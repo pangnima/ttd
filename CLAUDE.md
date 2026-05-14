@@ -95,6 +95,82 @@ src/
 ## 현재 작업 중인 주차
 Week 5 — Supabase 세팅 + DB 스키마
 
+## Supabase 마이그레이션 로드맵
+
+### 아키텍처 전환 방향
+- **현재**: localStorage 7개 키 (`tc_*`) + 더미 데이터 클라이언트 머지 (`'use client'` + useEffect)
+- **목표**: Supabase Auth (이메일+비밀번호) + PostgreSQL + RLS, Server Component 우선
+
+### DB 스키마 매핑 (localStorage → Supabase)
+
+| localStorage 키 | Supabase 테이블 | 비고 |
+|---|---|---|
+| `tc_current_user_id` | `auth.users` (Supabase 기본) | `supabase.auth.getUser()` 사용 |
+| `tc_profile` | `public.users` | id = auth.uid() 1:1 |
+| `tc_clubs` | `public.clubs` | RLS 적용 |
+| `tc_club_members` | `public.club_members` | PK: (user_id, club_id) |
+| `tc_tournaments` | `public.tournaments` | games / rounds / courts 정규화 |
+| `tc_tournaments[].games` | `public.tournament_games` | 별도 테이블 (FK: tournament_id) |
+| `tc_guest_players` | `public.users` (is_guest=true) 또는 별도 | Week 9에 최종 결정 |
+| `tc_matches` | ❌ 제거 | `tournament_games`로 통합 |
+
+### 핵심 원칙
+1. **Owner 단일 진실 출처**: `club_members.role = 'owner'`로 통일. `clubs.owner_id` 직접 비교 코드 제거
+2. **모든 mutation은 Server Action 통과** + RLS double-defense
+3. **Read 쿼리는 Server Component에서** `createServerClient` 사용
+4. **클라이언트 SDK 직접 호출은 read-only**만, 항상 RLS로 보호
+
+### Week 5: Supabase 세팅 + DB 스키마
+- `npm install @supabase/supabase-js @supabase/ssr`
+- `.env.local` 생성 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+- `lib/supabase/` 구조: `client.ts` (브라우저), `server.ts` (RSC/Action), `middleware.ts` (세션 갱신)
+- 루트 `middleware.ts` 신설 (`(main)` 그룹 인증 가드)
+- DB 마이그레이션 SQL: `users`, `clubs`, `club_members`, `tournaments`, `tournament_rounds`, `tournament_courts`, `tournament_time_slots`, `tournament_games`
+- 각 테이블 RLS 정책 작성 (Supabase MCP `apply_migration` 활용)
+
+### Week 6: 인증 연결 (이메일 + 비밀번호)
+- `/login` Supabase Auth UI 교체
+- `/signup` 실제 가입 + `auth.users` insert 트리거로 `public.users` row 자동 생성
+- `auth-store.ts` 제거, `getCurrentUserId()` 호출 15곳 → `supabase.auth.getUser()` 전환
+- Header 로그아웃 → `supabase.auth.signOut()`
+
+### Week 7: 클럽 기능 Supabase 연결
+- `lib/actions/clubs.ts`, `lib/actions/club-members.ts`, `lib/actions/profile.ts` 신설
+- 더미 데이터 머지 로직 제거 (`[...dummy, ...stored]` 패턴 전부)
+- **`/clubs/[clubId]/settings` 페이지에 owner 권한 가드 추가** (현재 누락, 보안 결함)
+- 제거 대상: `auth-store.ts`, `user-store.ts`, `club-store.ts`, `club-member-store.ts`, `dummy/clubs.ts`, `dummy/club-members.ts`
+- `/dashboard`, `/clubs`, `/clubs/[clubId]`, `/clubs/[clubId]/members` → Server Component 전환
+
+### Week 8: 대진표 기능 + 레거시 정리
+- `lib/actions/tournaments.ts`: Tournament + games 트랜잭션 저장 (RPC 권장)
+- 제거 대상: `tournament-store.ts`, `guest-player-store.ts`, `dummy/tournaments.ts`
+- **Match 타입 마이그레이션**:
+  - `stats.ts`를 `Game` 기반으로 재작성 (`Match[]` → `Game[]` 시그니처)
+  - `Match`, `MatchResult` 타입 제거
+  - `match-store.ts` 제거 (write 호출이 0건인 dead pipeline)
+  - `members-content.tsx`, `club-members-preview.tsx`의 `getStoredMatches()` → `tournament_games` 쿼리
+- **Dead code 정리**: `tournament-view.tsx` 제거 (import 0건)
+
+### Week 9: 통계 + 프로필 + 배포
+- `/profile/[userId]` 페이지 신설 (Server Component)
+- 통계 계산: 클라이언트 `stats.ts` vs PostgreSQL view/RPC — 성능 측정 후 선택
+- 게스트 선수 최종 모델 확정 (`users.is_guest` 또는 `guest_players` 별도 테이블)
+- Vercel 배포 (환경변수 설정, Supabase URL 화이트리스트)
+
+### RLS 정책 예시
+```sql
+-- clubs: public이면 모두 조회, approved 멤버는 비공개 클럽도 조회
+CREATE POLICY clubs_select ON clubs FOR SELECT USING (
+  is_public OR EXISTS (
+    SELECT 1 FROM club_members
+    WHERE club_id = clubs.id AND user_id = auth.uid() AND status = 'approved'
+  )
+);
+-- club_members INSERT (가입 신청): user_id = auth.uid() AND status = 'pending'
+-- club_members UPDATE (승인/거절): club owner만 (club_members role = 'owner' 조인)
+-- tournament_games SELECT/INSERT/UPDATE: approved 멤버만 / DELETE: owner만
+```
+
 ## 코딩 규칙
 
 ### 기본 원칙
@@ -166,9 +242,11 @@ npm install @supabase/supabase-js @supabase/ssr
 ```
 `.env.local` 파일 생성 후 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 추가
 
-- Supabase 클라이언트는 lib/supabase.ts 에서만 import
-- 데이터 fetching은 Server Component에서 처리
-- 민감한 작업은 Server Action 사용
+- Supabase 클라이언트는 `lib/supabase/client.ts` (브라우저), `lib/supabase/server.ts` (RSC/Action)에서만 import
+- 데이터 fetching은 Server Component에서 `createServerClient` 사용
+- 민감한 mutation은 Server Action 사용 (`lib/actions/<entity>.ts`, 파일당 한 entity)
+- 클라이언트 SDK 직접 쿼리는 read-only, RLS로 보호되는 데이터에만 한정
+- Owner/권한 판단은 항상 `club_members.role = 'owner'` 기준 (`Club.ownerId` 직접 비교 금지)
 - 환경변수는 .env.local 에서만 관리
 
 ## 타입 정의 (types/index.ts)
@@ -304,6 +382,11 @@ npm run build        # 빌드 (배포 전 반드시 확인)
 npm run lint         # 린트 검사
 npx tsc --noEmit     # 타입 에러 확인
 \`\`\`
+
+## 알려진 이슈 (Supabase 마이그레이션 시 해결)
+- `/clubs/[clubId]/settings` 페이지에 권한 가드 없음 — URL 직접 접근 시 누구나 폼 접근 가능 → **Week 7**
+- `match-store.ts`는 write 호출이 0건이라 통계가 항상 0승 0패 — `Tournament.games`와 연결 안 됨 → **Week 8** (Game 기반 재작성)
+- `tournament-view.tsx`는 어디서도 import되지 않는 dead code → **Week 8** 제거
 
 ## 절대 하지 말 것
 - any 타입 사용 금지
