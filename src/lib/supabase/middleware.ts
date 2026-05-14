@@ -26,8 +26,30 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // 세션 토큰 갱신 (getUser 호출로 자동 갱신)
-    await supabase.auth.getUser()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    const path = request.nextUrl.pathname
+
+    // (main) 그룹 보호 — 비로그인 시 /login 리다이렉트
+    const isMainRoute =
+        path.startsWith('/dashboard') ||
+        path.startsWith('/clubs') ||
+        path.startsWith('/profile')
+    if (isMainRoute && !user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+    }
+
+    // (auth) 그룹 — 이미 로그인 시 /dashboard 리다이렉트
+    const isAuthRoute = path === '/login' || path === '/signup'
+    if (isAuthRoute && user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+    }
 
     return supabaseResponse
 }

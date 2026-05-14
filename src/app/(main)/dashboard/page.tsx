@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,32 +15,33 @@ import { dummyTournaments } from '@/lib/dummy/tournaments'
 import { getStoredClubs } from '@/lib/store/club-store'
 import { getJoinedClubIds } from '@/lib/store/club-member-store'
 import { calcPlayerStats, calcHeadToHead, getMatchesByUser } from '@/lib/stats'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { Users, Trophy, ChevronRight, Award, Calendar, Shield } from 'lucide-react'
 import type { User } from '@/types'
 
 export default function DashboardPage() {
-    const router = useRouter()
     const [me, setMe] = useState<User | null>(null)
     const [myClubs, setMyClubs] = useState<ReturnType<typeof dummyClubs.filter>>([])
 
     useEffect(() => {
-        const id = getCurrentUserId()
-        if (!id) {
-            router.push('/login')
-            return
-        }
-        const user = getUserById(id)
-        if (!user) {
-            router.push('/login')
-            return
-        }
-        setMe(user)
+        let isMounted = true
+        const supabase = createClient()
 
-        const allClubs = [...dummyClubs, ...getStoredClubs()]
-        const joinedIds = getJoinedClubIds(id)
-        setMyClubs(allClubs.filter((c) => joinedIds.includes(c.id)))
-    }, [router])
+        supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+            if (!isMounted || !authUser) return
+            const user = getUserById(authUser.id)
+            if (!user) return
+            setMe(user)
+
+            const allClubs = [...dummyClubs, ...getStoredClubs()]
+            const joinedIds = getJoinedClubIds(authUser.id)
+            setMyClubs(allClubs.filter((c) => joinedIds.includes(c.id)))
+        })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     if (!me) {
         return (

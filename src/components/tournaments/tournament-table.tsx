@@ -154,12 +154,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
         }))
     }
 
-    const sortedGames = [...tournament.games].sort((a, b) => {
-        const courtA = tournament.courts.find((c) => c.id === a.courtId)?.order ?? 0
-        const courtB = tournament.courts.find((c) => c.id === b.courtId)?.order ?? 0
-        if (courtA !== courtB) return courtA - courtB
-        return a.timeSlotId.localeCompare(b.timeSlotId)
-    })
+    const sortedGames = tournament.games
 
     return (
         <div className="rounded-md border">

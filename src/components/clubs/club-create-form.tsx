@@ -11,7 +11,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { saveClub } from '@/lib/store/club-store'
 import { saveMember } from '@/lib/store/club-member-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { ImagePlus } from 'lucide-react'
 import type { Club } from '@/types'
 
@@ -24,10 +24,12 @@ export function ClubCreateForm() {
     const [error, setError] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         setError(null)
 
-        const userId = getCurrentUserId()
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        const userId = user?.id
         if (!userId) {
             setError('로그인이 필요합니다.')
             return

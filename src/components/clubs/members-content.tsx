@@ -14,7 +14,7 @@ import {
     approveMember,
     rejectMember,
 } from '@/lib/store/club-member-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { calcPlayerStats } from '@/lib/stats'
 import { getUserById } from '@/lib/dummy/users'
 import type { Club, ClubMember, Match } from '@/types'
@@ -36,10 +36,12 @@ export function MembersContent({ clubId }: MembersContentProps) {
         setPendingMembers(getPendingMembersByClubId(clubId))
         setAllMatches(getStoredMatches())
 
-        const userId = getCurrentUserId()
-        if (userId) {
-            setIsOwner(getMemberRoleInClub(userId, clubId) === 'owner')
-        }
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                setIsOwner(getMemberRoleInClub(user.id, clubId) === 'owner')
+            }
+        })
     }, [clubId])
 
     function handleApprove(memberId: string) {

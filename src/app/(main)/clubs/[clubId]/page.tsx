@@ -18,7 +18,7 @@ import {
     applyToClub,
     cancelApplication,
 } from '@/lib/store/club-member-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
 import { MapPin, Users, Trophy, Settings, ChevronRight, Clock, UserPlus } from 'lucide-react'
 import type { Club, ClubMember, Tournament } from '@/types'
@@ -39,7 +39,10 @@ export default function ClubPage({ params }: ClubPageProps) {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
-    const loadData = useCallback(() => {
+    const loadData = useCallback(async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
         const allClubs = [...dummyClubs, ...getStoredClubs()]
         const found = allClubs.find((c) => c.id === clubId)
         if (!found) {
@@ -54,7 +57,7 @@ export default function ClubPage({ params }: ClubPageProps) {
         const allTournaments = dummyTournaments.filter((t) => t.clubId === clubId)
         setTournaments(allTournaments)
 
-        const uid = getCurrentUserId()
+        const uid = user?.id ?? null
         setCurrentUserId(uid)
         if (uid) {
             setMembershipStatus(getMembershipStatus(uid, clubId))

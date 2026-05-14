@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { navItems } from '@/lib/nav-items'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { getJoinedClubIds } from '@/lib/store/club-member-store'
 import { getStoredClubs } from '@/lib/store/club-store'
 import { dummyClubs } from '@/lib/dummy/clubs'
@@ -21,18 +21,29 @@ export function Sidebar({ currentPath }: SidebarProps) {
     const [tournamentHref, setTournamentHref] = useState<string | null>(null)
 
     useEffect(() => {
-        const userId = getCurrentUserId()
-        if (!userId) return
+        let isMounted = true
+        const supabase = createClient()
 
-        const joinedIds = getJoinedClubIds(userId)
-        if (joinedIds.length === 0) return
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!isMounted || !user) return
 
-        const stored = getStoredClubs()
-        const storedIds = new Set(stored.map((c) => c.id))
-        const allClubs = [...dummyClubs.filter((c) => !storedIds.has(c.id)), ...stored]
-        const firstClub = allClubs.find((c) => joinedIds.includes(c.id))
-        if (firstClub) {
-            setTournamentHref(`/clubs/${firstClub.id}/tournaments`)
+            const joinedIds = getJoinedClubIds(user.id)
+            if (joinedIds.length === 0) return
+
+            const stored = getStoredClubs()
+            const storedIds = new Set(stored.map((c) => c.id))
+            const allClubs = [
+                ...dummyClubs.filter((c) => !storedIds.has(c.id)),
+                ...stored,
+            ]
+            const firstClub = allClubs.find((c) => joinedIds.includes(c.id))
+            if (isMounted && firstClub) {
+                setTournamentHref(`/clubs/${firstClub.id}/tournaments`)
+            }
+        })
+
+        return () => {
+            isMounted = false
         }
     }, [])
 

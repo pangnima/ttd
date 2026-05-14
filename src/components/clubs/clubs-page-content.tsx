@@ -15,7 +15,7 @@ import { ClubTableRow } from '@/components/clubs/club-table-row'
 import { cn } from '@/lib/utils'
 import { dummyClubs } from '@/lib/dummy/clubs'
 import { getStoredClubs } from '@/lib/store/club-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { getMembershipStatus } from '@/lib/store/club-member-store'
 import { Plus, Search } from 'lucide-react'
 import type { Club, ClubMember } from '@/types'
@@ -38,7 +38,7 @@ export function ClubsPageContent() {
     const [search, setSearch] = useState('')
     const [membershipMap, setMembershipMap] = useState<MembershipMap>({})
 
-    const loadData = useCallback(() => {
+    const loadData = useCallback(async () => {
         const stored = getStoredClubs()
         const storedIds = new Set(stored.map((c) => c.id))
         const merged = [
@@ -47,12 +47,13 @@ export function ClubsPageContent() {
         ]
         setAllClubs(merged)
 
-        const uid = getCurrentUserId()
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
 
-        if (uid) {
+        if (user) {
             const map: MembershipMap = {}
             merged.forEach((club) => {
-                map[club.id] = getMembershipStatus(uid, club.id)
+                map[club.id] = getMembershipStatus(user.id, club.id)
             })
             setMembershipMap(map)
         }

@@ -22,7 +22,7 @@ import { dummyClubs } from '@/lib/dummy/clubs'
 import { getStoredTournamentsByClubId, deleteStoredTournament } from '@/lib/store/tournament-store'
 import { getMembersByClubId, getJoinedClubIds, getMembershipStatus } from '@/lib/store/club-member-store'
 import { getGuestPlayers } from '@/lib/store/guest-player-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { getUserById } from '@/lib/dummy/users'
 import { Plus, Calendar, Trophy, ChevronRight, Trash2, Lock } from 'lucide-react'
 import type { Club, Tournament, User } from '@/types'
@@ -39,20 +39,20 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
     const [isMember, setIsMember] = useState<boolean | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<Tournament | null>(null)
 
-    const loadData = useCallback(() => {
+    const loadData = useCallback(async () => {
         const stored = getStoredClubs()
         const storedIds = new Set(stored.map((c) => c.id))
         const clubs = [...dummyClubs.filter((c) => !storedIds.has(c.id)), ...stored]
         setClub(clubs.find((c) => c.id === clubId) ?? null)
 
-        const userId = getCurrentUserId()
-        if (userId) {
-            const status = getMembershipStatus(userId, clubId)
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+            const status = getMembershipStatus(user.id, clubId)
             setIsMember(status === 'approved')
 
-            const joinedIds = new Set(getJoinedClubIds(userId))
+            const joinedIds = new Set(getJoinedClubIds(user.id))
             setMyClubs(clubs.filter((c) => joinedIds.has(c.id)))
-
         } else {
             setIsMember(false)
         }

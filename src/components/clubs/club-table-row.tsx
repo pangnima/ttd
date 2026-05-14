@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Users, MapPin, Clock } from 'lucide-react'
 import { applyToClub, cancelApplication, getMembersByClubId } from '@/lib/store/club-member-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import type { Club, ClubMember } from '@/types'
 
 type MembershipStatus = ClubMember['status'] | null
@@ -20,17 +20,19 @@ export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTab
     const initial = club.name.charAt(0)
     const memberCount = getMembersByClubId(club.id).length
 
-    const handleApply = () => {
-        const userId = getCurrentUserId()
-        if (!userId) return
-        applyToClub(userId, club.id)
+    const handleApply = async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        applyToClub(user.id, club.id)
         onStatusChange?.()
     }
 
-    const handleCancel = () => {
-        const userId = getCurrentUserId()
-        if (!userId) return
-        cancelApplication(userId, club.id)
+    const handleCancel = async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        cancelApplication(user.id, club.id)
         onStatusChange?.()
     }
 

@@ -5,7 +5,7 @@ import { TournamentTable } from '@/components/tournaments/tournament-table'
 import { getStoredClubs } from '@/lib/store/club-store'
 import { getStoredTournamentById } from '@/lib/store/tournament-store'
 import { getMembersByClubId, getMembershipStatus } from '@/lib/store/club-member-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { getUserById } from '@/lib/dummy/users'
 import type { Tournament, User } from '@/types'
 
@@ -20,36 +20,38 @@ export function TournamentDetailContent({ clubId, tournamentId }: TournamentDeta
     const [isNotFound, setIsNotFound] = useState(false)
 
     useEffect(() => {
-        const userId = getCurrentUserId()
-        if (!userId) {
-            setIsNotFound(true)
-            return
-        }
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user) {
+                setIsNotFound(true)
+                return
+            }
 
-        const club = getStoredClubs().find((c) => c.id === clubId)
-        if (!club) {
-            setIsNotFound(true)
-            return
-        }
+            const club = getStoredClubs().find((c) => c.id === clubId)
+            if (!club) {
+                setIsNotFound(true)
+                return
+            }
 
-        const membership = getMembershipStatus(userId, clubId)
-        if (membership !== 'approved') {
-            setIsNotFound(true)
-            return
-        }
+            const membership = getMembershipStatus(user.id, clubId)
+            if (membership !== 'approved') {
+                setIsNotFound(true)
+                return
+            }
 
-        const found = getStoredTournamentById(tournamentId)
-        if (!found) {
-            setIsNotFound(true)
-            return
-        }
-        setTournament(found)
+            const found = getStoredTournamentById(tournamentId)
+            if (!found) {
+                setIsNotFound(true)
+                return
+            }
+            setTournament(found)
 
-        const memberRecords = getMembersByClubId(clubId)
-        const memberUsers = memberRecords
-            .map((m) => getUserById(m.userId))
-            .filter((u): u is User => u !== undefined)
-        setMembers(memberUsers)
+            const memberRecords = getMembersByClubId(clubId)
+            const memberUsers = memberRecords
+                .map((m) => getUserById(m.userId))
+                .filter((u): u is User => u !== undefined)
+            setMembers(memberUsers)
+        })
     }, [clubId, tournamentId])
 
     if (isNotFound) {

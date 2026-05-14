@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { GameScoreDialog } from '@/components/tournaments/game-score-dialog'
 import { getStoredTournamentById, saveTournament } from '@/lib/store/tournament-store'
-import { getCurrentUserId } from '@/lib/store/auth-store'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { Court, Game, GameResult, Round, Tournament, User } from '@/types'
 
@@ -36,8 +36,10 @@ export function TournamentView({ tournament: initial, members, clubOwnerId }: To
     const [isOwner, setIsOwner] = useState(false)
 
     useEffect(() => {
-        const currentId = getCurrentUserId()
-        setIsOwner(currentId === clubOwnerId)
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setIsOwner(user?.id === clubOwnerId)
+        })
     }, [clubOwnerId])
 
     // localStorage에 저장된 게임 결과 병합 (더미 대진표 포함)
