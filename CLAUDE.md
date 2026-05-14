@@ -5,10 +5,11 @@
 여러 클럽이 독립적으로 운영되는 커뮤니티 중심 플랫폼.
 
 ## 기술 스택
-- Framework: Next.js 15 (App Router)
+- Framework: Next.js 16.2.6 (App Router)
+- Runtime: React 19.2.4
 - Language: TypeScript (strict mode)
 - UI: shadcn/ui + Tailwind CSS
-- Backend/DB: Supabase (Auth + PostgreSQL + Storage)
+- Backend/DB: Supabase (Auth + PostgreSQL + Storage) ← **미설치** — Week 5에서 추가 예정
 - 배포: Vercel
 
 ## 폴더 구조
@@ -38,7 +39,8 @@ src/
 │   ├── tournaments/            # 대진표 관련 컴포넌트
 │   └── profile/                # 프로필 관련 컴포넌트
 ├── lib/
-│   ├── supabase.ts             # Supabase 클라이언트 (Week 5에서 생성 예정)
+│   ├── supabase.ts             # Supabase 클라이언트 (미존재 — Week 5에서 생성 예정)
+│   ├── actions/                # Server Actions (비어있음 — Week 6 이후 구현)
 │   ├── dummy/                  # 더미데이터 (기본 seed 데이터)
 │   │   ├── clubs.ts
 │   │   ├── club-members.ts
@@ -52,7 +54,7 @@ src/
 │   │   ├── match-store.ts      # 레거시 — Week 8에서 제거 예정
 │   │   ├── guest-player-store.ts
 │   │   └── user-store.ts
-│   ├── stats.ts                # 경기 통계 계산 함수
+│   ├── stats.ts                # 경기 통계 계산 (⚠️ 레거시 Match 타입 사용 중 — Game 타입 마이그레이션 필요)
 │   ├── nav-items.ts            # 사이드바 네비게이션 설정
 │   └── utils.ts                # 공통 유틸 함수 (cn)
 └── types/
@@ -61,7 +63,7 @@ src/
 ## 페이지 구조 (사이트맵)
 / → 랜딩페이지
 /login → 로그인
-/signup → 회원가입
+/signup → 회원가입 (스텁만 존재 — Week 6 Supabase 인증 연결 후 구현)
 /dashboard → 메인 대시보드 (로그인 후)
 /clubs → 클럽 리스트
 /clubs/new → 클럽 생성
@@ -71,7 +73,7 @@ src/
 /clubs/[clubId]/tournaments/new → 대진표 생성
 /clubs/[clubId]/tournaments/[tournamentId] → 대진표 상세
 /clubs/[clubId]/settings → 클럽 설정 (운영자 전용)
-/profile/[userId] → 개인 프로필 + 통계 (미구현 — Week 9에서 구현 예정)
+/profile/[userId] → 개인 프로필 + 통계 (❌ 페이지 파일 없음 — Week 9에서 구현)
 /profile/settings → 내 정보 수정
 
 ## 현재 개발 단계
@@ -158,6 +160,12 @@ export const dummyClubs: Club[] = [
 - 컴포넌트에서 직접 `localStorage.getItem()` 호출 금지
 
 ### Supabase 규칙 (Week 5 이후 적용)
+**Week 5 시작 전 설치 필요:**
+```bash
+npm install @supabase/supabase-js @supabase/ssr
+```
+`.env.local` 파일 생성 후 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 추가
+
 - Supabase 클라이언트는 lib/supabase.ts 에서만 import
 - 데이터 fetching은 Server Component에서 처리
 - 민감한 작업은 Server Action 사용
@@ -167,7 +175,7 @@ export const dummyClubs: Club[] = [
 
 \`\`\`ts
 // 사용자
-type User = {
+export type User = {
   id: string
   email: string
   name: string
@@ -183,7 +191,7 @@ type User = {
 }
 
 // 클럽
-type Club = {
+export type Club = {
   id: string
   name: string
   description: string
@@ -195,7 +203,7 @@ type Club = {
 }
 
 // 클럽 멤버
-type ClubMember = {
+export type ClubMember = {
   userId: string
   clubId: string
   role: 'owner' | 'member'
@@ -204,17 +212,17 @@ type ClubMember = {
 }
 
 // 경기 종류
-type MatchType = 'singles' | 'men_doubles' | 'women_doubles' | 'mixed_doubles'
+export type MatchType = 'singles' | 'men_doubles' | 'women_doubles' | 'mixed_doubles'
 
 // 시간 슬롯
-type TimeSlot = {
+export type TimeSlot = {
   id: string
   startAt: string  // "08:05"
   endAt: string    // "08:30"
 }
 
 // 라운드
-type Round = {
+export type Round = {
   id: string
   label: string    // "1st", "2nd"
   order: number
@@ -222,20 +230,20 @@ type Round = {
 }
 
 // 코트
-type Court = {
+export type Court = {
   id: string
   label: string    // "1코트", "2코트"
   order: number
 }
 
 // 경기 결과
-type GameResult = {
+export type GameResult = {
   sets: Array<{ team1: number; team2: number }>
-  winnerId: string  // 단식: playerId / 복식: 'team1' | 'team2'
+  winnerId: string  // 단식: player1Id or player2Id / 복식: 'team1' | 'team2'
 }
 
 // 경기
-type Game = {
+export type Game = {
   id: string
   tournamentId: string
   roundId: string
@@ -251,7 +259,7 @@ type Game = {
 }
 
 // 대진표
-type Tournament = {
+export type Tournament = {
   id: string
   clubId: string
   name: string
@@ -264,14 +272,15 @@ type Tournament = {
 }
 
 // ── 레거시 타입 — Week 8 Supabase 연동 시 제거 예정 ──
+// stats.ts / profile / dashboard 에서 사용 중
 
-type MatchResult = {
+export type MatchResult = {
   matchId: string
   sets: Array<{ player1: number; player2: number }>
   winnerId: string
 }
 
-type Match = {
+export type Match = {
   id: string
   tournamentId: string
   player1Id: string
