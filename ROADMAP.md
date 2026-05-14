@@ -60,20 +60,26 @@
 
 ### Phase 3: Supabase 연동 (Week 6~8)
 
-#### Week 6: 인증 연결
-- [ ] `/login` 페이지 → Supabase Auth (이메일 + 비밀번호) Server Action으로 교체
-- [ ] `/signup` 페이지 → 실제 가입 구현 (`supabase.auth.signUp` + `raw_user_meta_data` 전달)
-  - `handle_new_user` 트리거가 `public.users` row 자동 생성
-- [ ] `middleware.ts`에 `(main)` 그룹 인증 가드 추가 (미로그인 시 `/login` 리다이렉트)
-- [ ] `lib/store/auth-store.ts` 제거 → `supabase.auth.getUser()` 전환
-  - 사용처 15곳 일괄 교체 (`header.tsx`, `sidebar.tsx`, `mobile-nav.tsx` 외)
-- [ ] `lib/store/user-store.ts` → Supabase `public.users` 조회/업데이트로 교체
-- [ ] Header 로그아웃 → `supabase.auth.signOut()`
+#### Week 6: 인증 연결 ✅ (커밋 1769b02)
+- [x] `/login` 페이지 → Supabase Auth (이메일 + 비밀번호) Server Action으로 교체
+- [x] `/signup` 페이지 → 실제 가입 구현 (`supabase.auth.signUp` + `raw_user_meta_data` 전달)
+  - `handle_new_user` 트리거가 `public.users` row 자동 생성 (전체 프로필 필드 포함)
+  - 회원가입 폼: 이름, 닉네임, 이메일, 비밀번호, 전화번호, 성별, 주력손, 시작일, 사진
+- [x] `middleware.ts`를 `src/`로 이동 + `(main)` 그룹 인증 가드 추가
+  - 비로그인 → `/login` 리다이렉트, 로그인 상태 → `/dashboard` 리다이렉트
+- [x] 14곳 `getCurrentUserId()` → `supabase.auth.getUser()` 전환
+  - `auth-store.ts` 파일은 Week 7에서 물리 삭제 (현재 import 0건)
+- [x] `lib/store/user-store.ts` 제거 + `profile-settings-form` → `updateProfileAction` 전환
+- [x] Header 로그아웃 → `logoutAction` form action으로 교체
+- [x] `lib/actions/auth.ts` 신설 (loginAction, signupAction, logoutAction)
+- [x] `lib/actions/profile.ts` 신설 (updateProfileAction + 아바타 업로드)
+- [x] Storage avatars 버킷 RLS 정책 4종 적용 (0007)
+- [x] admin 시드 계정 NULL 토큰 수정 — GoTrue 로그인 오류 해결 (0008)
 
 #### Week 7: 클럽 기능 Supabase 연결
 - [ ] `lib/actions/clubs.ts` 신설 (createClub, updateClub, deleteClub Server Action)
 - [ ] `lib/actions/club-members.ts` 신설 (joinClub, approveRequest, rejectRequest)
-- [ ] `lib/actions/profile.ts` 신설 (updateProfile)
+- [x] `lib/actions/profile.ts` 신설 (updateProfile) ← Week 6에서 선행 완료
 - [ ] 더미 데이터 머지 로직 제거 (`[...dummy, ...stored]` 패턴 전부)
 - [ ] **`/clubs/[clubId]/settings` 페이지 owner 권한 가드 추가** (현재 보안 결함)
 - [ ] 제거 대상: `auth-store.ts`, `user-store.ts`, `club-store.ts`, `club-member-store.ts`
