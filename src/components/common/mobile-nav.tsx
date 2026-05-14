@@ -8,9 +8,6 @@ import { Menu, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { navItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
-import { getJoinedClubIds } from '@/lib/store/club-member-store'
-import { getStoredClubs } from '@/lib/store/club-store'
-import { dummyClubs } from '@/lib/dummy/clubs'
 
 export function MobileNav() {
     const [open, setOpen] = useState(false)
@@ -21,21 +18,17 @@ export function MobileNav() {
         let isMounted = true
         const supabase = createClient()
 
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(async ({ data: { user } }) => {
             if (!isMounted || !user) return
-
-            const joinedIds = getJoinedClubIds(user.id)
-            if (joinedIds.length === 0) return
-
-            const stored = getStoredClubs()
-            const storedIds = new Set(stored.map((c) => c.id))
-            const allClubs = [
-                ...dummyClubs.filter((c) => !storedIds.has(c.id)),
-                ...stored,
-            ]
-            const firstClub = allClubs.find((c) => joinedIds.includes(c.id))
-            if (isMounted && firstClub) {
-                setTournamentHref(`/clubs/${firstClub.id}/tournaments`)
+            const { data } = await supabase
+                .from('club_members')
+                .select('club_id')
+                .eq('user_id', user.id)
+                .eq('status', 'approved')
+                .limit(1)
+                .maybeSingle()
+            if (isMounted && data) {
+                setTournamentHref(`/clubs/${data.club_id}/tournaments`)
             }
         })
 

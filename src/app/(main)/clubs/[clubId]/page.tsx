@@ -1,100 +1,38 @@
-'use client'
-
-import { useState, useEffect, useCallback, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { dummyClubs } from '@/lib/dummy/clubs'
-import { dummyTournaments } from '@/lib/dummy/tournaments'
-import { getStoredClubs } from '@/lib/store/club-store'
-import {
-    getMembersByClubId,
-    getMembershipStatus,
-    getMemberRoleInClub,
-    applyToClub,
-    cancelApplication,
-} from '@/lib/store/club-member-store'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
+import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
+import { ClubDetailActions } from '@/components/clubs/club-detail-actions'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
-import { MapPin, Users, Trophy, Settings, ChevronRight, Clock, UserPlus } from 'lucide-react'
-import type { Club, ClubMember, Tournament } from '@/types'
+import { MapPin, Users, Trophy, Settings, ChevronRight } from 'lucide-react'
 
 type ClubPageProps = {
     params: Promise<{ clubId: string }>
 }
 
-export default function ClubPage({ params }: ClubPageProps) {
-    const { clubId } = use(params)
-    const router = useRouter()
+export default async function ClubPage({ params }: ClubPageProps) {
+    const { clubId } = await params
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-    const [club, setClub] = useState<Club | null>(null)
-    const [members, setMembers] = useState<ClubMember[]>([])
-    const [tournaments, setTournaments] = useState<Tournament[]>([])
-    const [membershipStatus, setMembershipStatus] = useState<ClubMember['status'] | null>(null)
-    const [myRole, setMyRole] = useState<ClubMember['role'] | null>(null)
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [club, approvedMembers, myMembership] = await Promise.all([
+        fetchClubById(clubId),
+        fetchClubMembers(clubId, 'approved'),
+        fetchMyMembership(user.id, clubId),
+    ])
 
-    const loadData = useCallback(async () => {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+    if (!club) notFound()
 
-        const allClubs = [...dummyClubs, ...getStoredClubs()]
-        const found = allClubs.find((c) => c.id === clubId)
-        if (!found) {
-            router.push('/clubs')
-            return
-        }
-        setClub(found)
+    const isOwner = myMembership?.role === 'owner'
 
-        const approvedMembers = getMembersByClubId(clubId)
-        setMembers(approvedMembers)
-
-        const allTournaments = dummyTournaments.filter((t) => t.clubId === clubId)
-        setTournaments(allTournaments)
-
-        const uid = user?.id ?? null
-        setCurrentUserId(uid)
-        if (uid) {
-            setMembershipStatus(getMembershipStatus(uid, clubId))
-            setMyRole(getMemberRoleInClub(uid, clubId))
-        }
-
-        setLoading(false)
-    }, [clubId, router])
-
-    useEffect(() => {
-        loadData()
-    }, [loadData])
-
-    const handleApply = () => {
-        if (!currentUserId) return
-        applyToClub(currentUserId, clubId)
-        setMembershipStatus('pending')
-    }
-
-    const handleCancel = () => {
-        if (!currentUserId) return
-        cancelApplication(currentUserId, clubId)
-        setMembershipStatus(null)
-    }
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
-                불러오는 중...
-            </div>
-        )
-    }
-
-    if (!club) return null
-
-    const ongoingTournaments = tournaments.filter((t) => !t.isFixed)
-    const isOwner = myRole === 'owner'
+    // Week 8에서 tournament_games Supabase 연결 예정
+    const ongoingTournaments: { id: string; name: string; date: string }[] = []
 
     return (
         <div className="w-full max-w-4xl space-y-6">
@@ -111,35 +49,11 @@ export default function ClubPage({ params }: ClubPageProps) {
                         <p className="text-muted-foreground text-sm">{club.description}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        {/* 가입신청 버튼 영역 */}
-                        {!isOwner && membershipStatus !== 'approved' && (
-                            <>
-                                {membershipStatus === 'pending' ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="flex items-center gap-1 text-xs text-amber-500">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            가입승인 대기중
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
-                                            onClick={handleCancel}
-                                        >
-                                            신청 취소
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <Button
-                                        size="sm"
-                                        className="h-8 gap-1.5"
-                                        onClick={handleApply}
-                                    >
-                                        <UserPlus className="w-3.5 h-3.5" />
-                                        가입 신청
-                                    </Button>
-                                )}
-                            </>
+                        {!isOwner && (
+                            <ClubDetailActions
+                                clubId={clubId}
+                                membershipStatus={myMembership?.status ?? null}
+                            />
                         )}
                         {isOwner && (
                             <Link
@@ -159,11 +73,11 @@ export default function ClubPage({ params }: ClubPageProps) {
                     </span>
                     <span className="flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" />
-                        {members.length}명
+                        {approvedMembers.length}명
                     </span>
                     <span className="flex items-center gap-1">
                         <Trophy className="w-3.5 h-3.5" />
-                        {tournaments.length}개 대진표
+                        {ongoingTournaments.length}개 대진표
                     </span>
                 </div>
             </div>
@@ -191,9 +105,7 @@ export default function ClubPage({ params }: ClubPageProps) {
                                 >
                                     <div>
                                         <p className="text-sm font-medium">{t.name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t.date}
-                                        </p>
+                                        <p className="text-xs text-muted-foreground">{t.date}</p>
                                     </div>
                                     <Badge variant="secondary" className="text-xs">진행중</Badge>
                                 </Link>
@@ -212,7 +124,7 @@ export default function ClubPage({ params }: ClubPageProps) {
             {/* 회원 미리보기 */}
             <section>
                 <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-semibold">회원 ({members.length}명)</h2>
+                    <h2 className="font-semibold">회원 ({approvedMembers.length}명)</h2>
                     <Link
                         href={`/clubs/${clubId}/members`}
                         className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-0.5"
@@ -220,7 +132,7 @@ export default function ClubPage({ params }: ClubPageProps) {
                         전체보기 <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                 </div>
-                <ClubMembersPreview members={members} maxDisplay={8} />
+                <ClubMembersPreview members={approvedMembers} maxDisplay={8} />
             </section>
         </div>
     )

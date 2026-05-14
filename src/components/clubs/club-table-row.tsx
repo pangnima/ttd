@@ -1,11 +1,11 @@
 'use client'
 
+import { useTransition } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Users, MapPin, Clock } from 'lucide-react'
-import { applyToClub, cancelApplication, getMembersByClubId } from '@/lib/store/club-member-store'
-import { createClient } from '@/lib/supabase/client'
+import { applyToClubAction, cancelApplicationAction, leaveClubAction } from '@/lib/actions/club-members'
 import type { Club, ClubMember } from '@/types'
 
 type MembershipStatus = ClubMember['status'] | null
@@ -13,28 +13,15 @@ type MembershipStatus = ClubMember['status'] | null
 type ClubTableRowProps = {
     club: Club
     membershipStatus?: MembershipStatus
-    onStatusChange?: () => void
 }
 
-export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTableRowProps) {
+export function ClubTableRow({ club, membershipStatus }: ClubTableRowProps) {
+    const [isPending, startTransition] = useTransition()
     const initial = club.name.charAt(0)
-    const memberCount = getMembersByClubId(club.id).length
 
-    const handleApply = async () => {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-        applyToClub(user.id, club.id)
-        onStatusChange?.()
-    }
-
-    const handleCancel = async () => {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-        cancelApplication(user.id, club.id)
-        onStatusChange?.()
-    }
+    const handleApply = () => startTransition(async () => { await applyToClubAction(club.id) })
+    const handleCancel = () => startTransition(async () => { await cancelApplicationAction(club.id) })
+    const handleLeave = () => startTransition(async () => { await leaveClubAction(club.id) })
 
     return (
         <TableRow className="hover:bg-muted/50 transition-colors">
@@ -65,7 +52,7 @@ export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTab
             <TableCell>
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Users className="w-3.5 h-3.5" />
-                    {memberCount}명
+                    {club.memberCount}명
                 </span>
             </TableCell>
             <TableCell className="text-right">
@@ -74,7 +61,8 @@ export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTab
                         variant="ghost"
                         size="sm"
                         className="h-7 text-xs px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleCancel}
+                        onClick={handleLeave}
+                        disabled={isPending}
                     >
                         탈퇴
                     </Button>
@@ -89,6 +77,7 @@ export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTab
                             size="sm"
                             className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive"
                             onClick={handleCancel}
+                            disabled={isPending}
                         >
                             취소
                         </Button>
@@ -99,6 +88,7 @@ export function ClubTableRow({ club, membershipStatus, onStatusChange }: ClubTab
                         size="sm"
                         className="h-7 text-xs px-3"
                         onClick={handleApply}
+                        disabled={isPending}
                     >
                         가입 신청
                     </Button>

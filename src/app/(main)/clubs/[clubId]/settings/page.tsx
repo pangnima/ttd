@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation'
-import { getClubById } from '@/lib/dummy/clubs'
+import { notFound, redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { fetchClubById } from '@/lib/queries/clubs'
 import { ClubSettingsForm } from '@/components/clubs/club-settings-form'
 
 type SettingsPageProps = {
@@ -8,9 +9,13 @@ type SettingsPageProps = {
 
 export default async function ClubSettingsPage({ params }: SettingsPageProps) {
     const { clubId } = await params
-    const club = getClubById(clubId)
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-    if (!club) return notFound()
+    const club = await fetchClubById(clubId)
+    if (!club) notFound()
+    if (club.ownerId !== user.id) redirect(`/clubs/${clubId}`)
 
     return (
         <div className="w-full max-w-lg">

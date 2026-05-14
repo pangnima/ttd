@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,14 +13,13 @@ import {
 } from '@/components/ui/table'
 import { ClubTableRow } from '@/components/clubs/club-table-row'
 import { cn } from '@/lib/utils'
-import { dummyClubs } from '@/lib/dummy/clubs'
-import { getStoredClubs } from '@/lib/store/club-store'
-import { createClient } from '@/lib/supabase/client'
-import { getMembershipStatus } from '@/lib/store/club-member-store'
 import { Plus, Search } from 'lucide-react'
 import type { Club, ClubMember } from '@/types'
 
-type MembershipMap = Record<string, ClubMember['status'] | null>
+type Props = {
+    allClubs: Club[]
+    membershipMap: Map<string, ClubMember['status']>
+}
 
 const TABLE_HEADER = (
     <TableHeader>
@@ -33,42 +32,8 @@ const TABLE_HEADER = (
     </TableHeader>
 )
 
-export function ClubsPageContent() {
-    const [allClubs, setAllClubs] = useState<Club[]>(dummyClubs)
+export function ClubsPageContent({ allClubs, membershipMap }: Props) {
     const [search, setSearch] = useState('')
-    const [membershipMap, setMembershipMap] = useState<MembershipMap>({})
-
-    const loadData = useCallback(async () => {
-        const stored = getStoredClubs()
-        const storedIds = new Set(stored.map((c) => c.id))
-        const merged = [
-            ...dummyClubs.filter((c) => !storedIds.has(c.id)),
-            ...stored,
-        ]
-        setAllClubs(merged)
-
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (user) {
-            const map: MembershipMap = {}
-            merged.forEach((club) => {
-                map[club.id] = getMembershipStatus(user.id, club.id)
-            })
-            setMembershipMap(map)
-        }
-    }, [])
-
-    useEffect(() => {
-        loadData()
-    }, [loadData])
-
-    // getStoredMembers 변경 감지를 위해 storage 이벤트 구독
-    useEffect(() => {
-        const handler = () => loadData()
-        window.addEventListener('storage', handler)
-        return () => window.removeEventListener('storage', handler)
-    }, [loadData])
 
     const filtered = search.trim()
         ? allClubs.filter(
@@ -78,8 +43,8 @@ export function ClubsPageContent() {
         )
         : allClubs
 
-    const myClubs = filtered.filter((c) => membershipMap[c.id] === 'approved')
-    const otherClubs = filtered.filter((c) => membershipMap[c.id] !== 'approved')
+    const myClubs = filtered.filter((c) => membershipMap.get(c.id) === 'approved')
+    const otherClubs = filtered.filter((c) => membershipMap.get(c.id) !== 'approved')
 
     return (
         <div className="w-full">
@@ -125,7 +90,6 @@ export function ClubsPageContent() {
                                         key={club.id}
                                         club={club}
                                         membershipStatus="approved"
-                                        onStatusChange={loadData}
                                     />
                                 ))}
                             </TableBody>
@@ -151,8 +115,7 @@ export function ClubsPageContent() {
                                     <ClubTableRow
                                         key={club.id}
                                         club={club}
-                                        membershipStatus={membershipMap[club.id] ?? null}
-                                        onStatusChange={loadData}
+                                        membershipStatus={membershipMap.get(club.id) ?? null}
                                     />
                                 ))}
                             </TableBody>

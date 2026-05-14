@@ -1,7 +1,5 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -9,53 +7,45 @@ import { StatsCards } from '@/components/profile/stats-cards'
 import { HeadToHeadTable } from '@/components/profile/head-to-head-table'
 import { RecentMatches } from '@/components/profile/recent-matches'
 import { PendingMembersCard } from '@/components/clubs/pending-members-card'
-import { getUserById } from '@/lib/dummy/users'
-import { dummyClubs } from '@/lib/dummy/clubs'
-import { dummyTournaments } from '@/lib/dummy/tournaments'
-import { getStoredClubs } from '@/lib/store/club-store'
-import { getJoinedClubIds } from '@/lib/store/club-member-store'
+import { createClient } from '@/lib/supabase/server'
+import { fetchMyClubs, fetchPendingMembersByOwner } from '@/lib/queries/clubs'
 import { calcPlayerStats, calcHeadToHead, getMatchesByUser } from '@/lib/stats'
-import { createClient } from '@/lib/supabase/client'
 import { Users, Trophy, ChevronRight, Award, Calendar, Shield } from 'lucide-react'
 import type { User } from '@/types'
 
-export default function DashboardPage() {
-    const [me, setMe] = useState<User | null>(null)
-    const [myClubs, setMyClubs] = useState<ReturnType<typeof dummyClubs.filter>>([])
+export default async function DashboardPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-    useEffect(() => {
-        let isMounted = true
-        const supabase = createClient()
+    const { data: meRow } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+    if (!meRow) redirect('/login')
 
-        supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-            if (!isMounted || !authUser) return
-            const user = getUserById(authUser.id)
-            if (!user) return
-            setMe(user)
-
-            const allClubs = [...dummyClubs, ...getStoredClubs()]
-            const joinedIds = getJoinedClubIds(authUser.id)
-            setMyClubs(allClubs.filter((c) => joinedIds.includes(c.id)))
-        })
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
-
-    if (!me) {
-        return (
-            <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
-                불러오는 중...
-            </div>
-        )
+    const me: User = {
+        id: meRow.id,
+        email: meRow.email,
+        name: meRow.name,
+        nickname: meRow.nickname,
+        role: meRow.role as User['role'],
+        profileImage: meRow.profile_image ?? undefined,
+        phone: meRow.phone ?? '',
+        gender: (meRow.gender ?? 'male') as User['gender'],
+        dominantHand: (meRow.dominant_hand ?? 'right') as User['dominantHand'],
+        ntrp: meRow.ntrp ?? 0,
+        tennisStartDate: meRow.tennis_start_date ?? '',
+        createdAt: meRow.created_at,
     }
 
-    const myClubIds = myClubs.map((c) => c.id)
-    const ongoingTournaments = dummyTournaments.filter(
-        (t) => myClubIds.includes(t.clubId) && !t.isFixed
-    )
+    const [myClubs, pendingEntries] = await Promise.all([
+        fetchMyClubs(user.id),
+        fetchPendingMembersByOwner(user.id),
+    ])
 
+    // Week 9에서 tournament_games 연결 예정 — 현재 빈 배열
     const myMatches = getMatchesByUser([], me.id)
     const stats = calcPlayerStats([], me.id)
     const h2h = calcHeadToHead([], me.id)
@@ -143,7 +133,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
 
                     {/* 가입 승인 대기 (클럽 오너인 경우에만 표시) */}
-                    <PendingMembersCard currentUserId={me.id} />
+                    <PendingMembersCard entries={pendingEntries} />
 
                     {/* 내 클럽 */}
                     <Card className="bg-card border-white/5">
@@ -180,7 +170,7 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* 진행 중인 대진표 */}
+                    {/* 진행 중인 대진표 — Week 8에서 Supabase 연결 예정 */}
                     <Card className="bg-card border-white/5">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-sm font-medium flex items-center gap-1.5">
@@ -188,27 +178,8 @@ export default function DashboardPage() {
                                 진행 중인 대진표
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="px-4 pb-4 space-y-2">
-                            {ongoingTournaments.length === 0 ? (
-                                <p className="text-xs text-muted-foreground text-center py-4">진행 중인 대진표 없음</p>
-                            ) : (
-                                ongoingTournaments.map((t) => (
-                                    <Link key={t.id} href={`/clubs/${t.clubId}/tournaments/${t.id}`}>
-                                        <div className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-                                            <div className="w-7 h-7 rounded-md bg-amber-500/20 flex items-center justify-center shrink-0">
-                                                <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-medium truncate">{t.name}</p>
-                                                <p className="text-xs text-muted-foreground">{t.date}</p>
-                                            </div>
-                                            <Badge variant="default" className="text-xs shrink-0 bg-amber-500/20 text-amber-400 border-0">
-                                                진행중
-                                            </Badge>
-                                        </div>
-                                    </Link>
-                                ))
-                            )}
+                        <CardContent className="px-4 pb-4">
+                            <p className="text-xs text-muted-foreground text-center py-4">진행 중인 대진표 없음</p>
                         </CardContent>
                     </Card>
 

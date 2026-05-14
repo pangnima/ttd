@@ -1,68 +1,28 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useTransition } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { UserCheck } from 'lucide-react'
-import { getStoredClubs } from '@/lib/store/club-store'
-import {
-    getPendingMembersByClubId,
-    approveMember,
-    rejectMember,
-} from '@/lib/store/club-member-store'
-import { getUserById } from '@/lib/dummy/users'
-import { dummyClubs } from '@/lib/dummy/clubs'
-import type { Club, ClubMember } from '@/types'
+import { approveMemberAction, rejectMemberAction } from '@/lib/actions/club-members'
+import type { PendingEntry } from '@/lib/queries/clubs'
 
 type Props = {
-    currentUserId: string
+    entries: PendingEntry[]
 }
 
-type PendingEntry = {
-    club: Club
-    member: ClubMember
-    userName: string
-}
-
-export function PendingMembersCard({ currentUserId }: Props) {
-    const [entries, setEntries] = useState<PendingEntry[]>([])
-
-    const loadPending = useCallback(() => {
-        const allClubs = [...dummyClubs, ...getStoredClubs()]
-        const ownedClubs = allClubs.filter((c) => c.ownerId === currentUserId)
-
-        const pending: PendingEntry[] = []
-        ownedClubs.forEach((club) => {
-            const pendingMembers = getPendingMembersByClubId(club.id)
-            pendingMembers.forEach((m) => {
-                const user = getUserById(m.userId)
-                pending.push({
-                    club,
-                    member: m,
-                    userName: user?.name ?? m.userId,
-                })
-            })
-        })
-        setEntries(pending)
-    }, [currentUserId])
-
-    useEffect(() => {
-        loadPending()
-    }, [loadPending])
-
-    const handleApprove = (userId: string, clubId: string) => {
-        approveMember(userId, clubId)
-        loadPending()
-    }
-
-    const handleReject = (userId: string, clubId: string) => {
-        rejectMember(userId, clubId)
-        loadPending()
-    }
+export function PendingMembersCard({ entries }: Props) {
+    const [isPending, startTransition] = useTransition()
 
     if (entries.length === 0) return null
+
+    const handleApprove = (clubId: string, userId: string) =>
+        startTransition(async () => { await approveMemberAction(clubId, userId) })
+
+    const handleReject = (clubId: string, userId: string) =>
+        startTransition(async () => { await rejectMemberAction(clubId, userId) })
 
     return (
         <Card className="bg-card border-white/5">
@@ -76,18 +36,18 @@ export function PendingMembersCard({ currentUserId }: Props) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-2">
-                {entries.map(({ club, member, userName }) => (
+                {entries.map(({ club, member, user }) => (
                     <div
                         key={`${member.clubId}-${member.userId}`}
                         className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white/5"
                     >
                         <Avatar className="w-7 h-7 shrink-0">
                             <AvatarFallback className="text-xs bg-emerald-500/20 text-emerald-400">
-                                {userName[0]}
+                                {user.name[0]}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{userName}</p>
+                            <p className="text-xs font-medium truncate">{user.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{club.name}</p>
                         </div>
                         <div className="flex gap-1 shrink-0">
@@ -95,7 +55,8 @@ export function PendingMembersCard({ currentUserId }: Props) {
                                 size="sm"
                                 className="h-6 text-xs px-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-0"
                                 variant="outline"
-                                onClick={() => handleApprove(member.userId, member.clubId)}
+                                onClick={() => handleApprove(member.clubId, member.userId)}
+                                disabled={isPending}
                             >
                                 승인
                             </Button>
@@ -103,7 +64,8 @@ export function PendingMembersCard({ currentUserId }: Props) {
                                 size="sm"
                                 className="h-6 text-xs px-2"
                                 variant="ghost"
-                                onClick={() => handleReject(member.userId, member.clubId)}
+                                onClick={() => handleReject(member.clubId, member.userId)}
+                                disabled={isPending}
                             >
                                 거절
                             </Button>

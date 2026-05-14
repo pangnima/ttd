@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,70 +8,20 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { saveClub } from '@/lib/store/club-store'
-import { saveMember } from '@/lib/store/club-member-store'
-import { createClient } from '@/lib/supabase/client'
+import { createClubAction } from '@/lib/actions/clubs'
 import { ImagePlus } from 'lucide-react'
-import type { Club } from '@/types'
 
 export function ClubCreateForm() {
-    const router = useRouter()
-    const [name, setName] = useState('')
-    const [region, setRegion] = useState('')
-    const [description, setDescription] = useState('')
+    const [state, formAction, isPending] = useActionState(createClubAction, null)
     const [isPublic, setIsPublic] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-
-    const handleSubmit = async () => {
-        setError(null)
-
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        const userId = user?.id
-        if (!userId) {
-            setError('로그인이 필요합니다.')
-            return
-        }
-
-        if (!name.trim()) {
-            setError('클럽 이름을 입력해주세요.')
-            return
-        }
-        if (!region.trim()) {
-            setError('활동 지역을 입력해주세요.')
-            return
-        }
-
-        setIsSubmitting(true)
-
-        const clubId = `tc-c-${Date.now()}`
-        const today = new Date().toISOString().split('T')[0]
-
-        const club: Club = {
-            id: clubId,
-            name: name.trim(),
-            region: region.trim(),
-            description: description.trim(),
-            isPublic,
-            memberCount: 1,
-            ownerId: userId,
-            createdAt: today,
-        }
-
-        saveClub(club)
-        saveMember({
-            userId,
-            clubId,
-            role: 'owner',
-            status: 'approved',
-            joinedAt: today,
-        })
-        router.push(`/clubs`)
-    }
 
     return (
-        <form className="flex flex-col lg:flex-row gap-6 items-start" onSubmit={(e) => e.preventDefault()}>
+        <form
+            className="flex flex-col lg:flex-row gap-6 items-start"
+            action={formAction}
+        >
+            <input type="hidden" name="is_public" value={isPublic ? 'true' : 'false'} />
+
             {/* 썸네일 */}
             <div className="w-full lg:w-72 shrink-0">
                 <Card className="overflow-hidden">
@@ -119,11 +68,9 @@ export function ClubCreateForm() {
                         <Label htmlFor="name">클럽 이름 *</Label>
                         <Input
                             id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            name="name"
                             placeholder="예: 강남 테니스 클럽"
                             maxLength={30}
-                            className={error && !name.trim() ? 'border-destructive' : ''}
                         />
                     </div>
 
@@ -131,10 +78,8 @@ export function ClubCreateForm() {
                         <Label htmlFor="region">활동 지역 *</Label>
                         <Input
                             id="region"
-                            value={region}
-                            onChange={(e) => setRegion(e.target.value)}
+                            name="region"
                             placeholder="예: 서울 강남구"
-                            className={error && !region.trim() ? 'border-destructive' : ''}
                         />
                     </div>
 
@@ -142,8 +87,7 @@ export function ClubCreateForm() {
                         <Label htmlFor="description">클럽 소개</Label>
                         <Textarea
                             id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            name="description"
                             placeholder="클럽을 소개해주세요."
                             rows={4}
                             maxLength={200}
@@ -176,18 +120,17 @@ export function ClubCreateForm() {
                         </div>
                     </div>
 
-                    {error && (
-                        <p className="text-sm text-destructive">{error}</p>
+                    {state?.error && (
+                        <p className="text-sm text-destructive">{state.error}</p>
                     )}
 
                     <div className="flex gap-2 pt-1">
                         <Button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
+                            type="submit"
+                            disabled={isPending}
                             className="flex-1"
                         >
-                            {isSubmitting ? '저장 중...' : '클럽 만들기'}
+                            {isPending ? '저장 중...' : '클럽 만들기'}
                         </Button>
                         <Link
                             href="/clubs"

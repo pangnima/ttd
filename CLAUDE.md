@@ -87,13 +87,13 @@ src/
   - [x] Phase 2.3: 클럽 상세 멤버 정보 강화
   - [x] Phase 2.4: 클럽 생성 기능 + 한글 기본값
 - [x] Week 5: Supabase 세팅 + DB 스키마
-- [ ] Week 6: 인증 연결
-- [ ] Week 7: 클럽 기능 Supabase 연결
+- [x] Week 6: 인증 연결
+- [x] Week 7: 클럽 기능 Supabase 연결
 - [ ] Week 8: 대진표 기능 Supabase 연결
 - [ ] Week 9: 통계 연결 + 배포
 
 ## 현재 작업 중인 주차
-Week 6 — 인증 연결
+Week 7 완료 — Week 8: 대진표 기능 Supabase 연결 예정
 
 ## Supabase 마이그레이션 로드맵
 
