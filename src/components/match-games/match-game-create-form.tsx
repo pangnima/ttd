@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
@@ -18,12 +18,9 @@ import {
 } from '@/components/ui/table'
 import { PlayerSelect } from '@/components/match-games/player-select'
 import { cn } from '@/lib/utils'
-import { saveMatchGame } from '@/lib/store/match-game-store'
-import { getMembersByClubId } from '@/lib/store/club-member-store'
-import { getGuestPlayers, saveGuestPlayer } from '@/lib/store/guest-player-store'
-import { getUserById } from '@/lib/dummy/users'
+import { createMatchGameAction, addGuestPlayerAction } from '@/lib/actions/match-games'
 import { Plus, Trash2 } from 'lucide-react'
-import type { Court, Match, MatchType, Round, TimeSlot, MatchGame, User } from '@/types'
+import type { Court, Match, MatchType, Round, TimeSlot, User } from '@/types'
 
 const genId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 
@@ -55,32 +52,41 @@ type SimpleMatchEntry = {
 
 type MatchGameCreateFormProps = {
     clubId: string
+    members: User[]
 }
 
-export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
+export function MatchGameCreateForm({ clubId, members: initialMembers }: MatchGameCreateFormProps) {
     const router = useRouter()
+    const [isPending, startTransition] = useTransition()
     const [name, setName] = useState('')
     const [date, setDate] = useState('')
     const [entries, setEntries] = useState<SimpleMatchEntry[]>([])
-    const [allPlayers, setAllPlayers] = useState<User[]>([])
+    const [allPlayers, setAllPlayers] = useState<User[]>(initialMembers)
     const [error, setError] = useState<string | null>(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-
-    useEffect(() => {
-        const memberRecords = getMembersByClubId(clubId)
-        const memberUsers = memberRecords
-            .map((m) => getUserById(m.userId))
-            .filter((u): u is User => u !== undefined)
-        const guests = getGuestPlayers()
-        const seen = new Set(memberUsers.map((u) => u.id))
-        const newGuests = guests.filter((u) => !seen.has(u.id))
-        setAllPlayers([...memberUsers, ...newGuests])
-    }, [clubId])
 
     const handleCreatePlayer = (nickname: string) => {
-        const guest = saveGuestPlayer(nickname)
-        setAllPlayers((prev) => [...prev, guest])
-        return guest.id
+        startTransition(async () => {
+            const result = await addGuestPlayerAction(clubId, nickname)
+            if (!result.ok) {
+                setError(result.error)
+                return
+            }
+            const guest: User = {
+                id: result.userId!,
+                email: '',
+                name: nickname,
+                nickname,
+                role: 'member',
+                phone: '',
+                gender: 'male',
+                dominantHand: 'right',
+                ntrp: 0,
+                tennisStartDate: '',
+                createdAt: new Date().toISOString(),
+            }
+            setAllPlayers((prev) => [...prev, guest])
+        })
+        return ''
     }
 
     const addEntry = () => {
@@ -134,12 +140,7 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
             }
         }
 
-        setIsSubmitting(true)
-
-        const now = Date.now()
-        const matchGameId = `tc-mg-${now}`
-        const createdAt = new Date().toISOString()
-
+        // 구조 생성: courts / rounds / matches
         const uniqueCourtLabels = [...new Set(entries.map((e) => e.courtLabel.trim()))]
         const courts: Court[] = uniqueCourtLabels.map((label, i) => ({
             id: genId('court'),
@@ -155,15 +156,14 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
             }
         }
         const timeSlots = [...slotMap.values()]
-
         const round: Round = { id: genId('round'), label: '1st', order: 1, timeSlots }
 
         const matches: Match[] = entries.map((e, i) => {
             const court = courts.find((c) => c.label === e.courtLabel.trim())!
             const slot = slotMap.get(`${e.startAt}|${e.endAt}`)!
             return {
-                id: `tc-m-${now}-${i}`,
-                matchGameId,
+                id: genId(`m${i}`),
+                matchGameId: '',
                 roundId: round.id,
                 courtId: court.id,
                 timeSlotId: slot.id,
@@ -175,25 +175,18 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
             }
         })
 
-        const matchGame: MatchGame = {
-            id: matchGameId,
-            clubId,
-            name: name.trim(),
-            date,
-            courts,
-            rounds: [round],
-            matches,
-            isFixed: false,
-            createdAt,
-        }
-
-        saveMatchGame(matchGame)
-        router.push(`/clubs/${clubId}/match-games`)
+        startTransition(async () => {
+            const result = await createMatchGameAction(clubId, name.trim(), date, courts, [round], matches)
+            if (!result.ok) {
+                setError(result.error)
+                return
+            }
+            router.push(`/clubs/${clubId}/match-games`)
+        })
     }
 
     return (
         <div className="w-full space-y-5">
-            {/* 기본 정보 */}
             <div className="flex gap-4">
                 <div className="flex-1 space-y-1.5">
                     <Label htmlFor="name">대진표 이름 *</Label>
@@ -217,7 +210,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                 </div>
             </div>
 
-            {/* 게임 테이블 */}
             <div className="rounded-lg border">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">게임 목록</span>
@@ -247,7 +239,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                 const isSingles = entry.matchType === 'singles'
                                 return (
                                     <TableRow key={entry.id} className="align-top">
-                                        {/* 코트 */}
                                         <TableCell className="pt-3">
                                             <Input
                                                 value={entry.courtLabel}
@@ -256,8 +247,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                                 placeholder="1코트"
                                             />
                                         </TableCell>
-
-                                        {/* 시간 */}
                                         <TableCell className="pt-3">
                                             <div className="flex items-center gap-1">
                                                 <Input
@@ -275,8 +264,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                                 />
                                             </div>
                                         </TableCell>
-
-                                        {/* 종류 */}
                                         <TableCell className="pt-3">
                                             <Select
                                                 value={entry.matchType}
@@ -295,8 +282,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>
-
-                                        {/* 플레이어 1 */}
                                         <TableCell className="pt-3">
                                             {isSingles ? (
                                                 <PlayerSelect
@@ -325,8 +310,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                                 </div>
                                             )}
                                         </TableCell>
-
-                                        {/* 플레이어 2 */}
                                         <TableCell className="pt-3">
                                             {isSingles ? (
                                                 <PlayerSelect
@@ -355,8 +338,6 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
                                                 </div>
                                             )}
                                         </TableCell>
-
-                                        {/* 관리 */}
                                         <TableCell className="pt-3 text-right">
                                             <Button
                                                 type="button"
@@ -379,8 +360,8 @@ export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
             <div className="flex gap-2">
-                <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex-1">
-                    {isSubmitting ? '저장 중...' : '저장하기'}
+                <Button type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">
+                    {isPending ? '저장 중...' : '저장하기'}
                 </Button>
                 <Link
                     href={`/clubs/${clubId}/match-games`}

@@ -1,11 +1,21 @@
 import { Badge } from '@/components/ui/badge'
 import { getUserById } from '@/lib/dummy/users'
-import { getMatchGameById } from '@/lib/dummy/match-games'
 import type { Match } from '@/types'
 
 type RecentMatchesProps = {
     matches: Match[]
     userId: string
+}
+
+function getIsWin(match: Match, userId: string): boolean {
+    if (!match.result) return false
+    const winnerId = match.result.winnerId
+    if (match.matchType === 'singles') {
+        return (winnerId === 'team1' && match.player1Id === userId) ||
+               (winnerId === 'team2' && match.player2Id === userId)
+    }
+    return (winnerId === 'team1' && (match.team1?.includes(userId) ?? false)) ||
+           (winnerId === 'team2' && (match.team2?.includes(userId) ?? false))
 }
 
 export function RecentMatches({ matches, userId }: RecentMatchesProps) {
@@ -27,8 +37,7 @@ export function RecentMatches({ matches, userId }: RecentMatchesProps) {
             {finished.map((match) => {
                 const opponentId = (match.player1Id === userId ? match.player2Id : match.player1Id) ?? ''
                 const opponent = getUserById(opponentId)
-                const isWin = match.result!.winnerId === userId
-                const matchGame = getMatchGameById(match.matchGameId)
+                const isWin = getIsWin(match, userId)
 
                 const sets = match.result!.sets
                 const myScore  = sets.map((s) => match.player1Id === userId ? s.team1 : s.team2).join(' ')
@@ -45,9 +54,6 @@ export function RecentMatches({ matches, userId }: RecentMatchesProps) {
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">
                                 vs {opponent?.nickname ?? opponentId}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                                {matchGame?.name ?? match.matchGameId}
                             </p>
                         </div>
                         <div className="text-right shrink-0">

@@ -9,6 +9,7 @@ import { RecentMatches } from '@/components/profile/recent-matches'
 import { PendingMembersCard } from '@/components/clubs/pending-members-card'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyClubs, fetchPendingMembersByOwner } from '@/lib/queries/clubs'
+import { fetchMatchesByUser } from '@/lib/queries/match-games'
 import { calcPlayerStats, calcHeadToHead, getMatchesByUser } from '@/lib/stats'
 import { Users, Trophy, ChevronRight, Award, Calendar, Shield } from 'lucide-react'
 import type { User } from '@/types'
@@ -40,15 +41,24 @@ export default async function DashboardPage() {
         createdAt: meRow.created_at,
     }
 
-    const [myClubs, pendingEntries] = await Promise.all([
+    const [myClubs, pendingEntries, allMatches] = await Promise.all([
         fetchMyClubs(user.id),
         fetchPendingMembersByOwner(user.id),
+        fetchMatchesByUser(user.id),
     ])
 
-    // Week 9에서 match_game_matches 연결 예정 — 현재 빈 배열
-    const myMatches = getMatchesByUser([], me.id)
-    const stats = calcPlayerStats([], me.id)
-    const h2h = calcHeadToHead([], me.id)
+    const myMatches = getMatchesByUser(allMatches, me.id)
+
+    const singlesMatches = myMatches.filter((m) => m.matchType === 'singles')
+    const doublesMatches = myMatches.filter((m) => m.matchType !== 'singles')
+
+    const singlesStats = calcPlayerStats(singlesMatches, me.id)
+    const doublesStats = calcPlayerStats(doublesMatches, me.id)
+    const h2h = calcHeadToHead(allMatches, me.id)
+
+    const totalMatches = myMatches.length
+    const totalWins = singlesStats.wins + doublesStats.wins
+    const totalWinRate = totalMatches === 0 ? 0 : Math.round((totalWins / totalMatches) * 100)
 
     return (
         <div className="space-y-6">
@@ -86,15 +96,15 @@ export default async function DashboardPage() {
                         </div>
                         <div className="hidden sm:flex items-center gap-6 pr-2">
                             <div className="text-center">
-                                <p className="text-2xl font-bold">{stats.totalMatches}</p>
+                                <p className="text-2xl font-bold">{totalMatches}</p>
                                 <p className="text-xs text-muted-foreground">총 경기</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-2xl font-bold text-emerald-400">{stats.wins}</p>
+                                <p className="text-2xl font-bold text-emerald-400">{totalWins}</p>
                                 <p className="text-xs text-muted-foreground">승</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-2xl font-bold text-blue-400">{stats.winRate}%</p>
+                                <p className="text-2xl font-bold text-blue-400">{totalWinRate}%</p>
                                 <p className="text-xs text-muted-foreground">승률</p>
                             </div>
                         </div>
@@ -108,13 +118,23 @@ export default async function DashboardPage() {
                 {/* 좌측 컬럼 (2/3) */}
                 <div className="lg:col-span-2 space-y-4">
 
-                    {/* 전체 통계 */}
+                    {/* 단식 통계 */}
                     <Card className="bg-card border-white/5">
                         <CardHeader className="pb-2 pt-4 px-4">
-                            <CardTitle className="text-sm font-medium">전체 통계</CardTitle>
+                            <CardTitle className="text-sm font-medium">단식 통계</CardTitle>
                         </CardHeader>
                         <CardContent className="px-4 pb-4">
-                            <StatsCards stats={stats} />
+                            <StatsCards stats={singlesStats} />
+                        </CardContent>
+                    </Card>
+
+                    {/* 복식 통계 */}
+                    <Card className="bg-card border-white/5">
+                        <CardHeader className="pb-2 pt-4 px-4">
+                            <CardTitle className="text-sm font-medium">복식 통계</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4">
+                            <StatsCards stats={doublesStats} />
                         </CardContent>
                     </Card>
 
@@ -170,19 +190,6 @@ export default async function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* 진행 중인 대진표 — Week 8에서 Supabase 연결 예정 */}
-                    <Card className="bg-card border-white/5">
-                        <CardHeader className="pb-2 pt-4 px-4">
-                            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-                                <Trophy className="w-4 h-4 text-amber-400" />
-                                진행 중인 대진표
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="px-4 pb-4">
-                            <p className="text-xs text-muted-foreground text-center py-4">진행 중인 대진표 없음</p>
-                        </CardContent>
-                    </Card>
-
                     {/* 상대별 전적 */}
                     <Card className="bg-card border-white/5">
                         <CardHeader className="pb-2 pt-4 px-4">
@@ -193,6 +200,19 @@ export default async function DashboardPage() {
                         </CardHeader>
                         <CardContent className="px-4 pb-4">
                             <HeadToHeadTable records={h2h} />
+                        </CardContent>
+                    </Card>
+
+                    {/* 진행 중인 대진표 */}
+                    <Card className="bg-card border-white/5">
+                        <CardHeader className="pb-2 pt-4 px-4">
+                            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+                                <Trophy className="w-4 h-4 text-amber-400" />
+                                진행 중인 대진표
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4">
+                            <p className="text-xs text-muted-foreground text-center py-4">진행 중인 대진표 없음</p>
                         </CardContent>
                     </Card>
                 </div>

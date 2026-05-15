@@ -57,7 +57,7 @@ export type Court = {
 
 export type MatchResult = {
     sets: Array<{ team1: number; team2: number }>
-    winnerId: string  // 단식: player1Id or player2Id / 복식: 'team1' | 'team2'
+    winnerId: 'team1' | 'team2'  // 단·복식 공통 규약: 이긴 쪽 'team1' 또는 'team2'
 }
 
 export type Match = {

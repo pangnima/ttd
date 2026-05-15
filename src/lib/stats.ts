@@ -26,18 +26,25 @@ export type HeadToHead = {
     losses: number
 }
 
-/** 특정 유저가 참여한 경기만 필터 */
+// 단식/복식 통합: 사용자가 team1 측인지 team2 측인지 판별
+function getUserSide(match: Match, userId: string): 'team1' | 'team2' | null {
+    if (match.matchType === 'singles') {
+        if (match.player1Id === userId) return 'team1'
+        if (match.player2Id === userId) return 'team2'
+        return null
+    }
+    if (match.team1?.includes(userId)) return 'team1'
+    if (match.team2?.includes(userId)) return 'team2'
+    return null
+}
+
+/** 특정 유저가 참여한 경기만 필터 (단식 + 복식 모두) */
 export function getMatchesByUser(matches: Match[], userId: string): Match[] {
-    return matches.filter(
-        (m) => m.player1Id === userId || m.player2Id === userId
-    )
+    return matches.filter((m) => getUserSide(m, userId) !== null)
 }
 
 /** 전체 승/패/세트 통계 계산 + 종목별 분류 */
-export function calcPlayerStats(
-    matches: Match[],
-    userId: string
-): PlayerStats {
+export function calcPlayerStats(matches: Match[], userId: string): PlayerStats {
     const myMatches = getMatchesByUser(matches, userId).filter(
         (m) => m.status === 'finished' && m.result
     )
@@ -54,15 +61,16 @@ export function calcPlayerStats(
 
     for (const match of myMatches) {
         const result = match.result!
-        const isP1 = match.player1Id === userId
-        const isWin = result.winnerId === userId
+        const side = getUserSide(match, userId)
+        if (!side) continue
 
+        const isWin = result.winnerId === side
         if (isWin) wins++
         else losses++
 
         for (const set of result.sets) {
-            setsWon  += isP1 ? set.team1 : set.team2
-            setsLost += isP1 ? set.team2 : set.team1
+            setsWon  += side === 'team1' ? set.team1 : set.team2
+            setsLost += side === 'team1' ? set.team2 : set.team1
         }
 
         if (match.matchType) {
@@ -71,8 +79,8 @@ export function calcPlayerStats(
             if (isWin) entry.wins++
             else entry.losses++
             for (const set of result.sets) {
-                entry.setsWon  += isP1 ? set.team1 : set.team2
-                entry.setsLost += isP1 ? set.team2 : set.team1
+                entry.setsWon  += side === 'team1' ? set.team1 : set.team2
+                entry.setsLost += side === 'team1' ? set.team2 : set.team1
             }
             matchTypeMap.set(mt, entry)
         }
@@ -97,22 +105,25 @@ export function calcPlayerStats(
     return { wins, losses, totalMatches, winRate, setsWon, setsLost, byMatchType }
 }
 
-/** 상대별 전적 계산 */
+/** 상대별 전적 (단식 전용) */
 export function calcHeadToHead(matches: Match[], userId: string): HeadToHead[] {
-    const myMatches = getMatchesByUser(matches, userId).filter(
-        (m) => m.status === 'finished' && m.result
-    )
+    const myMatches = matches
+        .filter((m) => m.matchType === 'singles')
+        .filter((m) => getUserSide(m, userId) !== null)
+        .filter((m) => m.status === 'finished' && m.result)
 
     const map = new Map<string, HeadToHead>()
 
     for (const match of myMatches) {
         const opponentId = match.player1Id === userId ? match.player2Id : match.player1Id
-        const entry = map.get(opponentId ?? '') ?? { opponentId: opponentId ?? '', wins: 0, losses: 0 }
+        if (!opponentId) continue
+        const entry = map.get(opponentId) ?? { opponentId, wins: 0, losses: 0 }
 
-        if (match.result!.winnerId === userId) entry.wins++
+        const side = getUserSide(match, userId)
+        if (match.result!.winnerId === side) entry.wins++
         else entry.losses++
 
-        map.set(opponentId ?? '', entry)
+        map.set(opponentId, entry)
     }
 
     return Array.from(map.values()).sort((a, b) => b.wins + b.losses - (a.wins + a.losses))

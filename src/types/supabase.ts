@@ -360,6 +360,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_guest_player: {
+        Args: { p_club_id: string; p_nickname: string }
+        Returns: string
+      }
+      create_match_game: {
+        Args: {
+          p_club_id: string
+          p_courts: Json
+          p_date: string
+          p_matches: Json
+          p_name: string
+          p_rounds: Json
+        }
+        Returns: string
+      }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean

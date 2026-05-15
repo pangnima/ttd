@@ -46,15 +46,14 @@
 
 ## 진행 예정
 
-### 사전 정리: Supabase 마이그레이션 준비
+### 사전 정리: Supabase 마이그레이션 준비 ✅
 
 > localStorage → Supabase 전환 전에 해결해야 할 구조적 문제들
 
-- [ ] `Match`(레거시) vs `Game`(신규) 이중 구조 마이그레이션 전략 결정
-  - `stats.ts`가 `Match` 타입에 의존 중 (`club-members-preview.tsx`, `members-content.tsx`에서 사용)
-  - Week 8에서 `Game` 타입으로 통합 시 `stats.ts`도 함께 수정 예정
-- [ ] store 함수 시그니처 현황 파악
-  - 현재 모두 `void` 반환 (동기) → Supabase 교체 시 `async` + 에러 처리 필요
+- [x] `Match`(레거시) vs `Game`(신규) 이중 구조 마이그레이션 전략 결정
+  - `Game` 타입을 `Match`로 통합, 레거시 `Match`/`MatchResult` 제거 — 리네이밍 작업에서 완료
+  - `stats.ts` `Match[]` 시그니처 재작성 (`set.player1/player2` → `set.team1/team2`) 완료
+- [x] store 함수 시그니처 현황 파악 완료
 
 ---
 
@@ -76,31 +75,55 @@
 - [x] Storage avatars 버킷 RLS 정책 4종 적용 (0007)
 - [x] admin 시드 계정 NULL 토큰 수정 — GoTrue 로그인 오류 해결 (0008)
 
-#### Week 7: 클럽 기능 Supabase 연결
-- [ ] `lib/actions/clubs.ts` 신설 (createClub, updateClub, deleteClub Server Action)
-- [ ] `lib/actions/club-members.ts` 신설 (joinClub, approveRequest, rejectRequest)
+#### Week 7: 클럽 기능 Supabase 연결 ✅ (커밋 306b52d)
+- [x] `lib/actions/clubs.ts` 신설 (createClub, updateClub, deleteClub Server Action)
+- [x] `lib/actions/club-members.ts` 신설 (joinClub, approveRequest, rejectRequest)
 - [x] `lib/actions/profile.ts` 신설 (updateProfile) ← Week 6에서 선행 완료
-- [ ] 더미 데이터 머지 로직 제거 (`[...dummy, ...stored]` 패턴 전부)
-- [ ] **`/clubs/[clubId]/settings` 페이지 owner 권한 가드 추가** (현재 보안 결함)
-- [ ] 제거 대상: `auth-store.ts`, `user-store.ts`, `club-store.ts`, `club-member-store.ts`
-- [ ] 제거 대상: `dummy/clubs.ts`, `dummy/club-members.ts`
-- [ ] Server Component 전환: `/dashboard`, `/clubs`, `/clubs/[clubId]`, `/clubs/[clubId]/members`
-- [ ] `Club.memberCount` 필드 제거 → DB COUNT 집계로 교체
-- [ ] `guest-player-store.ts` → `public.users` (is_guest=true) 연동
+- [x] 더미 데이터 머지 로직 제거 (`[...dummy, ...stored]` 패턴 전부)
+- [x] `/clubs/[clubId]/settings` 페이지 owner 권한 가드 추가
+- [x] 제거: `auth-store.ts`, `user-store.ts`, `club-store.ts`, `club-member-store.ts`
+- [x] 제거: `dummy/clubs.ts`, `dummy/club-members.ts`
+- [x] Server Component 전환: `/dashboard`, `/clubs`, `/clubs/[clubId]`, `/clubs/[clubId]/members`
+- [x] `Club.memberCount` 필드 제거 → DB COUNT 집계로 교체
 
-#### Week 8: 대진표 기능 + 레거시 정리
-- [ ] `lib/actions/tournaments.ts` 신설 (Tournament + games 트랜잭션 저장, RPC 권장)
-- [ ] 대진표 CRUD → Supabase `tournament_games` 테이블 연동
-- [ ] 제거 대상: `tournament-store.ts`, `guest-player-store.ts`, `dummy/tournaments.ts`
-- [ ] **Match 타입 마이그레이션**
-  - `stats.ts` `Match[]` → `Game[]` 시그니처로 재작성
-  - `Match`, `MatchResult` 레거시 타입 제거
-  - `match-store.ts` 제거 (write 호출 0건 dead pipeline)
-  - `members-content.tsx`, `club-members-preview.tsx` stats 연동 수정
-  - `dashboard/page.tsx` 통계 실제 데이터 연결 (현재 빈 배열 `[]` 하드코딩)
-- [ ] **Dead code 정리**
-  - `tournament-view.tsx` 제거 (import 0건)
-  - `tournament-store.ts` 미사용 함수 제거 (`updateStoredTournament`, `updateGameInTournament`)
+#### 리네이밍: tournament → match-game 전면 교체 ✅ (커밋 62007e1)
+
+> DB, 타입, 컴포넌트, 라우트, store 전체 명칭을 match-game으로 통일
+> (Week 8 선행 작업 — 명칭 불일치 해소 + 레거시 타입 제거 병행)
+
+- [x] DB 마이그레이션 적용 (`0009_rename_tournament_to_match_game`)
+  - `tournaments` → `match_games`, `tournament_courts` → `match_game_courts`
+  - `tournament_rounds` → `match_game_rounds`, `tournament_time_slots` → `match_game_time_slots`
+  - `tournament_games` → `match_game_matches` (의미 중복 회피)
+  - 컬럼 `tournament_id` → `match_game_id` (자식 테이블 3개)
+  - FK 제약 10개 + RLS 정책 20개 RENAME
+- [x] `src/types/supabase.ts` 재생성 (match_game_* 반영)
+- [x] `src/types/index.ts` 전면 갱신
+  - `Tournament` → `MatchGame`, `Tournament.games: Game[]` → `MatchGame.matches: Match[]`
+  - `Game` → `Match` (신규), `GameResult` → `MatchResult` (신규)
+  - 레거시 `Match` / `MatchResult` 타입 제거
+- [x] `src/lib/stats.ts` 재작성 — `result.sets` 필드 `player1/player2` → `team1/team2`
+- [x] `src/lib/store/tournament-store.ts` → `match-game-store.ts` (키: `tc_tournaments` → `tc_match_games`)
+- [x] `src/lib/dummy/tournaments.ts` → `match-games.ts`
+- [x] `src/components/tournaments/` → `src/components/match-games/` (6개 파일 리네이밍)
+  - `tournament-table.tsx` → `match-game-table.tsx` (props: `MatchGame`, `matches`)
+  - `tournament-create-form.tsx` → `match-game-create-form.tsx`
+  - `tournament-detail-content.tsx` → `match-game-detail-content.tsx`
+  - `tournaments-page-content.tsx` → `match-games-page-content.tsx`
+- [x] 라우트 이동: `/clubs/[clubId]/tournaments` → `/clubs/[clubId]/match-games`
+  - 동적 파라미터: `[tournamentId]` → `[matchGameId]`
+- [x] `sidebar.tsx`, `mobile-nav.tsx` — 경로 문자열 + 상태명 갱신
+- [x] `clubs/[clubId]/page.tsx`, `recent-matches.tsx` — 참조 갱신
+- [x] Dead code 제거: `tournament-view.tsx` (import 0건), `match-store.ts` (write 0건)
+
+#### Week 8: 대진표 기능 Supabase 연결
+- [ ] `lib/actions/match-games.ts` 신설 (MatchGame + matches 트랜잭션 저장, RPC 권장)
+- [ ] 대진표 CRUD → Supabase `match_game_matches` 테이블 연동
+- [ ] `match-game-store.ts` 제거 (localStorage → Supabase 교체)
+- [ ] `guest-player-store.ts` 제거 → `public.users` (is_guest=true) 연동
+- [ ] `dummy/users.ts` 제거 — Supabase 쿼리로 교체
+- [ ] `members-content.tsx`, `club-members-preview.tsx` stats 연동 수정
+- [ ] `dashboard/page.tsx` 통계 실제 데이터 연결 (현재 빈 배열 `[]` 하드코딩)
 - [ ] 실시간 경기 결과 반영 (`revalidatePath` 또는 Supabase Realtime 구독)
 
 ### Phase 4: 통계 + 배포 (Week 9)

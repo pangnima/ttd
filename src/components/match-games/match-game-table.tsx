@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import {
     Table,
     TableBody,
@@ -12,9 +12,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Pencil, Trash2, Check } from 'lucide-react'
-import { getStoredMatchGameById, saveMatchGame } from '@/lib/store/match-game-store'
-import type { MatchResult, MatchType, MatchGame, User } from '@/types'
+import { Pencil, Check } from 'lucide-react'
+import { saveMatchResultAction } from '@/lib/actions/match-games'
+import type { MatchType, MatchGame, User } from '@/types'
 
 type SetScore = { team1: string; team2: string }
 type MatchState = { sets: SetScore[]; confirmed: boolean }
@@ -23,6 +23,7 @@ type MatchStates = Record<string, MatchState>
 type MatchGameTableProps = {
     matchGame: MatchGame
     members: User[]
+    clubId: string
 }
 
 const MATCH_TYPE_LABELS: Record<MatchType, string> = {
@@ -39,21 +40,22 @@ const MATCH_TYPE_VARIANTS: Record<MatchType, 'default' | 'secondary' | 'outline'
     mixed_doubles: 'destructive',
 }
 
-function getWinner(sets: SetScore[]): 'team1' | 'team2' | null {
-    let team1Wins = 0
-    let team2Wins = 0
+function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | null {
+    let t1 = 0
+    let t2 = 0
     for (const set of sets) {
         const s1 = parseInt(set.team1) || 0
         const s2 = parseInt(set.team2) || 0
-        if (s1 > s2) team1Wins++
-        else if (s2 > s1) team2Wins++
+        if (s1 > s2) t1++
+        else if (s2 > s1) t2++
     }
-    if (team1Wins > team2Wins) return 'team1'
-    if (team2Wins > team1Wins) return 'team2'
+    if (t1 > t2) return 'team1'
+    if (t2 > t1) return 'team2'
     return null
 }
 
-export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
+export function MatchGameTable({ matchGame, members, clubId }: MatchGameTableProps) {
+    const [isPending, startTransition] = useTransition()
     const [matchStates, setMatchStates] = useState<MatchStates>(() => {
         const initial: MatchStates = {}
         for (const match of matchGame.matches) {
@@ -69,26 +71,6 @@ export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
         }
         return initial
     })
-
-    useEffect(() => {
-        const stored = getStoredMatchGameById(matchGame.id)
-        if (!stored) return
-        setMatchStates((prev) => {
-            const merged = { ...prev }
-            for (const match of stored.matches) {
-                if (match.result) {
-                    merged[match.id] = {
-                        sets: match.result.sets.map((s) => ({
-                            team1: String(s.team1),
-                            team2: String(s.team2),
-                        })),
-                        confirmed: true,
-                    }
-                }
-            }
-            return merged
-        })
-    }, [matchGame.id])
 
     const userMap = new Map(members.map((m) => [m.id, m.nickname]))
 
@@ -123,28 +105,23 @@ export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
     }
 
     function confirmScore(matchId: string) {
-        const newStates = {
-            ...matchStates,
-            [matchId]: { ...matchStates[matchId], confirmed: true },
-        }
+        const state = matchStates[matchId]
+        const winnerSide = getWinnerSide(state.sets)
+        if (!winnerSide) return
 
-        const updatedMatches = matchGame.matches.map((m) => {
-            const state = newStates[m.id]
-            if (!state?.confirmed) return m
-            const sets = state.sets.map((s) => ({
-                team1: parseInt(s.team1) || 0,
-                team2: parseInt(s.team2) || 0,
-            }))
-            const winnerSide = getWinner(state.sets)
-            const winnerId =
-                m.matchType === 'singles'
-                    ? winnerSide === 'team1' ? (m.player1Id ?? '') : (m.player2Id ?? '')
-                    : winnerSide ?? 'team1'
-            return { ...m, status: 'finished' as const, result: { sets, winnerId } as MatchResult }
+        const sets = state.sets.map((s) => ({
+            team1: parseInt(s.team1) || 0,
+            team2: parseInt(s.team2) || 0,
+        }))
+
+        setMatchStates((prev) => ({
+            ...prev,
+            [matchId]: { ...prev[matchId], confirmed: true },
+        }))
+
+        startTransition(async () => {
+            await saveMatchResultAction(clubId, matchGame.id, matchId, sets, winnerSide)
         })
-        saveMatchGame({ ...matchGame, matches: updatedMatches })
-
-        setMatchStates(newStates)
     }
 
     function editScore(matchId: string) {
@@ -178,7 +155,7 @@ export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
                             : getTeamNames(match.team2)
 
                         const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
-                        const winner = state.confirmed ? getWinner(state.sets) : null
+                        const winner = state.confirmed ? getWinnerSide(state.sets) : null
 
                         return (
                             <TableRow key={match.id}>
@@ -232,6 +209,7 @@ export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
                                                 size="icon"
                                                 className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10"
                                                 onClick={() => confirmScore(match.id)}
+                                                disabled={isPending}
                                             >
                                                 <Check className="w-3.5 h-3.5" />
                                             </Button>
@@ -239,23 +217,15 @@ export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => editScore(match.id)}
-                                        >
-                                            <Pencil className="w-3.5 h-3.5" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-destructive hover:text-destructive"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() => editScore(match.id)}
+                                        disabled={isPending}
+                                    >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         )
