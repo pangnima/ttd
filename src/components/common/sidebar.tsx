@@ -15,7 +15,7 @@ type SidebarProps = {
 export function Sidebar({ currentPath }: SidebarProps) {
     const pathname = usePathname()
     const activePath = currentPath ?? pathname
-    const [tournamentHref, setTournamentHref] = useState<string | null>(null)
+    const [matchGameHref, setMatchGameHref] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -31,7 +31,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
                 .limit(1)
                 .maybeSingle()
             if (isMounted && data) {
-                setTournamentHref(`/clubs/${data.club_id}/tournaments`)
+                setMatchGameHref(`/clubs/${data.club_id}/match-games`)
             }
         })
 
@@ -71,12 +71,12 @@ export function Sidebar({ currentPath }: SidebarProps) {
                 ))}
 
                 {/* 동적 대진표 링크 */}
-                {tournamentHref && (
+                {matchGameHref && (
                     <Link
-                        href={tournamentHref}
+                        href={matchGameHref}
                         className={cn(
                             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                            activePath.includes('/tournaments')
+                            activePath.includes('/match-games')
                                 ? 'bg-white/10 text-foreground'
                                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                         )}

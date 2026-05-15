@@ -45,7 +45,7 @@ export default async function DashboardPage() {
         fetchPendingMembersByOwner(user.id),
     ])
 
-    // Week 9에서 tournament_games 연결 예정 — 현재 빈 배열
+    // Week 9에서 match_game_matches 연결 예정 — 현재 빈 배열
     const myMatches = getMatchesByUser([], me.id)
     const stats = calcPlayerStats([], me.id)
     const h2h = calcHeadToHead([], me.id)

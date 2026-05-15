@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 export function MobileNav() {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
-    const [tournamentHref, setTournamentHref] = useState<string | null>(null)
+    const [matchGameHref, setMatchGameHref] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -28,7 +28,7 @@ export function MobileNav() {
                 .limit(1)
                 .maybeSingle()
             if (isMounted && data) {
-                setTournamentHref(`/clubs/${data.club_id}/tournaments`)
+                setMatchGameHref(`/clubs/${data.club_id}/match-games`)
             }
         })
 
@@ -70,13 +70,13 @@ export function MobileNav() {
                     ))}
 
                     {/* 동적 대진표 링크 */}
-                    {tournamentHref && (
+                    {matchGameHref && (
                         <Link
-                            href={tournamentHref}
+                            href={matchGameHref}
                             onClick={() => setOpen(false)}
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                                pathname.includes('/tournaments')
+                                pathname.includes('/match-games')
                                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                     : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                             )}

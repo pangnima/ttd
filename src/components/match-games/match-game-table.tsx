@@ -13,15 +13,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pencil, Trash2, Check } from 'lucide-react'
-import { getStoredTournamentById, saveTournament } from '@/lib/store/tournament-store'
-import type { GameResult, MatchType, Tournament, User } from '@/types'
+import { getStoredMatchGameById, saveMatchGame } from '@/lib/store/match-game-store'
+import type { MatchResult, MatchType, MatchGame, User } from '@/types'
 
 type SetScore = { team1: string; team2: string }
-type GameState = { sets: SetScore[]; confirmed: boolean }
-type GameStates = Record<string, GameState>
+type MatchState = { sets: SetScore[]; confirmed: boolean }
+type MatchStates = Record<string, MatchState>
 
-type TournamentTableProps = {
-    tournament: Tournament
+type MatchGameTableProps = {
+    matchGame: MatchGame
     members: User[]
 }
 
@@ -53,32 +53,32 @@ function getWinner(sets: SetScore[]): 'team1' | 'team2' | null {
     return null
 }
 
-export function TournamentTable({ tournament, members }: TournamentTableProps) {
-    const [gameStates, setGameStates] = useState<GameStates>(() => {
-        const initial: GameStates = {}
-        for (const game of tournament.games) {
-            if (game.result) {
-                const firstSet = game.result.sets[0]
-                initial[game.id] = {
+export function MatchGameTable({ matchGame, members }: MatchGameTableProps) {
+    const [matchStates, setMatchStates] = useState<MatchStates>(() => {
+        const initial: MatchStates = {}
+        for (const match of matchGame.matches) {
+            if (match.result) {
+                const firstSet = match.result.sets[0]
+                initial[match.id] = {
                     sets: [{ team1: String(firstSet?.team1 ?? ''), team2: String(firstSet?.team2 ?? '') }],
                     confirmed: true,
                 }
             } else {
-                initial[game.id] = { sets: [{ team1: '', team2: '' }], confirmed: false }
+                initial[match.id] = { sets: [{ team1: '', team2: '' }], confirmed: false }
             }
         }
         return initial
     })
 
     useEffect(() => {
-        const stored = getStoredTournamentById(tournament.id)
+        const stored = getStoredMatchGameById(matchGame.id)
         if (!stored) return
-        setGameStates((prev) => {
+        setMatchStates((prev) => {
             const merged = { ...prev }
-            for (const game of stored.games) {
-                if (game.result) {
-                    merged[game.id] = {
-                        sets: game.result.sets.map((s) => ({
+            for (const match of stored.matches) {
+                if (match.result) {
+                    merged[match.id] = {
+                        sets: match.result.sets.map((s) => ({
                             team1: String(s.team1),
                             team2: String(s.team2),
                         })),
@@ -88,7 +88,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
             }
             return merged
         })
-    }, [tournament.id])
+    }, [matchGame.id])
 
     const userMap = new Map(members.map((m) => [m.id, m.nickname]))
 
@@ -102,59 +102,57 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
     }
 
     function getCourtLabel(courtId: string): string {
-        return tournament.courts.find((c) => c.id === courtId)?.label ?? courtId
+        return matchGame.courts.find((c) => c.id === courtId)?.label ?? courtId
     }
 
     function getTimeSlot(timeSlotId: string): string {
-        for (const round of tournament.rounds) {
+        for (const round of matchGame.rounds) {
             const ts = round.timeSlots.find((t) => t.id === timeSlotId)
             if (ts) return `${ts.startAt} ~ ${ts.endAt}`
         }
         return timeSlotId
     }
 
-    function updateScore(gameId: string, setIndex: number, field: 'team1' | 'team2', value: string) {
-        setGameStates((prev) => {
-            const state = prev[gameId]
+    function updateScore(matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) {
+        setMatchStates((prev) => {
+            const state = prev[matchId]
             const sets = [...state.sets]
             sets[setIndex] = { ...sets[setIndex], [field]: value }
-            return { ...prev, [gameId]: { ...state, sets } }
+            return { ...prev, [matchId]: { ...state, sets } }
         })
     }
 
-    function confirmScore(gameId: string) {
+    function confirmScore(matchId: string) {
         const newStates = {
-            ...gameStates,
-            [gameId]: { ...gameStates[gameId], confirmed: true },
+            ...matchStates,
+            [matchId]: { ...matchStates[matchId], confirmed: true },
         }
 
-        const updatedGames = tournament.games.map((g) => {
-            const state = newStates[g.id]
-            if (!state?.confirmed) return g
+        const updatedMatches = matchGame.matches.map((m) => {
+            const state = newStates[m.id]
+            if (!state?.confirmed) return m
             const sets = state.sets.map((s) => ({
                 team1: parseInt(s.team1) || 0,
                 team2: parseInt(s.team2) || 0,
             }))
             const winnerSide = getWinner(state.sets)
             const winnerId =
-                g.matchType === 'singles'
-                    ? winnerSide === 'team1' ? (g.player1Id ?? '') : (g.player2Id ?? '')
+                m.matchType === 'singles'
+                    ? winnerSide === 'team1' ? (m.player1Id ?? '') : (m.player2Id ?? '')
                     : winnerSide ?? 'team1'
-            return { ...g, status: 'finished' as const, result: { sets, winnerId } as GameResult }
+            return { ...m, status: 'finished' as const, result: { sets, winnerId } as MatchResult }
         })
-        saveTournament({ ...tournament, games: updatedGames })
+        saveMatchGame({ ...matchGame, matches: updatedMatches })
 
-        setGameStates(newStates)
+        setMatchStates(newStates)
     }
 
-    function editScore(gameId: string) {
-        setGameStates((prev) => ({
+    function editScore(matchId: string) {
+        setMatchStates((prev) => ({
             ...prev,
-            [gameId]: { ...prev[gameId], confirmed: false },
+            [matchId]: { ...prev[matchId], confirmed: false },
         }))
     }
-
-    const sortedGames = tournament.games
 
     return (
         <div className="rounded-md border">
@@ -171,28 +169,28 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {sortedGames.map((game) => {
-                        const player1 = game.matchType === 'singles'
-                            ? getName(game.player1Id ?? '')
-                            : getTeamNames(game.team1)
-                        const player2 = game.matchType === 'singles'
-                            ? getName(game.player2Id ?? '')
-                            : getTeamNames(game.team2)
+                    {matchGame.matches.map((match) => {
+                        const player1 = match.matchType === 'singles'
+                            ? getName(match.player1Id ?? '')
+                            : getTeamNames(match.team1)
+                        const player2 = match.matchType === 'singles'
+                            ? getName(match.player2Id ?? '')
+                            : getTeamNames(match.team2)
 
-                        const state = gameStates[game.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
+                        const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
                         const winner = state.confirmed ? getWinner(state.sets) : null
 
                         return (
-                            <TableRow key={game.id}>
+                            <TableRow key={match.id}>
                                 <TableCell className="text-sm font-medium">
-                                    {getCourtLabel(game.courtId)}
+                                    {getCourtLabel(match.courtId)}
                                 </TableCell>
                                 <TableCell className="text-xs text-muted-foreground">
-                                    {getTimeSlot(game.timeSlotId)}
+                                    {getTimeSlot(match.timeSlotId)}
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={MATCH_TYPE_VARIANTS[game.matchType]} className="text-xs px-1.5">
-                                        {MATCH_TYPE_LABELS[game.matchType]}
+                                    <Badge variant={MATCH_TYPE_VARIANTS[match.matchType]} className="text-xs px-1.5">
+                                        {MATCH_TYPE_LABELS[match.matchType]}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team1' ? 'font-semibold text-primary' : ''}`}>
@@ -217,7 +215,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
                                             <Input
                                                 type="text"
                                                 value={state.sets[0].team1}
-                                                onChange={(e) => updateScore(game.id, 0, 'team1', e.target.value)}
+                                                onChange={(e) => updateScore(match.id, 0, 'team1', e.target.value)}
                                                 className="h-6 w-10 text-center text-xs px-1"
                                                 placeholder="P1"
                                             />
@@ -225,7 +223,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
                                             <Input
                                                 type="text"
                                                 value={state.sets[0].team2}
-                                                onChange={(e) => updateScore(game.id, 0, 'team2', e.target.value)}
+                                                onChange={(e) => updateScore(match.id, 0, 'team2', e.target.value)}
                                                 className="h-6 w-10 text-center text-xs px-1"
                                                 placeholder="P2"
                                             />
@@ -233,7 +231,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10"
-                                                onClick={() => confirmScore(game.id)}
+                                                onClick={() => confirmScore(match.id)}
                                             >
                                                 <Check className="w-3.5 h-3.5" />
                                             </Button>
@@ -246,7 +244,7 @@ export function TournamentTable({ tournament, members }: TournamentTableProps) {
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7"
-                                            onClick={() => editScore(game.id)}
+                                            onClick={() => editScore(match.id)}
                                         >
                                             <Pencil className="w-3.5 h-3.5" />
                                         </Button>

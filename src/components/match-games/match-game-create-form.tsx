@@ -16,14 +16,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { PlayerSelect } from '@/components/tournaments/player-select'
+import { PlayerSelect } from '@/components/match-games/player-select'
 import { cn } from '@/lib/utils'
-import { saveTournament } from '@/lib/store/tournament-store'
+import { saveMatchGame } from '@/lib/store/match-game-store'
 import { getMembersByClubId } from '@/lib/store/club-member-store'
 import { getGuestPlayers, saveGuestPlayer } from '@/lib/store/guest-player-store'
 import { getUserById } from '@/lib/dummy/users'
 import { Plus, Trash2 } from 'lucide-react'
-import type { Court, Game, MatchType, Round, TimeSlot, Tournament, User } from '@/types'
+import type { Court, Match, MatchType, Round, TimeSlot, MatchGame, User } from '@/types'
 
 const genId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 
@@ -41,7 +41,7 @@ const MATCH_TYPE_VARIANTS: Record<MatchType, 'default' | 'secondary' | 'outline'
     mixed_doubles: 'destructive',
 }
 
-type SimpleGameEntry = {
+type SimpleMatchEntry = {
     id: string
     courtLabel: string
     startAt: string
@@ -53,15 +53,15 @@ type SimpleGameEntry = {
     team2: [string, string]
 }
 
-type TournamentCreateFormProps = {
+type MatchGameCreateFormProps = {
     clubId: string
 }
 
-export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
+export function MatchGameCreateForm({ clubId }: MatchGameCreateFormProps) {
     const router = useRouter()
     const [name, setName] = useState('')
     const [date, setDate] = useState('')
-    const [games, setGames] = useState<SimpleGameEntry[]>([])
+    const [entries, setEntries] = useState<SimpleMatchEntry[]>([])
     const [allPlayers, setAllPlayers] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,11 +83,11 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
         return guest.id
     }
 
-    const addGame = () => {
-        setGames((prev) => [
+    const addEntry = () => {
+        setEntries((prev) => [
             ...prev,
             {
-                id: genId('game'),
+                id: genId('match'),
                 courtLabel: '1코트',
                 startAt: '09:00',
                 endAt: '09:30',
@@ -100,18 +100,18 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
         ])
     }
 
-    const updateGame = (id: string, patch: Partial<SimpleGameEntry>) =>
-        setGames((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch } : g)))
+    const updateEntry = (id: string, patch: Partial<SimpleMatchEntry>) =>
+        setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)))
 
-    const removeGame = (id: string) => setGames((prev) => prev.filter((g) => g.id !== id))
+    const removeEntry = (id: string) => setEntries((prev) => prev.filter((e) => e.id !== id))
 
-    const updateTeamPlayer = (gameId: string, team: 'team1' | 'team2', index: 0 | 1, userId: string) => {
-        setGames((prev) =>
-            prev.map((g) => {
-                if (g.id !== gameId) return g
-                const t = [...g[team]] as [string, string]
+    const updateTeamPlayer = (entryId: string, team: 'team1' | 'team2', index: 0 | 1, userId: string) => {
+        setEntries((prev) =>
+            prev.map((e) => {
+                if (e.id !== entryId) return e
+                const t = [...e[team]] as [string, string]
                 t[index] = userId
-                return { ...g, [team]: t }
+                return { ...e, [team]: t }
             })
         )
     }
@@ -121,76 +121,74 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
 
         if (!name.trim()) { setError('대진표 이름을 입력해주세요.'); return }
         if (!date) { setError('날짜를 입력해주세요.'); return }
-        if (games.length === 0) { setError('게임을 1개 이상 추가해주세요.'); return }
+        if (entries.length === 0) { setError('게임을 1개 이상 추가해주세요.'); return }
 
-        for (const g of games) {
-            if (!g.courtLabel.trim()) { setError('모든 게임의 코트를 입력해주세요.'); return }
-            if (!g.startAt || !g.endAt) { setError('모든 게임의 시간을 입력해주세요.'); return }
-            if (g.matchType === 'singles') {
-                if (!g.player1Id || !g.player2Id) { setError('모든 게임의 선수를 선택해주세요.'); return }
-                if (g.player1Id === g.player2Id) { setError('같은 선수를 두 번 선택할 수 없습니다.'); return }
+        for (const e of entries) {
+            if (!e.courtLabel.trim()) { setError('모든 게임의 코트를 입력해주세요.'); return }
+            if (!e.startAt || !e.endAt) { setError('모든 게임의 시간을 입력해주세요.'); return }
+            if (e.matchType === 'singles') {
+                if (!e.player1Id || !e.player2Id) { setError('모든 게임의 선수를 선택해주세요.'); return }
+                if (e.player1Id === e.player2Id) { setError('같은 선수를 두 번 선택할 수 없습니다.'); return }
             } else {
-                if (!g.team1[0] || !g.team2[0]) { setError('모든 게임의 선수를 선택해주세요.'); return }
+                if (!e.team1[0] || !e.team2[0]) { setError('모든 게임의 선수를 선택해주세요.'); return }
             }
         }
 
         setIsSubmitting(true)
 
         const now = Date.now()
-        const tournamentId = `tc-t-${now}`
+        const matchGameId = `tc-mg-${now}`
         const createdAt = new Date().toISOString()
 
-        // 고유 코트 추출
-        const uniqueCourtLabels = [...new Set(games.map((g) => g.courtLabel.trim()))]
+        const uniqueCourtLabels = [...new Set(entries.map((e) => e.courtLabel.trim()))]
         const courts: Court[] = uniqueCourtLabels.map((label, i) => ({
             id: genId('court'),
             label,
             order: i + 1,
         }))
 
-        // 고유 시간 슬롯 추출
         const slotMap = new Map<string, TimeSlot>()
-        for (const g of games) {
-            const key = `${g.startAt}|${g.endAt}`
+        for (const e of entries) {
+            const key = `${e.startAt}|${e.endAt}`
             if (!slotMap.has(key)) {
-                slotMap.set(key, { id: genId('ts'), startAt: g.startAt, endAt: g.endAt })
+                slotMap.set(key, { id: genId('ts'), startAt: e.startAt, endAt: e.endAt })
             }
         }
         const timeSlots = [...slotMap.values()]
 
         const round: Round = { id: genId('round'), label: '1st', order: 1, timeSlots }
 
-        const newGames: Game[] = games.map((g, i) => {
-            const court = courts.find((c) => c.label === g.courtLabel.trim())!
-            const slot = slotMap.get(`${g.startAt}|${g.endAt}`)!
+        const matches: Match[] = entries.map((e, i) => {
+            const court = courts.find((c) => c.label === e.courtLabel.trim())!
+            const slot = slotMap.get(`${e.startAt}|${e.endAt}`)!
             return {
-                id: `tc-g-${now}-${i}`,
-                tournamentId,
+                id: `tc-m-${now}-${i}`,
+                matchGameId,
                 roundId: round.id,
                 courtId: court.id,
                 timeSlotId: slot.id,
-                matchType: g.matchType,
-                ...(g.matchType === 'singles'
-                    ? { player1Id: g.player1Id, player2Id: g.player2Id }
-                    : { team1: g.team1.filter(Boolean), team2: g.team2.filter(Boolean) }),
+                matchType: e.matchType,
+                ...(e.matchType === 'singles'
+                    ? { player1Id: e.player1Id, player2Id: e.player2Id }
+                    : { team1: e.team1.filter(Boolean), team2: e.team2.filter(Boolean) }),
                 status: 'scheduled',
             }
         })
 
-        const tournament: Tournament = {
-            id: tournamentId,
+        const matchGame: MatchGame = {
+            id: matchGameId,
             clubId,
             name: name.trim(),
             date,
             courts,
             rounds: [round],
-            games: newGames,
+            matches,
             isFixed: false,
             createdAt,
         }
 
-        saveTournament(tournament)
-        router.push(`/clubs/${clubId}/tournaments`)
+        saveMatchGame(matchGame)
+        router.push(`/clubs/${clubId}/match-games`)
     }
 
     return (
@@ -223,12 +221,12 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
             <div className="rounded-lg border">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">게임 목록</span>
-                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addGame}>
+                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addEntry}>
                         <Plus className="w-3 h-3" /> 게임 추가
                     </Button>
                 </div>
 
-                {games.length === 0 ? (
+                {entries.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-10">
                         게임 추가 버튼을 눌러 게임을 등록하세요.
                     </p>
@@ -245,15 +243,15 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {games.map((game) => {
-                                const isSingles = game.matchType === 'singles'
+                            {entries.map((entry) => {
+                                const isSingles = entry.matchType === 'singles'
                                 return (
-                                    <TableRow key={game.id} className="align-top">
+                                    <TableRow key={entry.id} className="align-top">
                                         {/* 코트 */}
                                         <TableCell className="pt-3">
                                             <Input
-                                                value={game.courtLabel}
-                                                onChange={(e) => updateGame(game.id, { courtLabel: e.target.value })}
+                                                value={entry.courtLabel}
+                                                onChange={(e) => updateEntry(entry.id, { courtLabel: e.target.value })}
                                                 className="h-8 text-xs w-20"
                                                 placeholder="1코트"
                                             />
@@ -263,15 +261,15 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                         <TableCell className="pt-3">
                                             <div className="flex items-center gap-1">
                                                 <Input
-                                                    value={game.startAt}
-                                                    onChange={(e) => updateGame(game.id, { startAt: e.target.value })}
+                                                    value={entry.startAt}
+                                                    onChange={(e) => updateEntry(entry.id, { startAt: e.target.value })}
                                                     className="h-8 text-xs w-16"
                                                     placeholder="09:00"
                                                 />
                                                 <span className="text-xs text-muted-foreground shrink-0">~</span>
                                                 <Input
-                                                    value={game.endAt}
-                                                    onChange={(e) => updateGame(game.id, { endAt: e.target.value })}
+                                                    value={entry.endAt}
+                                                    onChange={(e) => updateEntry(entry.id, { endAt: e.target.value })}
                                                     className="h-8 text-xs w-16"
                                                     placeholder="09:30"
                                                 />
@@ -281,12 +279,12 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                         {/* 종류 */}
                                         <TableCell className="pt-3">
                                             <Select
-                                                value={game.matchType}
-                                                onValueChange={(v) => updateGame(game.id, { matchType: v as MatchType })}
+                                                value={entry.matchType}
+                                                onValueChange={(v) => updateEntry(entry.id, { matchType: v as MatchType })}
                                             >
                                                 <SelectTrigger className="h-8 text-xs w-20">
-                                                    <Badge variant={MATCH_TYPE_VARIANTS[game.matchType]} className="text-xs px-1.5">
-                                                        {MATCH_TYPE_LABELS[game.matchType]}
+                                                    <Badge variant={MATCH_TYPE_VARIANTS[entry.matchType]} className="text-xs px-1.5">
+                                                        {MATCH_TYPE_LABELS[entry.matchType]}
                                                     </Badge>
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -303,8 +301,8 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                             {isSingles ? (
                                                 <PlayerSelect
                                                     users={allPlayers}
-                                                    value={game.player1Id}
-                                                    onChange={(id) => updateGame(game.id, { player1Id: id })}
+                                                    value={entry.player1Id}
+                                                    onChange={(id) => updateEntry(entry.id, { player1Id: id })}
                                                     placeholder="선수 선택"
                                                     onCreatePlayer={handleCreatePlayer}
                                                 />
@@ -312,15 +310,15 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                                 <div className="space-y-1">
                                                     <PlayerSelect
                                                         users={allPlayers}
-                                                        value={game.team1[0]}
-                                                        onChange={(id) => updateTeamPlayer(game.id, 'team1', 0, id)}
+                                                        value={entry.team1[0]}
+                                                        onChange={(id) => updateTeamPlayer(entry.id, 'team1', 0, id)}
                                                         placeholder="A팀 1번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
                                                     <PlayerSelect
                                                         users={allPlayers}
-                                                        value={game.team1[1]}
-                                                        onChange={(id) => updateTeamPlayer(game.id, 'team1', 1, id)}
+                                                        value={entry.team1[1]}
+                                                        onChange={(id) => updateTeamPlayer(entry.id, 'team1', 1, id)}
                                                         placeholder="A팀 2번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
@@ -333,8 +331,8 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                             {isSingles ? (
                                                 <PlayerSelect
                                                     users={allPlayers}
-                                                    value={game.player2Id}
-                                                    onChange={(id) => updateGame(game.id, { player2Id: id })}
+                                                    value={entry.player2Id}
+                                                    onChange={(id) => updateEntry(entry.id, { player2Id: id })}
                                                     placeholder="선수 선택"
                                                     onCreatePlayer={handleCreatePlayer}
                                                 />
@@ -342,15 +340,15 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                                 <div className="space-y-1">
                                                     <PlayerSelect
                                                         users={allPlayers}
-                                                        value={game.team2[0]}
-                                                        onChange={(id) => updateTeamPlayer(game.id, 'team2', 0, id)}
+                                                        value={entry.team2[0]}
+                                                        onChange={(id) => updateTeamPlayer(entry.id, 'team2', 0, id)}
                                                         placeholder="B팀 1번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
                                                     <PlayerSelect
                                                         users={allPlayers}
-                                                        value={game.team2[1]}
-                                                        onChange={(id) => updateTeamPlayer(game.id, 'team2', 1, id)}
+                                                        value={entry.team2[1]}
+                                                        onChange={(id) => updateTeamPlayer(entry.id, 'team2', 1, id)}
                                                         placeholder="B팀 2번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
@@ -365,7 +363,7 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={() => removeGame(game.id)}
+                                                onClick={() => removeEntry(entry.id)}
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
@@ -385,7 +383,7 @@ export function TournamentCreateForm({ clubId }: TournamentCreateFormProps) {
                     {isSubmitting ? '저장 중...' : '저장하기'}
                 </Button>
                 <Link
-                    href={`/clubs/${clubId}/tournaments`}
+                    href={`/clubs/${clubId}/match-games`}
                     className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 justify-center')}
                 >
                     취소

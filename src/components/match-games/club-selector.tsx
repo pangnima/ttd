@@ -21,7 +21,7 @@ export function ClubSelector({ clubs, currentClubId }: ClubSelectorProps) {
     return (
         <Select
             value={currentClubId}
-            onValueChange={(clubId) => router.push(`/clubs/${clubId}/tournaments`)}
+            onValueChange={(clubId) => router.push(`/clubs/${clubId}/match-games`)}
         >
             <SelectTrigger className="w-56">
                 <SelectValue placeholder="클럽 선택" />

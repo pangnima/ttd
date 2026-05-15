@@ -31,8 +31,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
     const isOwner = myMembership?.role === 'owner'
 
-    // Week 8에서 tournament_games Supabase 연결 예정
-    const ongoingTournaments: { id: string; name: string; date: string }[] = []
+    // Week 8에서 match_game_matches Supabase 연결 예정
+    const ongoingMatchGames: { id: string; name: string; date: string }[] = []
 
     return (
         <div className="w-full max-w-4xl space-y-6">
@@ -77,7 +77,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     </span>
                     <span className="flex items-center gap-1">
                         <Trophy className="w-3.5 h-3.5" />
-                        {ongoingTournaments.length}개 대진표
+                        {ongoingMatchGames.length}개 대진표
                     </span>
                 </div>
             </div>
@@ -89,23 +89,23 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="font-semibold">진행 중인 대진표</h2>
                     <Link
-                        href={`/clubs/${clubId}/tournaments`}
+                        href={`/clubs/${clubId}/match-games`}
                         className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-0.5"
                     >
                         전체보기 <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                 </div>
-                {ongoingTournaments.length > 0 ? (
+                {ongoingMatchGames.length > 0 ? (
                     <ul className="space-y-2">
-                        {ongoingTournaments.map((t) => (
-                            <li key={t.id}>
+                        {ongoingMatchGames.map((mg) => (
+                            <li key={mg.id}>
                                 <Link
-                                    href={`/clubs/${clubId}/tournaments/${t.id}`}
+                                    href={`/clubs/${clubId}/match-games/${mg.id}`}
                                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                                 >
                                     <div>
-                                        <p className="text-sm font-medium">{t.name}</p>
-                                        <p className="text-xs text-muted-foreground">{t.date}</p>
+                                        <p className="text-sm font-medium">{mg.name}</p>
+                                        <p className="text-xs text-muted-foreground">{mg.date}</p>
                                     </div>
                                     <Badge variant="secondary" className="text-xs">진행중</Badge>
                                 </Link>

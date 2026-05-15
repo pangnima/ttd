@@ -61,8 +61,8 @@ export function calcPlayerStats(
         else losses++
 
         for (const set of result.sets) {
-            setsWon  += isP1 ? set.player1 : set.player2
-            setsLost += isP1 ? set.player2 : set.player1
+            setsWon  += isP1 ? set.team1 : set.team2
+            setsLost += isP1 ? set.team2 : set.team1
         }
 
         if (match.matchType) {
@@ -71,8 +71,8 @@ export function calcPlayerStats(
             if (isWin) entry.wins++
             else entry.losses++
             for (const set of result.sets) {
-                entry.setsWon  += isP1 ? set.player1 : set.player2
-                entry.setsLost += isP1 ? set.player2 : set.player1
+                entry.setsWon  += isP1 ? set.team1 : set.team2
+                entry.setsLost += isP1 ? set.team2 : set.team1
             }
             matchTypeMap.set(mt, entry)
         }
@@ -107,12 +107,12 @@ export function calcHeadToHead(matches: Match[], userId: string): HeadToHead[] {
 
     for (const match of myMatches) {
         const opponentId = match.player1Id === userId ? match.player2Id : match.player1Id
-        const entry = map.get(opponentId) ?? { opponentId, wins: 0, losses: 0 }
+        const entry = map.get(opponentId ?? '') ?? { opponentId: opponentId ?? '', wins: 0, losses: 0 }
 
         if (match.result!.winnerId === userId) entry.wins++
         else entry.losses++
 
-        map.set(opponentId, entry)
+        map.set(opponentId ?? '', entry)
     }
 
     return Array.from(map.values()).sort((a, b) => b.wins + b.losses - (a.wins + a.losses))

@@ -32,7 +32,7 @@ export type ClubMember = {
     joinedAt: string
 }
 
-// ── 대진표 ─────────────────────────────────────────
+// ── 대진표(MatchGame) ────────────────────────────────
 
 export type MatchType = 'singles' | 'men_doubles' | 'women_doubles' | 'mixed_doubles'
 
@@ -55,14 +55,14 @@ export type Court = {
     order: number
 }
 
-export type GameResult = {
+export type MatchResult = {
     sets: Array<{ team1: number; team2: number }>
-    winnerId: string  // 단식: player1Id or player2Id / 복식: 'team1' or 'team2'
+    winnerId: string  // 단식: player1Id or player2Id / 복식: 'team1' | 'team2'
 }
 
-export type Game = {
+export type Match = {
     id: string
-    tournamentId: string
+    matchGameId: string
     roundId: string
     courtId: string
     timeSlotId: string
@@ -72,41 +72,17 @@ export type Game = {
     team1?: string[]      // 복식 [userId, userId]
     team2?: string[]      // 복식 [userId, userId]
     status: 'scheduled' | 'finished'
-    result?: GameResult
+    result?: MatchResult
 }
 
-export type Tournament = {
+export type MatchGame = {
     id: string
     clubId: string
     name: string
     date: string          // "2025-04-12"
     courts: Court[]
     rounds: Round[]
-    games: Game[]
+    matches: Match[]
     isFixed: boolean
     createdAt: string
-}
-
-// ── 기존 경기 통계용 (stats.ts / profile / dashboard) ─────
-
-export type MatchResult = {
-    matchId: string
-    sets: Array<{ player1: number; player2: number }>
-    winnerId: string
-}
-
-export type Match = {
-    id: string
-    tournamentId: string
-    player1Id: string
-    player2Id: string
-    round: number
-    status: 'scheduled' | 'finished'
-    result?: MatchResult
-    court?: number
-    startAt?: string
-    endAt?: string
-    player1Team?: string[]
-    player2Team?: string[]
-    matchType?: MatchType
 }

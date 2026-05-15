@@ -1,21 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TournamentTable } from '@/components/tournaments/tournament-table'
+import { MatchGameTable } from '@/components/match-games/match-game-table'
 import { getStoredClubs } from '@/lib/store/club-store'
-import { getStoredTournamentById } from '@/lib/store/tournament-store'
+import { getStoredMatchGameById } from '@/lib/store/match-game-store'
 import { getMembersByClubId, getMembershipStatus } from '@/lib/store/club-member-store'
 import { createClient } from '@/lib/supabase/client'
 import { getUserById } from '@/lib/dummy/users'
-import type { Tournament, User } from '@/types'
+import type { MatchGame, User } from '@/types'
 
-type TournamentDetailContentProps = {
+type MatchGameDetailContentProps = {
     clubId: string
-    tournamentId: string
+    matchGameId: string
 }
 
-export function TournamentDetailContent({ clubId, tournamentId }: TournamentDetailContentProps) {
-    const [tournament, setTournament] = useState<Tournament | null>(null)
+export function MatchGameDetailContent({ clubId, matchGameId }: MatchGameDetailContentProps) {
+    const [matchGame, setMatchGame] = useState<MatchGame | null>(null)
     const [members, setMembers] = useState<User[]>([])
     const [isNotFound, setIsNotFound] = useState(false)
 
@@ -39,12 +39,12 @@ export function TournamentDetailContent({ clubId, tournamentId }: TournamentDeta
                 return
             }
 
-            const found = getStoredTournamentById(tournamentId)
+            const found = getStoredMatchGameById(matchGameId)
             if (!found) {
                 setIsNotFound(true)
                 return
             }
-            setTournament(found)
+            setMatchGame(found)
 
             const memberRecords = getMembersByClubId(clubId)
             const memberUsers = memberRecords
@@ -52,7 +52,7 @@ export function TournamentDetailContent({ clubId, tournamentId }: TournamentDeta
                 .filter((u): u is User => u !== undefined)
             setMembers(memberUsers)
         })
-    }, [clubId, tournamentId])
+    }, [clubId, matchGameId])
 
     if (isNotFound) {
         return (
@@ -62,7 +62,7 @@ export function TournamentDetailContent({ clubId, tournamentId }: TournamentDeta
         )
     }
 
-    if (!tournament) {
+    if (!matchGame) {
         return (
             <div className="text-center py-16">
                 <p className="text-sm text-muted-foreground">불러오는 중...</p>
@@ -73,11 +73,11 @@ export function TournamentDetailContent({ clubId, tournamentId }: TournamentDeta
     return (
         <div className="space-y-4">
             <div>
-                <h1 className="text-2xl font-bold">{tournament.name}</h1>
-                <p className="text-sm text-muted-foreground mt-1">{tournament.date}</p>
+                <h1 className="text-2xl font-bold">{matchGame.name}</h1>
+                <p className="text-sm text-muted-foreground mt-1">{matchGame.date}</p>
             </div>
-            <TournamentTable
-                tournament={tournament}
+            <MatchGameTable
+                matchGame={matchGame}
                 members={members}
             />
         </div>

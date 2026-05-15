@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ClubSelector } from '@/components/tournaments/club-selector'
-import { TournamentTable } from '@/components/tournaments/tournament-table'
+import { ClubSelector } from '@/components/match-games/club-selector'
+import { MatchGameTable } from '@/components/match-games/match-game-table'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -19,25 +19,25 @@ import {
 import { cn } from '@/lib/utils'
 import { getStoredClubs } from '@/lib/store/club-store'
 import { dummyClubs } from '@/lib/dummy/clubs'
-import { getStoredTournamentsByClubId, deleteStoredTournament } from '@/lib/store/tournament-store'
+import { getStoredMatchGamesByClubId, deleteStoredMatchGame } from '@/lib/store/match-game-store'
 import { getMembersByClubId, getJoinedClubIds, getMembershipStatus } from '@/lib/store/club-member-store'
 import { getGuestPlayers } from '@/lib/store/guest-player-store'
 import { createClient } from '@/lib/supabase/client'
 import { getUserById } from '@/lib/dummy/users'
 import { Plus, Calendar, Trophy, ChevronRight, Trash2, Lock } from 'lucide-react'
-import type { Club, Tournament, User } from '@/types'
+import type { Club, MatchGame, User } from '@/types'
 
-type TournamentsPageContentProps = {
+type MatchGamesPageContentProps = {
     clubId: string
 }
 
-export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) {
+export function MatchGamesPageContent({ clubId }: MatchGamesPageContentProps) {
     const [club, setClub] = useState<Club | null>(null)
     const [myClubs, setMyClubs] = useState<Club[]>([])
-    const [storedTournaments, setStoredTournaments] = useState<Tournament[]>([])
+    const [storedMatchGames, setStoredMatchGames] = useState<MatchGame[]>([])
     const [allMembers, setAllMembers] = useState<User[]>([])
     const [isMember, setIsMember] = useState<boolean | null>(null)
-    const [deleteTarget, setDeleteTarget] = useState<Tournament | null>(null)
+    const [deleteTarget, setDeleteTarget] = useState<MatchGame | null>(null)
 
     const loadData = useCallback(async () => {
         const stored = getStoredClubs()
@@ -66,23 +66,23 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
         const newGuests = guests.filter((g) => !seen.has(g.id))
         setAllMembers([...memberUsers, ...newGuests])
 
-        setStoredTournaments(getStoredTournamentsByClubId(clubId))
+        setStoredMatchGames(getStoredMatchGamesByClubId(clubId))
     }, [clubId])
 
     useEffect(() => { loadData() }, [loadData])
 
-    const storedIds = new Set(storedTournaments.map((t) => t.id))
+    const storedIds = new Set(storedMatchGames.map((mg) => mg.id))
 
-    const allTournaments = storedTournaments
+    const allMatchGames = storedMatchGames
         .slice()
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    const latestTournament = allTournaments[0] ?? null
-    const olderTournaments = allTournaments.slice(1)
+    const latestMatchGame = allMatchGames[0] ?? null
+    const olderMatchGames = allMatchGames.slice(1)
 
     function handleDelete() {
         if (!deleteTarget) return
-        deleteStoredTournament(deleteTarget.id)
+        deleteStoredMatchGame(deleteTarget.id)
         setDeleteTarget(null)
         loadData()
     }
@@ -127,7 +127,7 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
                     {club && <p className="text-sm text-muted-foreground mt-1">{club.name}</p>}
                 </div>
                 <Link
-                    href={`/clubs/${clubId}/tournaments/new`}
+                    href={`/clubs/${clubId}/match-games/new`}
                     className={cn(buttonVariants({ size: 'sm' }), 'gap-1.5')}
                 >
                     <Plus className="w-4 h-4" />
@@ -135,7 +135,7 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
                 </Link>
             </div>
 
-            {allTournaments.length === 0 ? (
+            {allMatchGames.length === 0 ? (
                 <div className="text-center py-16 border rounded-lg border-dashed">
                     <Trophy className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
                     <p className="text-sm text-muted-foreground">아직 대진표가 없습니다.</p>
@@ -148,20 +148,20 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">최신 대진표</span>
                             <Link
-                                href={`/clubs/${clubId}/tournaments/${latestTournament!.id}`}
+                                href={`/clubs/${clubId}/match-games/${latestMatchGame!.id}`}
                                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 상세 보기 →
                             </Link>
                         </div>
-                        <TournamentTable
-                            tournament={latestTournament!}
+                        <MatchGameTable
+                            matchGame={latestMatchGame!}
                             members={allMembers}
                         />
                     </div>
 
                     {/* 이전 대진표 카드 목록 */}
-                    {olderTournaments.length > 0 && (
+                    {olderMatchGames.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <div className="h-px flex-1 bg-border" />
@@ -169,22 +169,22 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
                                 <div className="h-px flex-1 bg-border" />
                             </div>
                             <div className="space-y-2">
-                                {olderTournaments.map((t) => (
-                                    <div key={t.id} className="flex items-center gap-2">
-                                        <Link href={`/clubs/${clubId}/tournaments/${t.id}`} className="flex-1 min-w-0">
+                                {olderMatchGames.map((mg) => (
+                                    <div key={mg.id} className="flex items-center gap-2">
+                                        <Link href={`/clubs/${clubId}/match-games/${mg.id}`} className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
                                                 <div className="w-9 h-9 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
                                                     <Trophy className="w-4 h-4 text-amber-400" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm truncate">{t.name}</p>
+                                                    <p className="font-medium text-sm truncate">{mg.name}</p>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
                                                         <Calendar className="w-3 h-3 text-muted-foreground" />
-                                                        <span className="text-xs text-muted-foreground">{t.date}</span>
+                                                        <span className="text-xs text-muted-foreground">{mg.date}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    {t.isFixed ? (
+                                                    {mg.isFixed ? (
                                                         <Badge variant="secondary" className="text-xs">확정</Badge>
                                                     ) : (
                                                         <Badge variant="outline" className="text-xs">진행중</Badge>
@@ -193,12 +193,12 @@ export function TournamentsPageContent({ clubId }: TournamentsPageContentProps) 
                                                 </div>
                                             </div>
                                         </Link>
-                                        {storedIds.has(t.id) && (
+                                        {storedIds.has(mg.id) && (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="shrink-0 text-muted-foreground hover:text-destructive"
-                                                onClick={() => setDeleteTarget(t)}
+                                                onClick={() => setDeleteTarget(mg)}
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
