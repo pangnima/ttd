@@ -12,8 +12,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Pencil, Check } from 'lucide-react'
-import { saveMatchResultAction } from '@/lib/actions/match-games'
+import { Pencil, Check, Trophy } from 'lucide-react'
+import { saveMatchResultAction, confirmMatchGameAction } from '@/lib/actions/match-games'
 import type { MatchType, MatchGame, User } from '@/types'
 
 type SetScore = { team1: string; team2: string }
@@ -24,6 +24,7 @@ type MatchGameTableProps = {
     matchGame: MatchGame
     members: User[]
     clubId: string
+    isOwner?: boolean
 }
 
 const MATCH_TYPE_LABELS: Record<MatchType, string> = {
@@ -54,7 +55,7 @@ function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | null {
     return null
 }
 
-export function MatchGameTable({ matchGame, members, clubId }: MatchGameTableProps) {
+export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: MatchGameTableProps) {
     const [isPending, startTransition] = useTransition()
     const [matchStates, setMatchStates] = useState<MatchStates>(() => {
         const initial: MatchStates = {}
@@ -131,7 +132,20 @@ export function MatchGameTable({ matchGame, members, clubId }: MatchGameTablePro
         }))
     }
 
+    function handleConfirmMatchGame() {
+        startTransition(async () => {
+            await confirmMatchGameAction(clubId, matchGame.id)
+        })
+    }
+
+    const allConfirmed = matchGame.matches.length > 0 &&
+        matchGame.matches.every((m) => matchStates[m.id]?.confirmed === true)
+
+    const canConfirm = isOwner && allConfirmed && !matchGame.isFixed
+    const canEdit = !matchGame.isFixed || isOwner
+
     return (
+        <div className="space-y-3">
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
@@ -170,20 +184,20 @@ export function MatchGameTable({ matchGame, members, clubId }: MatchGameTablePro
                                         {MATCH_TYPE_LABELS[match.matchType]}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team1' ? 'font-semibold text-primary' : ''}`}>
+                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
                                     {player1}
                                 </TableCell>
-                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team2' ? 'font-semibold text-primary' : ''}`}>
+                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
                                     {player2}
                                 </TableCell>
                                 <TableCell>
                                     {state.confirmed ? (
                                         <div className="flex items-center gap-1.5 text-sm font-mono">
-                                            <span className={winner === 'team1' ? 'font-bold text-primary' : 'text-muted-foreground'}>
+                                            <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
                                                 {state.sets[0].team1}
                                             </span>
                                             <span className="text-xs text-muted-foreground">:</span>
-                                            <span className={winner === 'team2' ? 'font-bold text-primary' : 'text-muted-foreground'}>
+                                            <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
                                                 {state.sets[0].team2}
                                             </span>
                                         </div>
@@ -217,21 +231,37 @@ export function MatchGameTable({ matchGame, members, clubId }: MatchGameTablePro
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => editScore(match.id)}
-                                        disabled={isPending}
-                                    >
-                                        <Pencil className="w-3.5 h-3.5" />
-                                    </Button>
+                                    {canEdit && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => editScore(match.id)}
+                                            disabled={isPending}
+                                        >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         )
                     })}
                 </TableBody>
             </Table>
+        </div>
+        {canConfirm && (
+            <div className="flex justify-end">
+                <Button
+                    size="sm"
+                    onClick={handleConfirmMatchGame}
+                    disabled={isPending}
+                    className="gap-1.5"
+                >
+                    <Trophy className="w-4 h-4" />
+                    결과 확정
+                </Button>
+            </div>
+        )}
         </div>
     )
 }

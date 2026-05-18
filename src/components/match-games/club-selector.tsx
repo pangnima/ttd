@@ -17,6 +17,7 @@ type ClubSelectorProps = {
 
 export function ClubSelector({ clubs, currentClubId }: ClubSelectorProps) {
     const router = useRouter()
+    const currentClub = clubs.find(c => c.id === currentClubId)
 
     return (
         <Select
@@ -24,7 +25,9 @@ export function ClubSelector({ clubs, currentClubId }: ClubSelectorProps) {
             onValueChange={(clubId) => router.push(`/clubs/${clubId}/match-games`)}
         >
             <SelectTrigger className="w-56">
-                <SelectValue placeholder="클럽 선택" />
+                <SelectValue placeholder="클럽 선택">
+                    {currentClub?.name ?? '클럽 선택'}
+                </SelectValue>
             </SelectTrigger>
             <SelectContent>
                 {clubs.map((club) => (

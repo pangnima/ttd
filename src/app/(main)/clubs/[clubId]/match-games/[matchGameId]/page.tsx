@@ -24,5 +24,7 @@ export default async function MatchGameDetailPage({ params }: MatchGameDetailPag
     if (membership?.status !== 'approved') redirect(`/clubs/${clubId}`)
     if (!matchGame) notFound()
 
-    return <MatchGameDetailContent matchGame={matchGame} members={members} />
+    const isOwner = membership?.role === 'owner'
+
+    return <MatchGameDetailContent matchGame={matchGame} members={members} isOwner={isOwner} />
 }

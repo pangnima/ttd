@@ -24,6 +24,15 @@ export default async function MatchGamesPage({ params }: MatchGamesPageProps) {
     ])
 
     const isMember = membership?.status === 'approved'
+    const isOwner = membership?.role === 'owner'
+
+    // 현재 클럽이 내 클럽 목록에 없으면 ClubSelector에 UUID가 표시되므로 병합
+    const isInMyClubs = myClubs.some(c => c.id === clubId)
+    const clubsForSelector = isInMyClubs
+        ? myClubs
+        : club
+            ? [club, ...myClubs]
+            : myClubs
 
     return (
         <MatchGamesPageContent
@@ -32,7 +41,8 @@ export default async function MatchGamesPage({ params }: MatchGamesPageProps) {
             matchGames={matchGames}
             members={members}
             isMember={isMember}
-            myClubs={myClubs}
+            myClubs={clubsForSelector}
+            isOwner={isOwner ?? false}
         />
     )
 }

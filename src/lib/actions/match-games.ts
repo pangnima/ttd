@@ -110,6 +110,39 @@ export async function saveMatchResultAction(
     return { ok: true }
 }
 
+// MatchGame 결과 확정 (클럽장 전용: is_fixed = true)
+export async function confirmMatchGameAction(
+    clubId: string,
+    matchGameId: string
+): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
+
+    const { data: membership } = await supabase
+        .from('club_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('club_id', clubId)
+        .eq('status', 'approved')
+        .maybeSingle()
+
+    if (membership?.role !== 'owner') {
+        return { ok: false, error: '클럽장만 결과를 확정할 수 있습니다.' }
+    }
+
+    const { error } = await supabase
+        .from('match_games')
+        .update({ is_fixed: true })
+        .eq('id', matchGameId)
+
+    if (error) return { ok: false, error: error.message }
+
+    revalidatePath(`/clubs/${clubId}/match-games`)
+    revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
+    return { ok: true }
+}
+
 // 게스트 플레이어 추가: RPC로 users + club_members 트랜잭션
 export async function addGuestPlayerAction(
     clubId: string,

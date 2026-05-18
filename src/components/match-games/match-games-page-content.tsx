@@ -29,6 +29,7 @@ type MatchGamesPageContentProps = {
     members: User[]
     isMember: boolean
     myClubs: Club[]
+    isOwner: boolean
 }
 
 export function MatchGamesPageContent({
@@ -38,6 +39,7 @@ export function MatchGamesPageContent({
     members,
     isMember,
     myClubs,
+    isOwner,
 }: MatchGamesPageContentProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -115,7 +117,7 @@ export function MatchGamesPageContent({
                                 상세 보기 →
                             </Link>
                         </div>
-                        <MatchGameTable matchGame={latestMatchGame!} members={members} clubId={clubId} />
+                        <MatchGameTable matchGame={latestMatchGame!} members={members} clubId={clubId} isOwner={isOwner} />
                     </div>
 
                     {olderMatchGames.length > 0 && (
@@ -142,7 +144,7 @@ export function MatchGamesPageContent({
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {mg.isFixed ? (
-                                                        <Badge variant="secondary" className="text-xs">확정</Badge>
+                                                        <Badge variant="default" className="text-xs">완료된 경기</Badge>
                                                     ) : (
                                                         <Badge variant="outline" className="text-xs">진행중</Badge>
                                                     )}

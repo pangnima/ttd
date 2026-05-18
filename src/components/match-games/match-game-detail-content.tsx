@@ -6,9 +6,10 @@ import type { MatchGame, User } from '@/types'
 type MatchGameDetailContentProps = {
     matchGame: MatchGame
     members: User[]
+    isOwner: boolean
 }
 
-export function MatchGameDetailContent({ matchGame, members }: MatchGameDetailContentProps) {
+export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGameDetailContentProps) {
     return (
         <div className="space-y-4">
             <div>
@@ -19,6 +20,7 @@ export function MatchGameDetailContent({ matchGame, members }: MatchGameDetailCo
                 matchGame={matchGame}
                 members={members}
                 clubId={matchGame.clubId}
+                isOwner={isOwner}
             />
         </div>
     )
