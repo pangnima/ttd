@@ -11,6 +11,7 @@ export type User = {
     ntrp: number
     tennisStartDate: string
     createdAt: string
+    isGuest: boolean
 }
 
 export type Club = {
@@ -57,7 +58,7 @@ export type Court = {
 
 export type MatchResult = {
     sets: Array<{ team1: number; team2: number }>
-    winnerId: 'team1' | 'team2'  // 단·복식 공통 규약: 이긴 쪽 'team1' 또는 'team2'
+    winnerId: 'team1' | 'team2' | 'draw'
 }
 
 export type Match = {
@@ -71,6 +72,8 @@ export type Match = {
     player2Id?: string    // 단식
     team1?: string[]      // 복식 [userId, userId]
     team2?: string[]      // 복식 [userId, userId]
+    team1AdPlayerId?: string   // 복식: team1 중 애드코트 선수 ID
+    team2AdPlayerId?: string   // 복식: team2 중 애드코트 선수 ID
     status: 'scheduled' | 'finished'
     result?: MatchResult
 }

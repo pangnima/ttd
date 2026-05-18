@@ -103,7 +103,7 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
                             className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1"
                         >
                             {user.nickname}
-                            {user.id.startsWith('guest-') && (
+                            {user.isGuest && (
                                 <span className="text-xs text-muted-foreground">(게스트)</span>
                             )}
                         </button>

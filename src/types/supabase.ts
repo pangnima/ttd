@@ -135,7 +135,9 @@ export type Database = {
           round_id: string
           status: string
           team1: string[] | null
+          team1_ad_player_id: string | null
           team2: string[] | null
+          team2_ad_player_id: string | null
           time_slot_id: string
           winner_id: string | null
         }
@@ -150,7 +152,9 @@ export type Database = {
           round_id: string
           status?: string
           team1?: string[] | null
+          team1_ad_player_id?: string | null
           team2?: string[] | null
+          team2_ad_player_id?: string | null
           time_slot_id: string
           winner_id?: string | null
         }
@@ -165,7 +169,9 @@ export type Database = {
           round_id?: string
           status?: string
           team1?: string[] | null
+          team1_ad_player_id?: string | null
           team2?: string[] | null
+          team2_ad_player_id?: string | null
           time_slot_id?: string
           winner_id?: string | null
         }
@@ -203,6 +209,20 @@ export type Database = {
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "match_game_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_game_matches_team1_ad_player_id_fkey"
+            columns: ["team1_ad_player_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_game_matches_team2_ad_player_id_fkey"
+            columns: ["team2_ad_player_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -357,7 +377,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_match_participations: {
+        Row: {
+          match_id: string | null
+          match_type: string | null
+          result: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_guest_player: {
@@ -375,6 +403,17 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_head_to_head: {
+        Args: { p_user_id: string }
+        Returns: {
+          draws: number
+          losses: number
+          matches: number
+          opponent_id: string
+          wins: number
+        }[]
+      }
+      get_user_match_stats: { Args: { p_user_id: string }; Returns: Json }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
@@ -382,6 +421,17 @@ export type Database = {
       is_club_owner: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
+      }
+      update_match_game: {
+        Args: {
+          p_courts: Json
+          p_date: string
+          p_match_game_id: string
+          p_matches: Json
+          p_name: string
+          p_rounds: Json
+        }
+        Returns: string
       }
     }
     Enums: {

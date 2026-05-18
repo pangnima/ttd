@@ -13,12 +13,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pencil, Check, Trophy } from 'lucide-react'
-import { saveMatchResultAction, confirmMatchGameAction } from '@/lib/actions/match-games'
+import { saveMatchResultAction, confirmMatchGameAction, saveCourtSidesAction } from '@/lib/actions/match-games'
 import type { MatchType, MatchGame, User } from '@/types'
 
 type SetScore = { team1: string; team2: string }
 type MatchState = { sets: SetScore[]; confirmed: boolean }
 type MatchStates = Record<string, MatchState>
+type CourtSideState = Record<string, { team1: string | null; team2: string | null }>
 
 type MatchGameTableProps = {
     matchGame: MatchGame
@@ -41,18 +42,21 @@ const MATCH_TYPE_VARIANTS: Record<MatchType, 'default' | 'secondary' | 'outline'
     mixed_doubles: 'destructive',
 }
 
-function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | null {
+function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | 'draw' | null {
     let t1 = 0
     let t2 = 0
+    let hasInput = false
     for (const set of sets) {
-        const s1 = parseInt(set.team1) || 0
-        const s2 = parseInt(set.team2) || 0
-        if (s1 > s2) t1++
-        else if (s2 > s1) t2++
+        const s1 = parseInt(set.team1)
+        const s2 = parseInt(set.team2)
+        if (!Number.isNaN(s1) || !Number.isNaN(s2)) hasInput = true
+        if ((isNaN(s1) ? 0 : s1) > (isNaN(s2) ? 0 : s2)) t1++
+        else if ((isNaN(s2) ? 0 : s2) > (isNaN(s1) ? 0 : s1)) t2++
     }
+    if (!hasInput) return null
     if (t1 > t2) return 'team1'
     if (t2 > t1) return 'team2'
-    return null
+    return 'draw'
 }
 
 export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: MatchGameTableProps) {
@@ -68,6 +72,16 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                 }
             } else {
                 initial[match.id] = { sets: [{ team1: '', team2: '' }], confirmed: false }
+            }
+        }
+        return initial
+    })
+    const [courtSides, setCourtSides] = useState<CourtSideState>(() => {
+        const initial: CourtSideState = {}
+        for (const match of matchGame.matches) {
+            initial[match.id] = {
+                team1: match.team1AdPlayerId ?? null,
+                team2: match.team2AdPlayerId ?? null,
             }
         }
         return initial
@@ -108,7 +122,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
     function confirmScore(matchId: string) {
         const state = matchStates[matchId]
         const winnerSide = getWinnerSide(state.sets)
-        if (!winnerSide) return
+        if (winnerSide === null) return
 
         const sets = state.sets.map((s) => ({
             team1: parseInt(s.team1) || 0,
@@ -130,6 +144,16 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
             ...prev,
             [matchId]: { ...prev[matchId], confirmed: false },
         }))
+    }
+
+    function toggleAdSide(matchId: string, teamKey: 'team1' | 'team2', playerId: string) {
+        const current = courtSides[matchId]
+        const newAdId = current[teamKey] === playerId ? null : playerId
+        const nextSides = { ...current, [teamKey]: newAdId }
+        setCourtSides((prev) => ({ ...prev, [matchId]: nextSides }))
+        startTransition(async () => {
+            await saveCourtSidesAction(clubId, matchGame.id, matchId, nextSides.team1, nextSides.team2)
+        })
     }
 
     function handleConfirmMatchGame() {
@@ -156,7 +180,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                         <TableHead className="w-36">플레이어 1</TableHead>
                         <TableHead className="w-36">플레이어 2</TableHead>
                         <TableHead>스코어</TableHead>
-                        <TableHead className="w-16 text-right">관리</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -184,22 +207,95 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                         {MATCH_TYPE_LABELS[match.matchType]}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
-                                    {player1}
-                                </TableCell>
-                                <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
-                                    {player2}
-                                </TableCell>
+                                {match.matchType === 'singles' ? (
+                                    <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                        {player1}
+                                    </TableCell>
+                                ) : (
+                                    <TableCell className="text-sm">
+                                        <div className="space-y-1">
+                                            {(match.team1 ?? []).map((pid) => {
+                                                const isAd = courtSides[match.id]?.team1 === pid
+                                                return (
+                                                    <div key={pid} className="flex items-center gap-1.5">
+                                                        <span className={`truncate max-w-[72px] ${winner === 'team1' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                                            {getName(pid)}
+                                                        </span>
+                                                        {!matchGame.isFixed ? (
+                                                            <button
+                                                                onClick={() => toggleAdSide(match.id, 'team1', pid)}
+                                                                disabled={isPending}
+                                                                className={`text-[10px] px-1 py-0.5 rounded border shrink-0 leading-none ${isAd ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'}`}
+                                                            >
+                                                                {isAd ? '애드(백)' : '듀스(포)'}
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-[10px] text-muted-foreground shrink-0">
+                                                                {isAd ? '애드(백)' : '듀스(포)'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </TableCell>
+                                )}
+                                {match.matchType === 'singles' ? (
+                                    <TableCell className={`text-sm max-w-36 truncate transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                        {player2}
+                                    </TableCell>
+                                ) : (
+                                    <TableCell className="text-sm">
+                                        <div className="space-y-1">
+                                            {(match.team2 ?? []).map((pid) => {
+                                                const isAd = courtSides[match.id]?.team2 === pid
+                                                return (
+                                                    <div key={pid} className="flex items-center gap-1.5">
+                                                        <span className={`truncate max-w-[72px] ${winner === 'team2' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                                            {getName(pid)}
+                                                        </span>
+                                                        {!matchGame.isFixed ? (
+                                                            <button
+                                                                onClick={() => toggleAdSide(match.id, 'team2', pid)}
+                                                                disabled={isPending}
+                                                                className={`text-[10px] px-1 py-0.5 rounded border shrink-0 leading-none ${isAd ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'}`}
+                                                            >
+                                                                {isAd ? '애드(백)' : '듀스(포)'}
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-[10px] text-muted-foreground shrink-0">
+                                                                {isAd ? '애드(백)' : '듀스(포)'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </TableCell>
+                                )}
                                 <TableCell>
                                     {state.confirmed ? (
-                                        <div className="flex items-center gap-1.5 text-sm font-mono">
-                                            <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
-                                                {state.sets[0].team1}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">:</span>
-                                            <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
-                                                {state.sets[0].team2}
-                                            </span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1.5 text-sm font-mono">
+                                                <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
+                                                    {state.sets[0].team1}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">:</span>
+                                                <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-muted-foreground/50'}>
+                                                    {state.sets[0].team2}
+                                                </span>
+                                            </div>
+                                            {canEdit && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 shrink-0"
+                                                    onClick={() => editScore(match.id)}
+                                                    disabled={isPending}
+                                                >
+                                                    <Pencil className="w-3 h-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
@@ -228,19 +324,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                 <Check className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {canEdit && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => editScore(match.id)}
-                                            disabled={isPending}
-                                        >
-                                            <Pencil className="w-3.5 h-3.5" />
-                                        </Button>
                                     )}
                                 </TableCell>
                             </TableRow>

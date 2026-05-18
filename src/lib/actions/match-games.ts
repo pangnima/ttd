@@ -4,21 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Court, Match, MatchType, Round } from '@/types'
 
-type ActionResult = { ok: false; error: string } | { ok: true }
-
-// MatchGame 생성: RPC로 단일 트랜잭션 저장
-export async function createMatchGameAction(
-    clubId: string,
-    name: string,
-    date: string,
-    courts: Court[],
-    rounds: Round[],
-    matches: Match[]
-): Promise<ActionResult & { matchGameId?: string }> {
-    const supabase = await createClient()
-    const { data: { user }, error: authErr } = await supabase.auth.getUser()
-    if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
-
+function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[]) {
     const courtsPayload = courts.map((c) => ({
         temp_id: c.id,
         label: c.label,
@@ -46,6 +32,26 @@ export async function createMatchGameAction(
         team1: m.team1 ?? [],
         team2: m.team2 ?? [],
     }))
+
+    return { courtsPayload, roundsPayload, matchesPayload }
+}
+
+type ActionResult = { ok: false; error: string } | { ok: true }
+
+// MatchGame 생성: RPC로 단일 트랜잭션 저장
+export async function createMatchGameAction(
+    clubId: string,
+    name: string,
+    date: string,
+    courts: Court[],
+    rounds: Round[],
+    matches: Match[]
+): Promise<ActionResult & { matchGameId?: string }> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
+
+    const { courtsPayload, roundsPayload, matchesPayload } = buildMatchGamePayload(courts, rounds, matches)
 
     const { data, error } = await supabase.rpc('create_match_game', {
         p_club_id: clubId,
@@ -88,7 +94,7 @@ export async function saveMatchResultAction(
     matchGameId: string,
     matchId: string,
     sets: Array<{ team1: number; team2: number }>,
-    winnerId: string
+    winnerId: 'team1' | 'team2' | 'draw'
 ): Promise<ActionResult> {
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
@@ -107,6 +113,32 @@ export async function saveMatchResultAction(
 
     revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
     revalidatePath('/dashboard')
+    return { ok: true }
+}
+
+// 복식 코트 배치 저장 (애드코트/듀스코트 선수 ID)
+export async function saveCourtSidesAction(
+    clubId: string,
+    matchGameId: string,
+    matchId: string,
+    team1AdPlayerId: string | null,
+    team2AdPlayerId: string | null
+): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase
+        .from('match_game_matches')
+        .update({
+            team1_ad_player_id: team1AdPlayerId,
+            team2_ad_player_id: team2AdPlayerId,
+        })
+        .eq('id', matchId)
+
+    if (error) return { ok: false, error: error.message }
+
+    revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
     return { ok: true }
 }
 
@@ -162,4 +194,41 @@ export async function addGuestPlayerAction(
     if (error) return { ok: false, error: error.message }
 
     return { ok: true, userId: data as string }
+}
+
+// MatchGame 수정: 결과 미입력 상태에서만 전체 재구성 (RPC 트랜잭션)
+export async function updateMatchGameAction(
+    clubId: string,
+    matchGameId: string,
+    name: string,
+    date: string,
+    courts: Court[],
+    rounds: Round[],
+    matches: Match[]
+): Promise<ActionResult & { matchGameId?: string }> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
+
+    const { courtsPayload, roundsPayload, matchesPayload } = buildMatchGamePayload(courts, rounds, matches)
+
+    const { data, error } = await supabase.rpc('update_match_game', {
+        p_match_game_id: matchGameId,
+        p_name: name,
+        p_date: date,
+        p_courts: courtsPayload,
+        p_rounds: roundsPayload,
+        p_matches: matchesPayload,
+    })
+
+    if (error) {
+        const msg = error.message.includes('has_results')        ? '결과가 입력된 경기가 있어 수정할 수 없습니다.'
+                  : error.message.includes('match_game_fixed')   ? '이미 확정된 대진표는 수정할 수 없습니다.'
+                  : error.message.includes('not_owner')          ? '클럽장만 수정할 수 있습니다.'
+                  : error.message
+        return { ok: false, error: msg }
+    }
+
+    revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
+    return { ok: true, matchGameId: data as string }
 }

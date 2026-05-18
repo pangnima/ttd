@@ -18,9 +18,9 @@ import {
 } from '@/components/ui/table'
 import { PlayerSelect } from '@/components/match-games/player-select'
 import { cn } from '@/lib/utils'
-import { createMatchGameAction, addGuestPlayerAction } from '@/lib/actions/match-games'
+import { createMatchGameAction, updateMatchGameAction, addGuestPlayerAction } from '@/lib/actions/match-games'
 import { Plus, Trash2 } from 'lucide-react'
-import type { Court, Match, MatchType, Round, TimeSlot, User } from '@/types'
+import type { Court, Match, MatchGame, MatchType, Round, TimeSlot, User } from '@/types'
 
 const genId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 
@@ -53,14 +53,40 @@ type SimpleMatchEntry = {
 type MatchGameCreateFormProps = {
     clubId: string
     members: User[]
+    initialData?: MatchGame
 }
 
-export function MatchGameCreateForm({ clubId, members: initialMembers }: MatchGameCreateFormProps) {
+function matchGameToEntries(matchGame: MatchGame): SimpleMatchEntry[] {
+    return matchGame.matches.map((m) => {
+        const court = matchGame.courts.find((c) => c.id === m.courtId)
+        let startAt = ''
+        let endAt = ''
+        for (const round of matchGame.rounds) {
+            const ts = round.timeSlots.find((t) => t.id === m.timeSlotId)
+            if (ts) { startAt = ts.startAt; endAt = ts.endAt; break }
+        }
+        return {
+            id: m.id,
+            courtLabel: court?.label ?? '',
+            startAt,
+            endAt,
+            matchType: m.matchType,
+            player1Id: m.player1Id ?? '',
+            player2Id: m.player2Id ?? '',
+            team1: (m.team1 ?? ['', '']) as [string, string],
+            team2: (m.team2 ?? ['', '']) as [string, string],
+        }
+    })
+}
+
+export function MatchGameCreateForm({ clubId, members: initialMembers, initialData }: MatchGameCreateFormProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [name, setName] = useState('')
-    const [date, setDate] = useState('')
-    const [entries, setEntries] = useState<SimpleMatchEntry[]>([])
+    const [name, setName] = useState(initialData?.name ?? '')
+    const [date, setDate] = useState(initialData?.date ?? '')
+    const [entries, setEntries] = useState<SimpleMatchEntry[]>(() =>
+        initialData ? matchGameToEntries(initialData) : []
+    )
     const [allPlayers, setAllPlayers] = useState<User[]>(initialMembers)
     const [error, setError] = useState<string | null>(null)
 
@@ -83,6 +109,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers }: MatchGa
                 ntrp: 0,
                 tennisStartDate: '',
                 createdAt: new Date().toISOString(),
+                isGuest: true,
             }
             setAllPlayers((prev) => [...prev, guest])
         })
@@ -176,7 +203,9 @@ export function MatchGameCreateForm({ clubId, members: initialMembers }: MatchGa
         })
 
         startTransition(async () => {
-            const result = await createMatchGameAction(clubId, name.trim(), date, courts, [round], matches)
+            const result = initialData
+                ? await updateMatchGameAction(clubId, initialData.id, name.trim(), date, courts, [round], matches)
+                : await createMatchGameAction(clubId, name.trim(), date, courts, [round], matches)
             if (!result.ok) {
                 setError(result.error)
                 return
@@ -361,7 +390,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers }: MatchGa
 
             <div className="flex gap-2">
                 <Button type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">
-                    {isPending ? '저장 중...' : '저장하기'}
+                    {isPending ? '저장 중...' : initialData ? '수정 저장' : '저장하기'}
                 </Button>
                 <Link
                     href={`/clubs/${clubId}/match-games`}
