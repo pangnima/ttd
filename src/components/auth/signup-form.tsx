@@ -2,9 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import Image from 'next/image'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { signupAction } from '@/lib/actions/auth'
 
 const inputCls = [
@@ -20,6 +18,8 @@ const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-w
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    const [gender, setGender] = useState('male')
+    const [hand, setHand] = useState('right')
 
     function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
@@ -80,38 +80,46 @@ export function SignupForm() {
             <div className="h-px bg-white/5" />
 
             {/* 성별 + 주력손 */}
+            <input type="hidden" name="gender" value={gender} />
+            <input type="hidden" name="dominant_hand" value={hand} />
             <div className="grid grid-cols-2 gap-3">
                 <div>
                     <p className={labelCls}>성별</p>
-                    <RadioGroup name="gender" defaultValue="male" className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
                         {[{ value: 'male', label: '남성' }, { value: 'female', label: '여성' }].map(({ value, label }) => (
-                            <div key={value}>
-                                <RadioGroupItem value={value} id={`gender-${value}`} className="peer sr-only" />
-                                <Label
-                                    htmlFor={`gender-${value}`}
-                                    className="flex justify-center py-2 text-xs border border-white/15 rounded-md text-white/50 cursor-pointer transition-colors peer-data-[state=checked]:border-white/50 peer-data-[state=checked]:bg-white/10 peer-data-[state=checked]:text-white hover:border-white/30 hover:text-white/80"
-                                >
-                                    {label}
-                                </Label>
-                            </div>
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => setGender(value)}
+                                className={`py-2 text-xs rounded-md border transition-all ${
+                                    gender === value
+                                        ? 'border-cyan-400/70 bg-cyan-400/15 text-cyan-300 font-semibold'
+                                        : 'border-white/15 text-white/50 hover:border-white/30 hover:text-white/75'
+                                }`}
+                            >
+                                {label}
+                            </button>
                         ))}
-                    </RadioGroup>
+                    </div>
                 </div>
                 <div>
                     <p className={labelCls}>주력손</p>
-                    <RadioGroup name="dominant_hand" defaultValue="right" className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
                         {[{ value: 'right', label: '오른손' }, { value: 'left', label: '왼손' }].map(({ value, label }) => (
-                            <div key={value}>
-                                <RadioGroupItem value={value} id={`hand-${value}`} className="peer sr-only" />
-                                <Label
-                                    htmlFor={`hand-${value}`}
-                                    className="flex justify-center py-2 text-xs border border-white/15 rounded-md text-white/50 cursor-pointer transition-colors peer-data-[state=checked]:border-white/50 peer-data-[state=checked]:bg-white/10 peer-data-[state=checked]:text-white hover:border-white/30 hover:text-white/80"
-                                >
-                                    {label}
-                                </Label>
-                            </div>
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => setHand(value)}
+                                className={`py-2 text-xs rounded-md border transition-all ${
+                                    hand === value
+                                        ? 'border-cyan-400/70 bg-cyan-400/15 text-cyan-300 font-semibold'
+                                        : 'border-white/15 text-white/50 hover:border-white/30 hover:text-white/75'
+                                }`}
+                            >
+                                {label}
+                            </button>
                         ))}
-                    </RadioGroup>
+                    </div>
                 </div>
             </div>
 
