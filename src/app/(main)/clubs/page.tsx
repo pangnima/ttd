@@ -11,11 +11,14 @@ export default async function ClubsPage() {
 
     const [allClubs, membershipRows] = await Promise.all([
         fetchAllClubs(),
-        supabase.from('club_members').select('club_id, status').eq('user_id', user.id),
+        supabase.from('club_members').select('club_id, status, role').eq('user_id', user.id),
     ])
 
-    const membershipMap = new Map<string, ClubMember['status']>(
-        membershipRows.data?.map((m) => [m.club_id, m.status as ClubMember['status']]) ?? []
+    const membershipMap = new Map<string, { status: ClubMember['status'], role: ClubMember['role'] }>(
+        membershipRows.data?.map((m) => [
+            m.club_id,
+            { status: m.status as ClubMember['status'], role: m.role as ClubMember['role'] }
+        ]) ?? []
     )
 
     return <ClubsPageContent allClubs={allClubs} membershipMap={membershipMap} />

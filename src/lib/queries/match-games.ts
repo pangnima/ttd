@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
 import type { Court, Match, MatchGame, MatchResult, MatchType, Round, TimeSlot, User } from '@/types'
+import { mapUserRow } from '@/lib/queries/users'
 
 type MatchGameRow       = Database['public']['Tables']['match_games']['Row']
 type CourtRow           = Database['public']['Tables']['match_game_courts']['Row']
@@ -32,7 +33,7 @@ function mapMatchRow(row: MatchRow): Match {
     let result: MatchResult | undefined
     if (row.result_sets && row.winner_id) {
         const sets = (row.result_sets as Array<{ team1: number; team2: number }>)
-        result = { sets, winnerId: row.winner_id as 'team1' | 'team2' }
+        result = { sets, winnerId: row.winner_id as 'team1' | 'team2' | 'draw' }
     }
     return {
         id: row.id,
@@ -45,6 +46,8 @@ function mapMatchRow(row: MatchRow): Match {
         player2Id: row.player2_id ?? undefined,
         team1: row.team1 ?? undefined,
         team2: row.team2 ?? undefined,
+        team1AdPlayerId: row.team1_ad_player_id ?? undefined,
+        team2AdPlayerId: row.team2_ad_player_id ?? undefined,
         status: row.status as Match['status'],
         result,
     }
@@ -70,22 +73,6 @@ function mapMatchGameRow(
     }
 }
 
-export function mapUserRow(row: UserRow): User {
-    return {
-        id: row.id,
-        email: row.email,
-        name: row.name,
-        nickname: row.nickname,
-        role: row.role as User['role'],
-        profileImage: row.profile_image ?? undefined,
-        phone: row.phone ?? '',
-        gender: (row.gender ?? 'male') as User['gender'],
-        dominantHand: (row.dominant_hand ?? 'right') as User['dominantHand'],
-        ntrp: row.ntrp ?? 0,
-        tennisStartDate: row.tennis_start_date ?? '',
-        createdAt: row.created_at,
-    }
-}
 
 export async function fetchMatchGamesByClubId(clubId: string): Promise<MatchGame[]> {
     const supabase = await createClient()

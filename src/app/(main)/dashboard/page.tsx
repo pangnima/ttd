@@ -10,36 +10,18 @@ import { PendingMembersCard } from '@/components/clubs/pending-members-card'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyClubs, fetchPendingMembersByOwner } from '@/lib/queries/clubs'
 import { fetchMatchesByUser } from '@/lib/queries/match-games'
-import { calcPlayerStats, calcHeadToHead, getMatchesByUser } from '@/lib/stats'
+import { fetchUserById, fetchUsersByIds } from '@/lib/queries/users'
+import { fetchUserMatchStats, fetchUserHeadToHead } from '@/lib/queries/stats'
+import { getMatchesByUser } from '@/lib/stats'
 import { Users, Trophy, ChevronRight, Award, Calendar, Shield } from 'lucide-react'
-import type { User } from '@/types'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const { data: meRow } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-    if (!meRow) redirect('/login')
-
-    const me: User = {
-        id: meRow.id,
-        email: meRow.email,
-        name: meRow.name,
-        nickname: meRow.nickname,
-        role: meRow.role as User['role'],
-        profileImage: meRow.profile_image ?? undefined,
-        phone: meRow.phone ?? '',
-        gender: (meRow.gender ?? 'male') as User['gender'],
-        dominantHand: (meRow.dominant_hand ?? 'right') as User['dominantHand'],
-        ntrp: meRow.ntrp ?? 0,
-        tennisStartDate: meRow.tennis_start_date ?? '',
-        createdAt: meRow.created_at,
-    }
+    const me = await fetchUserById(user.id)
+    if (!me) redirect('/login')
 
     const [myClubs, pendingEntries, allMatches] = await Promise.all([
         fetchMyClubs(user.id),
@@ -49,14 +31,21 @@ export default async function DashboardPage() {
 
     const myMatches = getMatchesByUser(allMatches, me.id)
 
-    const singlesMatches = myMatches.filter((m) => m.matchType === 'singles')
-    const doublesMatches = myMatches.filter((m) => m.matchType !== 'singles')
+    const [{ singles: singlesStats, doubles: doublesStats }, h2h] = await Promise.all([
+        fetchUserMatchStats(me.id),
+        fetchUserHeadToHead(me.id),
+    ])
 
-    const singlesStats = calcPlayerStats(singlesMatches, me.id)
-    const doublesStats = calcPlayerStats(doublesMatches, me.id)
-    const h2h = calcHeadToHead(allMatches, me.id)
+    const opponentIds = [...new Set(
+        allMatches.flatMap((m) => [
+            m.player1Id, m.player2Id,
+            ...(m.team1 ?? []), ...(m.team2 ?? []),
+        ]).filter((id): id is string => !!id && id !== me.id)
+    )]
+    const opponentUsers = await fetchUsersByIds(opponentIds)
+    const userMap = new Map(opponentUsers.map((u) => [u.id, u]))
 
-    const totalMatches = myMatches.length
+    const totalMatches = singlesStats.totalMatches + doublesStats.totalMatches
     const totalWins = singlesStats.wins + doublesStats.wins
     const totalWinRate = totalMatches === 0 ? 0 : Math.round((totalWins / totalMatches) * 100)
 
@@ -144,7 +133,7 @@ export default async function DashboardPage() {
                             <CardTitle className="text-sm font-medium">최근 경기</CardTitle>
                         </CardHeader>
                         <CardContent className="px-4 pb-4">
-                            <RecentMatches matches={myMatches} userId={me.id} />
+                            <RecentMatches matches={myMatches} userId={me.id} userMap={userMap} />
                         </CardContent>
                     </Card>
                 </div>
@@ -199,7 +188,7 @@ export default async function DashboardPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="px-4 pb-4">
-                            <HeadToHeadTable records={h2h} />
+                            <HeadToHeadTable records={h2h} userMap={userMap} />
                         </CardContent>
                     </Card>
 

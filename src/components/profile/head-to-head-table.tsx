@@ -6,14 +6,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { getUserById } from '@/lib/dummy/users'
 import type { HeadToHead } from '@/lib/stats'
+import type { User } from '@/types'
 
 type HeadToHeadTableProps = {
     records: HeadToHead[]
+    userMap: Map<string, User>
 }
 
-export function HeadToHeadTable({ records }: HeadToHeadTableProps) {
+export function HeadToHeadTable({ records, userMap }: HeadToHeadTableProps) {
     if (records.length === 0) {
         return (
             <p className="text-sm text-muted-foreground text-center py-6 border rounded-lg">
@@ -30,14 +31,15 @@ export function HeadToHeadTable({ records }: HeadToHeadTableProps) {
                         <TableHead>상대</TableHead>
                         <TableHead className="text-center">승</TableHead>
                         <TableHead className="text-center">패</TableHead>
+                        <TableHead className="text-center">무</TableHead>
                         <TableHead className="text-center">승률</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {records.map((r) => {
-                        const opponent = getUserById(r.opponentId)
-                        const total = r.wins + r.losses
-                        const rate = total === 0 ? 0 : Math.round((r.wins / total) * 100)
+                        const opponent = userMap.get(r.opponentId)
+                        const decisive = r.wins + r.losses
+                        const rate = decisive === 0 ? 0 : Math.round((r.wins / decisive) * 100)
                         return (
                             <TableRow key={r.opponentId}>
                                 <TableCell className="font-medium">
@@ -48,6 +50,9 @@ export function HeadToHeadTable({ records }: HeadToHeadTableProps) {
                                 </TableCell>
                                 <TableCell className="text-center text-muted-foreground">
                                     {r.losses}
+                                </TableCell>
+                                <TableCell className="text-center text-muted-foreground">
+                                    {r.draws}
                                 </TableCell>
                                 <TableCell className="text-center text-sm">
                                     {rate}%

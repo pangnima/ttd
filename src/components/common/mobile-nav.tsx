@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { navItems } from '@/lib/nav-items'
+import { mainNavItems, settingNavItem } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 
 export function MobileNav() {
@@ -45,14 +45,16 @@ export function MobileNav() {
             >
                 <Menu className="w-5 h-5" />
             </SheetTrigger>
-            <SheetContent side="left" className="w-56 p-0">
+            <SheetContent side="left" className="w-56 p-0 flex flex-col">
                 <SheetHeader className="px-4 py-4 border-b">
                     <SheetTitle className="text-base font-semibold text-left">
                         🎾 테니스 클럽
                     </SheetTitle>
                 </SheetHeader>
-                <nav className="p-3 space-y-1">
-                    {navItems.map(({ href, label, icon: Icon }) => (
+
+                {/* 메인 네비게이션 */}
+                <nav className="flex-1 p-3 space-y-1">
+                    {mainNavItems.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}
                             href={href}
@@ -69,7 +71,7 @@ export function MobileNav() {
                         </Link>
                     ))}
 
-                    {/* 동적 대진표 링크 */}
+                    {/* 대진표: 가입 클럽 있을 때 클럽리스트 바로 아래 노출 */}
                     {matchGameHref && (
                         <Link
                             href={matchGameHref}
@@ -86,6 +88,23 @@ export function MobileNav() {
                         </Link>
                     )}
                 </nav>
+
+                {/* 설정 — 하단 고정 */}
+                <div className="p-3 border-t">
+                    <Link
+                        href={settingNavItem.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                            'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                            pathname === settingNavItem.href
+                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        )}
+                    >
+                        <settingNavItem.icon className="w-4 h-4" />
+                        {settingNavItem.label}
+                    </Link>
+                </div>
             </SheetContent>
         </Sheet>
     )

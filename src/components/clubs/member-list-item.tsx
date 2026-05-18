@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { GuestBadge } from '@/components/common/guest-badge'
 import type { ClubMember, User } from '@/types'
 
 type MemberListItemProps = {
@@ -29,11 +30,8 @@ export function MemberListItem({ member, user, wins, losses }: MemberListItemPro
     const totalMatches = (wins ?? 0) + (losses ?? 0)
     const winRate = totalMatches === 0 ? null : Math.round(((wins ?? 0) / totalMatches) * 100)
 
-    return (
-        <Link
-            href={`/profile/${user.id}`}
-            className="flex items-center gap-3 py-3 px-4 hover:bg-muted/30 transition-colors"
-        >
+    const inner = (
+        <>
             <Avatar className="w-9 h-9 shrink-0">
                 <AvatarFallback className="text-sm">
                     {user.name[0]}
@@ -43,6 +41,7 @@ export function MemberListItem({ member, user, wins, losses }: MemberListItemPro
                 <div className="flex items-center gap-1.5">
                     <p className="text-sm font-medium">{user.name}</p>
                     <span className="text-xs text-muted-foreground">({user.nickname})</span>
+                    {user.isGuest && <GuestBadge />}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-xs text-muted-foreground">
@@ -66,6 +65,23 @@ export function MemberListItem({ member, user, wins, losses }: MemberListItemPro
                     {roleLabel[member.role]}
                 </Badge>
             </div>
+        </>
+    )
+
+    if (user.isGuest) {
+        return (
+            <div className="flex items-center gap-3 py-3 px-4">
+                {inner}
+            </div>
+        )
+    }
+
+    return (
+        <Link
+            href={`/profile/${user.id}`}
+            className="flex items-center gap-3 py-3 px-4 hover:bg-muted/30 transition-colors"
+        >
+            {inner}
         </Link>
     )
 }

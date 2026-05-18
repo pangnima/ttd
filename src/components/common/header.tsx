@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Shield, LogOut } from 'lucide-react'
 
 type UserDisplay = {
+    id: string
     name: string
     nickname: string
     role: string
@@ -34,6 +35,7 @@ export function Header() {
                 .single()
             if (isMounted && data) {
                 setUserDisplay({
+                    id: user.id,
                     name: data.name,
                     nickname: data.nickname,
                     role: data.role,
@@ -67,7 +69,7 @@ export function Header() {
 
                 {userDisplay ? (
                     <div className="flex items-center gap-2">
-                        <div className="hidden sm:flex items-center gap-2">
+                        <Link href={`/profile/${userDisplay.id}`} className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <Avatar className="w-7 h-7">
                                 {userDisplay.profileImage && (
                                     <AvatarImage
@@ -89,7 +91,7 @@ export function Header() {
                                     관리자
                                 </Badge>
                             )}
-                        </div>
+                        </Link>
                         <form action={logoutAction}>
                             <Button
                                 type="submit"

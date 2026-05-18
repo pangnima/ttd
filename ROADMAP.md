@@ -116,24 +116,48 @@
 - [x] `clubs/[clubId]/page.tsx`, `recent-matches.tsx` — 참조 갱신
 - [x] Dead code 제거: `tournament-view.tsx` (import 0건), `match-store.ts` (write 0건)
 
-#### Week 8: 대진표 기능 Supabase 연결
-- [ ] `lib/actions/match-games.ts` 신설 (MatchGame + matches 트랜잭션 저장, RPC 권장)
-- [ ] 대진표 CRUD → Supabase `match_game_matches` 테이블 연동
-- [ ] `match-game-store.ts` 제거 (localStorage → Supabase 교체)
-- [ ] `guest-player-store.ts` 제거 → `public.users` (is_guest=true) 연동
-- [ ] `dummy/users.ts` 제거 — Supabase 쿼리로 교체
-- [ ] `members-content.tsx`, `club-members-preview.tsx` stats 연동 수정
-- [ ] `dashboard/page.tsx` 통계 실제 데이터 연결 (현재 빈 배열 `[]` 하드코딩)
-- [ ] 실시간 경기 결과 반영 (`revalidatePath` 또는 Supabase Realtime 구독)
+#### Week 8: 대진표 기능 Supabase 연결 ✅ (커밋 237b652)
+- [x] `lib/actions/match-games.ts` 신설 (createMatchGameAction, deleteMatchGameAction, saveMatchResultAction, addGuestPlayerAction)
+- [x] `lib/queries/match-games.ts` 신설 (fetchMatchGamesByClubId, fetchMatchGameById, fetchMatchesByUser, fetchClubMembersWithGuests)
+- [x] 대진표 CRUD → Supabase `match_game_matches` 테이블 연동
+- [x] `match-game-store.ts` 제거 (localStorage → Supabase 교체)
+- [x] `guest-player-store.ts` 제거 → `public.users` (is_guest=true) 연동
+- [x] `members-content.tsx`, `club-members-preview.tsx` store 의존성 제거 완료
+- [x] `dashboard/page.tsx` 통계 실제 데이터 연결 (fetchMatchesByUser 연결, 단식/복식 통계 분리)
+- [x] 실시간 경기 결과 반영 (`revalidatePath` 적용)
+- [x] `dummy/users.ts` 제거 — `recent-matches.tsx`, `head-to-head-table.tsx`에서 여전히 사용 중 (Week 9에서 정리)
 
 ### Phase 4: 통계 + 배포 (Week 9)
 
-#### Week 9: 통계 연결 + 배포
-- [ ] `/profile/[userId]` 페이지 구현 (현재 미구현)
-- [ ] 플레이어 통계 → Supabase 쿼리 기반으로 교체 (`stats.ts` 리팩토링)
-  - 클라이언트 `stats.ts` vs PostgreSQL view/RPC — 성능 측정 후 선택
-- [ ] 게스트 선수 최종 모델 확정 (`users.is_guest` 컬럼 방식 검증)
+#### Week 9: 통계 연결 + 배포 (진행 중)
+- [x] `/profile/[userId]` 페이지 구현 (Server Component)
+  - `src/app/(main)/profile/[userId]/page.tsx` 신설
+  - `profile-header.tsx`, `stats-scope-notice.tsx` 컴포넌트 신설
+  - 헤더 아바타 → 프로필 링크 연결
+  - 멤버 카드에서 프로필 진입 동선 확보 (기존 링크 확인)
+- [x] 플레이어 통계 → Supabase 쿼리 기반으로 교체 (`stats.ts` 리팩토링)
+  - 마이그레이션 `0012_user_match_stats_view_and_rpc` 적용
+    - `user_match_participations` view (security_invoker=on)
+    - `get_user_match_stats(p_user_id uuid)` RPC
+    - `get_user_head_to_head(p_user_id uuid)` RPC
+  - `src/lib/queries/stats.ts` 신설 (`fetchUserMatchStats`, `fetchUserHeadToHead`)
+  - `src/lib/stats.ts` 슬림화 (`calcPlayerStats`, `calcHeadToHead` 제거, `getMatchesByUser`만 유지)
+  - `dashboard/page.tsx` → RPC 호출로 교체
+  - **결정 기록**: `winner_id`가 'team1'/'team2' 리터럴이라 SQL 집계가 복잡 → PostgreSQL view로 통일
+- [x] 게스트 선수 최종 모델 확정 (`users.is_guest` 컬럼 방식 검증)
+  - `User` 타입에 `isGuest: boolean` 추가 (`src/types/index.ts`)
+  - `mapUserRow`에서 `is_guest` 매핑 (단일 출처: `src/lib/queries/users.ts`)
+  - `player-select.tsx`의 `id.startsWith('guest-')` 휴리스틱 → `user.isGuest`로 교체
+  - `guest-badge.tsx` 신설, 멤버 리스트/preview에 배지 노출
+  - 게스트는 프로필 링크 비활성화
+- [x] 인프라 정리
+  - `src/lib/queries/users.ts` 신설 (`fetchUserById`, `fetchUsersByIds`, `mapUserRow`)
+  - `clubs.ts`, `match-games.ts`의 중복 `mapUserRow` → `users.ts`에서 import로 통일
+  - `src/lib/dummy/` 디렉토리 전체 삭제 (users.ts, clubs.ts, club-members.ts)
+- [x] `next.config.ts` 이미지 도메인 화이트리스트 추가 (Supabase Storage)
+- [x] 빌드 최적화 확인 (`npm run build`)
+  - TypeScript 에러 없음
+  - 빌드 성공, `/profile/[userId]` Dynamic 라우트 등록 확인
 - [ ] `auth_leaked_password_protection` 활성화 (Supabase Dashboard → Auth → Security)
 - [ ] Vercel 배포 설정 + 환경변수 등록
-- [ ] 빌드 최적화 확인 (`npm run build`)
 - [ ] 도메인 설정 (선택)

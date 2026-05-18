@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge'
-import { getUserById } from '@/lib/dummy/users'
-import type { Match } from '@/types'
+import type { Match, User } from '@/types'
 
 type RecentMatchesProps = {
     matches: Match[]
     userId: string
+    userMap: Map<string, User>
 }
 
 function getIsWin(match: Match, userId: string): boolean {
@@ -18,7 +18,7 @@ function getIsWin(match: Match, userId: string): boolean {
            (winnerId === 'team2' && (match.team2?.includes(userId) ?? false))
 }
 
-export function RecentMatches({ matches, userId }: RecentMatchesProps) {
+export function RecentMatches({ matches, userId, userMap }: RecentMatchesProps) {
     const finished = matches
         .filter((m) => m.status === 'finished' && m.result)
         .slice(-5)
@@ -36,7 +36,7 @@ export function RecentMatches({ matches, userId }: RecentMatchesProps) {
         <div className="space-y-2">
             {finished.map((match) => {
                 const opponentId = (match.player1Id === userId ? match.player2Id : match.player1Id) ?? ''
-                const opponent = getUserById(opponentId)
+                const opponent = userMap.get(opponentId)
                 const isWin = getIsWin(match, userId)
 
                 const sets = match.result!.sets

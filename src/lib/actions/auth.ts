@@ -37,6 +37,7 @@ export async function signupAction(
                 gender: formData.get('gender'),
                 dominant_hand: formData.get('dominant_hand'),
                 tennis_start_date: formData.get('tennis_start_date'),
+                ntrp: formData.get('ntrp'),
             },
         },
     })

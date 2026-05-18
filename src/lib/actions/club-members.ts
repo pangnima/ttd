@@ -46,6 +46,14 @@ export async function leaveClubAction(clubId: string): Promise<{ error: string }
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { error: '로그인이 필요합니다.' }
 
+    const { data: membership } = await supabase
+        .from('club_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('club_id', clubId)
+        .maybeSingle()
+    if (membership?.role === 'owner') return { error: '클럽장은 클럽을 탈퇴할 수 없습니다.' }
+
     const { error } = await supabase
         .from('club_members')
         .delete()

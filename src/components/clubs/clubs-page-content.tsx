@@ -18,7 +18,7 @@ import type { Club, ClubMember } from '@/types'
 
 type Props = {
     allClubs: Club[]
-    membershipMap: Map<string, ClubMember['status']>
+    membershipMap: Map<string, { status: ClubMember['status'], role: ClubMember['role'] }>
 }
 
 const TABLE_HEADER = (
@@ -43,8 +43,8 @@ export function ClubsPageContent({ allClubs, membershipMap }: Props) {
         )
         : allClubs
 
-    const myClubs = filtered.filter((c) => membershipMap.get(c.id) === 'approved')
-    const otherClubs = filtered.filter((c) => membershipMap.get(c.id) !== 'approved')
+    const myClubs = filtered.filter((c) => membershipMap.get(c.id)?.status === 'approved')
+    const otherClubs = filtered.filter((c) => membershipMap.get(c.id)?.status !== 'approved')
 
     return (
         <div className="w-full">
@@ -90,6 +90,7 @@ export function ClubsPageContent({ allClubs, membershipMap }: Props) {
                                         key={club.id}
                                         club={club}
                                         membershipStatus="approved"
+                                        isOwner={membershipMap.get(club.id)?.role === 'owner'}
                                     />
                                 ))}
                             </TableBody>
@@ -115,7 +116,8 @@ export function ClubsPageContent({ allClubs, membershipMap }: Props) {
                                     <ClubTableRow
                                         key={club.id}
                                         club={club}
-                                        membershipStatus={membershipMap.get(club.id) ?? null}
+                                        membershipStatus={membershipMap.get(club.id)?.status ?? null}
+                                        isOwner={membershipMap.get(club.id)?.role === 'owner'}
                                     />
                                 ))}
                             </TableBody>

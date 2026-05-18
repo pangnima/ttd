@@ -13,9 +13,10 @@ type MembershipStatus = ClubMember['status'] | null
 type ClubTableRowProps = {
     club: Club
     membershipStatus?: MembershipStatus
+    isOwner?: boolean
 }
 
-export function ClubTableRow({ club, membershipStatus }: ClubTableRowProps) {
+export function ClubTableRow({ club, membershipStatus, isOwner }: ClubTableRowProps) {
     const [isPending, startTransition] = useTransition()
     const initial = club.name.charAt(0)
 
@@ -56,7 +57,7 @@ export function ClubTableRow({ club, membershipStatus }: ClubTableRowProps) {
                 </span>
             </TableCell>
             <TableCell className="text-right">
-                {membershipStatus === 'approved' ? (
+                {membershipStatus === 'approved' && !isOwner ? (
                     <Button
                         variant="ghost"
                         size="sm"
@@ -66,7 +67,8 @@ export function ClubTableRow({ club, membershipStatus }: ClubTableRowProps) {
                     >
                         탈퇴
                     </Button>
-                ) : membershipStatus === 'pending' ? (
+                ) : membershipStatus === 'approved' && isOwner ? null
+                : membershipStatus === 'pending' ? (
                     <div className="flex items-center justify-end gap-1.5">
                         <span className="flex items-center gap-1 text-xs text-amber-500">
                             <Clock className="w-3 h-3" />

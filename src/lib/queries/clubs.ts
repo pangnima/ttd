@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
 import type { Club, ClubMember, User } from '@/types'
+import { mapUserRow } from '@/lib/queries/users'
 
 type ClubRow = Database['public']['Tables']['clubs']['Row']
 type MemberRow = Database['public']['Tables']['club_members']['Row']
@@ -39,22 +40,6 @@ function mapMemberRow(row: MemberRow): ClubMember {
     }
 }
 
-function mapUserRow(row: UserRow): User {
-    return {
-        id: row.id,
-        email: row.email,
-        name: row.name,
-        nickname: row.nickname,
-        role: row.role as User['role'],
-        profileImage: row.profile_image ?? undefined,
-        phone: row.phone ?? '',
-        gender: (row.gender ?? 'male') as User['gender'],
-        dominantHand: (row.dominant_hand ?? 'right') as User['dominantHand'],
-        ntrp: row.ntrp ?? 0,
-        tennisStartDate: row.tennis_start_date ?? '',
-        createdAt: row.created_at,
-    }
-}
 
 export async function fetchAllClubs(): Promise<Club[]> {
     const supabase = await createClient()

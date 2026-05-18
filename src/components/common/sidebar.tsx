@@ -1,44 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { navItems } from '@/lib/nav-items'
-import { createClient } from '@/lib/supabase/client'
+import { mainNavItems, settingNavItem } from '@/lib/nav-items'
 
 type SidebarProps = {
     currentPath?: string
+    matchGameHref?: string | null
 }
 
-export function Sidebar({ currentPath }: SidebarProps) {
+export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
     const pathname = usePathname()
     const activePath = currentPath ?? pathname
-    const [matchGameHref, setMatchGameHref] = useState<string | null>(null)
 
-    useEffect(() => {
-        let isMounted = true
-        const supabase = createClient()
-
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
-            if (!isMounted || !user) return
-            const { data } = await supabase
-                .from('club_members')
-                .select('club_id')
-                .eq('user_id', user.id)
-                .eq('status', 'approved')
-                .limit(1)
-                .maybeSingle()
-            if (isMounted && data) {
-                setMatchGameHref(`/clubs/${data.club_id}/match-games`)
-            }
-        })
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
+    const navLinkClass = (active: boolean) =>
+        cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+            active
+                ? 'bg-white/10 text-foreground'
+                : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+        )
 
     return (
         <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-white/5 bg-card">
@@ -52,40 +35,41 @@ export function Sidebar({ currentPath }: SidebarProps) {
                 </Link>
             </div>
 
-            {/* 네비게이션 */}
+            {/* 메인 네비게이션 */}
             <nav className="flex-1 p-3 space-y-0.5">
-                {navItems.map(({ href, label, icon: Icon }) => (
+                {mainNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
-                        className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                            activePath === href
-                                ? 'bg-white/10 text-foreground'
-                                : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
-                        )}
+                        className={navLinkClass(activePath === href)}
                     >
                         <Icon className="w-4 h-4 shrink-0" />
                         {label}
                     </Link>
                 ))}
 
-                {/* 동적 대진표 링크 */}
+                {/* 대진표: 가입 클럽 있을 때 클럽리스트 바로 아래 노출 */}
                 {matchGameHref && (
                     <Link
                         href={matchGameHref}
-                        className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                            activePath.includes('/match-games')
-                                ? 'bg-white/10 text-foreground'
-                                : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
-                        )}
+                        className={navLinkClass(activePath.includes('/match-games'))}
                     >
                         <Trophy className="w-4 h-4 shrink-0" />
                         대진표
                     </Link>
                 )}
             </nav>
+
+            {/* 설정 — 하단 고정 */}
+            <div className="p-3 border-t border-white/5">
+                <Link
+                    href={settingNavItem.href}
+                    className={navLinkClass(activePath === settingNavItem.href)}
+                >
+                    <settingNavItem.icon className="w-4 h-4 shrink-0" />
+                    {settingNavItem.label}
+                </Link>
+            </div>
         </aside>
     )
 }
