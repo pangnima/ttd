@@ -1,55 +1,57 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { loginAction } from '@/lib/actions/auth'
+
+const inputCls = [
+    'w-full rounded-md px-3 py-2.5 text-sm text-white',
+    'bg-white/[0.04] border border-white/10',
+    'placeholder:text-white/20',
+    'outline-none focus:border-white/30 focus:bg-white/[0.06]',
+    'transition-colors',
+].join(' ')
+
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-white/40 mb-1.5'
 
 export function LoginForm() {
     const [state, formAction, isPending] = useActionState(loginAction, null)
 
     return (
         <form action={formAction} className="space-y-4">
-            <div className="space-y-1.5">
-                <Label htmlFor="email">이메일</Label>
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
+            <div>
+                <label htmlFor="email" className={labelCls}>이메일</label>
+                <input
+                    id="email" name="email" type="email"
                     placeholder="example@email.com"
-                    required
-                    autoComplete="email"
+                    required autoComplete="email"
+                    className={inputCls}
                 />
             </div>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="password">비밀번호</Label>
-                <Input
-                    id="password"
-                    name="password"
-                    type="password"
+            <div>
+                <label htmlFor="password" className={labelCls}>비밀번호</label>
+                <input
+                    id="password" name="password" type="password"
                     placeholder="비밀번호를 입력하세요"
-                    required
-                    autoComplete="current-password"
+                    required autoComplete="current-password"
+                    className={inputCls}
                 />
             </div>
 
             {state?.error && (
-                <p className="text-sm text-destructive">{state.error}</p>
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                    {state.error}
+                </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full rounded-full bg-white text-black hover:bg-white/90 font-semibold h-11 mt-2"
+            >
                 {isPending ? '로그인 중...' : '로그인'}
             </Button>
-
-            <p className="text-sm text-center text-muted-foreground">
-                계정이 없으신가요?{' '}
-                <Link href="/signup" className="underline text-foreground">
-                    회원가입
-                </Link>
-            </p>
         </form>
     )
 }

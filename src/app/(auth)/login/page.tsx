@@ -1,18 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
 import { LoginForm } from '@/components/auth/login-form'
 
 export default function LoginPage() {
     return (
-        <Card className="w-full max-w-md">
-            <CardHeader>
-                <CardTitle className="text-center">로그인</CardTitle>
-                <p className="text-sm text-muted-foreground text-center">
-                    이메일과 비밀번호로 로그인하세요
-                </p>
-            </CardHeader>
-            <CardContent>
+        <div className="h-full flex items-center justify-center px-6">
+            <div className="w-full max-w-sm">
+                <Link href="/" className="flex items-center gap-2.5 mb-10">
+                    <div className="w-8 h-8 rounded-md border border-white/20 flex items-center justify-center text-white text-sm font-bold bg-white/5">
+                        TC
+                    </div>
+                    <span className="text-sm font-medium tracking-widest uppercase text-white/60">
+                        Tennis Club
+                    </span>
+                </Link>
+
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-white">로그인</h1>
+                    <p className="mt-1 text-sm text-white/40">
+                        계정이 없으신가요?{' '}
+                        <Link href="/signup" className="text-white/70 hover:text-white underline underline-offset-2 transition-colors">
+                            회원가입
+                        </Link>
+                    </p>
+                </div>
+
                 <LoginForm />
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }

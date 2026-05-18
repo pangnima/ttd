@@ -1,13 +1,21 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { signupAction } from '@/lib/actions/auth'
+
+const inputCls = [
+    'w-full rounded-md px-3 py-2.5 text-sm text-white',
+    'bg-white/[0.06] border border-white/15',
+    'placeholder:text-white/30',
+    'outline-none focus:border-white/40 focus:bg-white/[0.09]',
+    'transition-colors',
+].join(' ')
+
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-white/60 mb-1.5'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
@@ -16,151 +24,127 @@ export function SignupForm() {
     function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return
-        const url = URL.createObjectURL(file)
-        setAvatarPreview(url)
+        setAvatarPreview(URL.createObjectURL(file))
     }
 
     return (
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="space-y-5">
             {/* 프로필 사진 */}
-            <div className="flex flex-col items-center gap-2 pb-2">
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border">
+            <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer group">
+                <div className="w-14 h-14 rounded-full bg-white/8 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-white/40 transition-colors">
                     {avatarPreview ? (
-                        <Image
-                            src={avatarPreview}
-                            alt="프로필 미리보기"
-                            width={80}
-                            height={80}
-                            className="w-full h-full object-cover"
-                        />
+                        <Image src={avatarPreview} alt="프로필" width={56} height={56} className="w-full h-full object-cover" />
                     ) : (
-                        <span className="text-2xl text-muted-foreground">👤</span>
+                        <span className="text-xl text-white/20">👤</span>
                     )}
                 </div>
-                <Label
-                    htmlFor="avatar"
-                    className="cursor-pointer text-xs text-muted-foreground underline hover:text-foreground"
-                >
-                    사진 선택 (선택)
-                </Label>
-                <Input
-                    id="avatar"
-                    name="avatar"
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleAvatarChange}
-                />
-            </div>
+                <div>
+                    <p className="text-sm text-white/70 group-hover:text-white transition-colors">프로필 사진 업로드</p>
+                    <p className="text-xs text-white/40">PNG, JPG, WEBP (선택)</p>
+                </div>
+                <input id="avatar" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleAvatarChange} />
+            </label>
 
+            <div className="h-px bg-white/5" />
+
+            {/* 이름 + 닉네임 */}
             <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                    <Label htmlFor="name">이름 *</Label>
-                    <Input id="name" name="name" placeholder="실명" required />
+                <div>
+                    <label htmlFor="name" className={labelCls}>이름 *</label>
+                    <input id="name" name="name" placeholder="실명" required className={inputCls} />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="nickname">닉네임 *</Label>
-                    <Input id="nickname" name="nickname" placeholder="닉네임" required />
+                <div>
+                    <label htmlFor="nickname" className={labelCls}>닉네임 *</label>
+                    <input id="nickname" name="nickname" placeholder="닉네임" required className={inputCls} />
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="email">이메일 *</Label>
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="example@email.com"
-                    required
-                    autoComplete="email"
-                />
+            {/* 이메일 */}
+            <div>
+                <label htmlFor="email" className={labelCls}>이메일 *</label>
+                <input id="email" name="email" type="email" placeholder="example@email.com" required autoComplete="email" className={inputCls} />
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="password">비밀번호 *</Label>
-                <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="6자 이상"
-                    required
-                    minLength={6}
-                    autoComplete="new-password"
-                />
+            {/* 비밀번호 */}
+            <div>
+                <label htmlFor="password" className={labelCls}>비밀번호 *</label>
+                <input id="password" name="password" type="password" placeholder="6자 이상" required minLength={6} autoComplete="new-password" className={inputCls} />
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="phone">연락처</Label>
-                <Input id="phone" name="phone" placeholder="010-0000-0000" />
+            {/* 연락처 */}
+            <div>
+                <label htmlFor="phone" className={labelCls}>연락처</label>
+                <input id="phone" name="phone" placeholder="010-0000-0000" className={inputCls} />
             </div>
 
-            <div className="space-y-2">
-                <Label>성별</Label>
-                <RadioGroup name="gender" defaultValue="male" className="flex gap-4">
-                    <div className="flex items-center gap-1.5">
-                        <RadioGroupItem value="male" id="gender-male" />
-                        <Label htmlFor="gender-male" className="font-normal cursor-pointer">남성</Label>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <RadioGroupItem value="female" id="gender-female" />
-                        <Label htmlFor="gender-female" className="font-normal cursor-pointer">여성</Label>
-                    </div>
-                </RadioGroup>
+            <div className="h-px bg-white/5" />
+
+            {/* 성별 + 주력손 */}
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <p className={labelCls}>성별</p>
+                    <RadioGroup name="gender" defaultValue="male" className="grid grid-cols-2 gap-1.5">
+                        {[{ value: 'male', label: '남성' }, { value: 'female', label: '여성' }].map(({ value, label }) => (
+                            <div key={value}>
+                                <RadioGroupItem value={value} id={`gender-${value}`} className="peer sr-only" />
+                                <Label
+                                    htmlFor={`gender-${value}`}
+                                    className="flex justify-center py-2 text-xs border border-white/15 rounded-md text-white/50 cursor-pointer transition-colors peer-data-[state=checked]:border-white/50 peer-data-[state=checked]:bg-white/10 peer-data-[state=checked]:text-white hover:border-white/30 hover:text-white/80"
+                                >
+                                    {label}
+                                </Label>
+                            </div>
+                        ))}
+                    </RadioGroup>
+                </div>
+                <div>
+                    <p className={labelCls}>주력손</p>
+                    <RadioGroup name="dominant_hand" defaultValue="right" className="grid grid-cols-2 gap-1.5">
+                        {[{ value: 'right', label: '오른손' }, { value: 'left', label: '왼손' }].map(({ value, label }) => (
+                            <div key={value}>
+                                <RadioGroupItem value={value} id={`hand-${value}`} className="peer sr-only" />
+                                <Label
+                                    htmlFor={`hand-${value}`}
+                                    className="flex justify-center py-2 text-xs border border-white/15 rounded-md text-white/50 cursor-pointer transition-colors peer-data-[state=checked]:border-white/50 peer-data-[state=checked]:bg-white/10 peer-data-[state=checked]:text-white hover:border-white/30 hover:text-white/80"
+                                >
+                                    {label}
+                                </Label>
+                            </div>
+                        ))}
+                    </RadioGroup>
+                </div>
             </div>
 
-            <div className="space-y-2">
-                <Label>주력손</Label>
-                <RadioGroup name="dominant_hand" defaultValue="right" className="flex gap-4">
-                    <div className="flex items-center gap-1.5">
-                        <RadioGroupItem value="right" id="hand-right" />
-                        <Label htmlFor="hand-right" className="font-normal cursor-pointer">오른손</Label>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <RadioGroupItem value="left" id="hand-left" />
-                        <Label htmlFor="hand-left" className="font-normal cursor-pointer">왼손</Label>
-                    </div>
-                </RadioGroup>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="tennis_start_date">테니스 시작일</Label>
-                <Input
-                    id="tennis_start_date"
-                    name="tennis_start_date"
-                    type="date"
-                    max="9999-12-31"
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="ntrp">NTRP *</Label>
-                <Input
-                    id="ntrp"
-                    name="ntrp"
-                    type="number"
-                    min={1.0}
-                    max={7.0}
-                    step={0.5}
-                    defaultValue={3.0}
-                    required
-                />
-                <p className="text-xs text-muted-foreground">1.0 ~ 7.0 (0.5 단위)</p>
+            {/* 테니스 시작일 + NTRP */}
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label htmlFor="tennis_start_date" className={labelCls}>테니스 시작일</label>
+                    <input id="tennis_start_date" name="tennis_start_date" type="date" max="9999-12-31" className={`${inputCls} [color-scheme:dark]`} />
+                </div>
+                <div>
+                    <label htmlFor="ntrp" className={labelCls}>NTRP *</label>
+                    <input
+                        id="ntrp" name="ntrp" type="number"
+                        min={1.0} max={7.0} step={0.5} defaultValue={3.0}
+                        required className={inputCls}
+                    />
+                    <p className="mt-1 text-[10px] text-white/40">1.0 ~ 7.0 (0.5 단위)</p>
+                </div>
             </div>
 
             {state?.error && (
-                <p className="text-sm text-destructive">{state.error}</p>
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                    {state.error}
+                </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full rounded-full bg-white text-black hover:bg-white/90 font-semibold h-11 mt-2"
+            >
                 {isPending ? '가입 중...' : '회원가입'}
             </Button>
-
-            <p className="text-sm text-center text-muted-foreground">
-                이미 계정이 있으신가요?{' '}
-                <Link href="/login" className="underline text-foreground">
-                    로그인
-                </Link>
-            </p>
         </form>
     )
 }
