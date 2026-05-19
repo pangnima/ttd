@@ -23,7 +23,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (!authUser) redirect('/login')
 
-    const [profile, allMatches, { singles: singlesStats, doubles: doublesStats }, h2h] = await Promise.all([
+    const [profile, { matches: allMatches }, { singles: singlesStats, doubles: doublesStats }, h2h] = await Promise.all([
         fetchUserById(userId),
         fetchMatchesByUser(userId),
         fetchUserMatchStats(userId),
@@ -54,13 +54,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     return (
         <div className="space-y-6">
             {/* 프로필 헤더 */}
-            <Card className="bg-card border-white/5">
+            <Card className="bg-card border-foreground/5">
                 <CardContent className="pt-6 pb-6">
                     <div className="space-y-4">
                         <ProfileHeader profile={profile} isMine={isMine} />
 
                         {/* 요약 통계 */}
-                        <div className="flex items-center gap-6 pt-2 border-t border-white/5">
+                        <div className="flex items-center gap-6 pt-2 border-t border-foreground/5">
                             <div className="text-center">
                                 <p className="text-2xl font-bold">{totalMatches}</p>
                                 <p className="text-xs text-muted-foreground">총 경기</p>
@@ -96,7 +96,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 {/* 좌측 컬럼 (2/3) */}
                 <div className="lg:col-span-2 space-y-4">
 
-                    <Card className="bg-card border-white/5">
+                    <Card className="bg-card border-foreground/5">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-sm font-medium">단식 통계</CardTitle>
                         </CardHeader>
@@ -105,7 +105,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-card border-white/5">
+                    <Card className="bg-card border-foreground/5">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-sm font-medium">복식 통계</CardTitle>
                         </CardHeader>
@@ -114,7 +114,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-card border-white/5">
+                    <Card className="bg-card border-foreground/5">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-sm font-medium">최근 경기</CardTitle>
                         </CardHeader>
@@ -126,7 +126,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
                 {/* 우측 컬럼 (1/3) */}
                 <div className="space-y-4">
-                    <Card className="bg-card border-white/5">
+                    <Card className="bg-card border-foreground/5">
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-sm font-medium flex items-center gap-1.5">
                                 <Users className="w-4 h-4 text-violet-400" />

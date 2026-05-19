@@ -114,19 +114,30 @@ export async function fetchMatchGameById(id: string): Promise<MatchGame | null> 
     return mapMatchGameRow(data as Parameters<typeof mapMatchGameRow>[0])
 }
 
-// 단식/복식 모두 커버하는 단일 쿼리.
+export type MatchGameMeta = { id: string; name: string; date: string; clubId: string }
+
+// 단식/복식 모두 커버하는 단일 쿼리. match_games(name, date)를 embed해서 메타 동봉.
 // - 단식: player1_id.eq / player2_id.eq
 // - 복식: team1.cs.{userId} / team2.cs.{userId}
 //   cs = PostgreSQL 배열 contains 연산자 ({userId}는 배열 리터럴 형식)
-export async function fetchMatchesByUser(userId: string): Promise<Match[]> {
+export async function fetchMatchesByUser(userId: string): Promise<{
+    matches: Match[]
+    gameMetaById: Record<string, MatchGameMeta>
+}> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_game_matches')
-        .select('*')
+        .select('*, match_games(id, name, date, club_id)')
         .or(`player1_id.eq.${userId},player2_id.eq.${userId},team1.cs.{${userId}},team2.cs.{${userId}}`)
         .eq('status', 'finished')
-    if (error || !data) return []
-    return data.map(mapMatchRow)
+    if (error || !data) return { matches: [], gameMetaById: {} }
+    const matches = data.map((row) => mapMatchRow(row as MatchRow))
+    const gameMetaById: Record<string, MatchGameMeta> = {}
+    for (const row of data) {
+        const g = row.match_games as { id: string; name: string; date: string; club_id: string } | null
+        if (g) gameMetaById[g.id] = { id: g.id, name: g.name, date: g.date, clubId: g.club_id }
+    }
+    return { matches, gameMetaById }
 }
 
 export async function fetchClubMembersWithGuests(clubId: string): Promise<User[]> {

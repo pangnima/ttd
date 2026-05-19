@@ -403,6 +403,10 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_doubles_court_stats: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_user_head_to_head: {
         Args: { p_user_id: string }
         Returns: {
@@ -414,6 +418,17 @@ export type Database = {
         }[]
       }
       get_user_match_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_user_match_stats_v2: { Args: { p_user_id: string }; Returns: Json }
+      get_user_partner_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          draws: number
+          losses: number
+          matches: number
+          partner_id: string
+          wins: number
+        }[]
+      }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
