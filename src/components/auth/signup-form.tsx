@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button'
 import { signupAction } from '@/lib/actions/auth'
 
 const inputCls = [
-    'w-full rounded-md px-3 py-2.5 text-sm text-white',
-    'bg-white/[0.06] border border-white/15',
-    'placeholder:text-white/30',
-    'outline-none focus:border-white/40 focus:bg-white/[0.09]',
+    'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
+    'bg-foreground/[0.06] border border-foreground/15',
+    'placeholder:text-foreground/50',
+    'outline-none focus:border-foreground/40 focus:bg-foreground/[0.09]',
     'transition-colors',
 ].join(' ')
 
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-white/60 mb-1.5'
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-foreground/75 mb-1.5'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
@@ -31,21 +31,21 @@ export function SignupForm() {
         <form action={formAction} className="space-y-5">
             {/* 프로필 사진 */}
             <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-14 h-14 rounded-full bg-white/8 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-white/40 transition-colors">
+                <div className="w-14 h-14 rounded-full bg-foreground/8 border border-foreground/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-foreground/40 transition-colors">
                     {avatarPreview ? (
                         <Image src={avatarPreview} alt="프로필" width={56} height={56} className="w-full h-full object-cover" />
                     ) : (
-                        <span className="text-xl text-white/20">👤</span>
+                        <span className="text-xl text-foreground/40">👤</span>
                     )}
                 </div>
                 <div>
-                    <p className="text-sm text-white/70 group-hover:text-white transition-colors">프로필 사진 업로드</p>
-                    <p className="text-xs text-white/40">PNG, JPG, WEBP (선택)</p>
+                    <p className="text-sm text-foreground/85 group-hover:text-foreground transition-colors">프로필 사진 업로드</p>
+                    <p className="text-xs text-foreground/65">PNG, JPG, WEBP (선택)</p>
                 </div>
                 <input id="avatar" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleAvatarChange} />
             </label>
 
-            <div className="h-px bg-white/5" />
+            <div className="h-px bg-foreground/5" />
 
             {/* 이름 + 닉네임 */}
             <div className="grid grid-cols-2 gap-3">
@@ -77,7 +77,7 @@ export function SignupForm() {
                 <input id="phone" name="phone" placeholder="010-0000-0000" className={inputCls} />
             </div>
 
-            <div className="h-px bg-white/5" />
+            <div className="h-px bg-foreground/5" />
 
             {/* 성별 + 주력손 */}
             <input type="hidden" name="gender" value={gender} />
@@ -94,7 +94,7 @@ export function SignupForm() {
                                 className={`py-2 text-xs rounded-md border transition-all ${
                                     gender === value
                                         ? 'border-cyan-400/70 bg-cyan-400/15 text-cyan-300 font-semibold'
-                                        : 'border-white/15 text-white/50 hover:border-white/30 hover:text-white/75'
+                                        : 'border-foreground/15 text-foreground/65 hover:border-foreground/30 hover:text-foreground/85'
                                 }`}
                             >
                                 {label}
@@ -113,7 +113,7 @@ export function SignupForm() {
                                 className={`py-2 text-xs rounded-md border transition-all ${
                                     hand === value
                                         ? 'border-cyan-400/70 bg-cyan-400/15 text-cyan-300 font-semibold'
-                                        : 'border-white/15 text-white/50 hover:border-white/30 hover:text-white/75'
+                                        : 'border-foreground/15 text-foreground/65 hover:border-foreground/30 hover:text-foreground/85'
                                 }`}
                             >
                                 {label}
@@ -136,7 +136,7 @@ export function SignupForm() {
                         min={1.0} max={7.0} step={0.5} defaultValue={3.0}
                         required className={inputCls}
                     />
-                    <p className="mt-1 text-[10px] text-white/40">1.0 ~ 7.0 (0.5 단위)</p>
+                    <p className="mt-1 text-[10px] text-foreground/65">1.0 ~ 7.0 (0.5 단위)</p>
                 </div>
             </div>
 
@@ -149,7 +149,7 @@ export function SignupForm() {
             <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-full bg-white text-black hover:bg-white/90 font-semibold h-11 mt-2"
+                className="w-full rounded-full bg-white text-black hover:bg-foreground/90 font-semibold h-11 mt-2"
             >
                 {isPending ? '가입 중...' : '회원가입'}
             </Button>

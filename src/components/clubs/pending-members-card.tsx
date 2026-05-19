@@ -25,7 +25,7 @@ export function PendingMembersCard({ entries }: Props) {
         startTransition(async () => { await rejectMemberAction(clubId, userId) })
 
     return (
-        <Card className="bg-card border-white/5">
+        <Card className="bg-card border-foreground/5">
             <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="text-sm font-medium flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-emerald-400" />
@@ -39,7 +39,7 @@ export function PendingMembersCard({ entries }: Props) {
                 {entries.map(({ club, member, user }) => (
                     <div
                         key={`${member.clubId}-${member.userId}`}
-                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white/5"
+                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-foreground/5"
                     >
                         <Avatar className="w-7 h-7 shrink-0">
                             <AvatarFallback className="text-xs bg-emerald-500/20 text-emerald-400">

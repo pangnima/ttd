@@ -27,7 +27,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
                     { label: '패',      value: losses,       color: 'text-red-400' },
                     { label: '세트',    value: `${setsWon}/${setsLost}`, color: 'text-muted-foreground' },
                 ].map(({ label, value, color }) => (
-                    <div key={label} className="border rounded-lg p-4 text-center space-y-1 border-white/5">
+                    <div key={label} className="border rounded-lg p-4 text-center space-y-1 border-foreground/5">
                         <p className={`text-2xl font-bold ${color}`}>{value}</p>
                         <p className="text-xs text-muted-foreground">{label}</p>
                     </div>
@@ -35,7 +35,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
             </div>
 
             {/* 승률 프로그레스 */}
-            <div className="border rounded-lg p-4 space-y-2 border-white/5">
+            <div className="border rounded-lg p-4 space-y-2 border-foreground/5">
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                         <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
@@ -51,8 +51,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
 
             {/* 종목별 통계 */}
             {byMatchType.length > 0 && (
-                <div className="border rounded-lg overflow-hidden border-white/5">
-                    <div className="px-4 py-2.5 border-b border-white/5 bg-muted/30">
+                <div className="border rounded-lg overflow-hidden border-foreground/5">
+                    <div className="px-4 py-2.5 border-b border-foreground/5 bg-muted/30">
                         <p className="text-xs font-medium text-muted-foreground">종목별 통계</p>
                     </div>
                     <div className="divide-y divide-white/5">

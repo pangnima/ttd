@@ -4,23 +4,23 @@ import { cn } from '@/lib/utils'
 
 export default function LandingPage() {
     return (
-        <div className="min-h-screen w-screen max-w-full flex flex-col bg-black text-white overflow-x-hidden">
+        <div className="min-h-screen w-screen max-w-full flex flex-col bg-background text-foreground overflow-x-hidden">
             {/* 네비게이션 */}
             <header className="relative z-20 flex items-center justify-between px-8 py-6">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-md border border-white/20 flex items-center justify-center text-white text-sm font-bold bg-white/5">
+                    <div className="w-8 h-8 rounded-md border border-foreground/20 flex items-center justify-center text-foreground text-sm font-bold bg-foreground/5">
                         TC
                     </div>
-                    <span className="text-sm font-medium tracking-widest uppercase text-white/70">
+                    <span className="text-sm font-medium tracking-widest uppercase text-foreground/85">
                         Tennis Club
                     </span>
                 </div>
-                <nav className="flex items-center gap-8 text-sm font-medium tracking-widest uppercase text-white/50">
-                    <Link href="/clubs" className="hover:text-white transition-colors">클럽</Link>
-                    <Link href="/login" className="hover:text-white transition-colors">로그인</Link>
+                <nav className="flex items-center gap-8 text-sm font-medium tracking-widest uppercase text-foreground/65">
+                    <Link href="/clubs" className="hover:text-foreground transition-colors">클럽</Link>
+                    <Link href="/login" className="hover:text-foreground transition-colors">로그인</Link>
                     <Link
                         href="/signup"
-                        className="text-white border border-white/20 px-4 py-1.5 rounded-full hover:bg-white/10 transition-colors"
+                        className="text-foreground border border-foreground/20 px-4 py-1.5 rounded-full hover:bg-foreground/10 transition-colors"
                     >
                         시작하기
                     </Link>
@@ -32,12 +32,12 @@ export default function LandingPage() {
                 {/* 헤드라인 */}
                 <div className="relative z-10 mt-16 sm:mt-20 text-center px-4">
                     <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight leading-none">
-                        <span className="block text-white">우리 클럽의</span>
+                        <span className="block text-foreground">우리 클럽의</span>
                         <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-cyan-300">
                             테니스
                         </span>
                     </h1>
-                    <p className="mt-6 text-white/40 text-base sm:text-lg tracking-widest uppercase">
+                    <p className="mt-6 text-foreground/65 text-base sm:text-lg tracking-widest uppercase">
                         클럽 운영 · 대진표 · 경기 기록
                     </p>
                 </div>
@@ -142,7 +142,7 @@ export default function LandingPage() {
 
                 {/* CTA 영역 */}
                 <div className="relative z-10 -mt-4 text-center px-4 pb-20">
-                    <p className="text-white/60 text-base sm:text-lg mb-6">
+                    <p className="text-foreground/75 text-base sm:text-lg mb-6">
                         체계적인 클럽 운영의 시작.
                     </p>
                     <div className="flex items-center justify-center gap-4">
@@ -157,7 +157,7 @@ export default function LandingPage() {
                         </Link>
                         <Link
                             href="/clubs"
-                            className="text-white/50 hover:text-white text-sm transition-colors underline underline-offset-4"
+                            className="text-foreground/65 hover:text-foreground text-sm transition-colors underline underline-offset-4"
                         >
                             클럽 둘러보기
                         </Link>
@@ -173,7 +173,7 @@ export default function LandingPage() {
                 }}
             />
 
-            <footer className="relative z-10 flex items-center justify-center py-6 text-xs text-white/20 tracking-widest uppercase">
+            <footer className="relative z-10 flex items-center justify-center py-6 text-xs text-foreground/40 tracking-widest uppercase">
                 © 2025 Tennis Club Platform
             </footer>
         </div>

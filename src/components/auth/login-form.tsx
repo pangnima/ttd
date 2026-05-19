@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { loginAction } from '@/lib/actions/auth'
 
 const inputCls = [
-    'w-full rounded-md px-3 py-2.5 text-sm text-white',
-    'bg-white/[0.04] border border-white/10',
-    'placeholder:text-white/20',
-    'outline-none focus:border-white/30 focus:bg-white/[0.06]',
+    'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
+    'bg-foreground/[0.04] border border-foreground/10',
+    'placeholder:text-foreground/40',
+    'outline-none focus:border-foreground/30 focus:bg-foreground/[0.06]',
     'transition-colors',
 ].join(' ')
 
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-white/40 mb-1.5'
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-foreground/65 mb-1.5'
 
 export function LoginForm() {
     const [state, formAction, isPending] = useActionState(loginAction, null)
@@ -48,7 +48,7 @@ export function LoginForm() {
             <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-full bg-white text-black hover:bg-white/90 font-semibold h-11 mt-2"
+                className="w-full rounded-full bg-white text-black hover:bg-foreground/90 font-semibold h-11 mt-2"
             >
                 {isPending ? '로그인 중...' : '로그인'}
             </Button>

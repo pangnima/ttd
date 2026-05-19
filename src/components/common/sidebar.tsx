@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems, settingNavItem } from '@/lib/nav-items'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
     currentPath?: string
@@ -19,14 +20,14 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
         cn(
             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
             active
-                ? 'bg-white/10 text-foreground'
-                : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                ? 'bg-foreground/10 text-foreground'
+                : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
         )
 
     return (
-        <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-white/5 bg-card">
+        <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 bg-card">
             {/* 로고 영역 */}
-            <div className="h-14 flex items-center px-5 border-b border-white/5">
+            <div className="h-14 flex items-center px-5 border-b border-foreground/5">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                         T
@@ -60,8 +61,9 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
                 )}
             </nav>
 
-            {/* 설정 — 하단 고정 */}
-            <div className="p-3 border-t border-white/5">
+            {/* 설정 + 테마 토글 — 하단 고정 */}
+            <div className="p-3 border-t border-foreground/5 space-y-1">
+                <ThemeToggle />
                 <Link
                     href={settingNavItem.href}
                     className={navLinkClass(activePath === settingNavItem.href)}
