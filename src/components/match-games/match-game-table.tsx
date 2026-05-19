@@ -32,6 +32,9 @@ const MATCH_TYPE_COLORS: Record<MatchType, string> = {
     mixed_doubles:  'border-amber-400/40 text-amber-400/80 bg-amber-400/8',
 }
 
+// 세트 카운트 다수결로 승자 결정.
+// 반환값: null = 아직 아무 점수도 입력되지 않음, 'draw' = 세트 수 동률.
+// NaN(빈 입력)은 0으로 처리하되, 양쪽 모두 NaN이면 미입력으로 판단.
 function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | 'draw' | null {
     let t1 = 0, t2 = 0, hasInput = false
     for (const set of sets) {
@@ -45,6 +48,157 @@ function getWinnerSide(sets: SetScore[]): 'team1' | 'team2' | 'draw' | null {
     if (t1 > t2) return 'team1'
     if (t2 > t1) return 'team2'
     return 'draw'
+}
+
+type MatchCardItemProps = {
+    match: MatchGame['matches'][number]
+    matchGame: MatchGame
+    state: MatchState
+    winner: 'team1' | 'team2' | 'draw' | null
+    courtSides: CourtSideState
+    isPending: boolean
+    canEdit: boolean
+    getName: (id: string) => string
+    getCourtLabel: (courtId: string) => string
+    getTimeSlot: (timeSlotId: string) => string
+    toggleAdSide: (matchId: string, teamKey: 'team1' | 'team2', playerId: string) => void
+    updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
+    confirmScore: (matchId: string) => void
+    editScore: (matchId: string) => void
+}
+
+function MatchCardItem({
+    match, matchGame, state, winner, courtSides, isPending, canEdit,
+    getName, getCourtLabel, getTimeSlot,
+    toggleAdSide, updateScore, confirmScore, editScore,
+}: MatchCardItemProps) {
+    const renderPlayerList = (playerIds: string[] | undefined, teamKey: 'team1' | 'team2', winnerSide: 'team1' | 'team2' | 'draw' | null) => {
+        if (!playerIds?.length) return <span className="text-white/55 text-xs">-</span>
+        return (
+            <div className="space-y-1">
+                {playerIds.map((pid) => {
+                    const isAd = courtSides[match.id]?.[teamKey] === pid
+                    return (
+                        <div key={pid} className="flex items-center justify-between gap-2">
+                            <span className={`text-sm flex-1 min-w-0 ${winnerSide === teamKey ? 'font-bold text-white' : 'text-white/85'}`}>
+                                {getName(pid)}
+                            </span>
+                            {!matchGame.isFixed ? (
+                                <button
+                                    onClick={() => toggleAdSide(match.id, teamKey, pid)}
+                                    disabled={isPending}
+                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-white/20 text-white/65 hover:border-white/35'}`}
+                                >
+                                    {isAd ? '애드(백)' : '듀스(포)'}
+                                </button>
+                            ) : (
+                                <span className="text-[10px] text-white/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
+
+    return (
+        <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3">
+            {/* 상단: 코트·시간·종류 */}
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-semibold text-sm text-white shrink-0">
+                        {getCourtLabel(match.courtId)}
+                    </span>
+                    <span className="text-xs text-white/55">·</span>
+                    <span className="text-xs text-white/75">
+                        {getTimeSlot(match.timeSlotId)}
+                    </span>
+                </div>
+                <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border shrink-0 ${MATCH_TYPE_COLORS[match.matchType]}`}>
+                    {MATCH_TYPE_LABELS[match.matchType]}
+                </span>
+            </div>
+
+            {/* 플레이어 */}
+            <div className="space-y-2">
+                {match.matchType === 'singles' ? (
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-white/55 shrink-0">P1</span>
+                        <span className={`text-sm flex-1 ${winner === 'team1' ? 'font-bold text-white' : 'text-white/85'}`}>
+                            {getName(match.player1Id ?? '')}
+                        </span>
+                        <span className="text-white/35 text-xs mx-1">vs</span>
+                        <span className={`text-sm flex-1 text-right ${winner === 'team2' ? 'font-bold text-white' : 'text-white/85'}`}>
+                            {getName(match.player2Id ?? '')}
+                        </span>
+                        <span className="text-xs text-white/55 shrink-0">P2</span>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <p className="text-[10px] text-white/55 mb-1 uppercase tracking-wider">플레이어 1</p>
+                            {renderPlayerList(match.team1, 'team1', winner)}
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-white/55 mb-1 uppercase tracking-wider">플레이어 2</p>
+                            {renderPlayerList(match.team2, 'team2', winner)}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* 스코어 */}
+            <div className="pt-1 border-t border-white/8">
+                {state.confirmed ? (
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 font-mono text-sm">
+                            <span className={winner === 'team1' ? 'font-black text-white' : 'text-white/70'}>
+                                {state.sets[0].team1}
+                            </span>
+                            <span className="text-white/55">:</span>
+                            <span className={winner === 'team2' ? 'font-black text-white' : 'text-white/70'}>
+                                {state.sets[0].team2}
+                            </span>
+                        </div>
+                        {canEdit && (
+                            <button
+                                className="w-7 h-7 flex items-center justify-center rounded text-white/60 hover:text-white/85 hover:bg-white/8 transition-colors"
+                                onClick={() => editScore(match.id)}
+                                disabled={isPending}
+                            >
+                                <Pencil className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            value={state.sets[0].team1}
+                            onChange={(e) => updateScore(match.id, 0, 'team1', e.target.value)}
+                            className="h-8 w-12 text-center text-xs rounded-md bg-white/5 border border-white/15 text-white placeholder:text-white/30 outline-none focus:border-white/35 transition-colors"
+                            placeholder="P1"
+                        />
+                        <span className="text-white/35 text-xs">:</span>
+                        <input
+                            type="text"
+                            value={state.sets[0].team2}
+                            onChange={(e) => updateScore(match.id, 0, 'team2', e.target.value)}
+                            className="h-8 w-12 text-center text-xs rounded-md bg-white/5 border border-white/15 text-white placeholder:text-white/30 outline-none focus:border-white/35 transition-colors"
+                            placeholder="P2"
+                        />
+                        <button
+                            className="h-8 px-3 flex items-center justify-center rounded-md border border-cyan-400/30 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-colors disabled:opacity-40"
+                            onClick={() => confirmScore(match.id)}
+                            disabled={isPending}
+                        >
+                            <Check className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
 }
 
 export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: MatchGameTableProps) {
@@ -64,6 +218,9 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
         }
         return initial
     })
+    // courtSides: 각 경기에서 team1/team2 중 애드코트(백핸드/레프트 사이드)를 맡은 선수 ID.
+    // DB의 team1AdPlayerId / team2AdPlayerId 단일 값으로 관리 — null이면 미지정(= 듀스코트 기본).
+    // 단식 경기에서는 이 state가 사용되지 않음.
     const [courtSides, setCourtSides] = useState<CourtSideState>(() => {
         const initial: CourtSideState = {}
         for (const match of matchGame.matches) {
@@ -77,7 +234,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
 
     const userMap = new Map(members.map((m) => [m.id, m.nickname]))
     const getName = (id: string) => userMap.get(id) ?? id
-    const getTeamNames = (ids?: string[]) => ids?.length ? ids.map(getName).join(' / ') : '-'
     const getCourtLabel = (courtId: string) => matchGame.courts.find((c) => c.id === courtId)?.label ?? courtId
     const getTimeSlot = (timeSlotId: string) => {
         for (const round of matchGame.rounds) {
@@ -108,6 +264,11 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
         setMatchStates((prev) => ({ ...prev, [matchId]: { ...prev[matchId], confirmed: false } }))
     }
 
+    // 테니스 코트 배치 토글:
+    //   듀스코트 = 포핸드 사이드 (라이트) — 기본값, 버튼 라벨: '듀스(포)'
+    //   애드코트 = 백핸드 사이드 (레프트) — 선택 시, 버튼 라벨: '애드(백)'
+    // 같은 팀에서 한 명만 애드코트를 차지할 수 있으므로 단일 ID로 토글
+    // (이미 선택된 선수를 다시 클릭하면 null로 해제)
     function toggleAdSide(matchId: string, teamKey: 'team1' | 'team2', playerId: string) {
         const current = courtSides[matchId]
         const newAdId = current[teamKey] === playerId ? null : playerId
@@ -128,24 +289,21 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
 
     return (
         <div className="space-y-3">
-            {/* 테이블 래퍼 */}
-            <div className="rounded-xl border border-white/8 bg-white/[0.02] overflow-hidden">
+            {/* 데스크탑 테이블 (md 이상) */}
+            <div className="hidden md:block rounded-xl border border-white/8 bg-white/[0.02] overflow-hidden">
                 <table className="w-full text-sm">
-                    {/* 헤더 */}
                     <thead>
                         <tr className="border-b border-white/8">
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55 w-12">코트</th>
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55 w-32">시간</th>
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55 w-14">종류</th>
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55">플레이어 1</th>
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55">플레이어 2</th>
-                            <th className="px-4 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/55">스코어</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65 whitespace-nowrap w-16">코트</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65 whitespace-nowrap w-32">시간</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65 whitespace-nowrap w-16">종류</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65">플레이어 1</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65">플레이어 2</th>
+                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-white/65">스코어</th>
                         </tr>
                     </thead>
                     <tbody>
                         {matchGame.matches.map((match, idx) => {
-                            const player1 = match.matchType === 'singles' ? getName(match.player1Id ?? '') : getTeamNames(match.team1)
-                            const player2 = match.matchType === 'singles' ? getName(match.player2Id ?? '') : getTeamNames(match.team2)
                             const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
                             const winner = state.confirmed ? getWinnerSide(state.sets) : null
                             const isLast = idx === matchGame.matches.length - 1
@@ -156,24 +314,24 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                     className={`transition-colors hover:bg-white/[0.025] ${!isLast ? 'border-b border-white/5' : ''}`}
                                 >
                                     {/* 코트 */}
-                                    <td className="px-4 py-3 font-semibold text-white/90">
+                                    <td className="px-3 py-3 font-semibold text-white">
                                         {getCourtLabel(match.courtId)}
                                     </td>
                                     {/* 시간 */}
-                                    <td className="px-4 py-3 text-xs text-white/60 whitespace-nowrap">
+                                    <td className="px-3 py-3 text-xs text-white/75 whitespace-nowrap">
                                         {getTimeSlot(match.timeSlotId)}
                                     </td>
                                     {/* 종류 배지 */}
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-3">
                                         <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border ${MATCH_TYPE_COLORS[match.matchType]}`}>
                                             {MATCH_TYPE_LABELS[match.matchType]}
                                         </span>
                                     </td>
                                     {/* 플레이어 1 */}
-                                    <td className="px-4 py-3 max-w-36">
+                                    <td className="px-3 py-3">
                                         {match.matchType === 'singles' ? (
-                                            <span className={`text-sm truncate block transition-colors ${winner === 'team1' ? 'font-bold text-white' : 'text-white/70'}`}>
-                                                {player1}
+                                            <span className={`text-sm transition-colors ${winner === 'team1' ? 'font-bold text-white' : 'text-white/85'}`}>
+                                                {getName(match.player1Id ?? '')}
                                             </span>
                                         ) : (
                                             <div className="space-y-1">
@@ -181,19 +339,19 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                     const isAd = courtSides[match.id]?.team1 === pid
                                                     return (
                                                         <div key={pid} className="flex items-center gap-1.5">
-                                                            <span className={`text-sm truncate max-w-[72px] ${winner === 'team1' ? 'font-bold text-white' : 'text-white/70'}`}>
+                                                            <span className={`text-sm ${winner === 'team1' ? 'font-bold text-white' : 'text-white/85'}`}>
                                                                 {getName(pid)}
                                                             </span>
                                                             {!matchGame.isFixed ? (
                                                                 <button
                                                                     onClick={() => toggleAdSide(match.id, 'team1', pid)}
                                                                     disabled={isPending}
-                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-white/15 text-white/50 hover:border-white/30'}`}
+                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-white/20 text-white/65 hover:border-white/35'}`}
                                                                 >
-                                                                    {isAd ? '애드' : '듀스'}
+                                                                    {isAd ? '애드(백)' : '듀스(포)'}
                                                                 </button>
                                                             ) : (
-                                                                <span className="text-[10px] text-white/45 shrink-0">{isAd ? '애드' : '듀스'}</span>
+                                                                <span className="text-[10px] text-white/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
                                                             )}
                                                         </div>
                                                     )
@@ -202,10 +360,10 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                         )}
                                     </td>
                                     {/* 플레이어 2 */}
-                                    <td className="px-4 py-3 max-w-36">
+                                    <td className="px-3 py-3">
                                         {match.matchType === 'singles' ? (
-                                            <span className={`text-sm truncate block transition-colors ${winner === 'team2' ? 'font-bold text-white' : 'text-white/70'}`}>
-                                                {player2}
+                                            <span className={`text-sm transition-colors ${winner === 'team2' ? 'font-bold text-white' : 'text-white/85'}`}>
+                                                {getName(match.player2Id ?? '')}
                                             </span>
                                         ) : (
                                             <div className="space-y-1">
@@ -213,19 +371,19 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                     const isAd = courtSides[match.id]?.team2 === pid
                                                     return (
                                                         <div key={pid} className="flex items-center gap-1.5">
-                                                            <span className={`text-sm truncate max-w-[72px] ${winner === 'team2' ? 'font-bold text-white' : 'text-white/70'}`}>
+                                                            <span className={`text-sm ${winner === 'team2' ? 'font-bold text-white' : 'text-white/85'}`}>
                                                                 {getName(pid)}
                                                             </span>
                                                             {!matchGame.isFixed ? (
                                                                 <button
                                                                     onClick={() => toggleAdSide(match.id, 'team2', pid)}
                                                                     disabled={isPending}
-                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-white/15 text-white/50 hover:border-white/30'}`}
+                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-white/20 text-white/65 hover:border-white/35'}`}
                                                                 >
-                                                                    {isAd ? '애드' : '듀스'}
+                                                                    {isAd ? '애드(백)' : '듀스(포)'}
                                                                 </button>
                                                             ) : (
-                                                                <span className="text-[10px] text-white/45 shrink-0">{isAd ? '애드' : '듀스'}</span>
+                                                                <span className="text-[10px] text-white/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
                                                             )}
                                                         </div>
                                                     )
@@ -234,21 +392,21 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                         )}
                                     </td>
                                     {/* 스코어 */}
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-3">
                                         {state.confirmed ? (
                                             <div className="flex items-center gap-2">
                                                 <div className="flex items-center gap-1.5 font-mono text-sm">
-                                                    <span className={winner === 'team1' ? 'font-black text-white' : 'text-white/55'}>
+                                                    <span className={winner === 'team1' ? 'font-black text-white' : 'text-white/70'}>
                                                         {state.sets[0].team1}
                                                     </span>
-                                                    <span className="text-white/45">:</span>
-                                                    <span className={winner === 'team2' ? 'font-black text-white' : 'text-white/55'}>
+                                                    <span className="text-white/55">:</span>
+                                                    <span className={winner === 'team2' ? 'font-black text-white' : 'text-white/70'}>
                                                         {state.sets[0].team2}
                                                     </span>
                                                 </div>
                                                 {canEdit && (
                                                     <button
-                                                        className="w-6 h-6 flex items-center justify-center rounded text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors"
+                                                        className="w-6 h-6 flex items-center justify-center rounded text-white/60 hover:text-white/85 hover:bg-white/8 transition-colors"
                                                         onClick={() => editScore(match.id)}
                                                         disabled={isPending}
                                                     >
@@ -262,15 +420,15 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                     type="text"
                                                     value={state.sets[0].team1}
                                                     onChange={(e) => updateScore(match.id, 0, 'team1', e.target.value)}
-                                                    className="h-7 w-10 text-center text-xs rounded-md bg-white/5 border border-white/12 text-white placeholder:text-white/20 outline-none focus:border-white/30 transition-colors"
+                                                    className="h-7 w-10 text-center text-xs rounded-md bg-white/5 border border-white/15 text-white placeholder:text-white/30 outline-none focus:border-white/35 transition-colors"
                                                     placeholder="P1"
                                                 />
-                                                <span className="text-white/25 text-xs">:</span>
+                                                <span className="text-white/35 text-xs">:</span>
                                                 <input
                                                     type="text"
                                                     value={state.sets[0].team2}
                                                     onChange={(e) => updateScore(match.id, 0, 'team2', e.target.value)}
-                                                    className="h-7 w-10 text-center text-xs rounded-md bg-white/5 border border-white/12 text-white placeholder:text-white/20 outline-none focus:border-white/30 transition-colors"
+                                                    className="h-7 w-10 text-center text-xs rounded-md bg-white/5 border border-white/15 text-white placeholder:text-white/30 outline-none focus:border-white/35 transition-colors"
                                                     placeholder="P2"
                                                 />
                                                 <button
@@ -288,6 +446,33 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                         })}
                     </tbody>
                 </table>
+            </div>
+
+            {/* 모바일 카드 리스트 (md 미만) */}
+            <div className="md:hidden space-y-2">
+                {matchGame.matches.map((match) => {
+                    const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
+                    const winner = state.confirmed ? getWinnerSide(state.sets) : null
+                    return (
+                        <MatchCardItem
+                            key={match.id}
+                            match={match}
+                            matchGame={matchGame}
+                            state={state}
+                            winner={winner}
+                            courtSides={courtSides}
+                            isPending={isPending}
+                            canEdit={canEdit}
+                            getName={getName}
+                            getCourtLabel={getCourtLabel}
+                            getTimeSlot={getTimeSlot}
+                            toggleAdSide={toggleAdSide}
+                            updateScore={updateScore}
+                            confirmScore={confirmScore}
+                            editScore={editScore}
+                        />
+                    )
+                })}
             </div>
 
             {/* 결과 확정 버튼 */}
