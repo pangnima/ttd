@@ -1,6 +1,8 @@
+// 통계 계산 본체는 Supabase RPC(get_user_match_stats, get_user_head_to_head)로 이전됨.
+// 이 파일에는 클라이언트 측에서 쓰이는 유저 필터 헬퍼와 타입 정의만 남아있음.
 import type { Match, MatchType } from '@/types'
 
-export type MatchTypeStats = {
+type MatchTypeStats = {
     matchType: MatchType
     wins: number
     losses: number
@@ -29,6 +31,8 @@ export type HeadToHead = {
     draws: number
 }
 
+// 단식: player1Id/player2Id로 참가 여부 판단.
+// 복식: team1/team2 배열 includes로 판단 (배열 contains).
 function getUserSide(match: Match, userId: string): 'team1' | 'team2' | null {
     if (match.matchType === 'singles') {
         if (match.player1Id === userId) return 'team1'

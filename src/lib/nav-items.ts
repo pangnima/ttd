@@ -20,6 +20,3 @@ export const settingNavItem: NavItem = {
     label: '설정',
     icon: Settings,
 }
-
-/** @deprecated mainNavItems + settingNavItem 으로 분리됨 */
-export const navItems: NavItem[] = [...mainNavItems, settingNavItem]
