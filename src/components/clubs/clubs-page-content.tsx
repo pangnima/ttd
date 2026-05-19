@@ -2,37 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-    Table,
-    TableBody,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-import { ClubTableRow } from '@/components/clubs/club-table-row'
-import { cn } from '@/lib/utils'
-import { Plus, Search } from 'lucide-react'
+import { ClubListRow } from '@/components/clubs/club-list-row'
+import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { Plus, Search, Users } from 'lucide-react'
 import type { Club, ClubMember } from '@/types'
 
-type Props = {
+type ClubsPageContentProps = {
     allClubs: Club[]
     membershipMap: Map<string, { status: ClubMember['status'], role: ClubMember['role'] }>
 }
 
-const TABLE_HEADER = (
-    <TableHeader>
-        <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="text-xs font-medium w-[40%]">클럽</TableHead>
-            <TableHead className="text-xs font-medium">지역</TableHead>
-            <TableHead className="text-xs font-medium">회원 수</TableHead>
-            <TableHead className="text-xs font-medium text-right">관리</TableHead>
-        </TableRow>
-    </TableHeader>
-)
-
-export function ClubsPageContent({ allClubs, membershipMap }: Props) {
+export function ClubsPageContent({ allClubs, membershipMap }: ClubsPageContentProps) {
     const [search, setSearch] = useState('')
 
     const filtered = search.trim()
@@ -47,87 +28,80 @@ export function ClubsPageContent({ allClubs, membershipMap }: Props) {
     const otherClubs = filtered.filter((c) => membershipMap.get(c.id)?.status !== 'approved')
 
     return (
-        <div className="w-full">
-            <div className="flex items-start justify-between mb-1">
+        <div className="w-full space-y-6">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">클럽 목록</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        가입할 클럽을 찾아보세요.
-                    </p>
+                    <h1 className="text-2xl font-bold text-foreground">클럽 목록</h1>
+                    <p className="text-sm text-foreground/60 mt-0.5">가입할 클럽을 찾아보세요</p>
                 </div>
                 <Link
                     href="/clubs/new"
-                    className={cn(buttonVariants({ size: 'sm' }), 'gap-1.5')}
+                    className="flex items-center gap-1.5 text-sm border border-foreground/20 rounded-full px-4 py-1.5 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 hover:text-foreground transition-colors"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     클럽 만들기
                 </Link>
             </div>
 
-            <div className="flex justify-end mb-4 mt-6">
-                <div className="relative w-56">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input
-                        placeholder="클럽 검색"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-8 h-8 text-sm"
-                    />
-                </div>
+            {/* 검색 */}
+            <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45" />
+                <Input
+                    placeholder="클럽 이름·지역으로 검색"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 bg-foreground/[0.02] border-foreground/10"
+                />
             </div>
 
+            {/* 내 클럽 */}
             {myClubs.length > 0 && (
-                <div className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                        내 클럽
-                    </h2>
-                    <div className="rounded-lg border border-border overflow-hidden">
-                        <Table>
-                            {TABLE_HEADER}
-                            <TableBody>
-                                {myClubs.map((club) => (
-                                    <ClubTableRow
-                                        key={club.id}
-                                        club={club}
-                                        membershipStatus="approved"
-                                        isOwner={membershipMap.get(club.id)?.role === 'owner'}
-                                    />
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
+                <section className="space-y-3">
+                    <p className={SECTION_LABEL}>내 클럽</p>
+                    <ul className="space-y-2">
+                        {myClubs.map((club) => (
+                            <ClubListRow
+                                key={club.id}
+                                club={club}
+                                membershipStatus="approved"
+                                isOwner={membershipMap.get(club.id)?.role === 'owner'}
+                            />
+                        ))}
+                    </ul>
+                </section>
             )}
 
-            <div>
-                <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                    전체 클럽
-                </h2>
+            {/* 전체 클럽 */}
+            <section className="space-y-3">
+                <p className={SECTION_LABEL}>전체 클럽</p>
                 {otherClubs.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center border rounded-lg">
-                        검색 결과가 없습니다.
-                    </p>
+                    search.trim() ? (
+                        <div className={EMPTY_BLOCK}>검색 결과가 없습니다.</div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-20 gap-4 border border-foreground/8 border-dashed rounded-xl">
+                            <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center">
+                                <Users className="w-5 h-5 text-foreground/55" />
+                            </div>
+                            <div className="text-center space-y-1">
+                                <p className="text-sm text-foreground/85">아직 가입 가능한 클럽이 없습니다.</p>
+                                <p className="text-xs text-foreground/65">직접 클럽을 만들어보세요.</p>
+                            </div>
+                        </div>
+                    )
                 ) : (
-                    <div className="rounded-lg border border-border overflow-hidden">
-                        <Table>
-                            {TABLE_HEADER}
-                            <TableBody>
-                                {otherClubs.map((club) => (
-                                    <ClubTableRow
-                                        key={club.id}
-                                        club={club}
-                                        membershipStatus={membershipMap.get(club.id)?.status ?? null}
-                                        isOwner={membershipMap.get(club.id)?.role === 'owner'}
-                                    />
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    <ul className="space-y-2">
+                        {otherClubs.map((club) => (
+                            <ClubListRow
+                                key={club.id}
+                                club={club}
+                                membershipStatus={membershipMap.get(club.id)?.status ?? null}
+                                isOwner={membershipMap.get(club.id)?.role === 'owner'}
+                            />
+                        ))}
+                    </ul>
                 )}
-                <p className="mt-3 text-xs text-muted-foreground">
-                    총 {otherClubs.length}개 클럽
-                </p>
-            </div>
+            </section>
         </div>
     )
 }
