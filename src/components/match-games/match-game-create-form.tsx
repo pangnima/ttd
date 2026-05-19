@@ -56,6 +56,10 @@ type MatchGameCreateFormProps = {
     initialData?: MatchGame
 }
 
+// 편집 진입 시 정규화된 MatchGame → 평면 SimpleMatchEntry[] 역매핑.
+// DB에는 courtId/timeSlotId(UUID)만 저장되므로, 폼 입력값(label 문자열/시각 문자열)을
+// 복원하려면 courts/rounds 배열을 역참조해야 한다.
+// timeSlot은 round 안에 중첩되어 있으므로 rounds를 순회하며 탐색한다.
 function matchGameToEntries(matchGame: MatchGame): SimpleMatchEntry[] {
     return matchGame.matches.map((m) => {
         const court = matchGame.courts.find((c) => c.id === m.courtId)
@@ -90,6 +94,10 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     const [allPlayers, setAllPlayers] = useState<User[]>(initialMembers)
     const [error, setError] = useState<string | null>(null)
 
+    // DB에 게스트 row를 생성하고, 성공 시 클라이언트 목록에 즉시 추가한다.
+    // 페이지 새로고침 없이 바로 선택 가능해야 UX가 끊기지 않기 때문.
+    // email/gender/ntrp 등 placeholder 값은 타입 충족용이며 실제 의미 없음 —
+    // 게스트는 Auth 계정이 없으므로 해당 필드를 입력·사용하는 경로가 없다.
     const handleCreatePlayer = (nickname: string) => {
         startTransition(async () => {
             const result = await addGuestPlayerAction(clubId, nickname)
@@ -167,7 +175,13 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             }
         }
 
-        // 구조 생성: courts / rounds / matches
+        // 평면 SimpleMatchEntry[] → 정규화된 courts / rounds / matches 3계층으로 변환.
+        // 폼은 "코트명 문자열 + 시작/종료 시각"으로 입력받으나, DB는 UUID 기반 정규화 구조를 요구하므로
+        // 여기서 중복을 제거하고 ID를 생성한다.
+        //
+        // 코트: 동일 label이 여러 경기에 반복되어도 Court row는 한 개. Set으로 중복 제거.
+        // 타임슬롯: "startAt|endAt" 복합 키로 중복 판단 — 시각이 같으면 같은 슬롯.
+        // 라운드: 현재 폼은 단일 라운드("1st")만 지원. 다중 라운드가 필요하면 폼 구조부터 변경 필요.
         const uniqueCourtLabels = [...new Set(entries.map((e) => e.courtLabel.trim()))]
         const courts: Court[] = uniqueCourtLabels.map((label, i) => ({
             id: genId('court'),
@@ -185,6 +199,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
         const timeSlots = [...slotMap.values()]
         const round: Round = { id: genId('round'), label: '1st', order: 1, timeSlots }
 
+        // 단식/복식 필드는 상호 배제 — DB Match 타입 규약과 동일.
         const matches: Match[] = entries.map((e, i) => {
             const court = courts.find((c) => c.label === e.courtLabel.trim())!
             const slot = slotMap.get(`${e.startAt}|${e.endAt}`)!

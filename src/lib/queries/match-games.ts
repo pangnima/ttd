@@ -29,6 +29,12 @@ function mapRoundRow(row: RoundRow & { time_slots: TimeSlotRow[] }): Round {
     }
 }
 
+// DB row → Match 도메인 타입 변환.
+// result_sets는 JSONB 컬럼이므로 Array<{team1, team2}> 로 캐스팅 필요.
+// winner_id는 외래키가 아닌 사이드 식별자 리터럴 ('team1' | 'team2' | 'draw').
+//   단식에서 player1 = team1, player2 = team2 로 매핑되는 규약에 따름.
+// player1Id/player2Id(단식)와 team1/team2(복식)는 상호 배제 —
+//   matchType이 'singles'이면 player1/2만, 복식이면 team1/2만 유효.
 function mapMatchRow(row: MatchRow): Match {
     let result: MatchResult | undefined
     if (row.result_sets && row.winner_id) {
@@ -74,6 +80,8 @@ function mapMatchGameRow(
 }
 
 
+// PostgREST embed 문법(alias:table(*))으로 4개 테이블을 단일 쿼리로 JOIN.
+// RLS는 match_games, match_game_courts, match_game_rounds, match_game_matches 각 테이블에 독립 적용됨.
 export async function fetchMatchGamesByClubId(clubId: string): Promise<MatchGame[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -106,6 +114,10 @@ export async function fetchMatchGameById(id: string): Promise<MatchGame | null> 
     return mapMatchGameRow(data as Parameters<typeof mapMatchGameRow>[0])
 }
 
+// 단식/복식 모두 커버하는 단일 쿼리.
+// - 단식: player1_id.eq / player2_id.eq
+// - 복식: team1.cs.{userId} / team2.cs.{userId}
+//   cs = PostgreSQL 배열 contains 연산자 ({userId}는 배열 리터럴 형식)
 export async function fetchMatchesByUser(userId: string): Promise<Match[]> {
     const supabase = await createClient()
     const { data, error } = await supabase

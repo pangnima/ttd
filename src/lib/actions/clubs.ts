@@ -1,5 +1,10 @@
 'use server'
 
+// RLS 의존성:
+//   - INSERT: owner_id = auth.uid() 로 강제 (RLS 정책)
+//   - UPDATE/DELETE: clubs.owner_id = auth.uid() 인 row만 허용 (RLS 정책)
+// is_public: true면 미가입 사용자도 클럽 검색/조회 가능, false면 approved 멤버만 조회
+
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'

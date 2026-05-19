@@ -6,6 +6,11 @@ import type { User } from '@/types'
 
 type UserRow = Database['public']['Tables']['users']['Row']
 
+// DB row → User 도메인 타입 변환. queries/clubs.ts, queries/match-games.ts 등에서 재사용.
+// 기본값은 게스트 선수의 미입력 NULL 컬럼 대응:
+//   - gender/dominantHand: DB에서 NULL이 가능한 컬럼이지만 타입은 string 유니온이므로 기본값 필요
+//   - ntrp: 게스트는 레이팅이 없으므로 0 (표시 시 별도 처리 필요)
+//   - isGuest: false가 기본이며, is_guest=true인 row는 public.users에 존재하는 임시 선수
 export function mapUserRow(row: UserRow): User {
     return {
         id: row.id,

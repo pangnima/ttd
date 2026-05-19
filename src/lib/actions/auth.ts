@@ -26,6 +26,8 @@ export async function signupAction(
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
+    // options.data는 Supabase Auth metadata로 전달되며,
+    // handle_new_user DB 트리거가 이 값을 읽어 public.users row를 자동 생성함.
     const { data, error } = await supabase.auth.signUp({
         email,
         password,

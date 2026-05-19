@@ -1,5 +1,13 @@
 'use server'
 
+// RLS 의존성:
+//   - INSERT (가입 신청): user_id = auth.uid() AND status = 'pending' (RLS 정책)
+//   - UPDATE (승인/거절): 클럽 owner만 허용 (RLS 정책, role = 'owner' JOIN)
+//   - DELETE: 본인 row만 허용 (RLS 정책)
+// 비즈니스 룰:
+//   - owner는 클럽을 탈퇴할 수 없음 (클럽 삭제 후 탈퇴 가능)
+//   - approveMember/rejectMember는 .eq('status', 'pending') 조건으로 멱등성 보장
+
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
@@ -52,6 +60,7 @@ export async function leaveClubAction(clubId: string): Promise<{ error: string }
         .eq('user_id', user.id)
         .eq('club_id', clubId)
         .maybeSingle()
+    // owner는 클럽을 먼저 삭제해야만 탈퇴 가능
     if (membership?.role === 'owner') return { error: '클럽장은 클럽을 탈퇴할 수 없습니다.' }
 
     const { error } = await supabase
@@ -75,7 +84,7 @@ export async function approveMemberAction(clubId: string, userId: string): Promi
         .update({ status: 'approved' })
         .eq('club_id', clubId)
         .eq('user_id', userId)
-        .eq('status', 'pending')
+        .eq('status', 'pending')   // pending인 row만 업데이트 (멱등성 보장)
 
     if (error) return { error: error.message }
     revalidateClubPaths(clubId)
@@ -92,7 +101,7 @@ export async function rejectMemberAction(clubId: string, userId: string): Promis
         .update({ status: 'rejected' })
         .eq('club_id', clubId)
         .eq('user_id', userId)
-        .eq('status', 'pending')
+        .eq('status', 'pending')   // pending인 row만 업데이트 (멱등성 보장)
 
     if (error) return { error: error.message }
     revalidateClubPaths(clubId)

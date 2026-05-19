@@ -1,9 +1,17 @@
 'use server'
 
+// RLS 의존성:
+//   - CREATE/UPDATE: approved member (RPC 내부에서 검증)
+//   - DELETE match_games: owner (RLS 정책으로 강제)
+//   - 경기 결과 입력(saveMatchResult): approved member
+//   - 결과 확정(confirm): owner — RLS만으로는 부족해 Server Action에서 role 체크를 이중 방어
+
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Court, Match, MatchType, Round } from '@/types'
 
+// temp_id 패턴: 클라이언트는 임시 UUID로 courts/rounds/timeSlots를 연결하고,
+// RPC 내부에서 INSERT 후 실제 DB ID로 매핑하여 matches에 FK를 연결함.
 function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[]) {
     const courtsPayload = courts.map((c) => ({
         temp_id: c.id,
@@ -38,7 +46,8 @@ function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[
 
 type ActionResult = { ok: false; error: string } | { ok: true }
 
-// MatchGame 생성: RPC로 단일 트랜잭션 저장
+// RPC `create_match_game`: match_games + courts + rounds + time_slots + matches를 단일 트랜잭션으로 INSERT.
+// temp_id 패턴으로 클라이언트 임시 ID를 DB 실제 ID에 매핑.
 export async function createMatchGameAction(
     clubId: string,
     name: string,
@@ -68,7 +77,7 @@ export async function createMatchGameAction(
     return { ok: true, matchGameId: data as string }
 }
 
-// MatchGame 삭제 (RLS: owner만 가능)
+// DELETE는 RLS에서 owner만 허용 — Server Action 추가 체크 없이 DB 오류로 반환
 export async function deleteMatchGameAction(
     clubId: string,
     matchGameId: string
@@ -88,7 +97,8 @@ export async function deleteMatchGameAction(
     return { ok: true }
 }
 
-// 경기 결과 저장 (단건 UPDATE)
+// winner_id는 외래키가 아닌 사이드 식별자 리터럴 ('team1' | 'team2' | 'draw').
+// 단식에서 player1 = team1, player2 = team2 로 매핑되는 규약에 따름.
 export async function saveMatchResultAction(
     clubId: string,
     matchGameId: string,
@@ -116,7 +126,9 @@ export async function saveMatchResultAction(
     return { ok: true }
 }
 
-// 복식 코트 배치 저장 (애드코트/듀스코트 선수 ID)
+// 복식 전용 — 각 팀에서 애드코트(백핸드 사이드)를 맡은 선수 ID를 저장.
+// null은 미지정 상태 (기본적으로 듀스코트/포핸드 사이드).
+// 단식 경기에서는 이 액션이 호출되지 않음.
 export async function saveCourtSidesAction(
     clubId: string,
     matchGameId: string,
@@ -142,7 +154,8 @@ export async function saveCourtSidesAction(
     return { ok: true }
 }
 
-// MatchGame 결과 확정 (클럽장 전용: is_fixed = true)
+// is_fixed = true: 이후 모든 수정 잠금 + 통계 집계에 반영되는 확정 상태.
+// RLS만으로는 owner 체크가 불충분한 경우를 대비해 Server Action에서 role을 이중 방어.
 export async function confirmMatchGameAction(
     clubId: string,
     matchGameId: string
@@ -175,7 +188,6 @@ export async function confirmMatchGameAction(
     return { ok: true }
 }
 
-// 게스트 플레이어 추가: RPC로 users + club_members 트랜잭션
 export async function addGuestPlayerAction(
     clubId: string,
     nickname: string
@@ -196,7 +208,8 @@ export async function addGuestPlayerAction(
     return { ok: true, userId: data as string }
 }
 
-// MatchGame 수정: 결과 미입력 상태에서만 전체 재구성 (RPC 트랜잭션)
+// RPC `update_match_game`: 기존 courts/rounds/time_slots/matches를 전부 삭제하고 재생성 (트랜잭션).
+// DB 함수가 RAISE하는 에러 코드: has_results(결과 있음), match_game_fixed(확정됨), not_owner(권한 없음).
 export async function updateMatchGameAction(
     clubId: string,
     matchGameId: string,
