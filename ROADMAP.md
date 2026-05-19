@@ -161,3 +161,31 @@
 - [ ] `auth_leaked_password_protection` 활성화 (Supabase Dashboard → Auth → Security)
 - [ ] Vercel 배포 설정 + 환경변수 등록
 - [ ] 도메인 설정 (선택)
+
+---
+
+## 앞으로 개선해야할 점
+
+### 단기: 배포 마무리 (Week 9 잔여)
+- [ ] Vercel 배포 + 환경변수 등록 (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+- [ ] Supabase Dashboard → Auth → Security → `auth_leaked_password_protection` 활성화
+- [ ] Supabase URL 화이트리스트 (Site URL, Redirect URLs)
+- [ ] 도메인 설정 (선택)
+- [ ] 프로덕션 빌드 후 핵심 플로우 회귀 점검 (로그인 → 대시보드 → 클럽 → 대진표 → 결과 입력)
+
+### 중기: 기술 부채 / 품질 개선
+- [ ] **에러 바운더리** — App Router 각 라우트 그룹에 `error.tsx` 추가
+- [ ] **로딩 상태 일관화** — `loading.tsx` + Suspense 패턴 (현재 일부 페이지 누락)
+- [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)
+- [ ] **테스트 도입** — Playwright e2e (로그인, 클럽 생성, 대진표 생성·결과 입력 플로우)
+- [ ] **접근성(a11y)** — 색 대비, ARIA 레이블, 키보드 네비게이션 점검
+- [ ] **모니터링** — Sentry 에러 수집 / Vercel Analytics
+- [ ] **DB 인덱스 점검** — `match_game_matches`의 `team1 @> ARRAY[userId]` 쿼리 성능
+
+### 장기: Phase 5+ 신기능 로드맵
+- [ ] **알림** — 가입 신청/승인, 결과 확정 알림 (Supabase Realtime 또는 Edge Function + push)
+- [ ] **경기 일정 공유** — ICS 내보내기, 캘린더 연동
+- [ ] **매칭 추천** — NTRP 기반 자동 페어링 알고리즘
+- [ ] **리그/시즌** — 누적 랭킹, 시즌 단위 집계 (별도 테이블 또는 view)
+- [ ] **클럽 게시판** — 공지/자유 게시판 (RLS: approved 멤버만 쓰기)
+- [ ] **모바일 PWA** — 오프라인 캐시, 홈 화면 추가, 푸시 알림
