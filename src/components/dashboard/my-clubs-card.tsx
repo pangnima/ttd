@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Club } from '@/types'
 import { CARD_BASE, CARD_HOVER, EMPTY_BLOCK, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { ClubAvatar } from '@/components/clubs/club-avatar'
 
 type Props = { clubs: Club[] }
 
@@ -24,9 +25,10 @@ export function MyClubsCard({ clubs }: Props) {
                         <li key={club.id}>
                             <Link
                                 href={`/clubs/${club.id}`}
-                                className={`${CARD_BASE} ${CARD_HOVER} flex items-center justify-between px-4 py-3 group`}
+                                className={`${CARD_BASE} ${CARD_HOVER} flex items-center gap-3 px-3 py-3 group`}
                             >
-                                <div className="min-w-0">
+                                <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="sm" />
+                                <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium text-foreground/95 group-hover:text-foreground transition-colors truncate">
                                         {club.name}
                                     </p>
@@ -34,7 +36,7 @@ export function MyClubsCard({ clubs }: Props) {
                                         <p className="text-[11px] text-foreground/55 mt-0.5">{club.region}</p>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0">
                                     <span className="text-[11px] text-foreground/55">
                                         {club.memberCount}명
                                     </span>

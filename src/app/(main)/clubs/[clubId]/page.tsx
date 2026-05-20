@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { ClubDetailActions } from '@/components/clubs/club-detail-actions'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
+import { ClubAvatar } from '@/components/clubs/club-avatar'
 import { MapPin, Users, Trophy, Settings, ChevronRight } from 'lucide-react'
 
 type ClubPageProps = {
@@ -39,7 +40,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {/* 클럽 헤더 */}
             <div className="space-y-2">
                 <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="lg" />
+                        <div className="space-y-1">
                         <div className="flex items-center gap-2">
                             <h1 className="text-2xl font-bold">{club.name}</h1>
                             <Badge variant={club.isPublic ? 'default' : 'secondary'}>
@@ -47,6 +50,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             </Badge>
                         </div>
                         <p className="text-muted-foreground text-sm">{club.description}</p>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         {!isOwner && (

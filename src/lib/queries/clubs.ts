@@ -27,6 +27,7 @@ function mapClubRow(row: ClubRow): Club {
         memberCount: row.member_count,
         ownerId: row.owner_id,
         createdAt: row.created_at,
+        logoUrl: row.logo_url ?? undefined,
     }
 }
 

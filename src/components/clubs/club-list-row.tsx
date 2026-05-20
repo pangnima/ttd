@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { MapPin, Users, ChevronRight } from 'lucide-react'
 import { applyToClubAction, cancelApplicationAction } from '@/lib/actions/club-members'
 import { CARD_BASE, CARD_HOVER, PILL_BASE } from '@/lib/dashboard/tokens'
+import { ClubAvatar } from '@/components/clubs/club-avatar'
 import type { Club, ClubMember } from '@/types'
 
 type ClubListRowProps = {
@@ -15,7 +16,6 @@ type ClubListRowProps = {
 
 export function ClubListRow({ club, membershipStatus, isOwner }: ClubListRowProps) {
     const [isPending, startTransition] = useTransition()
-    const initial = club.name.charAt(0).toUpperCase() || '?'
 
     const handleApply = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -73,8 +73,8 @@ export function ClubListRow({ club, membershipStatus, isOwner }: ClubListRowProp
                 className="absolute inset-0 rounded-xl"
                 aria-label={club.name}
             />
-            <div className="relative z-10 w-9 h-9 rounded-md bg-foreground/5 border border-foreground/10 flex items-center justify-center shrink-0 text-sm font-semibold text-foreground/70">
-                {initial}
+            <div className="relative z-10">
+                <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="md" />
             </div>
             <div className="relative z-10 flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors truncate">

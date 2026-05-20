@@ -59,6 +59,7 @@ export type Database = {
           description: string | null
           id: string
           is_public: boolean
+          logo_url: string | null
           member_count: number
           name: string
           owner_id: string
@@ -69,6 +70,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean
+          logo_url?: string | null
           member_count?: number
           name: string
           owner_id: string
@@ -79,6 +81,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean
+          logo_url?: string | null
           member_count?: number
           name?: string
           owner_id?: string

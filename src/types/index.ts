@@ -23,6 +23,7 @@ export type Club = {
     memberCount: number
     ownerId: string
     createdAt: string
+    logoUrl?: string
 }
 
 export type ClubMember = {
