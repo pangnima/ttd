@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems, settingNavItem } from '@/lib/nav-items'
+import { mainNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
@@ -61,16 +61,9 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
                 )}
             </nav>
 
-            {/* 설정 + 테마 토글 — 하단 고정 */}
-            <div className="p-3 border-t border-foreground/5 space-y-1">
+            {/* 테마 토글 — 하단 고정 */}
+            <div className="p-3 border-t border-foreground/5">
                 <ThemeToggle />
-                <Link
-                    href={settingNavItem.href}
-                    className={navLinkClass(activePath === settingNavItem.href)}
-                >
-                    <settingNavItem.icon className="w-4 h-4 shrink-0" />
-                    {settingNavItem.label}
-                </Link>
             </div>
         </aside>
     )

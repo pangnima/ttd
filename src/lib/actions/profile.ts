@@ -39,5 +39,6 @@ export async function updateProfileAction(
     if (error) return { error: error.message }
 
     revalidatePath('/profile/settings')
+    revalidatePath('/dashboard')
     return null
 }

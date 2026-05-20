@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems, settingNavItem } from '@/lib/nav-items'
+import { mainNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 
 export function MobileNav() {
@@ -89,22 +89,6 @@ export function MobileNav() {
                     )}
                 </nav>
 
-                {/* 설정 — 하단 고정 */}
-                <div className="p-3 border-t">
-                    <Link
-                        href={settingNavItem.href}
-                        onClick={() => setOpen(false)}
-                        className={cn(
-                            'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                            pathname === settingNavItem.href
-                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                        )}
-                    >
-                        <settingNavItem.icon className="w-4 h-4" />
-                        {settingNavItem.label}
-                    </Link>
-                </div>
             </SheetContent>
         </Sheet>
     )

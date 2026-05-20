@@ -69,7 +69,7 @@ export function Header() {
 
                 {userDisplay ? (
                     <div className="flex items-center gap-2">
-                        <Link href={`/profile/${userDisplay.id}`} className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Link href="/profile/settings" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <Avatar className="w-7 h-7">
                                 {userDisplay.profileImage && (
                                     <AvatarImage
