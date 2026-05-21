@@ -20,8 +20,18 @@ const notoSansKR = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-    title: '테니스 클럽 플랫폼',
+    metadataBase: new URL('https://tennis-club.vercel.app'),
+    title: {
+        default: '테니스 클럽 플랫폼',
+        template: '%s | 테니스 클럽',
+    },
     description: '테니스 클럽 운영자와 회원을 위한 클럽 관리 + 경기 통계 플랫폼',
+    openGraph: {
+        title: '테니스 클럽 플랫폼',
+        description: '테니스 클럽 운영자와 회원을 위한 클럽 관리 + 경기 통계 플랫폼',
+        locale: 'ko_KR',
+        type: 'website',
+    },
 }
 
 export default function RootLayout({
