@@ -11,13 +11,18 @@ import {
 } from '@/lib/queries/stats'
 import { PendingApprovalBanner } from '@/components/dashboard/pending-approval-banner'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
+import { ClubSelector } from '@/components/dashboard/club-selector'
 import { StatsQuadGrid } from '@/components/dashboard/stats-quad-grid'
 import { DoublesCourtStatsCard } from '@/components/dashboard/doubles-court-stats'
 import { RivalryPartnerCard } from '@/components/dashboard/rivalry-partner-card'
 import { RecentMatchesCard } from '@/components/dashboard/recent-matches-card'
 import { MyClubsCard } from '@/components/dashboard/my-clubs-card'
 
-export default async function DashboardPage() {
+type Props = {
+    searchParams: Promise<{ clubId?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
@@ -25,15 +30,21 @@ export default async function DashboardPage() {
     const me = await fetchUserById(user.id)
     if (!me) redirect('/login')
 
-    const [myClubs, pendingEntries, { matches, gameMetaById }, stats, court, h2h, partners] =
+    const { clubId: clubIdParam } = await searchParams
+    const myClubs = await fetchMyClubs(user.id)
+    const selectedClubId =
+        clubIdParam && myClubs.some((c) => c.id === clubIdParam)
+            ? clubIdParam
+            : myClubs[0]?.id
+
+    const [pendingEntries, { matches, gameMetaById }, stats, court, h2h, partners] =
         await Promise.all([
-            fetchMyClubs(user.id),
             fetchPendingMembersByOwner(user.id),
-            fetchMatchesByUser(user.id),
-            fetchUserMatchStatsV2(me.id),
-            fetchUserDoublesCourtStats(me.id),
-            fetchUserHeadToHead(me.id),
-            fetchUserPartnerStats(me.id),
+            fetchMatchesByUser(user.id, selectedClubId),
+            fetchUserMatchStatsV2(me.id, selectedClubId),
+            fetchUserDoublesCourtStats(me.id, selectedClubId),
+            fetchUserHeadToHead(me.id, selectedClubId),
+            fetchUserPartnerStats(me.id, selectedClubId),
         ])
 
     const userIds = new Set<string>()
@@ -53,6 +64,10 @@ export default async function DashboardPage() {
             <PendingApprovalBanner entries={pendingEntries} />
 
             <DashboardHeader me={me} />
+
+            {myClubs.length >= 2 && (
+                <ClubSelector clubs={myClubs} selectedClubId={selectedClubId} />
+            )}
 
             <StatsQuadGrid
                 gender={me.gender}
