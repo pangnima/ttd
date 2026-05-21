@@ -22,6 +22,17 @@ export type PlayerStats = {
     byMatchType: MatchTypeStats[]
 }
 
+export const EMPTY_PLAYER_STATS: PlayerStats = {
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    totalMatches: 0,
+    winRate: 0,
+    setsWon: 0,
+    setsLost: 0,
+    byMatchType: [],
+}
+
 export type HeadToHead = {
     opponentId: string
     wins: number

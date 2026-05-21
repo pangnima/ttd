@@ -52,9 +52,12 @@ const EMPTY_COURT: CourtStat = { matches: 0, wins: 0, losses: 0, draws: 0 }
 
 // Supabase RPC `get_user_head_to_head`: 상대 선수별 누적 전적 조회.
 // 단식/복식 구분 없이 opponent_id 기준으로 집계됨.
-export async function fetchUserHeadToHead(userId: string): Promise<HeadToHead[]> {
+export async function fetchUserHeadToHead(userId: string, clubId?: string): Promise<HeadToHead[]> {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_user_head_to_head', { p_user_id: userId })
+    const args = clubId
+        ? { p_user_id: userId, p_club_id: clubId }
+        : { p_user_id: userId }
+    const { data, error } = await supabase.rpc('get_user_head_to_head', args)
     if (error || !data) return []
     return (data as { opponent_id: string; matches: number; wins: number; losses: number; draws: number }[]).map(
         (row) => ({ opponentId: row.opponent_id, wins: row.wins, losses: row.losses, draws: row.draws ?? 0 })
@@ -62,14 +65,17 @@ export async function fetchUserHeadToHead(userId: string): Promise<HeadToHead[]>
 }
 
 // Supabase RPC `get_user_match_stats_v2`: 4분기(단식·남복·여복·혼복) + sets 통계 조회.
-export async function fetchUserMatchStatsV2(userId: string): Promise<{
+export async function fetchUserMatchStatsV2(userId: string, clubId?: string): Promise<{
     singles: PlayerStats
     menDoubles: PlayerStats
     womenDoubles: PlayerStats
     mixedDoubles: PlayerStats
 }> {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_user_match_stats_v2', { p_user_id: userId })
+    const args = clubId
+        ? { p_user_id: userId, p_club_id: clubId }
+        : { p_user_id: userId }
+    const { data, error } = await supabase.rpc('get_user_match_stats_v2', args)
     if (error || !data) {
         const empty = makePlayerStatsV2(EMPTY_RAW_V2)
         return { singles: empty, menDoubles: empty, womenDoubles: empty, mixedDoubles: empty }
@@ -84,9 +90,12 @@ export async function fetchUserMatchStatsV2(userId: string): Promise<{
 }
 
 // Supabase RPC `get_user_doubles_court_stats`: 복식 기준 애드/듀스 코트별 승패.
-export async function fetchUserDoublesCourtStats(userId: string): Promise<DoublesCourtStats> {
+export async function fetchUserDoublesCourtStats(userId: string, clubId?: string): Promise<DoublesCourtStats> {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_user_doubles_court_stats', { p_user_id: userId })
+    const args = clubId
+        ? { p_user_id: userId, p_club_id: clubId }
+        : { p_user_id: userId }
+    const { data, error } = await supabase.rpc('get_user_doubles_court_stats', args)
     if (error || !data) return { ad: { ...EMPTY_COURT }, deuce: { ...EMPTY_COURT } }
     const raw = data as DoublesCourtStats
     return {
@@ -96,9 +105,12 @@ export async function fetchUserDoublesCourtStats(userId: string): Promise<Double
 }
 
 // Supabase RPC `get_user_partner_stats`: 복식 동일 팀 파트너별 전적 조회.
-export async function fetchUserPartnerStats(userId: string): Promise<PartnerStat[]> {
+export async function fetchUserPartnerStats(userId: string, clubId?: string): Promise<PartnerStat[]> {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_user_partner_stats', { p_user_id: userId })
+    const args = clubId
+        ? { p_user_id: userId, p_club_id: clubId }
+        : { p_user_id: userId }
+    const { data, error } = await supabase.rpc('get_user_partner_stats', args)
     if (error || !data) return []
     return (data as { partner_id: string; matches: number; wins: number; losses: number; draws: number }[]).map(
         (row) => ({

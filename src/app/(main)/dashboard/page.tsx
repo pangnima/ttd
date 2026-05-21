@@ -75,6 +75,9 @@ export default async function DashboardPage({ searchParams }: Props) {
                 menDoubles={stats.menDoubles}
                 womenDoubles={stats.womenDoubles}
                 mixedDoubles={stats.mixedDoubles}
+                privacy={me.statsHidden ? 'self' : 'public'}
+                editable
+                statsHidden={me.statsHidden}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

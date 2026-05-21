@@ -26,6 +26,7 @@ export function mapUserRow(row: UserRow): User {
         tennisStartDate: row.tennis_start_date ?? '',
         createdAt: row.created_at,
         isGuest: row.is_guest ?? false,
+        statsHidden: row.stats_hidden ?? false,
     }
 }
 

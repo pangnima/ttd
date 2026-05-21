@@ -132,6 +132,7 @@ export type Database = {
           id: string
           match_game_id: string
           match_type: string
+          order: number
           player1_id: string | null
           player2_id: string | null
           result_sets: Json | null
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           match_game_id: string
           match_type: string
+          order?: number
           player1_id?: string | null
           player2_id?: string | null
           result_sets?: Json | null
@@ -166,6 +168,7 @@ export type Database = {
           id?: string
           match_game_id?: string
           match_type?: string
+          order?: number
           player1_id?: string | null
           player2_id?: string | null
           result_sets?: Json | null
@@ -344,6 +347,7 @@ export type Database = {
           phone: string | null
           profile_image: string | null
           role: string
+          stats_hidden: boolean
           tennis_start_date: string | null
         }
         Insert: {
@@ -359,6 +363,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           role?: string
+          stats_hidden?: boolean
           tennis_start_date?: string | null
         }
         Update: {
@@ -374,6 +379,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           role?: string
+          stats_hidden?: boolean
           tennis_start_date?: string | null
         }
         Relationships: []
@@ -382,6 +388,7 @@ export type Database = {
     Views: {
       user_match_participations: {
         Row: {
+          club_id: string | null
           match_id: string | null
           match_type: string | null
           result: string | null
@@ -391,10 +398,12 @@ export type Database = {
       }
     }
     Functions: {
-      add_guest_player: {
-        Args: { p_club_id: string; p_nickname: string }
-        Returns: string
-      }
+      add_guest_player:
+        | { Args: { p_club_id: string; p_nickname: string }; Returns: string }
+        | {
+            Args: { p_club_id: string; p_gender?: string; p_nickname: string }
+            Returns: string
+          }
       create_match_game: {
         Args: {
           p_club_id: string
@@ -406,32 +415,55 @@ export type Database = {
         }
         Returns: string
       }
-      get_user_doubles_court_stats: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      get_user_head_to_head: {
-        Args: { p_user_id: string }
-        Returns: {
-          draws: number
-          losses: number
-          matches: number
-          opponent_id: string
-          wins: number
-        }[]
-      }
+      get_user_doubles_court_stats:
+        | { Args: { p_user_id: string }; Returns: Json }
+        | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }
+      get_user_head_to_head:
+        | {
+            Args: { p_user_id: string }
+            Returns: {
+              draws: number
+              losses: number
+              matches: number
+              opponent_id: string
+              wins: number
+            }[]
+          }
+        | {
+            Args: { p_club_id?: string; p_user_id: string }
+            Returns: {
+              draws: number
+              losses: number
+              matches: number
+              opponent_id: string
+              wins: number
+            }[]
+          }
       get_user_match_stats: { Args: { p_user_id: string }; Returns: Json }
-      get_user_match_stats_v2: { Args: { p_user_id: string }; Returns: Json }
-      get_user_partner_stats: {
-        Args: { p_user_id: string }
-        Returns: {
-          draws: number
-          losses: number
-          matches: number
-          partner_id: string
-          wins: number
-        }[]
-      }
+      get_user_match_stats_v2:
+        | { Args: { p_user_id: string }; Returns: Json }
+        | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }
+      get_user_partner_stats:
+        | {
+            Args: { p_user_id: string }
+            Returns: {
+              draws: number
+              losses: number
+              matches: number
+              partner_id: string
+              wins: number
+            }[]
+          }
+        | {
+            Args: { p_club_id?: string; p_user_id: string }
+            Returns: {
+              draws: number
+              losses: number
+              matches: number
+              partner_id: string
+              wins: number
+            }[]
+          }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean

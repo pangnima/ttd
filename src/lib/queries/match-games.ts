@@ -66,6 +66,12 @@ function mapMatchGameRow(
         matches: MatchRow[]
     }
 ): MatchGame {
+    const courts = row.courts.map(mapCourtRow)
+    const rounds = row.rounds.map(mapRoundRow)
+    const matches = [...row.matches]
+        .sort((a, b) => (a.order - b.order) || (a.id < b.id ? -1 : 1))
+        .map(mapMatchRow)
+
     return {
         id: row.id,
         clubId: row.club_id,
@@ -73,12 +79,21 @@ function mapMatchGameRow(
         date: row.date,
         isFixed: row.is_fixed,
         createdAt: row.created_at,
-        courts: row.courts.map(mapCourtRow),
-        rounds: row.rounds.map(mapRoundRow),
-        matches: row.matches.map(mapMatchRow),
+        courts,
+        rounds,
+        matches,
     }
 }
 
+
+export async function fetchMatchGameCountByClubId(clubId: string): Promise<number> {
+    const supabase = await createClient()
+    const { count } = await supabase
+        .from('match_games')
+        .select('id', { count: 'exact', head: true })
+        .eq('club_id', clubId)
+    return count ?? 0
+}
 
 // PostgREST embed 문법(alias:table(*))으로 4개 테이블을 단일 쿼리로 JOIN.
 // RLS는 match_games, match_game_courts, match_game_rounds, match_game_matches 각 테이블에 독립 적용됨.
@@ -120,7 +135,8 @@ export type MatchGameMeta = { id: string; name: string; date: string; clubId: st
 // - 단식: player1_id.eq / player2_id.eq
 // - 복식: team1.cs.{userId} / team2.cs.{userId}
 //   cs = PostgreSQL 배열 contains 연산자 ({userId}는 배열 리터럴 형식)
-export async function fetchMatchesByUser(userId: string): Promise<{
+// clubId 지정 시 해당 클럽의 경기만 반환 (JS 필터).
+export async function fetchMatchesByUser(userId: string, clubId?: string): Promise<{
     matches: Match[]
     gameMetaById: Record<string, MatchGameMeta>
 }> {
@@ -131,12 +147,18 @@ export async function fetchMatchesByUser(userId: string): Promise<{
         .or(`player1_id.eq.${userId},player2_id.eq.${userId},team1.cs.{${userId}},team2.cs.{${userId}}`)
         .eq('status', 'finished')
     if (error || !data) return { matches: [], gameMetaById: {} }
-    const matches = data.map((row) => mapMatchRow(row as MatchRow))
+
     const gameMetaById: Record<string, MatchGameMeta> = {}
     for (const row of data) {
         const g = row.match_games as { id: string; name: string; date: string; club_id: string } | null
         if (g) gameMetaById[g.id] = { id: g.id, name: g.name, date: g.date, clubId: g.club_id }
     }
+
+    const allMatches = data.map((row) => mapMatchRow(row as MatchRow))
+    const matches = clubId
+        ? allMatches.filter((m) => gameMetaById[m.matchGameId]?.clubId === clubId)
+        : allMatches
+
     return { matches, gameMetaById }
 }
 

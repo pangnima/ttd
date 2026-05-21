@@ -12,6 +12,7 @@ export type User = {
     tennisStartDate: string
     createdAt: string
     isGuest: boolean   // true면 게스트 선수 (public.users에 존재하지만 Auth 계정 없음)
+    statsHidden: boolean  // true면 승률·승무패를 타인에게 비공개
 }
 
 export type Club = {
@@ -85,6 +86,9 @@ export type Match = {
     team2AdPlayerId?: string
     status: 'scheduled' | 'finished'
     result?: MatchResult
+    // 편집 저장 시에만 사용 — 이 match가 유래한 기존 match의 DB id.
+    // RPC가 구성 동일 여부를 확인해 점수를 이어붙이는 데 쓴다. 신규 경기/생성 시엔 undefined.
+    prevMatchId?: string
 }
 
 export type MatchGame = {
