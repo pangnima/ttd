@@ -15,12 +15,12 @@ export function DashboardHeader({ me }: Props) {
     return (
         <div className="flex items-center justify-between">
             <div className="space-y-1">
-                <p className="text-[11px] font-medium tracking-widest uppercase text-foreground/65">
+                <p className="text-xs font-medium tracking-widest uppercase text-foreground/75">
                     대시보드
                 </p>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-3xl font-bold text-foreground">
                     {greeting},{' '}
-                    <span className="text-foreground/85">{me.nickname}</span>
+                    <span className="text-foreground/90">{me.nickname}</span>
                 </h1>
             </div>
             <Link
@@ -35,7 +35,7 @@ export function DashboardHeader({ me }: Props) {
                         {me.nickname[0] ?? me.name[0] ?? '?'}
                     </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:block text-xs text-foreground/55 group-hover:text-foreground transition-colors">
+                <span className="hidden sm:block text-sm text-foreground/70 group-hover:text-foreground transition-colors">
                     프로필 변경
                 </span>
             </Link>

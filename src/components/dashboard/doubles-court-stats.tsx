@@ -9,12 +9,12 @@ function CourtBar({ label, stat }: { label: string; stat: DoublesCourtStats['ad'
 
     return (
         <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[11px]">
-                <span className="text-foreground/75 font-medium">{label}</span>
-                <span className="text-foreground/65">
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-base text-foreground/85 font-medium">{label}</span>
+                <span className="text-foreground/80">
                     {stat.wins}승 {stat.losses}패 {stat.draws > 0 ? `${stat.draws}무` : ''}
                     {rate !== null && (
-                        <span className="ml-1.5 text-foreground/85 font-semibold">{rate}%</span>
+                        <span className="ml-1.5 text-foreground/90 font-semibold">{rate}%</span>
                     )}
                 </span>
             </div>
@@ -24,7 +24,7 @@ function CourtBar({ label, stat }: { label: string; stat: DoublesCourtStats['ad'
                     style={{ width: `${barWidth}%` }}
                 />
             </div>
-            <p className="text-[10px] text-foreground/55">총 {stat.matches}경기</p>
+            <p className="text-xs text-foreground/70">총 {stat.matches}경기</p>
         </div>
     )
 }
@@ -40,12 +40,12 @@ export function DoublesCourtStatsCard({ court }: Props) {
                     <>
                         <CourtBar label="애드코트 (백핸드)" stat={court.ad} />
                         <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} />
-                        <p className="text-[10px] text-foreground/55 border-t border-foreground/5 pt-2">
+                        <p className="text-xs text-foreground/70 border-t border-foreground/5 pt-2">
                             * 복식 경기 기준. 코트 미지정 경기는 듀스에 포함.
                         </p>
                     </>
                 ) : (
-                    <p className="text-xs text-foreground/55 text-center py-4">
+                    <p className="text-sm text-foreground/70 text-center py-4">
                         복식 경기 데이터가 없습니다
                     </p>
                 )}

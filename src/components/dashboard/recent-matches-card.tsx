@@ -44,14 +44,14 @@ function PlayerName({
             {isMe ? (
                 <span className="text-cyan-400/90 font-medium">{nickname}</span>
             ) : isGuest || !user ? (
-                <span className="text-foreground/85">{nickname}</span>
+                <span className="text-foreground/90">{nickname}</span>
             ) : (
-                <Link href={`/profile/${userId}`} className="text-foreground/85 hover:text-foreground transition-colors">
+                <Link href={`/profile/${userId}`} className="text-foreground/90 hover:text-foreground transition-colors">
                     {nickname}
                 </Link>
             )}
             {courtLabel && (
-                <span className="text-foreground/55">{courtLabel}</span>
+                <span className="text-foreground/70">{courtLabel}</span>
             )}
         </>
     )
@@ -96,40 +96,40 @@ export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Pr
                                         {meta && (
                                             <Link
                                                 href={`/clubs/${meta.clubId}/match-games/${match.matchGameId}`}
-                                                className="text-xs text-foreground/65 hover:text-foreground/90 transition-colors truncate"
+                                                className="text-sm text-foreground/80 hover:text-foreground/90 transition-colors truncate"
                                             >
                                                 {meta.name}
                                             </Link>
                                         )}
                                         {meta && (
-                                            <span className="text-[10px] text-foreground/55">{meta.date}</span>
+                                            <span className="text-xs text-foreground/70">{meta.date}</span>
                                         )}
                                     </div>
-                                    <div className="text-xs text-foreground/70 flex flex-wrap items-center gap-x-0.5">
+                                    <div className="text-sm text-foreground/85 flex flex-wrap items-center gap-x-0.5">
                                         {/* 본인(+ 파트너) */}
                                         <PlayerName userId={userId} isMe={true} court={isSingles ? undefined : view.myCourt} userMap={userMap} />
                                         {view.partner && (
                                             <>
-                                                <span className="text-foreground/40 mx-0.5">,</span>
+                                                <span className="text-foreground/55 mx-0.5">,</span>
                                                 <PlayerName userId={view.partner.id} isMe={false} court={view.partner.court} userMap={userMap} />
                                             </>
                                         )}
                                         {/* vs 구분자 */}
-                                        <span className="text-foreground/40 mx-1">vs</span>
+                                        <span className="text-foreground/55 mx-1">vs</span>
                                         {/* 상대 */}
                                         {view.opponents.length === 0 ? (
-                                            <span className="text-foreground/55">상대 없음</span>
+                                            <span className="text-foreground/70">상대 없음</span>
                                         ) : (
                                             view.opponents.map((opp, i) => (
                                                 <span key={opp.id} className="flex items-center gap-x-0.5">
-                                                    {i > 0 && <span className="text-foreground/40">,</span>}
+                                                    {i > 0 && <span className="text-foreground/55">,</span>}
                                                     <PlayerName userId={opp.id} isMe={false} court={isSingles ? undefined : opp.court} userMap={userMap} />
                                                 </span>
                                             ))
                                         )}
                                     </div>
                                 </div>
-                                <div className="text-sm font-semibold text-foreground/85 shrink-0 tabular-nums">
+                                <div className="text-lg font-semibold text-foreground/90 shrink-0 tabular-nums">
                                     {view.mySets} : {view.oppSets}
                                 </div>
                             </li>
