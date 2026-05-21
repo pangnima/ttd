@@ -37,3 +37,15 @@ const STYLES: Record<MatchType, MatchTypeStyle> = {
 export function getMatchTypeStyle(type: MatchType): MatchTypeStyle {
     return STYLES[type]
 }
+
+export const MATCH_TYPE_LABELS: Record<MatchType, string> = {
+    singles: STYLES.singles.label,
+    men_doubles: STYLES.men_doubles.label,
+    women_doubles: STYLES.women_doubles.label,
+    mixed_doubles: STYLES.mixed_doubles.label,
+}
+
+export function getMatchTypeBadgeClass(type: MatchType): string {
+    const s = STYLES[type]
+    return `${s.borderClass} ${s.textClass} ${s.bgClass}`
+}
