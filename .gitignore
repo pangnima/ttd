@@ -32,6 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local tooling / temp artifacts
+/*.png
+shrimp_data/
+.playwright-mcp/
+.claude/
+.mcp.json
 
 # vercel
 .vercel
