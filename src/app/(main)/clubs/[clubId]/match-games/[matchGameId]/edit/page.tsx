@@ -20,13 +20,13 @@ export default async function MatchGameEditPage({ params }: Props) {
         .eq('status', 'approved')
         .maybeSingle()
 
-    if (membership?.role !== 'owner') redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
+    if (!membership) redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
 
     const matchGame = await fetchMatchGameById(matchGameId)
     if (!matchGame) notFound()
 
-    const editable = !matchGame.isFixed && matchGame.matches.every((m) => m.status === 'scheduled')
-    if (!editable) redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
+    const canEdit = !matchGame.isFixed || membership.role === 'owner'
+    if (!canEdit) redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
 
     const members = await fetchClubMembersWithGuests(clubId)
 

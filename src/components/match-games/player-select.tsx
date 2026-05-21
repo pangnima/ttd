@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input'
 import { ChevronDown, UserPlus } from 'lucide-react'
 import type { User } from '@/types'
 
+const GENDER_EMOJI: Record<'male' | 'female', string> = { male: '♂️', female: '♀️' }
+
 type PlayerSelectProps = {
     users: User[]
     value: string
     onChange: (userId: string) => void
     placeholder?: string
-    onCreatePlayer?: (nickname: string) => string
+    onCreatePlayer?: (nickname: string, gender: 'male' | 'female') => string
 }
 
 export function PlayerSelect({ users, value, onChange, placeholder = '선수 선택', onCreatePlayer }: PlayerSelectProps) {
@@ -58,9 +60,9 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
         handleClose()
     }
 
-    const handleCreate = () => {
+    const handleCreate = (gender: 'male' | 'female') => {
         if (!onCreatePlayer || !query.trim()) return
-        const newId = onCreatePlayer(query.trim())
+        const newId = onCreatePlayer(query.trim(), gender)
         onChange(newId)
         handleClose()
     }
@@ -100,8 +102,9 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
                                 e.preventDefault()
                                 handleSelect(user.id)
                             }}
-                            className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1"
+                            className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1.5"
                         >
+                            <span className="text-xs">{GENDER_EMOJI[user.gender]}</span>
                             {user.nickname}
                             {user.isGuest && (
                                 <span className="text-xs text-muted-foreground">(게스트)</span>
@@ -120,14 +123,19 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
                     {filtered.length > 0 && <div className="h-px bg-border" />}
                     <button
                         type="button"
-                        onMouseDown={(e) => {
-                            e.preventDefault()
-                            handleCreate()
-                        }}
+                        onMouseDown={(e) => { e.preventDefault(); handleCreate('male') }}
                         className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1.5 text-primary"
                     >
                         <UserPlus className="w-3.5 h-3.5 shrink-0" />
-                        <span>&apos;{query.trim()}&apos; 게스트로 추가</span>
+                        <span>♂️ &apos;{query.trim()}&apos; 남자 게스트 추가</span>
+                    </button>
+                    <button
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); handleCreate('female') }}
+                        className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1.5 text-primary"
+                    >
+                        <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                        <span>♀️ &apos;{query.trim()}&apos; 여자 게스트 추가</span>
                     </button>
                 </>
             )}

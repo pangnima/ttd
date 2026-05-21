@@ -16,7 +16,7 @@ type MembersContentProps = {
     isOwner: boolean
 }
 
-export function MembersContent({ clubName, members, pendingMembers, isOwner }: MembersContentProps) {
+export function MembersContent({ clubId, clubName, members, pendingMembers, isOwner }: MembersContentProps) {
     const [isPending, startTransition] = useTransition()
 
     const handleApprove = (clubId: string, userId: string) =>
@@ -43,6 +43,7 @@ export function MembersContent({ clubName, members, pendingMembers, isOwner }: M
                             key={m.userId}
                             member={m}
                             user={m.user}
+                            clubId={clubId}
                         />
                     ))}
                 </div>

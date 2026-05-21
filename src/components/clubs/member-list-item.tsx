@@ -7,6 +7,7 @@ import type { ClubMember, User } from '@/types'
 type MemberListItemProps = {
     member: ClubMember
     user: User
+    clubId?: string
     wins?: number
     losses?: number
 }
@@ -26,7 +27,7 @@ const handLabel: Record<User['dominantHand'], string> = {
     left: '왼손',
 }
 
-export function MemberListItem({ member, user, wins, losses }: MemberListItemProps) {
+export function MemberListItem({ member, user, clubId, wins, losses }: MemberListItemProps) {
     const totalMatches = (wins ?? 0) + (losses ?? 0)
     const winRate = totalMatches === 0 ? null : Math.round(((wins ?? 0) / totalMatches) * 100)
 
@@ -78,7 +79,7 @@ export function MemberListItem({ member, user, wins, losses }: MemberListItemPro
 
     return (
         <Link
-            href={`/profile/${user.id}`}
+            href={clubId ? `/profile/${user.id}?clubId=${clubId}` : `/profile/${user.id}`}
             className="flex items-center gap-3 py-3 px-4 hover:bg-muted/30 transition-colors"
         >
             {inner}

@@ -60,7 +60,6 @@ type MatchCardItemProps = {
     canEdit: boolean
     getName: (id: string) => string
     getCourtLabel: (courtId: string) => string
-    getTimeSlot: (timeSlotId: string) => string
     toggleAdSide: (matchId: string, teamKey: 'team1' | 'team2', playerId: string) => void
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
     confirmScore: (matchId: string) => void
@@ -69,7 +68,7 @@ type MatchCardItemProps = {
 
 function MatchCardItem({
     match, matchGame, state, winner, courtSides, isPending, canEdit,
-    getName, getCourtLabel, getTimeSlot,
+    getName, getCourtLabel,
     toggleAdSide, updateScore, confirmScore, editScore,
 }: MatchCardItemProps) {
     const renderPlayerList = (playerIds: string[] | undefined, teamKey: 'team1' | 'team2', winnerSide: 'team1' | 'team2' | 'draw' | null) => {
@@ -108,10 +107,6 @@ function MatchCardItem({
                 <div className="flex items-center gap-2 min-w-0">
                     <span className="font-semibold text-sm text-foreground shrink-0">
                         {getCourtLabel(match.courtId)}
-                    </span>
-                    <span className="text-xs text-foreground/55">·</span>
-                    <span className="text-xs text-foreground/75">
-                        {getTimeSlot(match.timeSlotId)}
                     </span>
                 </div>
                 <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border shrink-0 ${MATCH_TYPE_COLORS[match.matchType]}`}>
@@ -243,6 +238,19 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
         return timeSlotId
     }
 
+    // 시간대별 그룹 — matchGame.matches는 이미 order 정렬됨. timeSlotId로 묶고 시작 시각순 정렬.
+    const slotGroups = (() => {
+        const map = new Map<string, typeof matchGame.matches>()
+        for (const m of matchGame.matches) {
+            const arr = map.get(m.timeSlotId) ?? []
+            arr.push(m)
+            map.set(m.timeSlotId, arr)
+        }
+        return [...map.entries()]
+            .map(([slotId, matches]) => ({ slotId, label: getTimeSlot(slotId), matches }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+    })()
+
     function updateScore(matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) {
         setMatchStates((prev) => {
             const sets = [...prev[matchId].sets]
@@ -295,7 +303,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                     <thead>
                         <tr className="border-b border-foreground/8">
                             <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-foreground/65 whitespace-nowrap w-16">코트</th>
-                            <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-foreground/65 whitespace-nowrap w-32">시간</th>
                             <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-foreground/65 whitespace-nowrap w-16">종류</th>
                             <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-foreground/65">플레이어 1</th>
                             <th className="px-3 py-3 text-left text-[10px] font-medium tracking-widest uppercase text-foreground/65">플레이어 2</th>
@@ -303,176 +310,184 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                         </tr>
                     </thead>
                     <tbody>
-                        {matchGame.matches.map((match, idx) => {
-                            const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
-                            const winner = state.confirmed ? getWinnerSide(state.sets) : null
-                            const isLast = idx === matchGame.matches.length - 1
-
-                            return (
-                                <tr
-                                    key={match.id}
-                                    className={`transition-colors hover:bg-foreground/[0.025] ${!isLast ? 'border-b border-foreground/5' : ''}`}
-                                >
-                                    {/* 코트 */}
-                                    <td className="px-3 py-3 font-semibold text-foreground">
-                                        {getCourtLabel(match.courtId)}
-                                    </td>
-                                    {/* 시간 */}
-                                    <td className="px-3 py-3 text-xs text-foreground/75 whitespace-nowrap">
-                                        {getTimeSlot(match.timeSlotId)}
-                                    </td>
-                                    {/* 종류 배지 */}
-                                    <td className="px-3 py-3">
-                                        <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border ${MATCH_TYPE_COLORS[match.matchType]}`}>
-                                            {MATCH_TYPE_LABELS[match.matchType]}
-                                        </span>
-                                    </td>
-                                    {/* 플레이어 1 */}
-                                    <td className="px-3 py-3">
-                                        {match.matchType === 'singles' ? (
-                                            <span className={`text-sm transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
-                                                {getName(match.player1Id ?? '')}
+                        {slotGroups.flatMap((group) => [
+                            <tr key={`header-${group.slotId}`} className="bg-foreground/[0.03] border-y border-foreground/8">
+                                <td colSpan={5} className="px-3 py-2 text-xs font-semibold text-foreground/80">
+                                    {group.label}
+                                </td>
+                            </tr>,
+                            ...group.matches.map((match, idx) => {
+                                const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
+                                const winner = state.confirmed ? getWinnerSide(state.sets) : null
+                                const isLastInGroup = idx === group.matches.length - 1
+                                return (
+                                    <tr
+                                        key={match.id}
+                                        className={`transition-colors hover:bg-foreground/[0.025] ${!isLastInGroup ? 'border-b border-foreground/5' : ''}`}
+                                    >
+                                        {/* 코트 */}
+                                        <td className="px-3 py-3 font-semibold text-foreground">
+                                            {getCourtLabel(match.courtId)}
+                                        </td>
+                                        {/* 종류 배지 */}
+                                        <td className="px-3 py-3">
+                                            <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border ${MATCH_TYPE_COLORS[match.matchType]}`}>
+                                                {MATCH_TYPE_LABELS[match.matchType]}
                                             </span>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                {(match.team1 ?? []).map((pid) => {
-                                                    const isAd = courtSides[match.id]?.team1 === pid
-                                                    return (
-                                                        <div key={pid} className="flex items-center gap-1.5">
-                                                            <span className={`text-sm ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
-                                                                {getName(pid)}
-                                                            </span>
-                                                            {!matchGame.isFixed ? (
-                                                                <button
-                                                                    onClick={() => toggleAdSide(match.id, 'team1', pid)}
-                                                                    disabled={isPending}
-                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
-                                                                >
-                                                                    {isAd ? '애드(백)' : '듀스(포)'}
-                                                                </button>
-                                                            ) : (
-                                                                <span className="text-[10px] text-foreground/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        )}
-                                    </td>
-                                    {/* 플레이어 2 */}
-                                    <td className="px-3 py-3">
-                                        {match.matchType === 'singles' ? (
-                                            <span className={`text-sm transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
-                                                {getName(match.player2Id ?? '')}
-                                            </span>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                {(match.team2 ?? []).map((pid) => {
-                                                    const isAd = courtSides[match.id]?.team2 === pid
-                                                    return (
-                                                        <div key={pid} className="flex items-center gap-1.5">
-                                                            <span className={`text-sm ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
-                                                                {getName(pid)}
-                                                            </span>
-                                                            {!matchGame.isFixed ? (
-                                                                <button
-                                                                    onClick={() => toggleAdSide(match.id, 'team2', pid)}
-                                                                    disabled={isPending}
-                                                                    className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
-                                                                >
-                                                                    {isAd ? '애드(백)' : '듀스(포)'}
-                                                                </button>
-                                                            ) : (
-                                                                <span className="text-[10px] text-foreground/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        )}
-                                    </td>
-                                    {/* 스코어 */}
-                                    <td className="px-3 py-3">
-                                        {state.confirmed ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1.5 font-mono text-sm">
-                                                    <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-foreground/70'}>
-                                                        {state.sets[0].team1}
-                                                    </span>
-                                                    <span className="text-foreground/55">:</span>
-                                                    <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-foreground/70'}>
-                                                        {state.sets[0].team2}
-                                                    </span>
+                                        </td>
+                                        {/* 플레이어 1 */}
+                                        <td className="px-3 py-3">
+                                            {match.matchType === 'singles' ? (
+                                                <span className={`text-sm transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
+                                                    {getName(match.player1Id ?? '')}
+                                                </span>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {(match.team1 ?? []).map((pid) => {
+                                                        const isAd = courtSides[match.id]?.team1 === pid
+                                                        return (
+                                                            <div key={pid} className="flex items-center gap-1.5">
+                                                                <span className={`text-sm ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
+                                                                    {getName(pid)}
+                                                                </span>
+                                                                {!matchGame.isFixed ? (
+                                                                    <button
+                                                                        onClick={() => toggleAdSide(match.id, 'team1', pid)}
+                                                                        disabled={isPending}
+                                                                        className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
+                                                                    >
+                                                                        {isAd ? '애드(백)' : '듀스(포)'}
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-foreground/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </div>
-                                                {canEdit && (
+                                            )}
+                                        </td>
+                                        {/* 플레이어 2 */}
+                                        <td className="px-3 py-3">
+                                            {match.matchType === 'singles' ? (
+                                                <span className={`text-sm transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
+                                                    {getName(match.player2Id ?? '')}
+                                                </span>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {(match.team2 ?? []).map((pid) => {
+                                                        const isAd = courtSides[match.id]?.team2 === pid
+                                                        return (
+                                                            <div key={pid} className="flex items-center gap-1.5">
+                                                                <span className={`text-sm ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
+                                                                    {getName(pid)}
+                                                                </span>
+                                                                {!matchGame.isFixed ? (
+                                                                    <button
+                                                                        onClick={() => toggleAdSide(match.id, 'team2', pid)}
+                                                                        disabled={isPending}
+                                                                        className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
+                                                                    >
+                                                                        {isAd ? '애드(백)' : '듀스(포)'}
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-foreground/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </td>
+                                        {/* 스코어 */}
+                                        <td className="px-3 py-3">
+                                            {state.confirmed ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-1.5 font-mono text-sm">
+                                                        <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-foreground/70'}>
+                                                            {state.sets[0].team1}
+                                                        </span>
+                                                        <span className="text-foreground/55">:</span>
+                                                        <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-foreground/70'}>
+                                                            {state.sets[0].team2}
+                                                        </span>
+                                                    </div>
+                                                    {canEdit && (
+                                                        <button
+                                                            className="w-6 h-6 flex items-center justify-center rounded text-foreground/60 hover:text-foreground/85 hover:bg-foreground/8 transition-colors"
+                                                            onClick={() => editScore(match.id)}
+                                                            disabled={isPending}
+                                                        >
+                                                            <Pencil className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5">
+                                                    <input
+                                                        type="text"
+                                                        value={state.sets[0].team1}
+                                                        onChange={(e) => updateScore(match.id, 0, 'team1', e.target.value)}
+                                                        className="h-7 w-10 text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors"
+                                                        placeholder="P1"
+                                                    />
+                                                    <span className="text-foreground/35 text-xs">:</span>
+                                                    <input
+                                                        type="text"
+                                                        value={state.sets[0].team2}
+                                                        onChange={(e) => updateScore(match.id, 0, 'team2', e.target.value)}
+                                                        className="h-7 w-10 text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors"
+                                                        placeholder="P2"
+                                                    />
                                                     <button
-                                                        className="w-6 h-6 flex items-center justify-center rounded text-foreground/60 hover:text-foreground/85 hover:bg-foreground/8 transition-colors"
-                                                        onClick={() => editScore(match.id)}
+                                                        className="w-7 h-7 flex items-center justify-center rounded-md border border-cyan-400/30 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-colors disabled:opacity-40"
+                                                        onClick={() => confirmScore(match.id)}
                                                         disabled={isPending}
                                                     >
-                                                        <Pencil className="w-3 h-3" />
+                                                        <Check className="w-3.5 h-3.5" />
                                                     </button>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5">
-                                                <input
-                                                    type="text"
-                                                    value={state.sets[0].team1}
-                                                    onChange={(e) => updateScore(match.id, 0, 'team1', e.target.value)}
-                                                    className="h-7 w-10 text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors"
-                                                    placeholder="P1"
-                                                />
-                                                <span className="text-foreground/35 text-xs">:</span>
-                                                <input
-                                                    type="text"
-                                                    value={state.sets[0].team2}
-                                                    onChange={(e) => updateScore(match.id, 0, 'team2', e.target.value)}
-                                                    className="h-7 w-10 text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors"
-                                                    placeholder="P2"
-                                                />
-                                                <button
-                                                    className="w-7 h-7 flex items-center justify-center rounded-md border border-cyan-400/30 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-colors disabled:opacity-40"
-                                                    onClick={() => confirmScore(match.id)}
-                                                    disabled={isPending}
-                                                >
-                                                    <Check className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            )
-                        })}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )
+                            }),
+                        ])}
                     </tbody>
                 </table>
             </div>
 
             {/* 모바일 카드 리스트 (md 미만) */}
-            <div className="md:hidden space-y-2">
-                {matchGame.matches.map((match) => {
-                    const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
-                    const winner = state.confirmed ? getWinnerSide(state.sets) : null
-                    return (
-                        <MatchCardItem
-                            key={match.id}
-                            match={match}
-                            matchGame={matchGame}
-                            state={state}
-                            winner={winner}
-                            courtSides={courtSides}
-                            isPending={isPending}
-                            canEdit={canEdit}
-                            getName={getName}
-                            getCourtLabel={getCourtLabel}
-                            getTimeSlot={getTimeSlot}
-                            toggleAdSide={toggleAdSide}
-                            updateScore={updateScore}
-                            confirmScore={confirmScore}
-                            editScore={editScore}
-                        />
-                    )
-                })}
+            <div className="md:hidden space-y-3">
+                {slotGroups.map((group) => (
+                    <div key={group.slotId}>
+                        <p className="text-xs font-semibold text-foreground/80 pb-2">{group.label}</p>
+                        <div className="space-y-2">
+                            {group.matches.map((match) => {
+                                const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
+                                const winner = state.confirmed ? getWinnerSide(state.sets) : null
+                                return (
+                                    <MatchCardItem
+                                        key={match.id}
+                                        match={match}
+                                        matchGame={matchGame}
+                                        state={state}
+                                        winner={winner}
+                                        courtSides={courtSides}
+                                        isPending={isPending}
+                                        canEdit={canEdit}
+                                        getName={getName}
+                                        getCourtLabel={getCourtLabel}
+                                        toggleAdSide={toggleAdSide}
+                                        updateScore={updateScore}
+                                        confirmScore={confirmScore}
+                                        editScore={editScore}
+                                    />
+                                )
+                            })}
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* 결과 확정 버튼 */}

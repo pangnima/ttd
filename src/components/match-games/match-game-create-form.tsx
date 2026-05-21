@@ -24,6 +24,12 @@ import type { Court, Match, MatchGame, MatchType, Round, TimeSlot, User } from '
 
 const genId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 
+function filterCandidates(players: User[], matchType: MatchType): User[] {
+    if (matchType === 'men_doubles') return players.filter((u) => u.gender === 'male')
+    if (matchType === 'women_doubles') return players.filter((u) => u.gender === 'female')
+    return players
+}
+
 const MATCH_TYPE_LABELS: Record<MatchType, string> = {
     singles: '단식',
     men_doubles: '남복',
@@ -48,6 +54,13 @@ type SimpleMatchEntry = {
     player2Id: string
     team1: [string, string]
     team2: [string, string]
+    prevMatchId?: string
+}
+
+// 한 경기에 배정된 선수 ID 목록 (빈 칸 제외) — 단식/복식 공통.
+function entryPlayerIds(e: SimpleMatchEntry): string[] {
+    if (e.matchType === 'singles') return [e.player1Id, e.player2Id].filter(Boolean)
+    return [...e.team1, ...e.team2].filter(Boolean)
 }
 
 type MatchGameCreateFormProps = {
@@ -79,6 +92,7 @@ function matchGameToEntries(matchGame: MatchGame): SimpleMatchEntry[] {
             player2Id: m.player2Id ?? '',
             team1: (m.team1 ?? ['', '']) as [string, string],
             team2: (m.team2 ?? ['', '']) as [string, string],
+            prevMatchId: m.id,
         }
     })
 }
@@ -98,9 +112,9 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     // 페이지 새로고침 없이 바로 선택 가능해야 UX가 끊기지 않기 때문.
     // email/gender/ntrp 등 placeholder 값은 타입 충족용이며 실제 의미 없음 —
     // 게스트는 Auth 계정이 없으므로 해당 필드를 입력·사용하는 경로가 없다.
-    const handleCreatePlayer = (nickname: string) => {
+    const handleCreatePlayer = (nickname: string, gender: 'male' | 'female') => {
         startTransition(async () => {
-            const result = await addGuestPlayerAction(clubId, nickname)
+            const result = await addGuestPlayerAction(clubId, nickname, gender)
             if (!result.ok) {
                 setError(result.error)
                 return
@@ -112,12 +126,13 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 nickname,
                 role: 'member',
                 phone: '',
-                gender: 'male',
+                gender,
                 dominantHand: 'right',
                 ntrp: 0,
                 tennisStartDate: '',
                 createdAt: new Date().toISOString(),
                 isGuest: true,
+                statsHidden: false,
             }
             setAllPlayers((prev) => [...prev, guest])
         })
@@ -142,7 +157,17 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     }
 
     const updateEntry = (id: string, patch: Partial<SimpleMatchEntry>) =>
-        setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)))
+        setEntries((prev) => prev.map((e) => {
+            if (e.id !== id) return e
+            const next = { ...e, ...patch }
+            if (patch.matchType && patch.matchType !== e.matchType) {
+                next.player1Id = ''
+                next.player2Id = ''
+                next.team1 = ['', '']
+                next.team2 = ['', '']
+            }
+            return next
+        }))
 
     const removeEntry = (id: string) => setEntries((prev) => prev.filter((e) => e.id !== id))
 
@@ -169,10 +194,27 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             if (!e.startAt || !e.endAt) { setError('모든 게임의 시간을 입력해주세요.'); return }
             if (e.matchType === 'singles') {
                 if (!e.player1Id || !e.player2Id) { setError('모든 게임의 선수를 선택해주세요.'); return }
-                if (e.player1Id === e.player2Id) { setError('같은 선수를 두 번 선택할 수 없습니다.'); return }
             } else {
                 if (!e.team1[0] || !e.team2[0]) { setError('모든 게임의 선수를 선택해주세요.'); return }
             }
+            const ids = entryPlayerIds(e)
+            if (new Set(ids).size !== ids.length) { setError('한 경기에 같은 선수를 중복 배정할 수 없습니다.'); return }
+        }
+
+        // 같은 시간대 내 중복 출전 검사 — 다른 시간대 중복은 허용.
+        const nameOf = (id: string) => allPlayers.find((p) => p.id === id)?.nickname ?? '선수'
+        const slotSeen = new Map<string, Set<string>>()
+        for (const e of entries) {
+            const key = `${e.startAt}|${e.endAt}`
+            const seen = slotSeen.get(key) ?? new Set<string>()
+            for (const pid of entryPlayerIds(e)) {
+                if (seen.has(pid)) {
+                    setError(`같은 시간대(${e.startAt}~${e.endAt})에 ${nameOf(pid)} 선수가 중복 배정되었습니다.`)
+                    return
+                }
+                seen.add(pid)
+            }
+            slotSeen.set(key, seen)
         }
 
         // 평면 SimpleMatchEntry[] → 정규화된 courts / rounds / matches 3계층으로 변환.
@@ -214,6 +256,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                     ? { player1Id: e.player1Id, player2Id: e.player2Id }
                     : { team1: e.team1.filter(Boolean), team2: e.team2.filter(Boolean) }),
                 status: 'scheduled',
+                prevMatchId: e.prevMatchId,
             }
         })
 
@@ -281,6 +324,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         <TableBody>
                             {entries.map((entry) => {
                                 const isSingles = entry.matchType === 'singles'
+                                const candidates = filterCandidates(allPlayers, entry.matchType)
                                 return (
                                     <TableRow key={entry.id} className="align-top">
                                         <TableCell className="pt-3">
@@ -329,7 +373,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                         <TableCell className="pt-3">
                                             {isSingles ? (
                                                 <PlayerSelect
-                                                    users={allPlayers}
+                                                    users={candidates}
                                                     value={entry.player1Id}
                                                     onChange={(id) => updateEntry(entry.id, { player1Id: id })}
                                                     placeholder="선수 선택"
@@ -338,14 +382,14 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                             ) : (
                                                 <div className="space-y-1">
                                                     <PlayerSelect
-                                                        users={allPlayers}
+                                                        users={candidates}
                                                         value={entry.team1[0]}
                                                         onChange={(id) => updateTeamPlayer(entry.id, 'team1', 0, id)}
                                                         placeholder="A팀 1번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
                                                     <PlayerSelect
-                                                        users={allPlayers}
+                                                        users={candidates}
                                                         value={entry.team1[1]}
                                                         onChange={(id) => updateTeamPlayer(entry.id, 'team1', 1, id)}
                                                         placeholder="A팀 2번"
@@ -357,7 +401,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                         <TableCell className="pt-3">
                                             {isSingles ? (
                                                 <PlayerSelect
-                                                    users={allPlayers}
+                                                    users={candidates}
                                                     value={entry.player2Id}
                                                     onChange={(id) => updateEntry(entry.id, { player2Id: id })}
                                                     placeholder="선수 선택"
@@ -366,14 +410,14 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                             ) : (
                                                 <div className="space-y-1">
                                                     <PlayerSelect
-                                                        users={allPlayers}
+                                                        users={candidates}
                                                         value={entry.team2[0]}
                                                         onChange={(id) => updateTeamPlayer(entry.id, 'team2', 0, id)}
                                                         placeholder="B팀 1번"
                                                         onCreatePlayer={handleCreatePlayer}
                                                     />
                                                     <PlayerSelect
-                                                        users={allPlayers}
+                                                        users={candidates}
                                                         value={entry.team2[1]}
                                                         onChange={(id) => updateTeamPlayer(entry.id, 'team2', 1, id)}
                                                         placeholder="B팀 2번"
@@ -402,6 +446,12 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             </div>
 
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
+
+            {initialData && (
+                <p className="text-xs text-muted-foreground text-center">
+                    선수가 바뀐 경기의 점수는 초기화됩니다.
+                </p>
+            )}
 
             <div className="flex gap-2">
                 <Button type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">

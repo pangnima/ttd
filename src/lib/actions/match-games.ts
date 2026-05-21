@@ -39,6 +39,7 @@ function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[
         player2_id: m.player2Id ?? '',
         team1: m.team1 ?? [],
         team2: m.team2 ?? [],
+        prev_match_id: m.prevMatchId ?? null,
     }))
 
     return { courtsPayload, roundsPayload, matchesPayload }
@@ -190,7 +191,8 @@ export async function confirmMatchGameAction(
 
 export async function addGuestPlayerAction(
     clubId: string,
-    nickname: string
+    nickname: string,
+    gender: 'male' | 'female'
 ): Promise<ActionResult & { userId?: string }> {
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
@@ -201,6 +203,7 @@ export async function addGuestPlayerAction(
     const { data, error } = await supabase.rpc('add_guest_player', {
         p_club_id: clubId,
         p_nickname: nickname.trim(),
+        p_gender: gender,
     })
 
     if (error) return { ok: false, error: error.message }
@@ -235,9 +238,8 @@ export async function updateMatchGameAction(
     })
 
     if (error) {
-        const msg = error.message.includes('has_results')        ? '결과가 입력된 경기가 있어 수정할 수 없습니다.'
-                  : error.message.includes('match_game_fixed')   ? '이미 확정된 대진표는 수정할 수 없습니다.'
-                  : error.message.includes('not_owner')          ? '클럽장만 수정할 수 있습니다.'
+        const msg = error.message.includes('match_game_fixed') ? '확정된 대진표는 클럽장만 수정할 수 있습니다.'
+                  : error.message.includes('not_member')       ? '클럽 멤버만 수정할 수 있습니다.'
                   : error.message
         return { ok: false, error: msg }
     }

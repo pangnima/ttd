@@ -14,9 +14,7 @@ type MatchGameDetailContentProps = {
 }
 
 export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGameDetailContentProps) {
-    const canEditMatchGame = isOwner &&
-        !matchGame.isFixed &&
-        matchGame.matches.every((m) => m.status === 'scheduled')
+    const canEditMatchGame = !matchGame.isFixed || isOwner
 
     return (
         <div className="space-y-4">
