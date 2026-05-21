@@ -64,7 +64,7 @@ function MatchCardItem({
                 <span className="font-semibold text-sm text-foreground shrink-0">
                     {getCourtLabel(match.courtId)}
                 </span>
-                <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border shrink-0 ${getMatchTypeBadgeClass(match.matchType)}`}>
+                <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border shrink-0 ${getMatchTypeBadgeClass(match.matchType)}`}>
                     {MATCH_TYPE_LABELS[match.matchType]}
                 </span>
             </div>
@@ -262,7 +262,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                             {getCourtLabel(match.courtId)}
                                         </td>
                                         <td className="px-3 py-3">
-                                            <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border ${getMatchTypeBadgeClass(match.matchType)}`}>
+                                            <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
                                                 {MATCH_TYPE_LABELS[match.matchType]}
                                             </span>
                                         </td>

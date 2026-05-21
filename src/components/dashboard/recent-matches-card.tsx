@@ -84,7 +84,7 @@ export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Pr
                         return (
                             <li key={match.id} className={`${CARD_BASE} p-3 flex items-center gap-3`}>
                                 <span
-                                    className={`${PILL_BASE} ${OUTCOME_STYLE[view.outcome]} w-6 h-6 justify-center rounded-full border shrink-0`}
+                                    className={`${PILL_BASE} ${OUTCOME_STYLE[view.outcome]} w-6 h-6 justify-center !rounded-full border shrink-0`}
                                 >
                                     {OUTCOME_LABEL[view.outcome]}
                                 </span>

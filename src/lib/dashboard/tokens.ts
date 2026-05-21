@@ -1,7 +1,7 @@
 export const CARD_BASE = 'rounded-xl border border-foreground/8 bg-foreground/[0.02]'
 export const CARD_HOVER = 'hover:border-foreground/18 hover:bg-foreground/[0.04] transition-all'
 export const SECTION_LABEL = 'text-[11px] font-medium tracking-widest uppercase text-foreground/65'
-export const PILL_BASE = 'inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border'
+export const PILL_BASE = 'inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border'
 export const EMPTY_BLOCK =
     'rounded-xl border border-dashed border-foreground/10 bg-foreground/[0.01] text-foreground/55 text-xs text-center py-8'
 export const DIVIDER = 'h-px bg-foreground/8'

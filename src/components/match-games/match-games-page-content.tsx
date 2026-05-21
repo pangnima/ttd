@@ -160,7 +160,7 @@ export function MatchGamesPageContent({
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                                                    <span className={`text-[11px] px-2 py-0.5 rounded-[4px] border ${
                                                         mg.isFixed
                                                             ? 'border-cyan-400/40 text-cyan-400/80 bg-cyan-400/8'
                                                             : 'border-foreground/20 text-foreground/60'
