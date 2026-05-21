@@ -1,21 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyClubs, fetchPendingMembersByOwner } from '@/lib/queries/clubs'
-import { fetchMatchesByUser } from '@/lib/queries/match-games'
-import { fetchUserById, fetchUsersByIds } from '@/lib/queries/users'
-import {
-    fetchUserMatchStatsV2,
-    fetchUserDoublesCourtStats,
-    fetchUserPartnerStats,
-    fetchUserHeadToHead,
-} from '@/lib/queries/stats'
+import { fetchUserById } from '@/lib/queries/users'
+import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { PendingApprovalBanner } from '@/components/dashboard/pending-approval-banner'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { ClubSelector } from '@/components/dashboard/club-selector'
-import { StatsQuadGrid } from '@/components/dashboard/stats-quad-grid'
-import { DoublesCourtStatsCard } from '@/components/dashboard/doubles-court-stats'
-import { RivalryPartnerCard } from '@/components/dashboard/rivalry-partner-card'
-import { RecentMatchesCard } from '@/components/dashboard/recent-matches-card'
+import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { MyClubsCard } from '@/components/dashboard/my-clubs-card'
 
 type Props = {
@@ -37,27 +28,10 @@ export default async function DashboardPage({ searchParams }: Props) {
             ? clubIdParam
             : myClubs[0]?.id
 
-    const [pendingEntries, { matches, gameMetaById }, stats, court, h2h, partners] =
-        await Promise.all([
-            fetchPendingMembersByOwner(user.id),
-            fetchMatchesByUser(user.id, selectedClubId),
-            fetchUserMatchStatsV2(me.id, selectedClubId),
-            fetchUserDoublesCourtStats(me.id, selectedClubId),
-            fetchUserHeadToHead(me.id, selectedClubId),
-            fetchUserPartnerStats(me.id, selectedClubId),
-        ])
-
-    const userIds = new Set<string>()
-    for (const m of matches) {
-        for (const id of [m.player1Id, m.player2Id, ...(m.team1 ?? []), ...(m.team2 ?? [])]) {
-            if (id && id !== me.id) userIds.add(id)
-        }
-    }
-    for (const r of h2h) userIds.add(r.opponentId)
-    for (const p of partners) userIds.add(p.partnerId)
-
-    const allUsers = await fetchUsersByIds([...userIds])
-    const userMap = new Map(allUsers.map((u) => [u.id, u]))
+    const [pendingEntries, bundle] = await Promise.all([
+        fetchPendingMembersByOwner(user.id),
+        fetchPlayerStatsBundle(me.id, selectedClubId),
+    ])
 
     return (
         <div className="space-y-6">
@@ -69,27 +43,13 @@ export default async function DashboardPage({ searchParams }: Props) {
                 <ClubSelector clubs={myClubs} selectedClubId={selectedClubId} />
             )}
 
-            <StatsQuadGrid
+            <PlayerStatsSection
+                bundle={bundle}
                 gender={me.gender}
-                singles={stats.singles}
-                menDoubles={stats.menDoubles}
-                womenDoubles={stats.womenDoubles}
-                mixedDoubles={stats.mixedDoubles}
+                userId={me.id}
                 privacy={me.statsHidden ? 'self' : 'public'}
                 editable
                 statsHidden={me.statsHidden}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DoublesCourtStatsCard court={court} />
-                <RivalryPartnerCard rivals={h2h} partners={partners} userMap={userMap} />
-            </div>
-
-            <RecentMatchesCard
-                matches={matches}
-                userId={me.id}
-                userMap={userMap}
-                gameMetaById={gameMetaById}
             />
 
             <MyClubsCard clubs={myClubs} />
