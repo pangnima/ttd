@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_coaching_cache: {
+        Row: {
+          bundle_hash: string
+          content: Json
+          generated_at: string
+          model: string
+          user_id: string
+        }
+        Insert: {
+          bundle_hash: string
+          content: Json
+          generated_at?: string
+          model: string
+          user_id: string
+        }
+        Update: {
+          bundle_hash?: string
+          content?: Json
+          generated_at?: string
+          model?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_coaching_cache_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_members: {
         Row: {
           club_id: string
@@ -103,18 +135,21 @@ export type Database = {
           label: string
           match_game_id: string
           order: number
+          surface: string | null
         }
         Insert: {
           id?: string
           label: string
           match_game_id: string
           order: number
+          surface?: string | null
         }
         Update: {
           id?: string
           label?: string
           match_game_id?: string
           order?: number
+          surface?: string | null
         }
         Relationships: [
           {
@@ -333,6 +368,63 @@ export type Database = {
           },
         ]
       }
+      personal_matches: {
+        Row: {
+          created_at: string
+          id: string
+          match_type: string
+          notes: string | null
+          opponent_name: string
+          opponent_user_id: string | null
+          played_at: string
+          set_scores: Json
+          surface: string | null
+          user_id: string
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_type: string
+          notes?: string | null
+          opponent_name: string
+          opponent_user_id?: string | null
+          played_at: string
+          set_scores?: Json
+          surface?: string | null
+          user_id: string
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_type?: string
+          notes?: string | null
+          opponent_name?: string
+          opponent_user_id?: string | null
+          played_at?: string
+          set_scores?: Json
+          surface?: string | null
+          user_id?: string
+          winner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_matches_opponent_user_id_fkey"
+            columns: ["opponent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -415,6 +507,14 @@ export type Database = {
         }
         Returns: string
       }
+      get_club_activity_ranking: {
+        Args: { p_club_id: string; p_since?: string }
+        Returns: {
+          match_count: number
+          user_id: string
+          win_count: number
+        }[]
+      }
       get_user_doubles_court_stats:
         | { Args: { p_user_id: string }; Returns: Json }
         | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }
@@ -439,7 +539,24 @@ export type Database = {
               wins: number
             }[]
           }
+      get_user_head_to_head_unified: {
+        Args: { p_user_id: string }
+        Returns: {
+          draws: number
+          losses: number
+          matches: number
+          opponent_name: string
+          opponent_user_id: string
+          sets_lost: number
+          sets_won: number
+          wins: number
+        }[]
+      }
       get_user_match_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_user_match_stats_unified: {
+        Args: { p_scope?: string; p_user_id: string }
+        Returns: Json
+      }
       get_user_match_stats_v2:
         | { Args: { p_user_id: string }; Returns: Json }
         | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }
@@ -469,6 +586,10 @@ export type Database = {
         Returns: boolean
       }
       is_club_owner: {
+        Args: { p_club_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_club_owner_or_officer: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }

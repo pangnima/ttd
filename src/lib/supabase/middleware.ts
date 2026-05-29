@@ -40,20 +40,20 @@ export async function updateSession(request: NextRequest) {
 
     // 보호 라우트: 비로그인 시 /login 리다이렉트
     const isMainRoute =
-        path.startsWith('/dashboard') ||
         path.startsWith('/clubs') ||
-        path.startsWith('/profile')
+        path.startsWith('/profile') ||
+        path.startsWith('/me')
     if (isMainRoute && !user) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
-    // 인증 라우트: 이미 로그인된 사용자는 /dashboard로 리다이렉트
+    // 인증 라우트: 이미 로그인된 사용자는 /clubs로 리다이렉트
     const isAuthRoute = path === '/login' || path === '/signup'
     if (isAuthRoute && user) {
         const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
+        url.pathname = '/clubs'
         return NextResponse.redirect(url)
     }
 

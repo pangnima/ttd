@@ -40,7 +40,7 @@ export async function updateProfileAction(
     if (error) return { error: error.message }
 
     revalidatePath('/profile/settings')
-    revalidatePath('/dashboard')
+    revalidatePath('/me/analytics')
     return null
 }
 
@@ -50,7 +50,7 @@ export async function toggleStatsHiddenAction(hidden: boolean): Promise<void> {
     if (!user) return
 
     await supabase.from('users').update({ stats_hidden: hidden }).eq('id', user.id)
-    revalidatePath('/dashboard')
+    revalidatePath('/me/analytics')
     revalidatePath('/profile/settings')
 }
 

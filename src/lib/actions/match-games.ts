@@ -123,7 +123,6 @@ export async function saveMatchResultAction(
     if (error) return { ok: false, error: error.message }
 
     revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
-    revalidatePath('/dashboard')
     return { ok: true }
 }
 

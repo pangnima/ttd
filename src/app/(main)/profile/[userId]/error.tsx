@@ -21,10 +21,10 @@ export function ProfileError({ error, reset }: Props) {
                     다시 시도
                 </button>
                 <Link
-                    href="/dashboard"
+                    href="/clubs"
                     className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
                 >
-                    대시보드
+                    클럽 목록
                 </Link>
             </div>
         </div>

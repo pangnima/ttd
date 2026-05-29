@@ -1,6 +1,6 @@
 import {
-    LayoutDashboard,
     Users,
+    BarChart3,
 } from 'lucide-react'
 
 export type NavItem = {
@@ -10,6 +10,6 @@ export type NavItem = {
 }
 
 export const mainNavItems: NavItem[] = [
-    { href: '/dashboard', label: '나의 대시보드', icon: LayoutDashboard },
-    { href: '/clubs',     label: '클럽리스트',   icon: Users           },
+    { href: '/clubs',        label: '클럽리스트',   icon: Users           },
+    { href: '/me/analytics', label: '개인 분석',    icon: BarChart3       },
 ]

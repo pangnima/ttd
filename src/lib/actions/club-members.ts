@@ -15,7 +15,7 @@ function revalidateClubPaths(clubId: string) {
     revalidatePath('/clubs', 'layout')
     revalidatePath(`/clubs/${clubId}`, 'layout')
     revalidatePath(`/clubs/${clubId}/members`, 'layout')
-    revalidatePath('/dashboard', 'layout')
+    revalidatePath(`/clubs/${clubId}/dashboard`, 'layout')
 }
 
 export async function applyToClubAction(clubId: string): Promise<{ error: string } | null> {
@@ -102,6 +102,58 @@ export async function rejectMemberAction(clubId: string, userId: string): Promis
         .eq('club_id', clubId)
         .eq('user_id', userId)
         .eq('status', 'pending')   // pending인 row만 업데이트 (멱등성 보장)
+
+    if (error) return { error: error.message }
+    revalidateClubPaths(clubId)
+    return null
+}
+
+export async function assignOfficerAction(clubId: string, userId: string): Promise<{ error: string } | null> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { error: '로그인이 필요합니다.' }
+
+    const { data: actorMembership } = await supabase
+        .from('club_members')
+        .select('role')
+        .eq('club_id', clubId)
+        .eq('user_id', user.id)
+        .eq('status', 'approved')
+        .maybeSingle()
+    if (actorMembership?.role !== 'owner') return { error: '운영자만 임원을 지정할 수 있습니다.' }
+
+    const { error } = await supabase
+        .from('club_members')
+        .update({ role: 'officer' })
+        .eq('club_id', clubId)
+        .eq('user_id', userId)
+        .eq('role', 'member')   // member 행만 officer로 승격 (멱등성 보장)
+
+    if (error) return { error: error.message }
+    revalidateClubPaths(clubId)
+    return null
+}
+
+export async function removeOfficerAction(clubId: string, userId: string): Promise<{ error: string } | null> {
+    const supabase = await createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) return { error: '로그인이 필요합니다.' }
+
+    const { data: actorMembership } = await supabase
+        .from('club_members')
+        .select('role')
+        .eq('club_id', clubId)
+        .eq('user_id', user.id)
+        .eq('status', 'approved')
+        .maybeSingle()
+    if (actorMembership?.role !== 'owner') return { error: '운영자만 임원을 해제할 수 있습니다.' }
+
+    const { error } = await supabase
+        .from('club_members')
+        .update({ role: 'member' })
+        .eq('club_id', clubId)
+        .eq('user_id', userId)
+        .eq('role', 'officer')   // officer 행만 member로 강등 (멱등성 보장)
 
     if (error) return { error: error.message }
     revalidateClubPaths(clubId)

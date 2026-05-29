@@ -15,7 +15,7 @@ export async function loginAction(
     })
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    redirect('/dashboard')
+    redirect('/clubs')
 }
 
 export async function signupAction(
@@ -65,7 +65,7 @@ export async function signupAction(
     }
 
     revalidatePath('/', 'layout')
-    redirect('/dashboard')
+    redirect('/clubs')
 }
 
 export async function logoutAction() {

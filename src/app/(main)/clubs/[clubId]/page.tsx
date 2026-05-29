@@ -16,7 +16,7 @@ import {
     TEXT_META,
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
-import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown } from 'lucide-react'
+import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown, LayoutDashboard } from 'lucide-react'
 
 type ClubPageProps = {
     params: Promise<{ clubId: string }>
@@ -44,6 +44,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
     if (!club) notFound()
 
     const isOwner = myMembership?.role === 'owner'
+    const isOfficerOrOwner = myMembership?.role === 'owner' || myMembership?.role === 'officer'
     const ownerMember = approvedMembers.find((m) => m.role === 'owner')
 
     return (
@@ -76,6 +77,15 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             clubId={clubId}
                             membershipStatus={myMembership?.status ?? null}
                         />
+                    )}
+                    {isOfficerOrOwner && (
+                        <Link
+                            href={`/clubs/${clubId}/dashboard`}
+                            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'shrink-0')}
+                            title="클럽 대시보드"
+                        >
+                            <LayoutDashboard className="w-4 h-4" />
+                        </Link>
                     )}
                     {isOwner && (
                         <Link

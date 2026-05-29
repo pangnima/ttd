@@ -52,7 +52,7 @@ export function Header() {
     return (
         <header className="h-14 border-b border-foreground/5 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3">
             <MobileNav />
-            <Link href="/dashboard" className="font-semibold text-sm md:hidden">
+            <Link href="/clubs" className="font-semibold text-sm md:hidden">
                 🎾 테니스 클럽
             </Link>
             <div className="flex-1" />

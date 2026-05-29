@@ -7,10 +7,10 @@ export default function NotFound() {
             <h1 className="text-2xl font-semibold">페이지를 찾을 수 없습니다</h1>
             <p className="text-muted-foreground">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
             <Link
-                href="/dashboard"
+                href="/clubs"
                 className="mt-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-                대시보드로 돌아가기
+                클럽 목록으로 돌아가기
             </Link>
         </div>
     )

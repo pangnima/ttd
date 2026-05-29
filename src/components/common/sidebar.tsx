@@ -28,7 +28,7 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
         <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 bg-card">
             {/* 로고 영역 */}
             <div className="h-14 flex items-center px-5 border-b border-foreground/5">
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link href="/clubs" className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                         T
                     </div>

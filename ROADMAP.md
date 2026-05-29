@@ -162,20 +162,139 @@
 - [ ] Vercel 배포 설정 + 환경변수 등록
 - [ ] 도메인 설정 (선택)
 
+### Week 10: 개인 분석 페이지 ✅ (2026-05-27)
+
+#### DB 마이그레이션 (Supabase MCP `apply_migration`)
+- [x] `0013_court_surface`: `match_game_courts.surface` 컬럼 추가 (`hard|clay|indoor|omni`, NULL 허용)
+- [x] `0014_personal_matches`: `personal_matches` 테이블 신설 (RLS 4종, user_id 기반)
+- [x] `0015_ai_coaching_cache`: `ai_coaching_cache` 테이블 신설 (bundle_hash 기반 캐싱)
+
+#### 새 라우트 & 페이지
+- [x] `/me/analytics` — 개인 분석 대시보드 (Server Component, 전체 클럽 합산)
+- [x] `/me/personal-matches` — 개인 경기 목록
+- [x] `/me/personal-matches/new` — 경기 입력 폼
+- [x] `/me/personal-matches/[id]/edit` — 경기 수정 폼
+
+#### 사이드바
+- [x] `nav-items.ts`에 `개인 분석 (BarChart3)` 메뉴 추가
+
+#### 데이터 레이어
+- [x] `src/lib/queries/personal-matches.ts` 신설
+- [x] `src/lib/queries/analytics.ts` 신설 (`fetchAnalyticsBundle`)
+- [x] `src/lib/queries/match-games.ts` 수정 — `fetchMatchesByUser`에 `court:match_game_courts(surface)` embed + `courtSurfaceByMatchId` 반환
+- [x] `src/lib/queries/player-profile.ts` 수정 — `PlayerStatsBundle`에 `courtSurfaceByMatchId` 추가
+- [x] `src/lib/analytics/aggregations.ts` 신설 (표면별/폼/세트분포/NTRP차이/컴백률/매치타입/월별 집계)
+
+#### Server Actions
+- [x] `src/lib/actions/personal-matches.ts` 신설 (create/update/delete)
+- [x] `src/lib/actions/match-game-courts.ts` 신설 (`updateCourtSurfaceAction`)
+- [x] `src/lib/actions/ai-coaching.ts` 신설 (Claude Sonnet API + `ai_coaching_cache` 24h 캐싱)
+- [x] `@anthropic-ai/sdk` 의존성 추가
+
+#### 컴포넌트 (`src/components/analytics/`)
+- [ ] `SurfaceStatsCard` — 코트 표면별 승률 → **Week 11로 이관**
+- [ ] `RecentFormCard` — 최근 10경기 폼 + 스트릭 → **Week 11로 이관**
+- [ ] `StrengthWeaknessCard` — 룰 기반 강점·약점 진단 → **Week 11로 이관**
+- [ ] `NtrpDifferentialCard` — 강자/동급/약자 상대별 승률 → **Week 11로 이관**
+- [x] `AICoachingCard` — Claude AI 코칭 분석 (캐시 표시, 재분석 버튼) — **UI 임시 숨김 (향후 재활성화 가능)**
+- [ ] `PersonalMatchesPreview` — 외부 경기 최근 5개 미리보기 → **Week 11로 이관**
+- [x] `PersonalMatchListItem` — 목록 행 (수정/삭제)
+- [x] `PersonalMatchForm` — 경기 입력/수정 폼
+- [x] `AnalyticsModeTabs` — 2-모드 탭 (total/personal 쿼리스트링 기반)
+
+#### 개인 분석 페이지 개선 (`/me/analytics`) ✅
+- [x] **2-모드 토글 도입** — 전체(클럽+개인) / 개인경기 전환 UI (`AnalyticsModeTabs`)
+- [x] **1:1 맞대결 비교 카드 추가** — `HeadToHeadCard` (셀렉트로 상대 선택, 승률·세트·최근 결과 비교)
+- [x] **통계 모집단 통일** — `fetchMatchesByUser`에 `is_fixed=true` 필터 적용, `user_match_participations` 뷰 수정
+- [x] **역전 지수 집계 함수 추가** — 첫 세트 패배 후 매치 승리 비율 (`aggregateComebackRate`)
+- [x] **AI 코칭 카드 UI 임시 숨김** — 백엔드 코드(`ai-coaching.ts`)·DB 테이블(`ai_coaching_cache`) 보존
+  - 재활성화 방법: `analytics/page.tsx` 상단에서 4줄 import 복구 + JSX 마운트 1줄 추가
+
+> **결정 기록 (Week 10)**
+> - 기존 RPC를 변경하지 않고 JS에서 personal_matches 합산 (dashboard/profile 회귀 없음)
+> - `match_game_courts.surface`는 `is_fixed=true` 대진표도 소급 수정 허용 (통계 backfill)
+> - AI 캐시 키: 통계 묶음 SHA-1 (매치 count 포함) → 매치 추가 시 cache miss
+> - AI 모델: `claude-sonnet-4-6` (비용/품질 균형), 24시간 캐시
+> - **2-모드 토글 구현**: 전체(클럽+개인 합산) / 개인경기 전환 (`?mode=total|personal`)
+>   → `fetchAnalyticsBundle`의 scope 파라미터로 통계 RPC 분기, UI는 `AnalyticsModeTabs`로 처리
+> - **is_fixed 필터 일원화**: 미확정 경기가 통계에 섞이는 문제 해소 → dashboard·profile·analytics 모두 동일 모집단
+> - **AI 코칭 임시 숨김 배경**: 비용/UX 검증 보류, 백엔드는 유지하여 추후 토글로 부활 가능
+
+---
+
+### Week 11: 정리 + 잔여 카드 + 안정화 (부분 완료)
+
+#### 미문서화 커밋 흡수 (2026-05-28 ~)
+- [x] `d9c38e9` 배포 안전장치 — `error.tsx` 5종, `loading.tsx`, `global-error.tsx`, `not-found.tsx`, `app/layout.tsx` 메타데이터 보강
+- [x] `2a59f68` 대형 컴포넌트 분리 + 대진표 폼 로직 lib 추출
+  - `match-game-cell-components.tsx` 신설, `lib/match-games/form-mapping.ts` 신설, `lib/dashboard/match-type-style.ts` 신설
+- [x] `5b54013` dashboard·profile 통계 데이터 페칭·레이아웃 공통화
+  - `components/profile/player-stats-section.tsx` 신설, `lib/queries/player-profile.ts` 공통 fetch 추가
+- [x] `7367070` 전체 뱃지 모서리 `rounded-full` → 4px 사각형으로 변경
+- [x] `a193761` 대시보드 텍스트 위계 확대 및 폰트 색상 시인성 개선
+
+#### Week 10 잔여 카드 5종 구현
+- [x] `SurfaceStatsCard` — `aggregateBySurface` 소비, 코트 표면별 승률 시각화
+- [x] `RecentFormCard` — `aggregateRecentForm` 소비, 최근 10경기 W/L 시퀀스 + 현재 스트릭
+- [x] `StrengthWeaknessCard` — `diagnostics.ts` 신설 (룰 기반 진단) + 강점·약점 표시
+- [x] `NtrpDifferentialCard` — `aggregateByNtrpDiff` 소비, 강자/동급/약자 3구간 승률
+- [x] `PersonalMatchesPreview` — 개인 경기 최근 5개 미리보기 + "전체 보기" 링크
+
+#### 정리 / 데드 코드 제거
+- [x] `src/components/clubs/pending-members-card.tsx` 삭제 (import 0건 확인)
+- [x] `src/lib/analytics/aggregations.ts` 도메인별 파일 분해
+  - `shared.ts` / `surface.ts` / `form.ts` / `ntrp.ts` / `match-type.ts` / `head-to-head.ts`
+  - 미사용 export 제거: `aggregateSetDistribution`, `aggregateMonthlyTrend`, `extractOpponentIds`, `aggregateHeadToHead`(비-Unified), 동반 타입들
+- [x] 데드 export 정리
+  - `src/lib/dashboard/tokens.ts`: `DIVIDER`, `TEXT_HEADING`, `TEXT_BODY_STRONG`, `TEXT_BODY`, `TEXT_DISABLED`
+  - `src/lib/queries/player-profile.ts`: `createEmptyPlayerStatsBundle`
+- [ ] `src/lib/queries/stats.ts` V2/Unified 중복 정리 — 매핑 함수 분리
+
+#### 고위험·고가치 리팩토링
+- [x] `src/components/profile/profile-settings-form.tsx` — Client `createClient` fetch → Server prefill 전환
+- [x] `src/components/analytics/ai-coaching-card.tsx` — 파일 하단 `React` namespace import 위치 수정
+
+#### 배포 (Week 9에서 이관)
+- [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`)
+- [ ] Supabase Dashboard → Auth → Security → `auth_leaked_password_protection` 활성화
+- [ ] Supabase URL 화이트리스트 (Site URL, Redirect URLs)
+- [ ] `metadataBase` 환경변수화 (`src/app/layout.tsx` 하드코딩된 URL)
+- [ ] 도메인 설정 (선택)
+
+---
+
+### Week 10: 클럽 대시보드 신설 & 개인 화면 역할 분리 ✅ (2026-05-29)
+
+> 기존 `/dashboard`(개인 통계 중심)를 폐기하고, 클럽 단위 운영 도구로 재정의.
+> 개인 통계는 `/me/analytics`로 일원화하여 화면 역할을 명확히 분리.
+
+#### 라우트 재편
+- [x] `/dashboard`(나의 대시보드) 폐기 — `/clubs`로 redirect, 사이드바에서 제거
+- [x] `/clubs/[clubId]/dashboard` 신설 — owner + officer 전용 가드
+- [x] 로그인 후 진입 경로 `/dashboard` → `/clubs` 통일 (`auth.ts`, `middleware.ts`)
+- [x] 개인 통계는 `/me/analytics` 단독 담당으로 역할 명확화
+
+#### 클럽 대시보드 위젯 4종 (`/clubs/[clubId]/dashboard`)
+- [x] **가입 대기 승인 패널** — pending 회원 일괄 노출 + 승인/거절 액션
+- [x] **회원 통계** — 총원·신규 가입·활동률 요약 카드
+- [x] **대진표 활동 요약** — 최근 대진표 개수·확정 비율 등 운영 지표
+- [x] **이번 달 활동도 랭킹** — `get_club_activity_ranking` RPC 소비
+
+#### DB / RLS
+- [x] RPC `get_club_activity_ranking` 신설 — 단식·복식 player 컬럼 unnest 후 매치 참여 횟수 집계
+- [x] RLS 정책 추가 — officer도 pending 회원 승인/거절 가능 (`club_members_update_pending_by_officer`)
+
+> **결정 기록 (Week 10 — 대시보드 재편)**
+> - `/dashboard`는 "개인 통계 + 클럽 운영"이 섞여 정체성이 모호했음 → 클럽 단위 운영 도구로 분리, 개인 통계는 `/me/analytics`로 이관
+> - officer 역할의 운영 권한 확대(승인/거절) — owner 단독 부담 해소
+> - 활동도 랭킹은 RPC로 처리(단식 `player1/2_id` + 복식 `team1/2` 배열 unnest) — 클라이언트 집계 비용 회피
+
 ---
 
 ## 앞으로 개선해야할 점
 
-### 단기: 배포 마무리 (Week 9 잔여)
-- [ ] Vercel 배포 + 환경변수 등록 (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
-- [ ] Supabase Dashboard → Auth → Security → `auth_leaked_password_protection` 활성화
-- [ ] Supabase URL 화이트리스트 (Site URL, Redirect URLs)
-- [ ] 도메인 설정 (선택)
-- [ ] 프로덕션 빌드 후 핵심 플로우 회귀 점검 (로그인 → 대시보드 → 클럽 → 대진표 → 결과 입력)
-
-<!-- ### 중기: 기술 부채 / 품질 개선
-- [ ] **에러 바운더리** — App Router 각 라우트 그룹에 `error.tsx` 추가
-- [ ] **로딩 상태 일관화** — `loading.tsx` + Suspense 패턴 (현재 일부 페이지 누락)
+### 중기: 기술 부채 / 품질 개선
+<!-- 완료된 항목: d9c38e9에서 에러 바운더리 + 로딩 상태 일관화 완료 -->
 - [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)
 - [ ] **테스트 도입** — Playwright e2e (로그인, 클럽 생성, 대진표 생성·결과 입력 플로우)
 - [ ] **접근성(a11y)** — 색 대비, ARIA 레이블, 키보드 네비게이션 점검
@@ -188,4 +307,4 @@
 - [ ] **매칭 추천** — NTRP 기반 자동 페어링 알고리즘
 - [ ] **리그/시즌** — 누적 랭킹, 시즌 단위 집계 (별도 테이블 또는 view)
 - [ ] **클럽 게시판** — 공지/자유 게시판 (RLS: approved 멤버만 쓰기)
-- [ ] **모바일 PWA** — 오프라인 캐시, 홈 화면 추가, 푸시 알림 -->
+- [ ] **모바일 PWA** — 오프라인 캐시, 홈 화면 추가, 푸시 알림
