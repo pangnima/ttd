@@ -48,14 +48,14 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const ownerMember = approvedMembers.find((m) => m.role === 'owner')
 
     return (
-        <div className="w-full max-w-4xl space-y-6">
+        <div className="w-full space-y-8">
             {/* 헤더 */}
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="lg" />
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold text-foreground">{club.name}</h1>
+                            <h1 className={`${SECTION_LABEL} text-2xl`}>{club.name}</h1>
                             <span
                                 className={`${PILL_BASE} ${
                                     club.isPublic
@@ -67,7 +67,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             </span>
                         </div>
                         {club.description && (
-                            <p className={`text-sm ${TEXT_META}`}>{club.description}</p>
+                            <p className="text-sm text-foreground/60 mt-1">{club.description}</p>
                         )}
                     </div>
                 </div>
@@ -99,7 +99,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             </div>
 
             {/* 통계 카드 3분할 */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className={`${CARD_BASE} flex flex-col gap-1.5 p-4`}>
                     <div className="flex items-center gap-1.5">
                         <Users className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
