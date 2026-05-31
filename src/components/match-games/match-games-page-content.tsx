@@ -60,17 +60,17 @@ export function MatchGamesPageContent({
 
     if (!isMember) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 border border-foreground/8 rounded-xl bg-foreground/[0.02]">
-                <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-foreground/55" />
+            <div className="flex flex-col items-center justify-center py-20 gap-4 border border-border rounded-xl bg-card">
+                <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="text-center space-y-1">
-                    <p className="text-sm font-medium text-foreground/85">이 클럽의 멤버가 아닙니다</p>
-                    <p className="text-xs text-foreground/55">클럽에 가입한 후 대진표를 확인할 수 있습니다.</p>
+                    <p className="text-sm font-medium text-foreground">이 클럽의 멤버가 아닙니다</p>
+                    <p className="text-xs text-muted-foreground">클럽에 가입한 후 대진표를 확인할 수 있습니다.</p>
                 </div>
                 <Link
                     href={`/clubs/${clubId}`}
-                    className="mt-1 text-xs border border-foreground/15 rounded-full px-4 py-1.5 text-foreground/65 hover:border-foreground/30 hover:text-foreground/90 transition-colors"
+                    className="mt-1 text-xs border border-input rounded-full px-4 py-1.5 text-muted-foreground hover:border-input hover:text-foreground transition-colors"
                 >
                     클럽 페이지로 이동
                 </Link>
@@ -89,11 +89,11 @@ export function MatchGamesPageContent({
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">대진표</h1>
-                    {club && <p className="text-sm text-foreground/60 mt-0.5">{club.name}</p>}
+                    {club && <p className="text-sm text-muted-foreground mt-0.5">{club.name}</p>}
                 </div>
                 <Link
                     href={`/clubs/${clubId}/match-games/new`}
-                    className="flex items-center gap-1.5 text-sm border border-foreground/20 rounded-full px-4 py-1.5 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 hover:text-foreground transition-colors"
+                    className="flex items-center gap-1.5 text-sm border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-foreground/35 hover:text-foreground transition-colors"
                 >
                     <Plus className="w-3.5 h-3.5" />
                     대진표 만들기
@@ -102,13 +102,13 @@ export function MatchGamesPageContent({
 
             {sorted.length === 0 ? (
                 /* 빈 상태 */
-                <div className="flex flex-col items-center justify-center py-20 gap-4 border border-foreground/8 border-dashed rounded-xl">
-                    <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center">
-                        <Trophy className="w-5 h-5 text-foreground/55" />
+                <div className="flex flex-col items-center justify-center py-20 gap-4 border border-border border-dashed rounded-xl">
+                    <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                        <Trophy className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="text-center space-y-1">
-                        <p className="text-sm text-foreground/85">아직 대진표가 없습니다.</p>
-                        <p className="text-xs text-foreground/65">대진표 만들기 버튼으로 첫 대진표를 생성해보세요.</p>
+                        <p className="text-sm text-foreground">아직 대진표가 없습니다.</p>
+                        <p className="text-xs text-muted-foreground">대진표 만들기 버튼으로 첫 대진표를 생성해보세요.</p>
                     </div>
                 </div>
             ) : (
@@ -116,12 +116,12 @@ export function MatchGamesPageContent({
                     {/* 최신 대진표 */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium tracking-widest uppercase text-foreground/75">
+                            <span className="text-[11px] font-medium tracking-widest uppercase text-foreground">
                                 최신 대진표
                             </span>
                             <Link
                                 href={`/clubs/${clubId}/match-games/${latestMatchGame!.id}`}
-                                className="text-xs text-foreground/65 hover:text-foreground/90 transition-colors"
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 상세 보기 →
                             </Link>
@@ -138,32 +138,32 @@ export function MatchGamesPageContent({
                     {olderMatchGames.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex items-center gap-3">
-                                <div className="h-px flex-1 bg-foreground/8" />
-                                <span className="text-[11px] font-medium tracking-widest uppercase text-foreground/55 shrink-0">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="text-[11px] font-medium tracking-widest uppercase text-muted-foreground shrink-0">
                                     이전 대진표
                                 </span>
-                                <div className="h-px flex-1 bg-foreground/8" />
+                                <div className="h-px flex-1 bg-border" />
                             </div>
                             <div className="space-y-2">
                                 {olderMatchGames.map((mg) => (
                                     <div key={mg.id} className="flex items-center gap-2">
                                         <Link href={`/clubs/${clubId}/match-games/${mg.id}`} className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-3 p-4 rounded-lg border border-foreground/8 bg-foreground/[0.02] hover:border-foreground/18 hover:bg-foreground/[0.04] transition-all cursor-pointer">
-                                                <div className="w-9 h-9 rounded-md bg-foreground/5 border border-foreground/10 flex items-center justify-center shrink-0">
+                                            <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card hover:border-foreground/18 hover:bg-foreground/[0.04] transition-all cursor-pointer">
+                                                <div className="w-9 h-9 rounded-md bg-muted/50 border border-foreground/10 flex items-center justify-center shrink-0">
                                                     <Trophy className="w-4 h-4 text-foreground/40" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-sm text-foreground/90 truncate">{mg.name}</p>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
                                                         <Calendar className="w-3 h-3 text-foreground/50" />
-                                                        <span className="text-xs text-foreground/60">{mg.date}</span>
+                                                        <span className="text-xs text-muted-foreground">{mg.date}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     <span className={`text-[11px] px-2 py-0.5 rounded-[4px] border ${
                                                         mg.isFixed
                                                             ? 'border-cyan-400/40 text-cyan-400/80 bg-cyan-400/8'
-                                                            : 'border-foreground/20 text-foreground/60'
+                                                            : 'border-border text-muted-foreground'
                                                     }`}>
                                                         {mg.isFixed ? '완료' : '진행중'}
                                                     </span>
@@ -194,7 +194,7 @@ export function MatchGamesPageContent({
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="border-foreground/15 text-foreground/60 hover:bg-foreground/8 hover:text-foreground">
+                                <AlertDialogCancel className="border-input text-muted-foreground hover:bg-muted hover:text-foreground">
                                     취소
                                 </AlertDialogCancel>
                                 <AlertDialogAction

@@ -7,13 +7,12 @@ import { CARD_BASE } from '@/lib/dashboard/tokens'
 
 const inputCls = [
     'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
-    'bg-foreground/[0.04] border border-foreground/10',
-    'placeholder:text-foreground/40',
-    'outline-none focus:border-foreground/30 focus:bg-foreground/[0.06]',
-    'transition-colors',
+    'bg-background border border-input',
+    'placeholder:text-muted-foreground',
+    'outline-none focus:border-ring transition-colors',
 ].join(' ')
 
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-foreground/65 mb-1.5'
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
 export function PasswordChangeForm() {
     const [state, formAction, isPending] = useActionState(updatePasswordAction, null)
@@ -27,10 +26,10 @@ export function PasswordChangeForm() {
         <form ref={formRef} action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-4`}>
             <div>
                 <p className="text-sm font-semibold text-foreground">비밀번호 변경</p>
-                <p className="text-xs text-foreground/50 mt-0.5">현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.</p>
             </div>
 
-            <div className="h-px bg-foreground/8" />
+            <div className="h-px bg-border" />
 
             <div>
                 <label htmlFor="current_password" className={labelCls}>현재 비밀번호</label>
@@ -73,12 +72,12 @@ export function PasswordChangeForm() {
             </div>
 
             {state?.error && (
-                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}
             {state?.success && (
-                <p className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-3 py-2">
+                <p className="text-sm text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-3 py-2 dark:text-emerald-400">
                     비밀번호가 변경되었습니다.
                 </p>
             )}
@@ -86,7 +85,7 @@ export function PasswordChangeForm() {
             <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-full bg-white text-black hover:bg-foreground/90 font-semibold h-11"
+                className="w-full rounded-full font-semibold h-11"
             >
                 {isPending ? '변경 중...' : '비밀번호 변경'}
             </Button>

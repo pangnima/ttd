@@ -46,7 +46,7 @@ export default function RootLayout({
             className={`${geistSans.variable} ${geistMono.variable} ${notoSansKR.variable} h-full antialiased`}
         >
             <body className="min-h-full bg-background">
-                <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     {children}
                 </ThemeProvider>
             </body>

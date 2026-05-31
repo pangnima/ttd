@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useActionState } from 'react'
+import { useState, useActionState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImagePlus } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { updateProfileAction } from '@/lib/actions/profile'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 
@@ -16,19 +15,18 @@ const NTRP_OPTIONS = [
 
 const inputCls = [
     'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
-    'bg-foreground/[0.04] border border-foreground/10',
-    'placeholder:text-foreground/40',
-    'outline-none focus:border-foreground/30 focus:bg-foreground/[0.06]',
-    'transition-colors',
+    'bg-background border border-input',
+    'placeholder:text-muted-foreground',
+    'outline-none focus:border-ring transition-colors',
 ].join(' ')
 
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-foreground/65 mb-1.5'
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
 const toggleBase = 'py-2 text-xs rounded-md border transition-all'
-const toggleActive = 'border-cyan-400/70 bg-cyan-400/15 text-cyan-300 font-semibold'
-const toggleInactive = 'border-foreground/15 text-foreground/65 hover:border-foreground/30 hover:text-foreground/85'
-const toggleReadonlyActive = 'border-cyan-400/40 bg-cyan-400/10 text-cyan-300/60 font-semibold cursor-default pointer-events-none'
-const toggleReadonlyInactive = 'border-foreground/10 text-foreground/30 cursor-default pointer-events-none'
+const toggleActive = 'border-primary bg-primary/10 text-primary font-semibold'
+const toggleInactive = 'border-border text-muted-foreground hover:border-input hover:text-foreground'
+const toggleReadonlyActive = 'border-primary/40 bg-primary/5 text-primary/60 font-semibold cursor-default pointer-events-none'
+const toggleReadonlyInactive = 'border-border text-muted-foreground/50 cursor-default pointer-events-none'
 
 type ProfileData = {
     name: string
@@ -42,44 +40,22 @@ type ProfileData = {
     stats_hidden: boolean
 }
 
-export function ProfileSettingsForm() {
-    const [profile, setProfile] = useState<ProfileData | null>(null)
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-    const [ntrp, setNtrp] = useState('3.0')
-    const [dominantHand, setDominantHand] = useState('right')
-    const [statsHidden, setStatsHidden] = useState(false)
-    const [state, formAction, isPending] = useActionState(updateProfileAction, null)
+type Props = {
+    initialProfile: ProfileData
+}
 
-    useEffect(() => {
-        const supabase = createClient()
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
-            if (!user) return
-            const { data } = await supabase
-                .from('users')
-                .select('name, nickname, phone, gender, dominant_hand, tennis_start_date, ntrp, profile_image, stats_hidden')
-                .eq('id', user.id)
-                .single()
-            if (data) {
-                setProfile(data)
-                if (data.ntrp) setNtrp(data.ntrp.toFixed(1))
-                if (data.dominant_hand) setDominantHand(data.dominant_hand)
-                setStatsHidden(data.stats_hidden ?? false)
-            }
-        })
-    }, [])
+export function ProfileSettingsForm({ initialProfile }: Props) {
+    const [profile] = useState<ProfileData>(initialProfile)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    const [ntrp, setNtrp] = useState(initialProfile.ntrp ? initialProfile.ntrp.toFixed(1) : '3.0')
+    const [dominantHand, setDominantHand] = useState(initialProfile.dominant_hand ?? 'right')
+    const [statsHidden, setStatsHidden] = useState(initialProfile.stats_hidden ?? false)
+    const [state, formAction, isPending] = useActionState(updateProfileAction, null)
 
     function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return
         setAvatarPreview(URL.createObjectURL(file))
-    }
-
-    if (!profile) {
-        return (
-            <div className="py-10 text-center text-sm text-foreground/50">
-                불러오는 중...
-            </div>
-        )
     }
 
     const avatarSrc = avatarPreview ?? profile.profile_image
@@ -91,7 +67,7 @@ export function ProfileSettingsForm() {
             <div className="space-y-1.5">
                 <label className={labelCls}>프로필 사진</label>
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full border border-foreground/10 bg-foreground/5 flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="w-16 h-16 rounded-full border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
                         {avatarSrc ? (
                             <Image
                                 src={avatarSrc}
@@ -101,7 +77,7 @@ export function ProfileSettingsForm() {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-xl text-foreground/40 font-medium">
+                            <span className="text-xl text-muted-foreground font-medium">
                                 {profile.nickname?.[0] ?? '?'}
                             </span>
                         )}
@@ -109,12 +85,12 @@ export function ProfileSettingsForm() {
                     <div className="space-y-1.5">
                         <label
                             htmlFor="avatar"
-                            className="inline-flex items-center gap-1.5 text-xs border border-foreground/20 rounded-full px-3 py-1.5 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
                         >
                             <ImagePlus className="w-3.5 h-3.5" />
                             이미지 변경
                         </label>
-                        <p className="text-xs text-foreground/50">JPG, PNG, WEBP · 최대 5MB</p>
+                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
                         <input
                             id="avatar"
                             name="avatar"
@@ -166,7 +142,7 @@ export function ProfileSettingsForm() {
                 <div>
                     <p className={`${labelCls} flex items-center gap-1.5`}>
                         성별
-                        <span className="normal-case tracking-normal font-normal text-foreground/40">(변경 불가)</span>
+                        <span className="normal-case tracking-normal font-normal text-muted-foreground">(변경 불가)</span>
                     </p>
                     {/* 성별은 서버에 저장된 값을 그대로 전달 */}
                     <input type="hidden" name="gender" value={currentGender} />
@@ -208,7 +184,7 @@ export function ProfileSettingsForm() {
                     name="tennis_start_date"
                     type="date"
                     defaultValue={profile.tennis_start_date ?? ''}
-                    className={`${inputCls} [color-scheme:dark]`}
+                    className={inputCls}
                 />
             </div>
 
@@ -216,7 +192,7 @@ export function ProfileSettingsForm() {
                 <label className={labelCls}>NTRP 레이팅</label>
                 <input type="hidden" name="ntrp" value={ntrp} />
                 <Select value={ntrp} onValueChange={(v) => v && setNtrp(v)}>
-                    <SelectTrigger className="bg-foreground/[0.04] border-foreground/10 focus:border-foreground/30">
+                    <SelectTrigger className="bg-background border-input focus:border-ring">
                         <SelectValue placeholder="NTRP 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -246,13 +222,13 @@ export function ProfileSettingsForm() {
                         </button>
                     ))}
                 </div>
-                <p className="text-[11px] text-foreground/40 mt-1.5">
+                <p className="text-[11px] text-muted-foreground mt-1.5">
                     비공개 시 다른 회원이 내 프로필에서 승률·승무패를 볼 수 없습니다
                 </p>
             </div>
 
             {state?.error && (
-                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}
@@ -260,7 +236,7 @@ export function ProfileSettingsForm() {
             <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-full bg-white text-black hover:bg-foreground/90 font-semibold h-11"
+                className="w-full rounded-full font-semibold h-11"
             >
                 {isPending ? '저장 중...' : '저장하기'}
             </Button>

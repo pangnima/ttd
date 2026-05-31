@@ -6,13 +6,12 @@ import { loginAction } from '@/lib/actions/auth'
 
 const inputCls = [
     'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
-    'bg-foreground/[0.04] border border-foreground/10',
-    'placeholder:text-foreground/40',
-    'outline-none focus:border-foreground/30 focus:bg-foreground/[0.06]',
-    'transition-colors',
+    'bg-background border border-input',
+    'placeholder:text-muted-foreground',
+    'outline-none focus:border-ring transition-colors',
 ].join(' ')
 
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-foreground/65 mb-1.5'
+const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
 export function LoginForm() {
     const [state, formAction, isPending] = useActionState(loginAction, null)
@@ -40,7 +39,7 @@ export function LoginForm() {
             </div>
 
             {state?.error && (
-                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}
@@ -48,7 +47,7 @@ export function LoginForm() {
             <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-full bg-white text-black hover:bg-foreground/90 font-semibold h-11 mt-2"
+                className="w-full rounded-full font-semibold h-11 mt-2"
             >
                 {isPending ? '로그인 중...' : '로그인'}
             </Button>

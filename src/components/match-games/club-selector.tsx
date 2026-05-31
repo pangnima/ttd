@@ -24,17 +24,17 @@ export function ClubSelector({ clubs, currentClubId }: ClubSelectorProps) {
             value={currentClubId}
             onValueChange={(clubId) => router.push(`/clubs/${clubId}/match-games`)}
         >
-            <SelectTrigger className="w-48 h-8 text-xs bg-foreground/[0.04] border border-foreground/12 text-foreground/85 hover:border-foreground/25 hover:text-foreground focus:ring-0 focus:border-foreground/30 transition-colors rounded-lg">
+            <SelectTrigger className="w-48 h-8 text-xs bg-background border border-input text-foreground hover:border-ring focus:ring-0 focus:border-ring transition-colors rounded-lg">
                 <SelectValue placeholder="클럽 선택">
                     {currentClub?.name ?? '클럽 선택'}
                 </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-popover border border-foreground/12 text-foreground">
+            <SelectContent className="bg-popover border border-border text-foreground">
                 {clubs.map((club) => (
                     <SelectItem
                         key={club.id}
                         value={club.id}
-                        className="text-foreground/70 focus:bg-foreground/8 focus:text-foreground cursor-pointer text-xs"
+                        className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer text-xs"
                     >
                         {club.name}
                     </SelectItem>

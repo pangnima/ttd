@@ -32,14 +32,14 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
                     {pendingMembers.length}명
                 </Badge>
             </div>
-            <div className={`${CARD_BASE} divide-y divide-foreground/8`}>
+            <div className={`${CARD_BASE} divide-y divide-border`}>
                 {pendingMembers.map((m) => (
                     <div key={m.userId} className="flex items-center justify-between px-4 py-3 gap-3">
                         <div className="flex items-center gap-2 min-w-0">
-                            <Clock className="w-3.5 h-3.5 text-orange-400/70 shrink-0" />
+                            <Clock className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                             <div className="min-w-0">
-                                <p className="text-sm text-foreground/85 truncate">{m.user.name}</p>
-                                <p className="text-xs text-foreground/45 truncate">{m.user.nickname}</p>
+                                <p className="text-sm text-foreground truncate">{m.user.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{m.user.nickname}</p>
                             </div>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
