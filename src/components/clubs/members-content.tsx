@@ -4,26 +4,53 @@ import { useTransition } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { MemberListItem } from '@/components/clubs/member-list-item'
-import { approveMemberAction, rejectMemberAction } from '@/lib/actions/club-members'
+import {
+    approveMemberAction,
+    rejectMemberAction,
+    assignOfficerAction,
+    removeOfficerAction,
+} from '@/lib/actions/club-members'
 import type { MemberWithUser } from '@/lib/queries/clubs'
+import type { ClubMember } from '@/types'
 
 type MembersContentProps = {
     clubId: string
     clubName: string
     members: MemberWithUser[]
     pendingMembers: MemberWithUser[]
-    isOwner: boolean
+    currentUserRole: ClubMember['role'] | null
 }
 
-export function MembersContent({ clubId, clubName, members, pendingMembers, isOwner }: MembersContentProps) {
+export function MembersContent({
+    clubId,
+    clubName,
+    members,
+    pendingMembers,
+    currentUserRole,
+}: MembersContentProps) {
     const [isPending, startTransition] = useTransition()
 
-    const handleApprove = (clubId: string, userId: string) =>
+    const isOwner = currentUserRole === 'owner'
+    const canManagePending = currentUserRole === 'owner' || currentUserRole === 'officer'
+
+    const handleApprove = (userId: string) =>
         startTransition(async () => { await approveMemberAction(clubId, userId) })
 
-    const handleReject = (clubId: string, userId: string) =>
+    const handleReject = (userId: string) =>
         startTransition(async () => { await rejectMemberAction(clubId, userId) })
+
+    const handleAssignOfficer = (userId: string) =>
+        startTransition(async () => { await assignOfficerAction(clubId, userId) })
+
+    const handleRemoveOfficer = (userId: string) =>
+        startTransition(async () => { await removeOfficerAction(clubId, userId) })
 
     return (
         <>
@@ -39,12 +66,40 @@ export function MembersContent({ clubId, clubName, members, pendingMembers, isOw
                 </div>
                 <div className="border rounded-lg divide-y">
                     {members.map((m) => (
-                        <MemberListItem
-                            key={m.userId}
-                            member={m}
-                            user={m.user}
-                            clubId={clubId}
-                        />
+                        <div key={m.userId} className="flex items-center pr-2">
+                            <div className="flex-1 min-w-0">
+                                <MemberListItem
+                                    member={m}
+                                    user={m.user}
+                                    clubId={clubId}
+                                />
+                            </div>
+                            {isOwner && m.role !== 'owner' && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md p-0 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+                                        disabled={isPending}
+                                    >
+                                        ···
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {m.role === 'member' ? (
+                                            <DropdownMenuItem
+                                                onClick={() => handleAssignOfficer(m.userId)}
+                                            >
+                                                임원으로 지정
+                                            </DropdownMenuItem>
+                                        ) : (
+                                            <DropdownMenuItem
+                                                onClick={() => handleRemoveOfficer(m.userId)}
+                                            >
+                                                임원 해제
+                                            </DropdownMenuItem>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                        </div>
                     ))}
                 </div>
             </section>
@@ -65,12 +120,12 @@ export function MembersContent({ clubId, clubName, members, pendingMembers, isOw
                                     <div className="flex-1 opacity-60">
                                         <MemberListItem member={m} user={m.user} />
                                     </div>
-                                    {isOwner && (
+                                    {canManagePending && (
                                         <div className="flex gap-1.5 shrink-0">
                                             <Button
                                                 size="sm"
                                                 className="h-7 text-xs"
-                                                onClick={() => handleApprove(m.clubId, m.userId)}
+                                                onClick={() => handleApprove(m.userId)}
                                                 disabled={isPending}
                                             >
                                                 승인
@@ -79,7 +134,7 @@ export function MembersContent({ clubId, clubName, members, pendingMembers, isOw
                                                 size="sm"
                                                 variant="outline"
                                                 className="h-7 text-xs"
-                                                onClick={() => handleReject(m.clubId, m.userId)}
+                                                onClick={() => handleReject(m.userId)}
                                                 disabled={isPending}
                                             >
                                                 거절
@@ -89,9 +144,9 @@ export function MembersContent({ clubId, clubName, members, pendingMembers, isOw
                                 </div>
                             ))}
                         </div>
-                        {!isOwner && (
+                        {!canManagePending && (
                             <p className="text-xs text-muted-foreground mt-2">
-                                ※ 승인/거절은 클럽 운영자만 가능합니다.
+                                ※ 승인/거절은 운영자 또는 임원만 가능합니다.
                             </p>
                         )}
                     </section>

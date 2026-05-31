@@ -14,7 +14,14 @@ type MemberListItemProps = {
 
 const roleLabel: Record<ClubMember['role'], string> = {
     owner: '운영자',
+    officer: '임원',
     member: '회원',
+}
+
+const roleBadgeVariant: Record<ClubMember['role'], 'default' | 'secondary' | 'outline'> = {
+    owner: 'default',
+    officer: 'outline',
+    member: 'secondary',
 }
 
 const genderLabel: Record<User['gender'], string> = {
@@ -62,7 +69,10 @@ export function MemberListItem({ member, user, clubId, wins, losses }: MemberLis
                 <Badge variant="outline" className="text-xs font-mono">
                     NTRP {user.ntrp.toFixed(1)}
                 </Badge>
-                <Badge variant={member.role === 'owner' ? 'default' : 'secondary'} className="text-xs">
+                <Badge
+                    variant={roleBadgeVariant[member.role]}
+                    className={member.role === 'officer' ? 'text-xs text-blue-600 border-blue-300' : 'text-xs'}
+                >
                     {roleLabel[member.role]}
                 </Badge>
             </div>

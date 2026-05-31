@@ -20,7 +20,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
         fetchMyMembership(user.id, clubId),
     ])
 
-    const isOwner = myMembership?.role === 'owner'
+    const currentUserRole = myMembership?.role ?? null
 
     return (
         <div className="w-full max-w-3xl">
@@ -29,7 +29,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
                 clubName={club?.name ?? ''}
                 members={approvedMembers}
                 pendingMembers={pendingMembers}
-                isOwner={isOwner}
+                currentUserRole={currentUserRole}
             />
         </div>
     )
