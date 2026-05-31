@@ -11,6 +11,7 @@ import type { User } from '@/types'
 export type PlayerStatsBundle = {
     matches: Awaited<ReturnType<typeof fetchMatchesByUser>>['matches']
     gameMetaById: Awaited<ReturnType<typeof fetchMatchesByUser>>['gameMetaById']
+    courtSurfaceByMatchId: Awaited<ReturnType<typeof fetchMatchesByUser>>['courtSurfaceByMatchId']
     stats: Awaited<ReturnType<typeof fetchUserMatchStatsV2>>
     court: Awaited<ReturnType<typeof fetchUserDoublesCourtStats>>
     h2h: Awaited<ReturnType<typeof fetchUserHeadToHead>>
@@ -23,7 +24,7 @@ export async function fetchPlayerStatsBundle(
     userId: string,
     clubId: string | undefined,
 ): Promise<PlayerStatsBundle> {
-    const [{ matches, gameMetaById }, stats, court, h2h, partners] = await Promise.all([
+    const [{ matches, gameMetaById, courtSurfaceByMatchId }, stats, court, h2h, partners] = await Promise.all([
         fetchMatchesByUser(userId, clubId),
         fetchUserMatchStatsV2(userId, clubId),
         fetchUserDoublesCourtStats(userId, clubId),
@@ -43,5 +44,5 @@ export async function fetchPlayerStatsBundle(
     const allUsers = await fetchUsersByIds([...userIds])
     const userMap = new Map(allUsers.map((u) => [u.id, u]))
 
-    return { matches, gameMetaById, stats, court, h2h, partners, userMap }
+    return { matches, gameMetaById, courtSurfaceByMatchId, stats, court, h2h, partners, userMap }
 }

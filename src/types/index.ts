@@ -30,7 +30,7 @@ export type Club = {
 export type ClubMember = {
     userId: string
     clubId: string
-    role: 'owner' | 'member'
+    role: 'owner' | 'officer' | 'member'
     status: 'pending' | 'approved' | 'rejected'
     joinedAt: string
 }
@@ -52,10 +52,13 @@ export type Round = {
     timeSlots: TimeSlot[]
 }
 
+export type CourtSurface = 'hard' | 'clay' | 'grass' | 'other'
+
 export type Court = {
     id: string
     label: string     // "1코트", "2코트"
     order: number
+    surface?: CourtSurface
 }
 
 export type MatchResult = {
@@ -100,5 +103,28 @@ export type MatchGame = {
     rounds: Round[]
     matches: Match[]
     isFixed: boolean      // true면 결과 확정 — 수정 잠금, 통계 집계 반영
+    createdAt: string
+}
+
+// ── 개인 경기 (클럽 외부) ────────────────────────────────
+
+export type PersonalMatchWinner = 'me' | 'opponent' | 'draw'
+
+export type PersonalMatchSetScore = {
+    me: number
+    opp: number
+}
+
+export type PersonalMatch = {
+    id: string
+    userId: string
+    opponentName: string
+    opponentUserId?: string  // 클럽 회원과 연결된 경우 users.id, 외부 상대는 undefined
+    playedAt: string        // "2025-04-12"
+    matchType: MatchType
+    surface?: CourtSurface
+    setScores: PersonalMatchSetScore[]
+    winner: PersonalMatchWinner
+    notes?: string
     createdAt: string
 }

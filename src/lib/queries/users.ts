@@ -51,3 +51,44 @@ export async function fetchUsersByIds(ids: string[]): Promise<User[]> {
     if (error || !data) return []
     return data.map(mapUserRow)
 }
+
+export type OpponentCandidate = {
+    id: string
+    name: string
+    ntrp?: number
+    isGuest: boolean
+    clubNames: string[]
+}
+
+// 내가 가입(approved)한 클럽의 모든 멤버 목록 (자신 제외, 중복 제거).
+// 개인 매치 등록 폼에서 상대 검색 콤보에 사용.
+export async function fetchOpponentCandidates(userId: string): Promise<OpponentCandidate[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('club_members')
+        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, is_guest)')
+        .eq('status', 'approved')
+        .neq('user_id', userId)
+
+    if (error || !data) return []
+
+    const map = new Map<string, OpponentCandidate>()
+    for (const row of data) {
+        const u = row.users as { id: string; name: string; ntrp: number | null; is_guest: boolean } | null
+        const club = row.clubs as { name: string } | null
+        if (!u) continue
+        const existing = map.get(u.id)
+        if (existing) {
+            if (club) existing.clubNames.push(club.name)
+        } else {
+            map.set(u.id, {
+                id: u.id,
+                name: u.name,
+                ntrp: u.ntrp ?? undefined,
+                isGuest: u.is_guest ?? false,
+                clubNames: club ? [club.name] : [],
+            })
+        }
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
+}

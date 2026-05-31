@@ -515,6 +515,17 @@ export type Database = {
           win_count: number
         }[]
       }
+      get_club_win_rate_ranking: {
+        Args: { p_club_id: string; p_min_matches?: number }
+        Returns: {
+          loss_count: number
+          match_count: number
+          match_type_group: string
+          user_id: string
+          win_count: number
+          win_rate: number
+        }[]
+      }
       get_user_doubles_court_stats:
         | { Args: { p_user_id: string }; Returns: Json }
         | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }

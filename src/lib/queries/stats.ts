@@ -104,6 +104,71 @@ export async function fetchUserDoublesCourtStats(userId: string, clubId?: string
     }
 }
 
+export type UnifiedHeadToHead = {
+    opponentUserId: string | null
+    opponentName: string | null
+    matches: number
+    wins: number
+    losses: number
+    draws: number
+    setsWon: number
+    setsLost: number
+}
+
+// 클럽+개인 매치를 통합한 상대별 H2H 집계.
+export async function fetchUserHeadToHeadUnified(userId: string): Promise<UnifiedHeadToHead[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_user_head_to_head_unified', { p_user_id: userId })
+    if (error || !data) return []
+    return (data as {
+        opponent_user_id: string | null
+        opponent_name: string | null
+        matches: number
+        wins: number
+        losses: number
+        draws: number
+        sets_won: number
+        sets_lost: number
+    }[]).map((row) => ({
+        opponentUserId: row.opponent_user_id ?? null,
+        opponentName: row.opponent_name ?? null,
+        matches: row.matches,
+        wins: row.wins,
+        losses: row.losses,
+        draws: row.draws ?? 0,
+        setsWon: row.sets_won ?? 0,
+        setsLost: row.sets_lost ?? 0,
+    }))
+}
+
+// 클럽+개인 통합 4분기 경기 통계. scope: 'total'|'club'|'personal'
+export async function fetchUserMatchStatsUnified(
+    userId: string,
+    scope: 'total' | 'club' | 'personal' = 'total',
+): Promise<{
+    singles: PlayerStats
+    menDoubles: PlayerStats
+    womenDoubles: PlayerStats
+    mixedDoubles: PlayerStats
+}> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_user_match_stats_unified', {
+        p_user_id: userId,
+        p_scope: scope,
+    })
+    if (error || !data) {
+        const empty = makePlayerStatsV2(EMPTY_RAW_V2)
+        return { singles: empty, menDoubles: empty, womenDoubles: empty, mixedDoubles: empty }
+    }
+    const raw = data as RawMatchStatsV2
+    return {
+        singles: makePlayerStatsV2(raw.singles ?? EMPTY_RAW_V2),
+        menDoubles: makePlayerStatsV2(raw.men_doubles ?? EMPTY_RAW_V2),
+        womenDoubles: makePlayerStatsV2(raw.women_doubles ?? EMPTY_RAW_V2),
+        mixedDoubles: makePlayerStatsV2(raw.mixed_doubles ?? EMPTY_RAW_V2),
+    }
+}
+
 // Supabase RPC `get_user_partner_stats`: 복식 동일 팀 파트너별 전적 조회.
 export async function fetchUserPartnerStats(userId: string, clubId?: string): Promise<PartnerStat[]> {
     const supabase = await createClient()

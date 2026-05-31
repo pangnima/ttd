@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
-import type { Court, Match, MatchGame, MatchResult, MatchType, Round, TimeSlot, User } from '@/types'
+import type { Court, CourtSurface, Match, MatchGame, MatchResult, MatchType, Round, TimeSlot, User } from '@/types'
 import { mapUserRow } from '@/lib/queries/users'
 
 type MatchGameRow       = Database['public']['Tables']['match_games']['Row']
@@ -13,7 +13,12 @@ type MatchRow           = Database['public']['Tables']['match_game_matches']['Ro
 type UserRow            = Database['public']['Tables']['users']['Row']
 
 function mapCourtRow(row: CourtRow): Court {
-    return { id: row.id, label: row.label, order: row.order }
+    return {
+        id: row.id,
+        label: row.label,
+        order: row.order,
+        surface: (row.surface as CourtSurface) ?? undefined,
+    }
 }
 
 function mapTimeSlotRow(row: TimeSlotRow): TimeSlot {
@@ -132,6 +137,7 @@ export async function fetchMatchGameById(id: string): Promise<MatchGame | null> 
 export type MatchGameMeta = { id: string; name: string; date: string; clubId: string }
 
 // 단식/복식 모두 커버하는 단일 쿼리. match_games(name, date)를 embed해서 메타 동봉.
+// court:match_game_courts(surface)도 embed해서 표면 정보를 courtSurfaceByMatchId에 담아 반환.
 // - 단식: player1_id.eq / player2_id.eq
 // - 복식: team1.cs.{userId} / team2.cs.{userId}
 //   cs = PostgreSQL 배열 contains 연산자 ({userId}는 배열 리터럴 형식)
@@ -139,27 +145,37 @@ export type MatchGameMeta = { id: string; name: string; date: string; clubId: st
 export async function fetchMatchesByUser(userId: string, clubId?: string): Promise<{
     matches: Match[]
     gameMetaById: Record<string, MatchGameMeta>
+    courtSurfaceByMatchId: Record<string, CourtSurface | null>
 }> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_game_matches')
-        .select('*, match_games(id, name, date, club_id)')
+        .select('*, match_games(id, name, date, club_id, is_fixed), court:match_game_courts(surface)')
         .or(`player1_id.eq.${userId},player2_id.eq.${userId},team1.cs.{${userId}},team2.cs.{${userId}}`)
         .eq('status', 'finished')
-    if (error || !data) return { matches: [], gameMetaById: {} }
+    if (error || !data) return { matches: [], gameMetaById: {}, courtSurfaceByMatchId: {} }
+
+    // 클라이언트 집계와 RPC 통계(is_fixed=true 기준)의 모집단을 통일.
+    const fixedData = data.filter((row) => {
+        const g = row.match_games as { is_fixed: boolean } | null
+        return g?.is_fixed === true
+    })
 
     const gameMetaById: Record<string, MatchGameMeta> = {}
-    for (const row of data) {
+    const courtSurfaceByMatchId: Record<string, CourtSurface | null> = {}
+    for (const row of fixedData) {
         const g = row.match_games as { id: string; name: string; date: string; club_id: string } | null
         if (g) gameMetaById[g.id] = { id: g.id, name: g.name, date: g.date, clubId: g.club_id }
+        const c = row.court as { surface: string | null } | null
+        courtSurfaceByMatchId[row.id] = (c?.surface as CourtSurface) ?? null
     }
 
-    const allMatches = data.map((row) => mapMatchRow(row as MatchRow))
+    const allMatches = fixedData.map((row) => mapMatchRow(row as MatchRow))
     const matches = clubId
         ? allMatches.filter((m) => gameMetaById[m.matchGameId]?.clubId === clubId)
         : allMatches
 
-    return { matches, gameMetaById }
+    return { matches, gameMetaById, courtSurfaceByMatchId }
 }
 
 export async function fetchClubMembersWithGuests(clubId: string): Promise<User[]> {
