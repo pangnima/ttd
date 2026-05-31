@@ -3,14 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchMyMembership } from '@/lib/queries/clubs'
 import {
     fetchPendingMembersByClubId,
-    fetchClubMemberStats,
     fetchClubMatchGameActivity,
     fetchClubActivityRanking,
+    fetchClubWinRateRanking,
 } from '@/lib/queries/club-dashboard'
 import { PendingMembersPanel } from '@/components/club-dashboard/pending-members-panel'
-import { MemberStatsCard } from '@/components/club-dashboard/member-stats-card'
 import { MatchGameActivityCard } from '@/components/club-dashboard/match-game-activity-card'
 import { ActivityRankingCard } from '@/components/club-dashboard/activity-ranking-card'
+import { WinRateRankingCard } from '@/components/club-dashboard/win-rate-ranking-card'
 import { SECTION_LABEL, TEXT_META } from '@/lib/dashboard/tokens'
 
 type Props = {
@@ -40,15 +40,15 @@ export default async function ClubDashboardPage({ params }: Props) {
         redirect(`/clubs/${clubId}`)
     }
 
-    const [pendingMembers, memberStats, matchGameActivity, activityRanking] = await Promise.all([
+    const [pendingMembers, matchGameActivity, activityRanking, winRateRanking] = await Promise.all([
         fetchPendingMembersByClubId(clubId),
-        fetchClubMemberStats(clubId),
         fetchClubMatchGameActivity(clubId),
         fetchClubActivityRanking(clubId),
+        fetchClubWinRateRanking(clubId),
     ])
 
     return (
-        <div className="w-full max-w-4xl space-y-6">
+        <div className="w-full space-y-8">
             <div>
                 <h1 className={`${SECTION_LABEL} text-2xl`}>{club.name}</h1>
                 <p className={`text-sm ${TEXT_META} mt-1`}>클럽 대시보드</p>
@@ -56,10 +56,14 @@ export default async function ClubDashboardPage({ params }: Props) {
 
             <PendingMembersPanel clubId={clubId} pendingMembers={pendingMembers} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <MemberStatsCard stats={memberStats} />
-                <MatchGameActivityCard clubId={clubId} activity={matchGameActivity} />
-            </div>
+            <MatchGameActivityCard clubId={clubId} activity={matchGameActivity} />
+
+            <WinRateRankingCard
+                singles={winRateRanking.singles}
+                menDoubles={winRateRanking.menDoubles}
+                womenDoubles={winRateRanking.womenDoubles}
+                mixedDoubles={winRateRanking.mixedDoubles}
+            />
 
             <ActivityRankingCard ranking={activityRanking} />
         </div>

@@ -41,6 +41,22 @@ export type ActivityRankingEntry = {
     winCount: number
 }
 
+export type WinRateRankingEntry = {
+    userId: string
+    user: User | null
+    matchCount: number
+    winCount: number
+    lossCount: number
+    winRate: number
+}
+
+export type ClubWinRateRanking = {
+    singles: WinRateRankingEntry[]
+    menDoubles: WinRateRankingEntry[]
+    womenDoubles: WinRateRankingEntry[]
+    mixedDoubles: WinRateRankingEntry[]
+}
+
 export async function fetchPendingMembersByClubId(clubId: string): Promise<PendingMemberWithUser[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -132,6 +148,38 @@ export async function fetchClubMatchGameActivity(clubId: string): Promise<ClubMa
         fixedCount,
         pendingCount,
         nextGame: nextGame ? { id: nextGame.id, name: nextGame.name, date: nextGame.date, isFixed: nextGame.is_fixed } : null,
+    }
+}
+
+export async function fetchClubWinRateRanking(clubId: string): Promise<ClubWinRateRanking> {
+    const supabase = await createClient()
+
+    const { data: rankData, error: rankErr } = await supabase
+        .rpc('get_club_win_rate_ranking', { p_club_id: clubId })
+    if (rankErr || !rankData || rankData.length === 0) return { singles: [], menDoubles: [], womenDoubles: [], mixedDoubles: [] }
+
+    const userIds = [...new Set(rankData.map((r) => r.user_id as string))]
+    const { data: usersData } = await supabase
+        .from('users')
+        .select('*')
+        .in('id', userIds)
+
+    const userMap = new Map((usersData ?? []).map((u) => [u.id, mapUserRow(u as UserRow)]))
+
+    const toEntry = (r: { user_id: string; match_count: number; win_count: number; loss_count: number; win_rate: number }): WinRateRankingEntry => ({
+        userId: r.user_id,
+        user: userMap.get(r.user_id) ?? null,
+        matchCount: Number(r.match_count),
+        winCount: Number(r.win_count),
+        lossCount: Number(r.loss_count),
+        winRate: Number(r.win_rate),
+    })
+
+    return {
+        singles: rankData.filter((r) => r.match_type_group === 'singles').map(toEntry),
+        menDoubles: rankData.filter((r) => r.match_type_group === 'men_doubles').map(toEntry),
+        womenDoubles: rankData.filter((r) => r.match_type_group === 'women_doubles').map(toEntry),
+        mixedDoubles: rankData.filter((r) => r.match_type_group === 'mixed_doubles').map(toEntry),
     }
 }
 
