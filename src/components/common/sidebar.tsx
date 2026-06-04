@@ -2,19 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Trophy } from 'lucide-react'
+import { Trophy, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems, type NavItem } from '@/lib/nav-items'
+import { mainNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
     currentPath?: string
     matchGameHref?: string | null
-    /** 동적으로 생성된 프로필 nav item (layout에서 주입) */
-    profileNavItem?: NavItem | null
+    /** 동적으로 생성된 프로필 링크 (layout에서 주입, 아이콘은 클라이언트에서 직접 렌더링) */
+    profileHref?: string | null
 }
 
-export function Sidebar({ currentPath, matchGameHref, profileNavItem }: SidebarProps) {
+export function Sidebar({ currentPath, matchGameHref, profileHref }: SidebarProps) {
     const pathname = usePathname()
     const activePath = currentPath ?? pathname
 
@@ -25,11 +25,6 @@ export function Sidebar({ currentPath, matchGameHref, profileNavItem }: SidebarP
                 ? 'bg-foreground/10 text-foreground'
                 : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
         )
-
-    // 정적 nav item + 동적 프로필 item 병합
-    const allNavItems = profileNavItem
-        ? [...mainNavItems, profileNavItem]
-        : mainNavItems
 
     return (
         <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 bg-card">
@@ -45,7 +40,7 @@ export function Sidebar({ currentPath, matchGameHref, profileNavItem }: SidebarP
 
             {/* 메인 네비게이션 */}
             <nav className="flex-1 p-3 space-y-0.5">
-                {allNavItems.map(({ href, label, icon: Icon }) => (
+                {mainNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
@@ -55,6 +50,17 @@ export function Sidebar({ currentPath, matchGameHref, profileNavItem }: SidebarP
                         {label}
                     </Link>
                 ))}
+
+                {/* 내 분석: 로그인한 경우에만 노출 (아이콘은 직렬화 문제 방지를 위해 클라이언트에서 직접 렌더링) */}
+                {profileHref && (
+                    <Link
+                        href={profileHref}
+                        className={navLinkClass(activePath.startsWith('/profile/'))}
+                    >
+                        <BarChart3 className="w-4 h-4 shrink-0" />
+                        내 분석
+                    </Link>
+                )}
 
                 {/* 대진표: 가입 클럽 있을 때 클럽리스트 바로 아래 노출 */}
                 {matchGameHref && (
