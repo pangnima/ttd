@@ -1,14 +1,9 @@
 import type { RecentFormResult } from '@/lib/analytics/form'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { FORM_BADGE_STYLE } from '@/lib/dashboard/outcome'
 
 type Props = {
     recentForm: RecentFormResult
-}
-
-const OUTCOME_STYLE: Record<'W' | 'L' | 'D', string> = {
-    W: 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 dark:text-emerald-400',
-    L: 'bg-red-500/20 text-red-700 border border-red-500/30 dark:text-red-400',
-    D: 'bg-muted text-muted-foreground border border-border',
 }
 
 export function RecentFormCard({ recentForm }: Props) {
@@ -38,7 +33,7 @@ export function RecentFormCard({ recentForm }: Props) {
                         {last10.map((outcome, i) => (
                             <span
                                 key={i}
-                                className={`w-7 h-7 rounded-[4px] text-xs font-bold flex items-center justify-center ${OUTCOME_STYLE[outcome]}`}
+                                className={`w-7 h-7 rounded-[4px] text-xs font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
                             >
                                 {outcome}
                             </span>

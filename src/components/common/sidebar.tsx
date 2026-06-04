@@ -4,15 +4,17 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems } from '@/lib/nav-items'
+import { mainNavItems, type NavItem } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
     currentPath?: string
     matchGameHref?: string | null
+    /** 동적으로 생성된 프로필 nav item (layout에서 주입) */
+    profileNavItem?: NavItem | null
 }
 
-export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
+export function Sidebar({ currentPath, matchGameHref, profileNavItem }: SidebarProps) {
     const pathname = usePathname()
     const activePath = currentPath ?? pathname
 
@@ -23,6 +25,11 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
                 ? 'bg-foreground/10 text-foreground'
                 : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
         )
+
+    // 정적 nav item + 동적 프로필 item 병합
+    const allNavItems = profileNavItem
+        ? [...mainNavItems, profileNavItem]
+        : mainNavItems
 
     return (
         <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 bg-card">
@@ -38,11 +45,11 @@ export function Sidebar({ currentPath, matchGameHref }: SidebarProps) {
 
             {/* 메인 네비게이션 */}
             <nav className="flex-1 p-3 space-y-0.5">
-                {mainNavItems.map(({ href, label, icon: Icon }) => (
+                {allNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
-                        className={navLinkClass(activePath === href)}
+                        className={navLinkClass(activePath === href || activePath.startsWith(`${href}/`))}
                     >
                         <Icon className="w-4 h-4 shrink-0" />
                         {label}

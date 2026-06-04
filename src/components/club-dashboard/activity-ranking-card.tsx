@@ -1,13 +1,11 @@
 import Link from 'next/link'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED, calcWinRate } from '@/lib/dashboard/tokens'
-import { Medal } from 'lucide-react'
+import { RankBadge } from '@/components/common/rank-badge'
 import type { ActivityRankingEntry } from '@/lib/queries/club-dashboard'
 
 type ActivityRankingCardProps = {
     ranking: ActivityRankingEntry[]
 }
-
-const RANK_COLORS = ['text-yellow-500', 'text-slate-400', 'text-amber-600']
 
 export function ActivityRankingCard({ ranking }: ActivityRankingCardProps) {
     return (
@@ -27,11 +25,7 @@ export function ActivityRankingCard({ ranking }: ActivityRankingCardProps) {
                             return (
                                 <div key={entry.userId} className="flex items-center gap-3 px-4 py-3">
                                     <div className="w-6 shrink-0 flex justify-center">
-                                        {idx < 3 ? (
-                                            <Medal className={`w-4 h-4 ${RANK_COLORS[idx]}`} />
-                                        ) : (
-                                            <span className={`text-sm font-medium ${TEXT_MUTED}`}>{idx + 1}</span>
-                                        )}
+                                        <RankBadge index={idx} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         {profileHref ? (

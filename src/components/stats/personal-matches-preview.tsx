@@ -1,22 +1,18 @@
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { PERSONAL_OUTCOME_LABEL } from '@/lib/dashboard/outcome'
+import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 
 type Props = {
     personalMatches: PersonalMatch[]
 }
 
-const WINNER_LABEL: Record<string, { text: string; cls: string }> = {
-    me: { text: '승', cls: 'text-emerald-600 dark:text-emerald-400' },
-    opponent: { text: '패', cls: 'text-red-600 dark:text-red-400' },
-    draw: { text: '무', cls: 'text-muted-foreground' },
-}
-
-const MATCH_TYPE_LABEL: Record<string, string> = {
-    singles: '단식',
-    men_doubles: '남복',
-    women_doubles: '여복',
-    mixed_doubles: '혼복',
+// 개인 경기 미리보기 목록에서 사용하는 승/패/무 색상
+const WINNER_CLS: Record<string, string> = {
+    me: 'text-emerald-600 dark:text-emerald-400',
+    opponent: 'text-red-600 dark:text-red-400',
+    draw: 'text-muted-foreground',
 }
 
 export function PersonalMatchesPreview({ personalMatches }: Props) {
@@ -44,15 +40,16 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                 ) : (
                     <ul className="divide-y divide-border">
                         {recent.map((pm) => {
-                            const wl = WINNER_LABEL[pm.winner] ?? WINNER_LABEL.draw
                             const scoreStr = pm.setScores.map((s) => `${s.me}-${s.opp}`).join(', ')
                             return (
                                 <li key={pm.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                                    <span className={`w-5 font-bold tabular-nums ${wl.cls}`}>{wl.text}</span>
+                                    <span className={`w-5 font-bold tabular-nums ${WINNER_CLS[pm.winner] ?? WINNER_CLS.draw}`}>
+                                        {PERSONAL_OUTCOME_LABEL[pm.winner] ?? '무'}
+                                    </span>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-foreground truncate">vs {pm.opponentName}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            {MATCH_TYPE_LABEL[pm.matchType] ?? pm.matchType}
+                                            {MATCH_TYPE_LABELS[pm.matchType] ?? pm.matchType}
                                             {scoreStr && ` · ${scoreStr}`}
                                         </p>
                                     </div>

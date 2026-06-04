@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
-import { PersonalMatchListItem } from '@/components/analytics/personal-match-list-item'
+import { PersonalMatchListItem } from '@/components/personal-matches/personal-match-list-item'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 
 export const metadata = { title: '개인 경기 기록' }

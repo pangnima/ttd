@@ -6,9 +6,19 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameCountByClubId } from '@/lib/queries/match-games'
+import {
+    fetchPendingMembersByClubId,
+    fetchClubMatchGameActivity,
+    fetchClubActivityRanking,
+    fetchClubWinRateRanking,
+} from '@/lib/queries/club-dashboard'
 import { ClubDetailActions } from '@/components/clubs/club-detail-actions'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
 import { ClubAvatar } from '@/components/clubs/club-avatar'
+import { PendingMembersPanel } from '@/components/club-dashboard/pending-members-panel'
+import { MatchGameActivityCard } from '@/components/club-dashboard/match-game-activity-card'
+import { WinRateRankingCard } from '@/components/club-dashboard/win-rate-ranking-card'
+import { ActivityRankingCard } from '@/components/club-dashboard/activity-ranking-card'
 import {
     CARD_BASE,
     SECTION_LABEL,
@@ -16,7 +26,7 @@ import {
     TEXT_META,
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
-import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown, LayoutDashboard } from 'lucide-react'
+import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown } from 'lucide-react'
 
 type ClubPageProps = {
     params: Promise<{ clubId: string }>
@@ -46,6 +56,16 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const isOwner = myMembership?.role === 'owner'
     const isOfficerOrOwner = myMembership?.role === 'owner' || myMembership?.role === 'officer'
     const ownerMember = approvedMembers.find((m) => m.role === 'owner')
+
+    // 운영자/임원인 경우에만 추가 데이터 페치
+    const [pendingMembers, matchGameActivity, activityRanking, winRateRanking] = isOfficerOrOwner
+        ? await Promise.all([
+            fetchPendingMembersByClubId(clubId),
+            fetchClubMatchGameActivity(clubId),
+            fetchClubActivityRanking(clubId),
+            fetchClubWinRateRanking(clubId),
+        ])
+        : [null, null, null, null]
 
     return (
         <div className="w-full space-y-8">
@@ -77,15 +97,6 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             clubId={clubId}
                             membershipStatus={myMembership?.status ?? null}
                         />
-                    )}
-                    {isOfficerOrOwner && (
-                        <Link
-                            href={`/clubs/${clubId}/dashboard`}
-                            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'shrink-0')}
-                            title="클럽 대시보드"
-                        >
-                            <LayoutDashboard className="w-4 h-4" />
-                        </Link>
                     )}
                     {isOwner && (
                         <Link
@@ -154,6 +165,25 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 </div>
                 <ClubMembersPreview members={approvedMembers} maxDisplay={8} />
             </section>
+
+            {/* ── 운영자/임원 전용 운영 섹션 ────────────────────────────── */}
+            {isOfficerOrOwner && pendingMembers !== null && matchGameActivity !== null && activityRanking !== null && winRateRanking !== null && (
+                <>
+                    <hr className="border-foreground/8" />
+                    <div className="space-y-8">
+                        <p className={`${SECTION_LABEL} text-lg`}>클럽 운영</p>
+                        <PendingMembersPanel clubId={clubId} pendingMembers={pendingMembers} />
+                        <MatchGameActivityCard clubId={clubId} activity={matchGameActivity} />
+                        <WinRateRankingCard
+                            singles={winRateRanking.singles}
+                            menDoubles={winRateRanking.menDoubles}
+                            womenDoubles={winRateRanking.womenDoubles}
+                            mixedDoubles={winRateRanking.mixedDoubles}
+                        />
+                        <ActivityRankingCard ranking={activityRanking} />
+                    </div>
+                </>
+            )}
         </div>
     )
 }

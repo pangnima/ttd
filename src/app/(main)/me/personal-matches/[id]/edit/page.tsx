@@ -2,7 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchById } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
-import { PersonalMatchForm } from '@/components/analytics/personal-match-form'
+import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 
 type Props = { params: Promise<{ id: string }> }

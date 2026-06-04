@@ -4,6 +4,7 @@ import type { MatchGameMeta } from '@/lib/queries/match-games'
 import { toMatchView } from '@/lib/dashboard/match-display'
 import { getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
 import { CARD_BASE, PILL_BASE, SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { OUTCOME_STYLE, OUTCOME_LABEL } from '@/lib/dashboard/outcome'
 
 type Props = {
     matches: Match[]
@@ -11,15 +12,6 @@ type Props = {
     userMap: Map<string, User>
     gameMetaById: Record<string, MatchGameMeta>
 }
-
-const OUTCOME_STYLE = {
-    win: 'border-emerald-600/50 text-emerald-700 bg-emerald-500/10 dark:border-emerald-400/40 dark:text-emerald-400/80 dark:bg-emerald-400/8',
-    loss: 'border-red-600/50 text-red-700 bg-red-500/10 dark:border-red-400/40 dark:text-red-400/80 dark:bg-red-400/8',
-    draw: 'border-border text-muted-foreground bg-muted/50',
-    unknown: 'border-border text-muted-foreground bg-muted/30',
-}
-
-const OUTCOME_LABEL = { win: 'W', loss: 'L', draw: 'D', unknown: '-' }
 
 const COURT_LABEL: Record<'ad' | 'deuce', string> = { ad: '애드', deuce: '듀스' }
 
@@ -39,7 +31,7 @@ function PlayerName({
     const isGuest = !isMe && (user?.isGuest ?? false)
     const courtLabel = court ? `(${COURT_LABEL[court]})` : ''
 
-    const nameWithCourt = (
+    return (
         <>
             {isMe ? (
                 <span className="text-primary font-medium">{nickname}</span>
@@ -55,8 +47,6 @@ function PlayerName({
             )}
         </>
     )
-
-    return nameWithCourt
 }
 
 export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Props) {

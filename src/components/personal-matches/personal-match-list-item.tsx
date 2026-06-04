@@ -4,21 +4,11 @@ import Link from 'next/link'
 import { useTransition } from 'react'
 import type { PersonalMatch } from '@/types'
 import { deletePersonalMatchAction } from '@/lib/actions/personal-matches'
+import { PERSONAL_OUTCOME_STYLE, PERSONAL_OUTCOME_LABEL } from '@/lib/dashboard/outcome'
+import { SURFACE_LABELS } from '@/lib/dashboard/surface'
+import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 
 type Props = { match: PersonalMatch }
-
-const SURFACE_LABEL: Record<string, string> = {
-    hard: '하드', clay: '클레이', grass: '인조잔디', other: '기타',
-}
-const MATCH_TYPE_LABEL: Record<string, string> = {
-    singles: '단식', men_doubles: '남복', women_doubles: '여복', mixed_doubles: '혼복',
-}
-const WINNER_STYLE: Record<string, string> = {
-    me: 'text-green-600 font-bold',
-    opponent: 'text-red-500 font-bold',
-    draw: 'text-muted-foreground font-bold',
-}
-const WINNER_LABEL: Record<string, string> = { me: '승', opponent: '패', draw: '무' }
 
 export function PersonalMatchListItem({ match: m }: Props) {
     const [isPending, startTransition] = useTransition()
@@ -35,18 +25,18 @@ export function PersonalMatchListItem({ match: m }: Props) {
             <div className="space-y-0.5 flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
                     vs <span className="text-foreground">{m.opponentName}</span>
-                    <span className={`ml-2 text-base ${WINNER_STYLE[m.winner]}`}>
-                        {WINNER_LABEL[m.winner]}
+                    <span className={`ml-2 text-base ${PERSONAL_OUTCOME_STYLE[m.winner]}`}>
+                        {PERSONAL_OUTCOME_LABEL[m.winner]}
                     </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                     {m.playedAt}
                     <span className="mx-1 text-muted-foreground">·</span>
-                    {MATCH_TYPE_LABEL[m.matchType]}
+                    {MATCH_TYPE_LABELS[m.matchType]}
                     {m.surface && (
                         <>
                             <span className="mx-1 text-muted-foreground">·</span>
-                            {SURFACE_LABEL[m.surface]}
+                            {SURFACE_LABELS[m.surface] ?? m.surface}
                         </>
                     )}
                 </p>

@@ -20,25 +20,33 @@ src/
 │   │   ├── login/
 │   │   └── signup/
 │   ├── (main)/                   # 로그인 후 라우트 그룹 (middleware 인증 가드)
-│   │   ├── dashboard/
 │   │   ├── clubs/
 │   │   │   ├── page.tsx          # 클럽 리스트
 │   │   │   ├── new/
 │   │   │   └── [clubId]/
-│   │   │       ├── page.tsx      # 클럽 홈
+│   │   │       ├── page.tsx      # 클럽 홈 (운영자이면 운영 섹션 포함)
+│   │   │       ├── dashboard/    # /clubs/[clubId]로 리다이렉트
 │   │   │       ├── members/
 │   │   │       ├── match-games/  # 대진표 목록/생성/상세
 │   │   │       └── settings/
+│   │   ├── me/
+│   │   │   ├── analytics/        # /profile/[userId]?mode=total 리다이렉트
+│   │   │   └── personal-matches/ # 개인 경기 기록 CRUD
 │   │   └── profile/
-│   │       ├── [userId]/         # 개인 프로필 + 통계
+│   │       ├── [userId]/         # 개인 프로필 (본인=분석 풀버전, 타인=공개 요약)
 │   │       └── settings/
 │   └── page.tsx                  # 랜딩페이지
 ├── components/
 │   ├── ui/                       # shadcn/ui 자동 생성 컴포넌트 (직접 수정 금지)
-│   ├── common/                   # 공통 컴포넌트 (Header, Sidebar 등)
+│   ├── common/                   # 공통 컴포넌트 (Header, Sidebar, ProfileLink 등)
 │   ├── clubs/                    # 클럽 관련 컴포넌트
+│   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking 등)
 │   ├── match-games/              # 대진표 관련 컴포넌트
-│   └── profile/                  # 프로필 관련 컴포넌트
+│   ├── personal-matches/         # 개인 경기 입력·목록 컴포넌트
+│   ├── profile/                  # 프로필 헤더·통계 조합 컴포넌트
+│   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
+│   ├── auth/                     # 인증 폼
+│   └── theme/                    # 테마 관련
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts             # 브라우저용 (Client Component 전용)
@@ -49,15 +57,29 @@ src/
 │   │   ├── clubs.ts
 │   │   ├── club-members.ts
 │   │   ├── match-games.ts
-│   │   └── profile.ts
+│   │   ├── personal-matches.ts
+│   │   ├── profile.ts
+│   │   └── ai-coaching.ts
 │   ├── queries/                  # Supabase read-only 쿼리
+│   │   ├── _shared.ts            # buildUserMap 등 공용 헬퍼
 │   │   ├── clubs.ts
 │   │   ├── match-games.ts
+│   │   ├── personal-matches.ts
+│   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
+│   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
+│   │   ├── club-dashboard.ts     # 클럽 운영 쿼리
 │   │   ├── stats.ts              # RPC 호출 (get_user_match_stats, get_user_head_to_head)
 │   │   └── users.ts              # mapUserRow 공용 매퍼
-│   ├── stats.ts                  # 클라이언트 유저 필터 헬퍼 (통계 본체는 RPC)
-│   ├── nav-items.ts              # 사이드바 네비게이션 설정
-│   └── utils.ts                  # 공통 유틸 함수 (cn)
+│   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음)
+│   ├── dashboard/                # UI 토큰·스타일·outcome/surface 헬퍼
+│   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, calcWinRate 등
+│   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL (승/패/무 통일)
+│   │   ├── surface.ts            # SURFACE_LABELS (코트 표면 라벨 통일)
+│   │   └── match-type-style.ts   # MATCH_TYPE_LABELS, getMatchTypeStyle
+│   ├── match-games/              # 대진표 폼 매핑
+│   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
+│   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems + getProfileNavItem)
+│   └── utils.ts                  # cn() 헬퍼
 ├── middleware.ts                  # 루트 미들웨어 (세션 갱신 + 보호 라우트 가드)
 └── types/
     ├── index.ts                   # 전역 도메인 타입 정의
@@ -69,17 +91,23 @@ src/
 / → 랜딩페이지
 /login → 로그인
 /signup → 회원가입
-/dashboard → 메인 대시보드 (로그인 후)
-/clubs → 클럽 리스트
+/clubs → 클럽 리스트 (로그인 후 기본 진입점)
 /clubs/new → 클럽 생성
-/clubs/[clubId] → 클럽 홈
+/clubs/[clubId] → 클럽 홈 (owner/officer이면 하단에 운영 섹션 인라인)
+/clubs/[clubId]/dashboard → /clubs/[clubId] 리다이렉트
 /clubs/[clubId]/members → 회원 목록
 /clubs/[clubId]/match-games → 대진표 목록
 /clubs/[clubId]/match-games/new → 대진표 생성
 /clubs/[clubId]/match-games/[matchGameId] → 대진표 상세
 /clubs/[clubId]/settings → 클럽 설정 (owner 전용)
-/profile/[userId] → 개인 프로필 + 통계
+/profile/[userId] → 개인 통계 허브
+  ├── 본인: scope 탭(전체/개인) + 심층 분석 풀버전 + AI 코칭
+  └── 타인: 공개 통계 요약 (프라이버시 설정 반영)
 /profile/settings → 내 정보 수정
+/me/analytics → /profile/[내id]?mode=total 리다이렉트
+/me/personal-matches → 개인 경기 기록 목록
+/me/personal-matches/new → 개인 경기 추가
+/me/personal-matches/[id]/edit → 개인 경기 수정
 ```
 
 ## 현재 개발 단계

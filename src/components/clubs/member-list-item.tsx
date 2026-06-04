@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { calcWinRate } from '@/lib/dashboard/tokens'
 import type { ClubMember, User } from '@/types'
 
 type MemberListItemProps = {
@@ -35,8 +36,7 @@ const handLabel: Record<User['dominantHand'], string> = {
 }
 
 export function MemberListItem({ member, user, clubId, wins, losses }: MemberListItemProps) {
-    const totalMatches = (wins ?? 0) + (losses ?? 0)
-    const winRate = totalMatches === 0 ? null : Math.round(((wins ?? 0) / totalMatches) * 100)
+    const winRate = calcWinRate(wins ?? 0, losses ?? 0)
 
     const inner = (
         <>
@@ -55,7 +55,7 @@ export function MemberListItem({ member, user, clubId, wins, losses }: MemberLis
                     <span className="text-xs text-muted-foreground">
                         {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
                     </span>
-                    {totalMatches > 0 && (
+                    {winRate !== null && (
                         <>
                             <span className="text-xs text-muted-foreground">·</span>
                             <span className="text-xs text-muted-foreground">

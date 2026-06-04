@@ -39,3 +39,16 @@ export type HeadToHead = {
     losses: number
     draws: number
 }
+
+// ── 코트 통계 타입 (queries/stats.ts에서 이동) ──────────────────────
+export type CourtStat = { matches: number; wins: number; losses: number; draws: number }
+
+export type DoublesCourtStats = { ad: CourtStat; deuce: CourtStat }
+
+export type PartnerStat = {
+    partnerId: string
+    matches: number
+    wins: number
+    losses: number
+    draws: number
+}

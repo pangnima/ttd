@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
-import { PersonalMatchForm } from '@/components/analytics/personal-match-form'
+import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 
 export const metadata = { title: '경기 기록 추가' }

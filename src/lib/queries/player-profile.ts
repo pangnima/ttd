@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { fetchMatchesByUser } from '@/lib/queries/match-games'
 import {
     fetchUserMatchStatsV2,
@@ -5,7 +7,7 @@ import {
     fetchUserPartnerStats,
     fetchUserHeadToHead,
 } from '@/lib/queries/stats'
-import { fetchUsersByIds } from '@/lib/queries/users'
+import { buildUserMap, extractH2hIds, extractPartnerIds } from '@/lib/queries/_shared'
 import type { User } from '@/types'
 
 export type PlayerStatsBundle = {
@@ -32,17 +34,11 @@ export async function fetchPlayerStatsBundle(
         fetchUserPartnerStats(userId, clubId),
     ])
 
-    const userIds = new Set<string>()
-    for (const m of matches) {
-        for (const id of [m.player1Id, m.player2Id, ...(m.team1 ?? []), ...(m.team2 ?? [])]) {
-            if (id && id !== userId) userIds.add(id)
-        }
-    }
-    for (const r of h2h) userIds.add(r.opponentId)
-    for (const p of partners) userIds.add(p.partnerId)
-
-    const allUsers = await fetchUsersByIds([...userIds])
-    const userMap = new Map(allUsers.map((u) => [u.id, u]))
+    const userMap = await buildUserMap(
+        matches,
+        userId,
+        [...extractH2hIds(h2h), ...extractPartnerIds(partners)],
+    )
 
     return { matches, gameMetaById, courtSurfaceByMatchId, stats, court, h2h, partners, userMap }
 }

@@ -1,16 +1,9 @@
 import type { SurfaceStats } from '@/lib/analytics/surface'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 
 type Props = {
     surfaceStats: SurfaceStats
-}
-
-const SURFACE_LABELS: Record<string, string> = {
-    hard: '하드',
-    clay: '클레이',
-    grass: '잔디',
-    other: '기타',
-    unknown: '미지정',
 }
 
 export function SurfaceStatsCard({ surfaceStats }: Props) {

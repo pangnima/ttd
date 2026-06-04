@@ -7,7 +7,8 @@ import {
 } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
 import type { Match, PersonalMatch, User } from '@/types'
-import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
+import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL } from '@/lib/dashboard/outcome'
 import {
     Select,
     SelectContent,
@@ -29,12 +30,6 @@ type Props = {
     userMap: Map<string, User>
 }
 
-const OUTCOME_STYLE: Record<string, string> = {
-    W: 'bg-green-500/20 text-green-600 border-green-500/30',
-    L: 'bg-red-500/20 text-red-600 border-red-500/30',
-    D: 'bg-muted text-muted-foreground border-border',
-}
-const OUTCOME_LABEL: Record<string, string> = { W: '승', L: '패', D: '무' }
 const SOURCE_LABEL: Record<string, string> = { club: '클럽', personal: '개인' }
 
 function StatBlock({ label, value }: { label: string; value: string | number }) {
@@ -72,9 +67,7 @@ function H2HDetail({
                     <p className="text-sm font-medium text-muted-foreground mb-2">{detail.opponentName}</p>
                     <p className="text-3xl font-bold text-foreground">{detail.myLosses}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                        승 ({detail.myWins + detail.myLosses > 0
-                            ? Math.round((detail.myLosses / (detail.myWins + detail.myLosses)) * 100)
-                            : 0}%)
+                        승 ({calcWinRate(detail.myLosses, detail.myWins) ?? 0}%)
                     </p>
                 </div>
             </div>
@@ -96,9 +89,9 @@ function H2HDetail({
                         {detail.last5.map((o, i) => (
                             <span
                                 key={i}
-                                className={`inline-flex items-center justify-center w-8 h-8 rounded-[4px] text-xs font-bold border ${OUTCOME_STYLE[o]}`}
+                                className={`inline-flex items-center justify-center w-8 h-8 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[o]}`}
                             >
-                                {OUTCOME_LABEL[o]}
+                                {H2H_OUTCOME_LABEL[o]}
                             </span>
                         ))}
                     </div>
@@ -114,8 +107,8 @@ function H2HDetail({
                                 <span className="text-muted-foreground text-xs">{m.date}</span>
                                 <span className="text-muted-foreground text-xs">{SOURCE_LABEL[m.source]}</span>
                                 <span className="text-foreground text-xs">{m.score || '—'}</span>
-                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-[4px] text-xs font-bold border ${OUTCOME_STYLE[m.outcome]}`}>
-                                    {OUTCOME_LABEL[m.outcome]}
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
+                                    {H2H_OUTCOME_LABEL[m.outcome]}
                                 </span>
                             </div>
                         ))}

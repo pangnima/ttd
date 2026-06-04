@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
-import { Medal } from 'lucide-react'
+import { RankBadge } from '@/components/common/rank-badge'
 import type { WinRateRankingEntry } from '@/lib/queries/club-dashboard'
 
 type WinRateRankingCardProps = {
@@ -9,8 +9,6 @@ type WinRateRankingCardProps = {
     womenDoubles: WinRateRankingEntry[]
     mixedDoubles: WinRateRankingEntry[]
 }
-
-const RANK_COLORS = ['text-yellow-500', 'text-slate-400', 'text-amber-600']
 
 function RankingColumn({ title, entries }: { title: string; entries: WinRateRankingEntry[] }) {
     return (
@@ -28,11 +26,7 @@ function RankingColumn({ title, entries }: { title: string; entries: WinRateRank
                         return (
                             <div key={entry.userId} className="flex items-center gap-2 py-2">
                                 <div className="w-5 shrink-0 flex justify-center">
-                                    {idx < 3 ? (
-                                        <Medal className={`w-3.5 h-3.5 ${RANK_COLORS[idx]}`} />
-                                    ) : (
-                                        <span className={`text-xs font-medium ${TEXT_MUTED}`}>{idx + 1}</span>
-                                    )}
+                                    <RankBadge index={idx} iconClass="w-3.5 h-3.5" textClass="text-xs" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     {profileHref ? (

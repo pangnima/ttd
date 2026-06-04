@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import type { PlayerStats, HeadToHead } from '@/lib/stats'
+import type { PlayerStats, HeadToHead, CourtStat, DoublesCourtStats, PartnerStat } from '@/lib/stats'
 
 type RawStats = {
     matches: number
@@ -20,17 +20,9 @@ type RawMatchStatsV2 = {
     mixed_doubles: RawStatsV2
 }
 
-export type CourtStat = { matches: number; wins: number; losses: number; draws: number }
-
-export type DoublesCourtStats = { ad: CourtStat; deuce: CourtStat }
-
-export type PartnerStat = {
-    partnerId: string
-    matches: number
-    wins: number
-    losses: number
-    draws: number
-}
+// CourtStat, DoublesCourtStats, PartnerStat 타입은 lib/stats.ts로 이동.
+// 하위 호환을 위해 re-export 유지.
+export type { CourtStat, DoublesCourtStats, PartnerStat }
 
 // decisive = wins + losses (무승부 제외 분모): 승률은 무승부를 포함하지 않는 백분율.
 function makePlayerStatsV2(raw: RawStatsV2): PlayerStats {

@@ -3,6 +3,7 @@ import type { HeadToHead } from '@/lib/stats'
 import type { PartnerStat } from '@/lib/queries/stats'
 import type { User } from '@/types'
 import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
+import { GuestBadge } from '@/components/common/guest-badge'
 
 type Props = {
     rivals: HeadToHead[]
@@ -40,11 +41,7 @@ function UserRow({
                 ) : (
                     <span className="text-base text-foreground/90 truncate">{name}</span>
                 )}
-                {isGuest && (
-                    <span className="text-xs px-1.5 py-0.5 rounded-full border border-foreground/15 text-foreground/70 shrink-0">
-                        게스트
-                    </span>
-                )}
+                {isGuest && <GuestBadge />}
             </div>
             <span className="text-sm text-foreground/80 shrink-0">
                 {wins}승 {losses}패{draws > 0 ? ` ${draws}무` : ''}

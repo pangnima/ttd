@@ -5,6 +5,8 @@ import type { AnalyticsMode } from '@/lib/queries/analytics'
 
 type Props = {
     mode: AnalyticsMode
+    /** 탭 전환 시 이동할 base pathname (기본: /me/analytics) */
+    basePath?: string
 }
 
 const TABS: { value: AnalyticsMode; label: string }[] = [
@@ -12,14 +14,14 @@ const TABS: { value: AnalyticsMode; label: string }[] = [
     { value: 'personal', label: '개인' },
 ]
 
-export function AnalyticsModeTabs({ mode }: Props) {
+export function AnalyticsModeTabs({ mode, basePath = '/me/analytics' }: Props) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
     const handleChange = (next: AnalyticsMode) => {
         const params = new URLSearchParams(searchParams.toString())
         params.set('mode', next)
-        router.push(`/me/analytics?${params.toString()}`)
+        router.push(`${basePath}?${params.toString()}`)
     }
 
     return (

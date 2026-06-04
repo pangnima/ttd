@@ -7,7 +7,7 @@ import {
     fetchUserHeadToHeadUnified,
     type UnifiedHeadToHead,
 } from '@/lib/queries/stats'
-import { fetchUsersByIds } from '@/lib/queries/users'
+import { buildUserMap, extractUnifiedH2hIds } from '@/lib/queries/_shared'
 import type { Match, PersonalMatch, User } from '@/types'
 
 export type AnalyticsMode = 'total' | 'personal'
@@ -43,18 +43,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
     ])
 
     // H2H 상세 패널에서 클럽 멤버 이름 표시용 userMap
-    const userIds = new Set<string>()
-    for (const m of matches) {
-        for (const id of [m.player1Id, m.player2Id, ...(m.team1 ?? []), ...(m.team2 ?? [])]) {
-            if (id && id !== userId) userIds.add(id)
-        }
-    }
-    for (const entry of h2hList) {
-        if (entry.opponentUserId) userIds.add(entry.opponentUserId)
-    }
-
-    const allUsers = await fetchUsersByIds([...userIds])
-    const userMap = new Map(allUsers.map((u) => [u.id, u]))
+    const userMap = await buildUserMap(matches, userId, extractUnifiedH2hIds(h2hList))
 
     return { stats, h2hList, matches, gameMetaById, courtSurfaceByMatchId, personalMatches, userMap }
 }
