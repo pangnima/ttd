@@ -44,9 +44,11 @@ function StatBlock({ label, value }: { label: string; value: string | number }) 
 function H2HDetail({
     detail,
     myName,
+    opponentDisplayName,
 }: {
     detail: UnifiedHeadToHeadDetail
     myName: string
+    opponentDisplayName: string
 }) {
     return (
         <div className="space-y-4">
@@ -64,7 +66,7 @@ function H2HDetail({
                     )}
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">{detail.opponentName}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">{opponentDisplayName}</p>
                     <p className="text-3xl font-bold text-foreground">{detail.myLosses}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                         승 ({calcWinRate(detail.myLosses, detail.myWins) ?? 0}%)
@@ -138,6 +140,15 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
 
     const myName = userMap.get(userId)?.name ?? '나'
 
+    // 상대 표시명: opponentName 우선, 없으면 userMap, 없으면 ID 앞 8자
+    const opponentDisplayName = useMemo(() => {
+        if (!selectedEntry) return ''
+        const { opponentName, opponentUserId } = selectedEntry
+        if (opponentName) return opponentName
+        if (opponentUserId) return userMap.get(opponentUserId)?.name ?? opponentUserId.slice(0, 8)
+        return ''
+    }, [selectedEntry, userMap])
+
     if (h2hList.length === 0) return null
 
     const memberOpponents = h2hList.filter((h) => h.opponentUserId !== null)
@@ -188,7 +199,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
             <div className={`${CARD_BASE} p-4`}>
                 {detail ? (
                     detail.totalMatches > 0 ? (
-                        <H2HDetail detail={detail} myName={myName} />
+                        <H2HDetail detail={detail} myName={myName} opponentDisplayName={opponentDisplayName} />
                     ) : (
                         <p className="text-sm text-muted-foreground text-center py-4">
                             해당 상대와의 맞대결 기록이 없습니다

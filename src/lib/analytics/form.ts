@@ -34,24 +34,29 @@ export function aggregateRecentForm(
         outcomes.push({ date: pm.playedAt, outcome: o })
     }
 
+    // 내림차순(최신=index 0) 정렬 후 최근 N경기 slice — streak은 최신 기준으로 계산
     outcomes.sort((a, b) => b.date.localeCompare(a.date))
     const recent = outcomes.slice(0, n)
 
-    const last10 = recent.map((r) => r.outcome)
-    const recentWins = last10.filter((o) => o === 'W').length
-    const recentLosses = last10.filter((o) => o === 'L').length
-    const recentDraws = last10.filter((o) => o === 'D').length
+    const newestFirst = recent.map((r) => r.outcome)
+    const recentWins = newestFirst.filter((o) => o === 'W').length
+    const recentLosses = newestFirst.filter((o) => o === 'L').length
+    const recentDraws = newestFirst.filter((o) => o === 'D').length
 
+    // currentStreak: 최신 경기(index 0) 기준
     let currentStreak: RecentFormResult['currentStreak'] = null
-    if (last10.length > 0) {
-        const first = last10[0]
+    if (newestFirst.length > 0) {
+        const first = newestFirst[0]
         let len = 1
-        for (let i = 1; i < last10.length; i++) {
-            if (last10[i] === first) len++
+        for (let i = 1; i < newestFirst.length; i++) {
+            if (newestFirst[i] === first) len++
             else break
         }
         currentStreak = { type: first, length: len }
     }
+
+    // 표시 배열은 과거→최신 (왼쪽=과거, 오른쪽=최신)
+    const last10 = [...newestFirst].reverse()
 
     return { last10, currentStreak, recentWins, recentLosses, recentDraws }
 }

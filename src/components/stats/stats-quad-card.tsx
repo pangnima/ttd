@@ -7,9 +7,10 @@ type Props = {
     matchType: MatchType
     stats: PlayerStats
     masked?: boolean
+    showSets?: boolean
 }
 
-export function StatsQuadCard({ matchType, stats, masked }: Props) {
+export function StatsQuadCard({ matchType, stats, masked, showSets = true }: Props) {
     const style = getMatchTypeStyle(matchType)
 
     const winRateLabel =
@@ -45,7 +46,7 @@ export function StatsQuadCard({ matchType, stats, masked }: Props) {
                     <p className="text-sm text-foreground/75">무</p>
                 </div>
             </div>
-            {!masked && (stats.setsWon > 0 || stats.setsLost > 0) && (
+            {!masked && showSets && (stats.setsWon > 0 || stats.setsLost > 0) && (
                 <p className="text-xs text-foreground/70 text-right">
                     세트 {stats.setsWon} : {stats.setsLost}
                 </p>

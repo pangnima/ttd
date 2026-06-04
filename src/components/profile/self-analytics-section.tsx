@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import type { AnalyticsBundle, AnalyticsMode } from '@/lib/queries/analytics'
+import type { AnalyticsBundle, AnalyticsScope } from '@/lib/queries/analytics'
 import type { User } from '@/types'
 import { StatsQuadGrid } from '@/components/stats/stats-quad-grid'
 import { HeadToHeadCard } from '@/components/stats/head-to-head-card'
@@ -10,31 +10,34 @@ import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
 import { AnalyticsModeTabs } from '@/components/stats/analytics-mode-tabs'
+import { PartnerRecommendationCard } from '@/components/stats/partner-recommendation-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
+import { aggregatePartnerRecommendations } from '@/lib/analytics/partner'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 
 type Props = {
     bundle: AnalyticsBundle
     me: User
-    mode: AnalyticsMode
+    scope: AnalyticsScope
+    clubs: { id: string; name: string }[]
     /** 탭 전환 시 이동할 URL base (예: /profile/[userId]) */
     basePath: string
 }
 
-const MODE_LABEL: Record<AnalyticsMode, string> = {
-    total: '클럽 + 개인 경기 통합 통계',
-    personal: '클럽 외 개인 경기 통계',
+function getScopeLabel(scope: AnalyticsScope): string {
+    if (scope.kind === 'personal') return '클럽 외 개인 경기 통계'
+    if (scope.kind === 'club') return `${scope.clubName} 클럽 경기 통계`
+    return '클럽 + 개인 경기 통합 통계'
 }
 
 /**
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
- * /me/analytics 페이지의 컨텐츠를 흡수.
  */
-export async function SelfAnalyticsSection({ bundle, me, mode, basePath }: Props) {
+export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath }: Props) {
     const surfaceStats = aggregateBySurface(
         {
             matches: bundle.matches,
@@ -69,19 +72,24 @@ export async function SelfAnalyticsSection({ bundle, me, mode, basePath }: Props
         me.ntrp ?? null,
     )
 
+    const partnerRecommendations = aggregatePartnerRecommendations(
+        { matches: bundle.matches },
+        me.id,
+    )
+
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
     return (
         <div className="space-y-8">
             {/* 모드 탭 + 설명 */}
             <div className="flex items-start justify-between gap-4 flex-wrap">
-                <p className="text-sm text-foreground/60">{MODE_LABEL[mode]}</p>
+                <p className="text-sm text-foreground/60">{getScopeLabel(scope)}</p>
                 <Suspense>
-                    <AnalyticsModeTabs mode={mode} basePath={basePath} />
+                    <AnalyticsModeTabs scope={scope} clubs={clubs} basePath={basePath} />
                 </Suspense>
             </div>
 
-            {/* 종합 통계 */}
+            {/* 종합 통계 — 세트 표기 숨김 (심플하게) */}
             <section className="space-y-3">
                 <p className={SECTION_LABEL}>종합 통계</p>
                 <StatsQuadGrid
@@ -93,24 +101,17 @@ export async function SelfAnalyticsSection({ bundle, me, mode, basePath }: Props
                     privacy="public"
                     editable={false}
                     statsHidden={false}
+                    showSets={false}
                 />
             </section>
 
-            {/* 심층 분석 카드 그리드 */}
+            {/* 최근 폼 + 코트 표면 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <RecentFormCard recentForm={recentForm} />
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
-                <NtrpDifferentialCard ntrpStats={ntrpStats} />
-                <StrengthWeaknessCard diagnosis={diagnosis} />
             </div>
 
-            {/* AI 코칭 */}
-            <AICoachingCard
-                initialResult={aiResult}
-                initialGeneratedAt={aiGeneratedAt}
-            />
-
-            {/* 1:1 맞대결 */}
+            {/* 1:1 맞대결 비교 */}
             <Suspense>
                 <HeadToHeadCard
                     h2hList={bundle.h2hList}
@@ -123,6 +124,25 @@ export async function SelfAnalyticsSection({ bundle, me, mode, basePath }: Props
                     userMap={bundle.userMap}
                 />
             </Suspense>
+
+            {/* 나와 잘 맞는 파트너 추천 */}
+            <PartnerRecommendationCard
+                recommendations={partnerRecommendations}
+                userMap={bundle.userMap}
+                gender={me.gender}
+            />
+
+            {/* ── 심화 진단 (하단) ─────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <NtrpDifferentialCard ntrpStats={ntrpStats} />
+                <StrengthWeaknessCard diagnosis={diagnosis} />
+            </div>
+
+            {/* AI 코칭 */}
+            <AICoachingCard
+                initialResult={aiResult}
+                initialGeneratedAt={aiGeneratedAt}
+            />
 
             {/* 개인 경기 미리보기 */}
             <PersonalMatchesPreview personalMatches={bundle.personalMatches} />

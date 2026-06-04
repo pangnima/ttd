@@ -10,5 +10,5 @@ export default async function AnalyticsRedirectPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    redirect(`/profile/${user.id}?mode=total`)
+    redirect(`/profile/${user.id}?scope=total`)
 }

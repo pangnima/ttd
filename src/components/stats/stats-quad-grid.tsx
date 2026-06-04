@@ -18,6 +18,7 @@ type Props = {
     privacy?: 'public' | 'self' | 'locked'
     editable?: boolean
     statsHidden?: boolean
+    showSets?: boolean
 }
 
 export function StatsQuadGrid({
@@ -29,6 +30,7 @@ export function StatsQuadGrid({
     privacy = 'public',
     editable = false,
     statsHidden = false,
+    showSets = true,
 }: Props) {
     const [revealed, setRevealed] = useState(false)
     const [, startTransition] = useTransition()
@@ -62,10 +64,10 @@ export function StatsQuadGrid({
             </div>
             <div className="relative">
                 <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
-                    <StatsQuadCard matchType="singles" stats={singles} masked={isLocked} />
-                    {showMenDoubles && <StatsQuadCard matchType="men_doubles" stats={menDoubles} masked={isLocked} />}
-                    {showWomenDoubles && <StatsQuadCard matchType="women_doubles" stats={womenDoubles} masked={isLocked} />}
-                    <StatsQuadCard matchType="mixed_doubles" stats={mixedDoubles} masked={isLocked} />
+                    <StatsQuadCard matchType="singles" stats={singles} masked={isLocked} showSets={showSets} />
+                    {showMenDoubles && <StatsQuadCard matchType="men_doubles" stats={menDoubles} masked={isLocked} showSets={showSets} />}
+                    {showWomenDoubles && <StatsQuadCard matchType="women_doubles" stats={womenDoubles} masked={isLocked} showSets={showSets} />}
+                    <StatsQuadCard matchType="mixed_doubles" stats={mixedDoubles} masked={isLocked} showSets={showSets} />
                 </div>
 
                 {isBlurred && (

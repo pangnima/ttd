@@ -1,47 +1,85 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import type { AnalyticsMode } from '@/lib/queries/analytics'
+import type { AnalyticsScope } from '@/lib/queries/analytics'
 
 type Props = {
-    mode: AnalyticsMode
-    /** 탭 전환 시 이동할 base pathname (기본: /me/analytics) */
+    scope: AnalyticsScope
+    clubs: { id: string; name: string }[]
+    /** 탭 전환 시 이동할 base pathname */
     basePath?: string
 }
 
-const TABS: { value: AnalyticsMode; label: string }[] = [
-    { value: 'total',    label: '전체' },
-    { value: 'personal', label: '개인' },
-]
-
-export function AnalyticsModeTabs({ mode, basePath = '/me/analytics' }: Props) {
+export function AnalyticsModeTabs({ scope, clubs, basePath = '/me/analytics' }: Props) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const handleChange = (next: AnalyticsMode) => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.set('mode', next)
+    const handleChange = (scopeValue: string) => {
+        // scope 전환 시 불필요한 기존 파라미터(clubId 등)가 전파되지 않도록 새 파라미터 객체 생성
+        const params = new URLSearchParams()
+        params.set('scope', scopeValue)
         router.push(`${basePath}?${params.toString()}`)
     }
 
+    const currentKey =
+        scope.kind === 'personal'
+            ? 'personal'
+            : scope.kind === 'club'
+            ? scope.clubId
+            : 'total'
+
     return (
-        <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5 gap-0.5">
-            {TABS.map((tab) => {
-                const active = tab.value === mode
-                return (
-                    <button
-                        key={tab.value}
-                        onClick={() => handleChange(tab.value)}
-                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                            active
-                                ? 'bg-background text-foreground shadow-sm border border-border'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                )
-            })}
+        <div className="flex flex-wrap gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
+            {/* 전체 탭 */}
+            <TabButton
+                label="전체"
+                value="total"
+                active={currentKey === 'total'}
+                onClick={handleChange}
+            />
+            {/* 클럽별 탭 */}
+            {clubs.map((club) => (
+                <TabButton
+                    key={club.id}
+                    label={club.name}
+                    value={club.id}
+                    active={currentKey === club.id}
+                    onClick={handleChange}
+                />
+            ))}
+            {/* 개인 탭 */}
+            <TabButton
+                label="개인"
+                value="personal"
+                active={currentKey === 'personal'}
+                onClick={handleChange}
+            />
         </div>
+    )
+}
+
+function TabButton({
+    label,
+    value,
+    active,
+    onClick,
+}: {
+    label: string
+    value: string
+    active: boolean
+    onClick: (value: string) => void
+}) {
+    return (
+        <button
+            type="button"
+            onClick={() => onClick(value)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all max-w-[120px] truncate ${
+                active
+                    ? 'bg-background text-foreground shadow-sm border border-border'
+                    : 'text-muted-foreground hover:text-foreground'
+            }`}
+        >
+            {label}
+        </button>
     )
 }

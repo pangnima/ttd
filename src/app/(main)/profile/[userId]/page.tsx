@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchUserById } from '@/lib/queries/users'
-import { fetchClubById } from '@/lib/queries/clubs'
+import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
-import { fetchAnalyticsBundle, type AnalyticsMode } from '@/lib/queries/analytics'
+import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
@@ -11,10 +11,8 @@ import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 
 type Props = {
     params: Promise<{ userId: string }>
-    searchParams: Promise<{ clubId?: string; mode?: string }>
+    searchParams: Promise<{ clubId?: string; scope?: string }>
 }
-
-const VALID_MODES: AnalyticsMode[] = ['total', 'personal']
 
 export default async function MemberProfilePage({ params, searchParams }: Props) {
     const supabase = await createClient()
@@ -22,7 +20,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     if (!authUser) redirect('/login')
 
     const { userId } = await params
-    const { clubId, mode: modeParam } = await searchParams
+    const { clubId, scope: scopeParam } = await searchParams
 
     const [target, club] = await Promise.all([
         fetchUserById(userId),
@@ -33,12 +31,21 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     const isSelf = authUser.id === userId
 
     if (isSelf) {
-        // 본인 프로필: 개인 분석 풀버전 렌더
-        const mode: AnalyticsMode = VALID_MODES.includes(modeParam as AnalyticsMode)
-            ? (modeParam as AnalyticsMode)
-            : 'total'
+        // 가입 클럽 목록 로드 (scope 탭 + 클럽 ID 검증에 사용)
+        const myClubs = await fetchMyClubs(userId)
 
-        const bundle = await fetchAnalyticsBundle(userId, { mode })
+        // scope 결정: personal | <clubId>(가입 클럽 중 일치) | total(기본)
+        const matchedClub = myClubs.find((c) => c.id === scopeParam)
+        const scope: AnalyticsScope = matchedClub
+            ? { kind: 'club', clubId: matchedClub.id, clubName: matchedClub.name }
+            : scopeParam === 'personal'
+            ? { kind: 'personal' }
+            : { kind: 'total' }
+
+        const bundle = await fetchAnalyticsBundle(userId, { scope })
+
+        // 탭 렌더용 간략 클럽 목록
+        const clubsForTab = myClubs.map((c) => ({ id: c.id, name: c.name }))
 
         return (
             <div className="space-y-6">
@@ -48,7 +55,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     <SelfAnalyticsSection
                         bundle={bundle}
                         me={target}
-                        mode={mode}
+                        scope={scope}
+                        clubs={clubsForTab}
                         basePath={`/profile/${userId}`}
                     />
                 </div>
