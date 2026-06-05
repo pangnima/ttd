@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
+import { PageContainer } from '@/components/common/page-container'
 import type { MatchGame, User } from '@/types'
 
 type MatchGameDetailContentProps = {
@@ -17,7 +18,7 @@ export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGam
     const canEditMatchGame = !matchGame.isFixed || isOwner
 
     return (
-        <div className="space-y-4">
+        <PageContainer>
             <div className="flex items-start justify-between gap-2">
                 <div>
                     <h1 className="text-2xl font-bold">{matchGame.name}</h1>
@@ -39,6 +40,6 @@ export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGam
                 clubId={matchGame.clubId}
                 isOwner={isOwner}
             />
-        </div>
+        </PageContainer>
     )
 }

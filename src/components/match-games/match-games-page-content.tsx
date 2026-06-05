@@ -16,6 +16,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { deleteMatchGameAction } from '@/lib/actions/match-games'
+import { PageContainer } from '@/components/common/page-container'
 import { Plus, Calendar, Trophy, ChevronRight, Trash2, Lock } from 'lucide-react'
 import type { Club, MatchGame, User } from '@/types'
 
@@ -79,7 +80,7 @@ export function MatchGamesPageContent({
     }
 
     return (
-        <div className="w-full space-y-6">
+        <PageContainer>
             {/* 클럽 선택 */}
             <div>
                 <ClubSelector clubs={myClubs} currentClubId={clubId} />
@@ -209,6 +210,6 @@ export function MatchGamesPageContent({
                     </AlertDialog>
                 </>
             )}
-        </div>
+        </PageContainer>
     )
 }

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { PersonalMatchListItem } from '@/components/personal-matches/personal-match-list-item'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { PageContainer } from '@/components/common/page-container'
 
 export const metadata = { title: '개인 경기 기록' }
 
@@ -15,7 +16,7 @@ export default async function PersonalMatchesPage() {
     const matches = await fetchPersonalMatchesByUser(user.id)
 
     return (
-        <div className="space-y-6">
+        <PageContainer>
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className={`${SECTION_LABEL} text-2xl`}>개인 경기 기록</h1>
@@ -43,6 +44,6 @@ export default async function PersonalMatchesPage() {
                     ))}
                 </div>
             )}
-        </div>
+        </PageContainer>
     )
 }

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { MembersContent } from '@/components/clubs/members-content'
+import { PageContainer } from '@/components/common/page-container'
 
 type MembersPageProps = {
     params: Promise<{ clubId: string }>
@@ -23,7 +24,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
     const currentUserRole = myMembership?.role ?? null
 
     return (
-        <div className="w-full max-w-3xl">
+        <PageContainer>
             <MembersContent
                 clubId={clubId}
                 clubName={club?.name ?? ''}
@@ -31,6 +32,6 @@ export default async function MembersPage({ params }: MembersPageProps) {
                 pendingMembers={pendingMembers}
                 currentUserRole={currentUserRole}
             />
-        </div>
+        </PageContainer>
     )
 }

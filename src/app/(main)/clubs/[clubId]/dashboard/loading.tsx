@@ -1,6 +1,6 @@
 export default function ClubDashboardLoading() {
     return (
-        <div className="w-full max-w-4xl space-y-6 animate-pulse">
+        <div className="space-y-6 animate-pulse">
             <div className="space-y-1">
                 <div className="h-6 w-40 bg-foreground/10 rounded" />
                 <div className="h-4 w-24 bg-foreground/8 rounded" />

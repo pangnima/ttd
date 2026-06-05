@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMatchGameById, fetchClubMembersWithGuests } from '@/lib/queries/match-games'
 import { MatchGameCreateForm } from '@/components/match-games/match-game-create-form'
+import { PageContainer } from '@/components/common/page-container'
 
 type Props = { params: Promise<{ clubId: string; matchGameId: string }> }
 
@@ -31,9 +32,9 @@ export default async function MatchGameEditPage({ params }: Props) {
     const members = await fetchClubMembersWithGuests(clubId)
 
     return (
-        <div className="space-y-4 max-w-4xl mx-auto">
-            <h1 className="text-xl font-bold">대진표 수정</h1>
+        <PageContainer>
+            <h1 className="text-2xl font-bold">대진표 수정</h1>
             <MatchGameCreateForm clubId={clubId} members={members} initialData={matchGame} />
-        </div>
+        </PageContainer>
     )
 }
