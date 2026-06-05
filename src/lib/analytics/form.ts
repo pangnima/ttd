@@ -19,23 +19,28 @@ export function aggregateRecentForm(
     userId: string,
     n = 10,
 ): RecentFormResult {
-    const outcomes: { date: string; outcome: 'W' | 'L' | 'D' }[] = []
+    // id: 날짜 동률 시 결정적 정렬을 위한 2차 키 (매치 UUID)
+    const outcomes: { date: string; id: string; outcome: 'W' | 'L' | 'D' }[] = []
 
     for (const m of bundle.matches) {
         if (!m.result) continue
         const meta = bundle.gameMetaById[m.matchGameId]
         const date = meta?.date ?? '0000-00-00'
         const o = getMatchOutcome(m, userId)
-        outcomes.push({ date, outcome: o === 'win' ? 'W' : o === 'loss' ? 'L' : 'D' })
+        outcomes.push({ date, id: m.id, outcome: o === 'win' ? 'W' : o === 'loss' ? 'L' : 'D' })
     }
 
     for (const pm of bundle.personalMatches) {
         const o = pm.winner === 'me' ? 'W' : pm.winner === 'opponent' ? 'L' : 'D'
-        outcomes.push({ date: pm.playedAt, outcome: o })
+        outcomes.push({ date: pm.playedAt, id: pm.id, outcome: o })
     }
 
-    // 내림차순(최신=index 0) 정렬 후 최근 N경기 slice — streak은 최신 기준으로 계산
-    outcomes.sort((a, b) => b.date.localeCompare(a.date))
+    // 내림차순(최신=index 0) 정렬 후 최근 N경기 slice — streak은 최신 기준으로 계산.
+    // 날짜 동률 시 id를 2차 키로 사용해 정렬을 결정적으로 만든다.
+    outcomes.sort((a, b) => {
+        const dateComp = b.date.localeCompare(a.date)
+        return dateComp !== 0 ? dateComp : b.id.localeCompare(a.id)
+    })
     const recent = outcomes.slice(0, n)
 
     const newestFirst = recent.map((r) => r.outcome)
@@ -66,8 +71,10 @@ export function aggregateRecentForm(
 export type ComebackStats = {
     comebackWins: number     // 첫 세트 패 후 역전 승리
     comebackLosses: number   // 첫 세트 승 후 역전 패배
-    total: number            // 결정 세트까지 간 경기 수
-    comebackRate: number     // comebackWins / (comebackWins + comebackLosses)
+    /** 2세트 이상이고 무승부가 아닌 경기 수. comebackRate의 분모와는 다르다.
+     *  comebackRate 분모 = comebackWins + comebackLosses (역전이 발생한 경기만). */
+    total: number
+    comebackRate: number     // comebackWins / (comebackWins + comebackLosses) × 100
 }
 
 export function aggregateComebackRate(
