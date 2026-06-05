@@ -263,7 +263,7 @@
 
 ---
 
-### Week 10: 클럽 대시보드 신설 & 개인 화면 역할 분리 ✅ (2026-05-29)
+### Week 12: 클럽 대시보드 신설 & 개인 화면 역할 분리 ✅ (2026-05-29)
 
 > 기존 `/dashboard`(개인 통계 중심)를 폐기하고, 클럽 단위 운영 도구로 재정의.
 > 개인 통계는 `/me/analytics`로 일원화하여 화면 역할을 명확히 분리.
@@ -284,17 +284,58 @@
 - [x] RPC `get_club_activity_ranking` 신설 — 단식·복식 player 컬럼 unnest 후 매치 참여 횟수 집계
 - [x] RLS 정책 추가 — officer도 pending 회원 승인/거절 가능 (`club_members_update_pending_by_officer`)
 
-> **결정 기록 (Week 10 — 대시보드 재편)**
+> **결정 기록 (Week 12 — 대시보드 재편)**
 > - `/dashboard`는 "개인 통계 + 클럽 운영"이 섞여 정체성이 모호했음 → 클럽 단위 운영 도구로 분리, 개인 통계는 `/me/analytics`로 이관
 > - officer 역할의 운영 권한 확대(승인/거절) — owner 단독 부담 해소
 > - 활동도 랭킹은 RPC로 처리(단식 `player1/2_id` + 복식 `team1/2` 배열 unnest) — 클라이언트 집계 비용 회피
 
 ---
 
+### Week 13: 레이아웃 통일 + 통계 검증 ✅ (2026-06-05)
+
+#### 미문서화 커밋 흡수
+- [x] `971b337` — 클럽 대시보드 승률 랭킹 카드 신설 (`WinRateRankingCard`, `get_club_win_rate_ranking` RPC)
+- [x] `75b5543` — 중복 페이지 통합 + 컴포넌트/디렉토리 심플화 (`/me/analytics` → `/profile/[userId]` 통합, `stats/` 디렉토리 정리)
+- [x] `c41ef16` — 사이드바 프로필 링크 직렬화 안전 방식 교체 (Client Component에 함수 전달 금지)
+- [x] `a592361` — 내 분석 페이지 전면 개선 (scope 탭·헤더·카드 레이아웃·SelfAnalyticsSection 신설)
+
+#### 레이아웃 통일
+- [x] `src/components/common/page-container.tsx` 신설 — 페이지 루트 공용 컨테이너 (`space-y-6`, full-width)
+- [x] 14개 페이지 루트를 `PageContainer`로 교체 (max-w-lg/3xl/4xl, mx-auto, w-full 제거)
+  - clubs/page, clubs/new, clubs/[clubId], members, match-games 목록/new/상세/수정
+  - clubs/settings, personal-matches 목록/new/edit, profile/[userId], profile/settings
+- [x] `loading.tsx`의 `max-w-4xl` 제거
+- [x] 린트 정리 — `set-state-in-effect` eslint-disable 3건, 미사용 `useSearchParams` import 제거
+
+#### 통계 수치 검증
+- [x] Supabase MCP로 RPC/뷰 SQL 본문 조회 및 분석
+  - `is_fixed = true` 필터, `winner_id` 판정, 세트 집계, 코트 판정 모두 정상 확인
+  - 실데이터(남자2, 14경기) 수기 기준값 vs RPC 결과 완전 일치
+- [x] `supabase/migrations/0016_stats_baseline_snapshot.sql` — SQL 기준 스냅샷 레포 편입 (버전관리 시작)
+- [x] `docs/stats-verification.md` 검증 리포트 작성
+- [x] 코드 수정 3건
+  - `lib/analytics/form.ts` — 날짜 동률 시 비결정적 정렬 → `id` 2차 키로 결정적 정렬
+  - `lib/analytics/diagnostics.ts` — 컴백 진단 주석 (`>= 3`) 정합
+  - `lib/analytics/form.ts` — `ComebackStats.total` JSDoc 명확화 (분모 불일치 명시)
+
+> **결정 기록 (Week 13)**
+> - 레이아웃 기준: 내 분석 페이지(`/profile/[userId]`) = full-width + `space-y-6` + 레이아웃 `p-4 md:p-6` 패딩 의존
+> - 폼 페이지도 전부 full-width 통일 (사용자 결정)
+> - 통계 검증 결과: SQL 로직 모두 정상, 코드 측 3건 수정. 핵심 수치 불일치 없음
+> - SQL 버전관리: 0001~0015는 MCP apply_migration으로만 관리됐으나 0016부터 로컬 `.sql` 파일로 버전관리 시작
+> - 데드 RPC `get_user_match_stats` v1은 서버에 존재하나 호출처 없음 — 향후 DROP 대상
+
+---
+
 ## 앞으로 개선해야할 점
 
 ### 중기: 기술 부채 / 품질 개선
-<!-- 완료된 항목: d9c38e9에서 에러 바운더리 + 로딩 상태 일관화 완료 -->
+<!-- 완료: d9c38e9 에러 바운더리·로딩 일관화, Week 13 레이아웃 통일·린트 정리 -->
+- [ ] **통계 단일 소스화** — `lib/analytics/*`(순수함수) vs `lib/queries/stats.ts`(RPC) 이중 경로 통합. 현재 두 경로가 동일 수치를 내나 유지 비용과 불일치 리스크 잠재 (가장 큰 기술 부채)
+- [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 시작됨)
+- [ ] **통계 단위 테스트** — `lib/analytics/*` 순수함수에 고정 픽스처 Vitest 테스트 작성 (회귀 방지)
+- [ ] **최근 폼 정렬 개선** — 클럽 경기는 일 단위 날짜만 있어 같은 날 경기 순서가 UUID에 의존. `match_game_matches.created_at` 컬럼 추가 시 더 정확한 정렬 가능
+- [ ] **데드 RPC 정리** — `get_user_match_stats` v1 DROP 마이그레이션
 - [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)
 - [ ] **테스트 도입** — Playwright e2e (로그인, 클럽 생성, 대진표 생성·결과 입력 플로우)
 - [ ] **접근성(a11y)** — 색 대비, ARIA 레이블, 키보드 네비게이션 점검

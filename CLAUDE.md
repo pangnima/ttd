@@ -118,12 +118,18 @@ src/
 - [x] Week 7: 클럽 기능 Supabase 연결 (localStorage 전면 제거)
 - [x] 리네이밍: tournament → match-game 전면 교체 (0009, 레거시 타입 제거)
 - [x] Week 8: 대진표 기능 Supabase 연결 (0010~0012 포함)
-- [x] Week 9 진행 중: 프로필/통계 구현, 배포 전 정리
+- [x] Week 9: 프로필/통계 구현 + 배포 전 정리
   - [x] /profile/[userId] 페이지
   - [x] 통계 RPC 연결
   - [x] 게스트 선수 모델 확정
-  - [ ] Vercel 배포
+- [x] Week 10: 개인 분석 페이지 (0013~0015 마이그레이션, personal_matches, AI 코칭)
+- [x] Week 11: 잔여 카드 5종 + 정리 + 고위험 리팩토링
+- [x] Week 12: 클럽 대시보드 신설 + 개인 화면 역할 분리
+- [x] Week 13: 레이아웃 full-width 통일 (PageContainer) + 통계 검증 + SQL 버전관리 시작 (0016)
+- [ ] 배포
+  - [ ] Vercel 배포 + 환경변수 등록
   - [ ] leaked password protection 활성화
+  - [ ] metadataBase 환경변수화
 
 ## 데이터 흐름
 ```
