@@ -4,6 +4,7 @@ import { useState, useActionState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { ImagePlus } from 'lucide-react'
 import { updateProfileAction } from '@/lib/actions/profile'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
@@ -207,20 +208,15 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
             <div>
                 <p className={labelCls}>전적 통계 공개</p>
                 <input type="hidden" name="stats_hidden" value={String(statsHidden)} />
-                <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                        { value: false, label: '공개' },
-                        { value: true, label: '비공개' },
-                    ].map(({ value, label }) => (
-                        <button
-                            key={label}
-                            type="button"
-                            onClick={() => setStatsHidden(value)}
-                            className={`${toggleBase} ${statsHidden === value ? toggleActive : toggleInactive}`}
-                        >
-                            {label}
-                        </button>
-                    ))}
+                <div className="flex items-center justify-between rounded-md border border-border px-3 py-2.5">
+                    <label htmlFor="stats_public" className="text-sm text-foreground cursor-pointer">
+                        {statsHidden ? '비공개' : '공개'}
+                    </label>
+                    <Switch
+                        id="stats_public"
+                        checked={!statsHidden}
+                        onCheckedChange={(checked) => setStatsHidden(checked === false)}
+                    />
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1.5">
                     비공개 시 다른 회원이 내 프로필에서 승률·승무패를 볼 수 없습니다

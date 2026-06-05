@@ -52,6 +52,8 @@ export async function toggleStatsHiddenAction(hidden: boolean): Promise<void> {
     await supabase.from('users').update({ stats_hidden: hidden }).eq('id', user.id)
     revalidatePath('/me/analytics')
     revalidatePath('/profile/settings')
+    // 내 분석 화면(/profile/[userId])의 블러 모드 즉시 반영
+    revalidatePath('/profile', 'layout')
 }
 
 export async function updatePasswordAction(

@@ -9,7 +9,6 @@ import { NtrpDifferentialCard } from '@/components/stats/ntrp-differential-card'
 import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
-import { AnalyticsModeTabs } from '@/components/stats/analytics-mode-tabs'
 import { PartnerRecommendationCard } from '@/components/stats/partner-recommendation-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
@@ -23,9 +22,6 @@ type Props = {
     bundle: AnalyticsBundle
     me: User
     scope: AnalyticsScope
-    clubs: { id: string; name: string }[]
-    /** 탭 전환 시 이동할 URL base (예: /profile/[userId]) */
-    basePath: string
 }
 
 function getScopeLabel(scope: AnalyticsScope): string {
@@ -37,7 +33,7 @@ function getScopeLabel(scope: AnalyticsScope): string {
 /**
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
  */
-export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath }: Props) {
+export async function SelfAnalyticsSection({ bundle, me, scope }: Props) {
     const surfaceStats = aggregateBySurface(
         {
             matches: bundle.matches,
@@ -81,16 +77,9 @@ export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath 
 
     return (
         <div className="space-y-8">
-            {/* 모드 탭 + 설명 */}
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-                <p className="text-sm text-foreground/60">{getScopeLabel(scope)}</p>
-                <Suspense>
-                    <AnalyticsModeTabs scope={scope} clubs={clubs} basePath={basePath} />
-                </Suspense>
-            </div>
-
             {/* 종합 통계 — 세트 표기 숨김 (심플하게) */}
             <section className="space-y-3">
+                <p className="text-sm text-foreground/60">{getScopeLabel(scope)}</p>
                 <p className={SECTION_LABEL}>종합 통계</p>
                 <StatsQuadGrid
                     gender={me.gender}
@@ -98,9 +87,9 @@ export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath 
                     menDoubles={bundle.stats.menDoubles}
                     womenDoubles={bundle.stats.womenDoubles}
                     mixedDoubles={bundle.stats.mixedDoubles}
-                    privacy="public"
-                    editable={false}
-                    statsHidden={false}
+                    privacy={me.statsHidden ? 'self' : 'public'}
+                    editable={true}
+                    statsHidden={me.statsHidden}
                     showSets={false}
                 />
             </section>
@@ -132,6 +121,9 @@ export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath 
                 gender={me.gender}
             />
 
+            {/* 개인 경기 미리보기 */}
+            <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+
             {/* ── 심화 진단 (하단) ─────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <NtrpDifferentialCard ntrpStats={ntrpStats} />
@@ -143,9 +135,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, clubs, basePath 
                 initialResult={aiResult}
                 initialGeneratedAt={aiGeneratedAt}
             />
-
-            {/* 개인 경기 미리보기 */}
-            <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
         </div>
     )
 }

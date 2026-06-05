@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import type { AnalyticsScope } from '@/lib/queries/analytics'
 
 type Props = {
@@ -12,7 +12,6 @@ type Props = {
 
 export function AnalyticsModeTabs({ scope, clubs, basePath = '/me/analytics' }: Props) {
     const router = useRouter()
-    const searchParams = useSearchParams()
 
     const handleChange = (scopeValue: string) => {
         // scope 전환 시 불필요한 기존 파라미터(clubId 등)가 전파되지 않도록 새 파라미터 객체 생성
@@ -73,7 +72,7 @@ function TabButton({
         <button
             type="button"
             onClick={() => onClick(value)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all max-w-[120px] truncate ${
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 active
                     ? 'bg-background text-foreground shadow-sm border border-border'
                     : 'text-muted-foreground hover:text-foreground'

@@ -1,13 +1,16 @@
+import { Suspense } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchUserById } from '@/lib/queries/users'
 import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
-import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
+import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
+import { AnalyticsModeTabs } from '@/components/stats/analytics-mode-tabs'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { PageContainer } from '@/components/common/page-container'
 
 type Props = {
     params: Promise<{ userId: string }>
@@ -48,19 +51,20 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const clubsForTab = myClubs.map((c) => ({ id: c.id, name: c.name }))
 
         return (
-            <div className="space-y-6">
-                <MemberProfileHeader user={target} clubName={club?.name} />
-                <div>
-                    <h2 className={`${SECTION_LABEL} mb-6`}>나의 분석</h2>
-                    <SelfAnalyticsSection
-                        bundle={bundle}
-                        me={target}
-                        scope={scope}
-                        clubs={clubsForTab}
-                        basePath={`/profile/${userId}`}
-                    />
+            <PageContainer>
+                <div className="space-y-4">
+                    <h2 className={SECTION_LABEL}>내 분석</h2>
+                    <MemberProfileHeader user={target} clubName={club?.name} />
+                    <Suspense>
+                        <AnalyticsModeTabs
+                            scope={scope}
+                            clubs={clubsForTab}
+                            basePath={`/profile/${userId}`}
+                        />
+                    </Suspense>
                 </div>
-            </div>
+                <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} />
+            </PageContainer>
         )
     }
 
@@ -69,7 +73,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     const bundle = await fetchPlayerStatsBundle(userId, clubId)
 
     return (
-        <div className="space-y-6">
+        <PageContainer>
             <MemberProfileHeader user={target} clubName={club?.name} />
             <PlayerStatsSection
                 bundle={bundle}
@@ -79,6 +83,6 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 editable={false}
                 statsHidden={target.statsHidden}
             />
-        </div>
+        </PageContainer>
     )
 }
