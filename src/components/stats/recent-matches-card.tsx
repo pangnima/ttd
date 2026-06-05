@@ -5,6 +5,7 @@ import { toMatchView } from '@/lib/dashboard/match-display'
 import { getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
 import { CARD_BASE, PILL_BASE, SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { OUTCOME_STYLE, OUTCOME_LABEL } from '@/lib/dashboard/outcome'
+import { ProfileLink } from '@/components/common/profile-link'
 
 type Props = {
     matches: Match[]
@@ -35,12 +36,14 @@ function PlayerName({
         <>
             {isMe ? (
                 <span className="text-primary font-medium">{nickname}</span>
-            ) : isGuest || !user ? (
-                <span className="text-foreground">{nickname}</span>
             ) : (
-                <Link href={`/profile/${userId}`} className="text-foreground hover:text-foreground transition-colors">
+                <ProfileLink
+                    userId={userId}
+                    isGuest={isGuest || !user}
+                    className="text-foreground hover:text-foreground transition-colors"
+                >
                     {nickname}
-                </Link>
+                </ProfileLink>
             )}
             {courtLabel && (
                 <span className="text-muted-foreground">{courtLabel}</span>

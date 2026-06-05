@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import type { PartnerRecommendations, PartnerRec } from '@/lib/analytics/partner'
 import type { User } from '@/types'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { ProfileLink } from '@/components/common/profile-link'
 
 type Props = {
     recommendations: PartnerRecommendations
@@ -25,16 +25,13 @@ function PartnerRow({ rec, userMap }: { rec: PartnerRec; userMap: Map<string, Us
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
-                {!isGuest ? (
-                    <Link
-                        href={`/profile/${rec.partnerId}`}
-                        className="text-sm text-foreground/90 hover:text-foreground transition-colors truncate"
-                    >
-                        {name}{ntrp}
-                    </Link>
-                ) : (
-                    <span className="text-sm text-foreground/90 truncate">{name}</span>
-                )}
+                <ProfileLink
+                    userId={rec.partnerId}
+                    isGuest={isGuest}
+                    className="text-sm text-foreground/90 hover:text-foreground transition-colors truncate"
+                >
+                    {name}{ntrp}
+                </ProfileLink>
                 {isGuest && <GuestBadge />}
             </div>
             <span className="text-sm text-foreground/80 shrink-0 ml-2">

@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import type { HeadToHead } from '@/lib/stats'
 import type { PartnerStat } from '@/lib/queries/stats'
 import type { User } from '@/types'
 import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { ProfileLink } from '@/components/common/profile-link'
 
 type Props = {
     rivals: HeadToHead[]
@@ -31,16 +31,13 @@ function UserRow({
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
-                {!isGuest ? (
-                    <Link
-                        href={`/profile/${userId}`}
-                        className="text-base text-foreground/90 hover:text-foreground transition-colors truncate"
-                    >
-                        {name}
-                    </Link>
-                ) : (
-                    <span className="text-base text-foreground/90 truncate">{name}</span>
-                )}
+                <ProfileLink
+                    userId={userId}
+                    isGuest={isGuest}
+                    className="text-base text-foreground/90 hover:text-foreground transition-colors truncate"
+                >
+                    {name}
+                </ProfileLink>
                 {isGuest && <GuestBadge />}
             </div>
             <span className="text-sm text-foreground/80 shrink-0">
