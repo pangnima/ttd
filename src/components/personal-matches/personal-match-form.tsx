@@ -10,6 +10,7 @@ import {
     type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import {
     Command,
     CommandEmpty,
@@ -34,13 +35,6 @@ const MATCH_TYPES: { value: MatchType; label: string }[] = [
     { value: 'men_doubles', label: '남복' },
     { value: 'women_doubles', label: '여복' },
     { value: 'mixed_doubles', label: '혼복' },
-]
-
-const SURFACES: { value: CourtSurface; label: string }[] = [
-    { value: 'hard', label: '하드' },
-    { value: 'clay', label: '클레이' },
-    { value: 'grass', label: '인조잔디' },
-    { value: 'other', label: '기타' },
 ]
 
 type InputMode = 'member' | 'external'
@@ -237,7 +231,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                         className={inputClass}
                     >
                         <option value="">미지정</option>
-                        {SURFACES.map((s) => (
+                        {SURFACE_OPTIONS.map((s) => (
                             <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                     </select>

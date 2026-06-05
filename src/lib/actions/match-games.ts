@@ -17,6 +17,7 @@ function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[
         temp_id: c.id,
         label: c.label,
         order: c.order,
+        surface: c.surface ?? null,
     }))
 
     const roundsPayload = rounds.map((r) => ({

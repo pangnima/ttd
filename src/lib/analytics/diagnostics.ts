@@ -6,6 +6,7 @@ import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateComebackRate } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateBySurface } from '@/lib/analytics/surface'
+import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 
 export type DiagnosticItem = {
     label: string
@@ -41,7 +42,7 @@ export function diagnoseStrengthsWeaknesses(
         }
     }
 
-    // 컴백 능력 진단 (최소 5경기 이상의 결정 세트)
+    // 컴백 능력 진단 (2세트 이상 + 무승부 아닌 경기가 최소 3경기)
     if (comeback.total >= 3) {
         if (comeback.comebackRate >= 50) {
             strengths.push({ label: '강한 역전 능력', description: `결정 세트에서 ${comeback.comebackRate}%의 역전 성공률을 보입니다.` })
@@ -67,13 +68,14 @@ export function diagnoseStrengthsWeaknesses(
         const best = surfaceEntries.reduce((a, b) => a[1].winRate >= b[1].winRate ? a : b)
         const worst = surfaceEntries.reduce((a, b) => a[1].winRate <= b[1].winRate ? a : b)
 
-        const surfaceLabel: Record<string, string> = { hard: '하드코트', clay: '클레이', grass: '잔디', other: '기타 코트' }
+        // SURFACE_LABELS 공용 상수 사용 (surface.ts에서 단일 관리)
+        const surfaceLabel = (key: string) => SURFACE_LABELS[key] ?? key
 
         if (best[1].winRate >= 60) {
-            strengths.push({ label: `${surfaceLabel[best[0]] ?? best[0]} 강세`, description: `${surfaceLabel[best[0]] ?? best[0]}에서 ${best[1].winRate}% 승률로 가장 좋은 성적을 보입니다.` })
+            strengths.push({ label: `${surfaceLabel(best[0])} 강세`, description: `${surfaceLabel(best[0])}에서 ${best[1].winRate}% 승률로 가장 좋은 성적을 보입니다.` })
         }
         if (worst[0] !== best[0] && worst[1].winRate <= 30 && worst[1].total >= 3) {
-            weaknesses.push({ label: `${surfaceLabel[worst[0]] ?? worst[0]} 약세`, description: `${surfaceLabel[worst[0]] ?? worst[0]}에서 ${worst[1].winRate}% 승률 — 해당 표면 적응 훈련이 도움이 됩니다.` })
+            weaknesses.push({ label: `${surfaceLabel(worst[0])} 약세`, description: `${surfaceLabel(worst[0])}에서 ${worst[1].winRate}% 승률 — 해당 표면 적응 훈련이 도움이 됩니다.` })
         }
     }
 
