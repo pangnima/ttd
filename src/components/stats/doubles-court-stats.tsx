@@ -1,5 +1,6 @@
 import type { DoublesCourtStats } from '@/lib/queries/stats'
-import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
+import { calcWinRate } from '@/lib/dashboard/tokens'
+import { SectionCard } from '@/components/common/section-card'
 
 type Props = { court: DoublesCourtStats }
 
@@ -33,23 +34,17 @@ export function DoublesCourtStatsCard({ court }: Props) {
     const hasData = court.ad.matches > 0 || court.deuce.matches > 0
 
     return (
-        <section className="space-y-3">
-            <p className={SECTION_LABEL}>복식 코트 성향</p>
-            <div className={`${CARD_BASE} p-4 space-y-4`}>
-                {hasData ? (
-                    <>
-                        <CourtBar label="애드코트 (백핸드)" stat={court.ad} />
-                        <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} />
-                        <p className="text-xs text-foreground/70 border-t border-foreground/5 pt-2">
-                            * 복식 경기 기준. 코트 미지정 경기는 듀스에 포함.
-                        </p>
-                    </>
-                ) : (
-                    <p className="text-sm text-foreground/70 text-center py-4">
-                        복식 경기 데이터가 없습니다
-                    </p>
-                )}
-            </div>
-        </section>
+        <SectionCard
+            title="복식 코트 성향"
+            isEmpty={!hasData}
+            emptyMessage="복식 경기 데이터가 없습니다"
+            contentClass="p-4 space-y-4"
+        >
+            <CourtBar label="애드코트 (백핸드)" stat={court.ad} />
+            <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} />
+            <p className="text-xs text-foreground/70 border-t border-foreground/5 pt-2">
+                * 복식 경기 기준. 코트 미지정 경기는 듀스에 포함.
+            </p>
+        </SectionCard>
     )
 }
