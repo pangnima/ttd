@@ -2,21 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { generateAICoachingAction, type AICoachingResult } from '@/lib/actions/ai-coaching'
-import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { CARD_BASE, SECTION_LABEL, AI_COACHING_STYLE } from '@/lib/dashboard/tokens'
+import { formatRelativeTime } from '@/lib/format'
 
 type Props = {
     initialResult: AICoachingResult | null
     initialGeneratedAt: string | null
-}
-
-function formatRelativeTime(isoString: string): string {
-    const diffMs = Date.now() - new Date(isoString).getTime()
-    const diffMin = Math.floor(diffMs / 60000)
-    if (diffMin < 1) return '방금 전'
-    if (diffMin < 60) return `${diffMin}분 전`
-    const diffH = Math.floor(diffMin / 60)
-    if (diffH < 24) return `${diffH}시간 전`
-    return `${Math.floor(diffH / 24)}일 전`
 }
 
 export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
@@ -52,7 +43,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                 {result ? (
                     <>
                         <div className="space-y-2">
-                            <p className="text-sm font-semibold text-green-600">💪 강점</p>
+                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.strength}`}>💪 강점</p>
                             <ul className="space-y-1">
                                 {result.strengths.map((s, i) => (
                                     <li key={i} className="text-sm text-foreground flex gap-2">
@@ -63,7 +54,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             </ul>
                         </div>
                         <div className="space-y-2">
-                            <p className="text-sm font-semibold text-orange-500">⚠️ 개선 포인트</p>
+                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.weakness}`}>⚠️ 개선 포인트</p>
                             <ul className="space-y-1">
                                 {result.weaknesses.map((w, i) => (
                                     <li key={i} className="text-sm text-foreground flex gap-2">
@@ -74,7 +65,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             </ul>
                         </div>
                         <div className="space-y-2">
-                            <p className="text-sm font-semibold text-blue-500">🎯 코칭 팁</p>
+                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.tip}`}>🎯 코칭 팁</p>
                             <ul className="space-y-1">
                                 {result.tips.map((t, i) => (
                                     <li key={i} className="text-sm text-foreground flex gap-2">
@@ -100,7 +91,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             AI가 나의 경기 데이터를 분석해 강점·약점·코칭 팁을 제공합니다.
                         </p>
                         {error && (
-                            <p className="text-sm text-red-500">{error}</p>
+                            <p className={`text-sm ${AI_COACHING_STYLE.error}`}>{error}</p>
                         )}
                         <button
                             onClick={handleGenerate}

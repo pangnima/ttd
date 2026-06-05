@@ -1,18 +1,11 @@
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
-import { PERSONAL_OUTCOME_LABEL } from '@/lib/dashboard/outcome'
+import { PERSONAL_OUTCOME_LABEL, PERSONAL_OUTCOME_STYLE } from '@/lib/dashboard/outcome'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 
 type Props = {
     personalMatches: PersonalMatch[]
-}
-
-// 개인 경기 미리보기 목록에서 사용하는 승/패/무 색상
-const WINNER_CLS: Record<string, string> = {
-    me: 'text-emerald-600 dark:text-emerald-400',
-    opponent: 'text-red-600 dark:text-red-400',
-    draw: 'text-muted-foreground',
 }
 
 export function PersonalMatchesPreview({ personalMatches }: Props) {
@@ -43,7 +36,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                             const scoreStr = pm.setScores.map((s) => `${s.me}-${s.opp}`).join(', ')
                             return (
                                 <li key={pm.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                                    <span className={`w-5 font-bold tabular-nums ${WINNER_CLS[pm.winner] ?? WINNER_CLS.draw}`}>
+                                    <span className={`w-5 tabular-nums ${PERSONAL_OUTCOME_STYLE[pm.winner] ?? PERSONAL_OUTCOME_STYLE.draw}`}>
                                         {PERSONAL_OUTCOME_LABEL[pm.winner] ?? '무'}
                                     </span>
                                     <div className="flex-1 min-w-0">

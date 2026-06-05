@@ -26,16 +26,12 @@ import {
     TEXT_META,
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
+import { PageContainer } from '@/components/common/page-container'
+import { formatYearMonth } from '@/lib/format'
 import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown } from 'lucide-react'
 
 type ClubPageProps = {
     params: Promise<{ clubId: string }>
-}
-
-function formatFoundedDate(createdAt: string): string {
-    return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' }).format(
-        new Date(createdAt)
-    )
 }
 
 export default async function ClubPage({ params }: ClubPageProps) {
@@ -53,6 +49,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
     if (!club) notFound()
 
+    const regularMembers = approvedMembers.filter((m) => !m.user.isGuest)
+    const guestMembers = approvedMembers.filter((m) => m.user.isGuest)
+
     const isOwner = myMembership?.role === 'owner'
     const isOfficerOrOwner = myMembership?.role === 'owner' || myMembership?.role === 'officer'
     const ownerMember = approvedMembers.find((m) => m.role === 'owner')
@@ -68,7 +67,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
         : [null, null, null, null]
 
     return (
-        <div className="w-full space-y-8">
+        <PageContainer>
             {/* 헤더 */}
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -116,7 +115,16 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         <Users className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
                         <span className={`text-[11px] ${TEXT_MUTED}`}>회원 수</span>
                     </div>
-                    <p className="text-xl font-semibold text-foreground">{approvedMembers.length}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>명</span></p>
+                    <div className="flex items-end gap-4">
+                        <div className="flex flex-col">
+                            <span className={`text-[11px] ${TEXT_META}`}>정회원</span>
+                            <p className="text-xl font-semibold text-foreground">{regularMembers.length}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>명</span></p>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className={`text-[11px] ${TEXT_META}`}>게스트</span>
+                            <p className="text-xl font-semibold text-foreground/70">{guestMembers.length}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>명</span></p>
+                        </div>
+                    </div>
                 </div>
                 <div className={`${CARD_BASE} flex flex-col gap-1.5 p-4`}>
                     <div className="flex items-center gap-1.5">
@@ -130,7 +138,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         <Calendar className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
                         <span className={`text-[11px] ${TEXT_MUTED}`}>설립</span>
                     </div>
-                    <p className="text-sm font-medium text-foreground/90 mt-0.5">{formatFoundedDate(club.createdAt)}</p>
+                    <p className="text-sm font-medium text-foreground/90 mt-0.5">{formatYearMonth(club.createdAt)}</p>
                 </div>
             </div>
 
@@ -155,7 +163,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {/* 회원 미리보기 */}
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <p className={SECTION_LABEL}>회원 ({approvedMembers.length}명)</p>
+                    <p className={SECTION_LABEL}>회원 ({regularMembers.length}명)</p>
                     <Link
                         href={`/clubs/${clubId}/members`}
                         className={`text-xs ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5 transition-colors`}
@@ -163,8 +171,16 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         전체보기 <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                 </div>
-                <ClubMembersPreview members={approvedMembers} maxDisplay={8} />
+                <ClubMembersPreview members={regularMembers} maxDisplay={8} />
             </section>
+
+            {/* 게스트 미리보기 */}
+            {guestMembers.length > 0 && (
+                <section className="space-y-3">
+                    <p className={SECTION_LABEL}>게스트 ({guestMembers.length}명)</p>
+                    <ClubMembersPreview members={guestMembers} maxDisplay={8} />
+                </section>
+            )}
 
             {/* ── 운영자/임원 전용 운영 섹션 ────────────────────────────── */}
             {isOfficerOrOwner && pendingMembers !== null && matchGameActivity !== null && activityRanking !== null && winRateRanking !== null && (
@@ -184,6 +200,6 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     </div>
                 </>
             )}
-        </div>
+        </PageContainer>
     )
 }

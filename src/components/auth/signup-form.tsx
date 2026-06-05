@@ -4,15 +4,7 @@ import { useActionState, useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { signupAction } from '@/lib/actions/auth'
-
-const inputCls = [
-    'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
-    'bg-background border border-input',
-    'placeholder:text-muted-foreground',
-    'outline-none focus:border-ring transition-colors',
-].join(' ')
-
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
+import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)

@@ -1,15 +1,12 @@
 import Link from 'next/link'
 import { CARD_BASE, SECTION_LABEL, TEXT_META, TEXT_MUTED, PILL_BASE } from '@/lib/dashboard/tokens'
+import { formatShortDate } from '@/lib/format'
 import { Trophy, Calendar, ChevronRight } from 'lucide-react'
 import type { ClubMatchGameActivity } from '@/lib/queries/club-dashboard'
 
 type MatchGameActivityCardProps = {
     clubId: string
     activity: ClubMatchGameActivity
-}
-
-function formatDate(dateStr: string): string {
-    return new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric' }).format(new Date(dateStr))
 }
 
 export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCardProps) {
@@ -39,7 +36,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                         <Calendar className={`w-3.5 h-3.5 shrink-0 ${TEXT_MUTED}`} />
                         <span className={`text-xs ${TEXT_MUTED}`}>다음 예정</span>
                         <span className={`${PILL_BASE} text-[10px] border-blue-500/50 text-blue-600 bg-blue-500/8 dark:border-blue-400/40 dark:text-blue-400 dark:bg-blue-400/8`}>
-                            {formatDate(activity.nextGame.date)}
+                            {formatShortDate(activity.nextGame.date)}
                         </span>
                         <Link
                             href={`/clubs/${clubId}/match-games/${activity.nextGame.id}`}
@@ -72,7 +69,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                                     <span className="text-sm text-foreground truncate">{g.name}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className={`text-xs ${TEXT_MUTED}`}>{formatDate(g.date)}</span>
+                                    <span className={`text-xs ${TEXT_MUTED}`}>{formatShortDate(g.date)}</span>
                                     <span className={`${PILL_BASE} text-[10px] ${g.isFixed ? 'border-emerald-600/50 text-emerald-700 bg-emerald-500/8 dark:border-emerald-400/40 dark:text-emerald-400 dark:bg-emerald-400/8' : 'border-border text-muted-foreground'}`}>
                                         {g.isFixed ? '확정' : '예정'}
                                     </span>

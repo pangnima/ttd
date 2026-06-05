@@ -3,16 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { updatePasswordAction } from '@/lib/actions/profile'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
-
-const inputCls = [
-    'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
-    'bg-background border border-input',
-    'placeholder:text-muted-foreground',
-    'outline-none focus:border-ring transition-colors',
-].join(' ')
-
-const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
+import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function PasswordChangeForm() {
     const [state, formAction, isPending] = useActionState(updatePasswordAction, null)

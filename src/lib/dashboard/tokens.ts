@@ -8,6 +8,25 @@ export const EMPTY_BLOCK =
 export const TEXT_META = 'text-muted-foreground'
 export const TEXT_MUTED = 'text-muted-foreground'
 
+/** 폼 입력 필드 공통 스타일 (auth/profile 폼에서 공유) */
+export const FORM_INPUT_BASE = [
+    'w-full rounded-md px-3 py-2.5 text-sm text-foreground',
+    'bg-background border border-input',
+    'placeholder:text-muted-foreground',
+    'outline-none focus:border-ring transition-colors',
+].join(' ')
+
+/** 폼 라벨 공통 스타일 (auth/profile 폼에서 공유) */
+export const FORM_LABEL_BASE = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
+
+/** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
+export const AI_COACHING_STYLE = {
+    strength: 'text-green-600',
+    weakness: 'text-orange-500',
+    tip: 'text-blue-500',
+    error: 'text-red-500',
+} as const
+
 /** 승률 계산 (무승부 제외 분모). 경기 없으면 null. */
 export function calcWinRate(wins: number, losses: number): number | null {
     const decisive = wins + losses
