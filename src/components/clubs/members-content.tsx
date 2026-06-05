@@ -40,6 +40,9 @@ export function MembersContent({
     const isOwner = currentUserRole === 'owner'
     const canManagePending = currentUserRole === 'owner' || currentUserRole === 'officer'
 
+    const regularMembers = members.filter((m) => !m.user.isGuest)
+    const guestMembers = members.filter((m) => m.user.isGuest)
+
     const handleApprove = (userId: string) =>
         startTransition(async () => { await approveMemberAction(clubId, userId) })
 
@@ -61,11 +64,11 @@ export function MembersContent({
 
             <section>
                 <div className="flex items-center gap-2 mb-2">
-                    <h2 className="font-semibold text-sm">승인된 회원</h2>
-                    <Badge variant="secondary" className="text-xs">{members.length}명</Badge>
+                    <h2 className="font-semibold text-sm">정회원</h2>
+                    <Badge variant="secondary" className="text-xs">{regularMembers.length}명</Badge>
                 </div>
                 <div className="border rounded-lg divide-y">
-                    {members.map((m) => (
+                    {regularMembers.map((m) => (
                         <div key={m.userId} className="flex items-center pr-2">
                             <div className="flex-1 min-w-0">
                                 <MemberListItem
@@ -103,6 +106,28 @@ export function MembersContent({
                     ))}
                 </div>
             </section>
+
+            {guestMembers.length > 0 && (
+                <>
+                    <Separator className="my-6" />
+                    <section>
+                        <div className="flex items-center gap-2 mb-2">
+                            <h2 className="font-semibold text-sm">게스트</h2>
+                            <Badge variant="outline" className="text-xs">{guestMembers.length}명</Badge>
+                        </div>
+                        <div className="border rounded-lg divide-y">
+                            {guestMembers.map((m) => (
+                                <MemberListItem
+                                    key={m.userId}
+                                    member={m}
+                                    user={m.user}
+                                    clubId={clubId}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                </>
+            )}
 
             {pendingMembers.length > 0 && (
                 <>

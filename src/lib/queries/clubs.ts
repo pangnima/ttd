@@ -108,6 +108,37 @@ export async function fetchClubMembers(
         }))
 }
 
+export type ClubMemberCount = { regular: number; guest: number }
+
+export async function fetchClubMemberCounts(
+    clubIds: string[]
+): Promise<Map<string, ClubMemberCount>> {
+    const counts = new Map<string, ClubMemberCount>()
+    if (clubIds.length === 0) return counts
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('club_members')
+        .select('club_id, users(is_guest)')
+        .in('club_id', clubIds)
+        .eq('status', 'approved')
+    if (error || !data) return counts
+
+    for (const row of data) {
+        const user = row.users as { is_guest: boolean | null } | null
+        if (!user) continue
+        const entry = counts.get(row.club_id) ?? { regular: 0, guest: 0 }
+        if (user.is_guest) {
+            entry.guest += 1
+        } else {
+            entry.regular += 1
+        }
+        counts.set(row.club_id, entry)
+    }
+
+    return counts
+}
+
 export async function fetchMyMembership(
     userId: string,
     clubId: string

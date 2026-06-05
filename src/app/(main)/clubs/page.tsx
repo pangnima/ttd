@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchAllClubs } from '@/lib/queries/clubs'
+import { fetchAllClubs, fetchClubMemberCounts } from '@/lib/queries/clubs'
 import { ClubsPageContent } from '@/components/clubs/clubs-page-content'
 import type { ClubMember } from '@/types'
 
@@ -14,6 +14,8 @@ export default async function ClubsPage() {
         supabase.from('club_members').select('club_id, status, role').eq('user_id', user.id),
     ])
 
+    const memberCounts = await fetchClubMemberCounts(allClubs.map((c) => c.id))
+
     const membershipMap = new Map<string, { status: ClubMember['status'], role: ClubMember['role'] }>(
         membershipRows.data?.map((m) => [
             m.club_id,
@@ -21,5 +23,5 @@ export default async function ClubsPage() {
         ]) ?? []
     )
 
-    return <ClubsPageContent allClubs={allClubs} membershipMap={membershipMap} />
+    return <ClubsPageContent allClubs={allClubs} membershipMap={membershipMap} memberCounts={memberCounts} />
 }

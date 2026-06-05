@@ -5,15 +5,18 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { ClubListRow } from '@/components/clubs/club-list-row'
 import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { PageContainer } from '@/components/common/page-container'
 import { Plus, Search, Users } from 'lucide-react'
+import type { ClubMemberCount } from '@/lib/queries/clubs'
 import type { Club, ClubMember } from '@/types'
 
 type ClubsPageContentProps = {
     allClubs: Club[]
     membershipMap: Map<string, { status: ClubMember['status'], role: ClubMember['role'] }>
+    memberCounts: Map<string, ClubMemberCount>
 }
 
-export function ClubsPageContent({ allClubs, membershipMap }: ClubsPageContentProps) {
+export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: ClubsPageContentProps) {
     const [search, setSearch] = useState('')
 
     const filtered = search.trim()
@@ -28,7 +31,7 @@ export function ClubsPageContent({ allClubs, membershipMap }: ClubsPageContentPr
     const otherClubs = filtered.filter((c) => membershipMap.get(c.id)?.status !== 'approved')
 
     return (
-        <div className="w-full space-y-6">
+        <PageContainer>
             {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div>
@@ -66,6 +69,7 @@ export function ClubsPageContent({ allClubs, membershipMap }: ClubsPageContentPr
                                 club={club}
                                 membershipStatus="approved"
                                 isOwner={membershipMap.get(club.id)?.role === 'owner'}
+                                memberCount={memberCounts.get(club.id)}
                             />
                         ))}
                     </ul>
@@ -97,11 +101,12 @@ export function ClubsPageContent({ allClubs, membershipMap }: ClubsPageContentPr
                                 club={club}
                                 membershipStatus={membershipMap.get(club.id)?.status ?? null}
                                 isOwner={membershipMap.get(club.id)?.role === 'owner'}
+                                memberCount={memberCounts.get(club.id)}
                             />
                         ))}
                     </ul>
                 )}
             </section>
-        </div>
+        </PageContainer>
     )
 }
