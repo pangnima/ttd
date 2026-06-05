@@ -23,6 +23,7 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
     const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>({})
     const containerRef = useRef<HTMLDivElement>(null)
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { setMounted(true) }, [])
 
     const selectedUser = users.find((u) => u.id === value)
@@ -102,12 +103,12 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
                                 e.preventDefault()
                                 handleSelect(user.id)
                             }}
-                            className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1.5"
+                            className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-1.5 min-w-0"
                         >
-                            <span className="text-xs">{GENDER_EMOJI[user.gender]}</span>
-                            {user.nickname}
+                            <span className="text-xs shrink-0">{GENDER_EMOJI[user.gender]}</span>
+                            <span className="truncate">{user.nickname}</span>
                             {user.isGuest && (
-                                <span className="text-xs text-muted-foreground">(게스트)</span>
+                                <span className="text-xs text-muted-foreground shrink-0">(게스트)</span>
                             )}
                         </button>
                     ))
