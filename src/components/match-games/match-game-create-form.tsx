@@ -44,6 +44,16 @@ const MATCH_TYPE_VARIANTS: Record<MatchType, 'default' | 'secondary' | 'outline'
     mixed_doubles: 'destructive',
 }
 
+// @base-ui Select.Value는 기본적으로 선택된 raw value를 그대로 표시한다.
+// 라벨로 매핑하려면 Select.Root에 items({value,label})를 넘겨야 한다.
+const SURFACE_SELECT_ITEMS = [{ value: '', label: '미지정' }, ...SURFACE_OPTIONS]
+const SLOT_SELECT_ITEMS = [
+    { value: '20', label: '20분' },
+    { value: '30', label: '30분' },
+    { value: '40', label: '40분' },
+    { value: '60', label: '60분' },
+]
+
 type MatchGameCreateFormProps = {
     clubId: string
     members: User[]
@@ -265,13 +275,13 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 <Select
                                     value={court.surface}
                                     onValueChange={(v) => updateCourt(court.id, { surface: v as CourtSurface | '' })}
+                                    items={SURFACE_SELECT_ITEMS}
                                 >
                                     <SelectTrigger className="h-8 text-xs w-28">
                                         <SelectValue placeholder="표면 선택" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">미지정</SelectItem>
-                                        {SURFACE_OPTIONS.map((s) => (
+                                        {SURFACE_SELECT_ITEMS.map((s) => (
                                             <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -328,15 +338,15 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                             <Select
                                 value={String(slotMinutes)}
                                 onValueChange={(v) => setSlotMinutes(Number(v))}
+                                items={SLOT_SELECT_ITEMS}
                             >
                                 <SelectTrigger className="h-7 text-xs w-20">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="20">20분</SelectItem>
-                                    <SelectItem value="30">30분</SelectItem>
-                                    <SelectItem value="40">40분</SelectItem>
-                                    <SelectItem value="60">60분</SelectItem>
+                                    {SLOT_SELECT_ITEMS.map((s) => (
+                                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -382,6 +392,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                             <Select
                                                 value={entry.courtId}
                                                 onValueChange={(v) => updateEntry(entry.id, { courtId: v ?? '' })}
+                                                items={courts.map((c) => ({ value: c.id, label: c.label }))}
                                             >
                                                 <SelectTrigger className="h-8 text-xs w-24">
                                                     <SelectValue placeholder="코트 선택" />

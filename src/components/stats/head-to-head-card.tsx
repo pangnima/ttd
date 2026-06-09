@@ -154,11 +154,26 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
     const memberOpponents = h2hList.filter((h) => h.opponentUserId !== null)
     const externalOpponents = h2hList.filter((h) => h.opponentUserId === null)
 
+    // @base-ui Select.Value는 raw value를 표시하므로, value→label 매핑을 items로 넘긴다.
+    // 라벨은 아래 SelectItem 드롭다운 표시와 동일하게 유지한다.
+    const memberItems = memberOpponents.map((h) => {
+        const key = h.opponentUserId!
+        const u = userMap.get(key)
+        const label = h.opponentName ?? u?.name ?? key.slice(0, 8)
+        const ntrp = u?.ntrp ? ` (${u.ntrp})` : ''
+        return { value: key, label: `${label}${ntrp}` }
+    })
+    const externalItems = externalOpponents.map((h) => ({
+        value: `name:${h.opponentName}`,
+        label: `${h.opponentName} (외부)`,
+    }))
+    const opponentItems = [...memberItems, ...externalItems]
+
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className={SECTION_LABEL}>1:1 맞대결 비교</p>
-                <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)}>
+                <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)} items={opponentItems}>
                     <SelectTrigger className="w-[200px] h-8 text-sm">
                         <SelectValue placeholder="상대 선택" />
                     </SelectTrigger>

@@ -192,7 +192,11 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
             <div className="space-y-1.5">
                 <label className={labelCls}>NTRP 레이팅</label>
                 <input type="hidden" name="ntrp" value={ntrp} />
-                <Select value={ntrp} onValueChange={(v) => v && setNtrp(v)}>
+                <Select
+                    value={ntrp}
+                    onValueChange={(v) => v && setNtrp(v)}
+                    items={NTRP_OPTIONS.map((v) => ({ value: v, label: `NTRP ${v}` }))}
+                >
                     <SelectTrigger className="bg-background border-input focus:border-ring">
                         <SelectValue placeholder="NTRP 선택" />
                     </SelectTrigger>
