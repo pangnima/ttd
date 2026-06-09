@@ -24,15 +24,45 @@ export type SimpleMatchEntry = {
 export const genId = (prefix: string) =>
     `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 
+/** "HH:MM" 문자열에 분을 더해 "HH:MM"로 반환. 24시를 넘으면 wrap(방어). */
+export function addMinutes(time: string, minutes: number): string {
+    const [h, m] = time.split(':').map(Number)
+    if (Number.isNaN(h) || Number.isNaN(m)) return time   // 비정상 입력은 그대로 반환
+    const total = ((h * 60 + m + minutes) % 1440 + 1440) % 1440
+    const hh = Math.floor(total / 60)
+    const mm = total % 60
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+}
+
 export function filterCandidates(players: User[], matchType: MatchType): User[] {
     if (matchType === 'men_doubles') return players.filter((u) => u.gender === 'male')
     if (matchType === 'women_doubles') return players.filter((u) => u.gender === 'female')
     return players
 }
 
+// 남성(male) → 여성(female) 순으로 정렬. 같은 성별 내에서는 nickname 가나다순.
+// 참석자 칩 표시와 게임 행 후보 드롭다운 양쪽에서 공용으로 사용.
+export function sortByGender(users: User[]): User[] {
+    const genderRank = (g: User['gender']) => (g === 'male' ? 0 : 1)
+    return [...users].sort((a, b) => {
+        const diff = genderRank(a.gender) - genderRank(b.gender)
+        if (diff !== 0) return diff
+        return a.nickname.localeCompare(b.nickname, 'ko')
+    })
+}
+
 export function entryPlayerIds(e: SimpleMatchEntry): string[] {
     if (e.matchType === 'singles') return [e.player1Id, e.player2Id].filter(Boolean)
     return [...e.team1, ...e.team2].filter(Boolean)
+}
+
+// 편집 진입 시 기존 매치에 배정된 모든 선수 id를 모아 초기 참석자 명단으로 복원한다.
+export function collectAttendeeIds(entries: SimpleMatchEntry[]): string[] {
+    const ids = new Set<string>()
+    for (const e of entries) {
+        for (const id of entryPlayerIds(e)) ids.add(id)
+    }
+    return [...ids]
 }
 
 // 편집 진입 시 정규화된 MatchGame → 폼 상태(코트 목록 + 평면 엔트리)로 역매핑.

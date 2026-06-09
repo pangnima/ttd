@@ -17,12 +17,16 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { PlayerSelect } from '@/components/match-games/player-select'
+import { AttendeePicker } from '@/components/match-games/attendee-picker'
 import { cn } from '@/lib/utils'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import {
     genId,
+    addMinutes,
     filterCandidates,
+    sortByGender,
+    collectAttendeeIds,
     matchGameToFormState,
     validateEntries,
     buildMatchGamePayload,
@@ -66,9 +70,17 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     const [entries, setEntries] = useState<SimpleMatchEntry[]>(
         initialState?.entries ?? []
     )
+    // 참석자 명단 — 편집 진입 시 기존 매치에 배정된 선수들로 복원
+    const [attendeeIds, setAttendeeIds] = useState<string[]>(
+        initialState ? collectAttendeeIds(initialState.entries) : []
+    )
 
     const [allPlayers, setAllPlayers] = useState<User[]>(initialMembers)
     const [error, setError] = useState<string | null>(null)
+
+    // 게임 추가 시 시간 자동 채우기 설정 — 새로 추가되는 게임에만 적용.
+    const [baseStart, setBaseStart] = useState('09:00')   // 첫 게임 시작 시간
+    const [slotMinutes, setSlotMinutes] = useState(30)    // 경기 시간(슬롯 길이, 분)
 
     // DB에 게스트 row를 생성하고, 성공 시 클라이언트 목록에 즉시 추가한다.
     // 페이지 새로고침 없이 바로 선택 가능해야 UX가 끊기지 않기 때문.
@@ -92,8 +104,28 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 statsHidden: false,
             }
             setAllPlayers((prev) => [...prev, guest])
+            // 게스트를 만들면 곧바로 참석자 명단에도 추가
+            setAttendeeIds((prev) => (prev.includes(guest.id) ? prev : [...prev, guest.id]))
         })
         return ''
+    }
+
+    // ── 참석자 명단 관리 ──────────────────────────────────────
+    const addAttendee = (id: string) =>
+        setAttendeeIds((prev) => (!id || prev.includes(id) ? prev : [...prev, id]))
+
+    // 명단에서 제거하면서, 해당 선수가 배정된 게임 슬롯도 자동으로 비운다.
+    const removeAttendee = (id: string) => {
+        setAttendeeIds((prev) => prev.filter((x) => x !== id))
+        setEntries((prev) =>
+            prev.map((e) => ({
+                ...e,
+                player1Id: e.player1Id === id ? '' : e.player1Id,
+                player2Id: e.player2Id === id ? '' : e.player2Id,
+                team1: e.team1.map((p) => (p === id ? '' : p)) as [string, string],
+                team2: e.team2.map((p) => (p === id ? '' : p)) as [string, string],
+            }))
+        )
     }
 
     // ── 코트 목록 관리 ────────────────────────────────────────
@@ -110,21 +142,30 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     }
 
     // ── 게임 목록 관리 ────────────────────────────────────────
+    // 코트 수만큼 게임이 채워지면 다음 타임슬롯으로 넘어가고, 코트는 순환 배정한다.
     const addEntry = () =>
-        setEntries((prev) => [
-            ...prev,
-            {
-                id: genId('match'),
-                courtId: courts[0]?.id ?? '',
-                startAt: '09:00',
-                endAt: '09:30',
-                matchType: 'singles',
-                player1Id: '',
-                player2Id: '',
-                team1: ['', ''],
-                team2: ['', ''],
-            },
-        ])
+        setEntries((prev) => {
+            const courtCount = courts.length
+            const index = prev.length                          // 새 게임의 0-based 인덱스
+            const slotIndex = Math.floor(index / courtCount)   // 코트 수만큼 채워지면 다음 슬롯
+            const startAt = addMinutes(baseStart, slotIndex * slotMinutes)
+            const endAt = addMinutes(startAt, slotMinutes)
+            const courtId = courts[index % courtCount]?.id ?? ''   // 코트 순환 배정
+            return [
+                ...prev,
+                {
+                    id: genId('match'),
+                    courtId,
+                    startAt,
+                    endAt,
+                    matchType: 'singles',
+                    player1Id: '',
+                    player2Id: '',
+                    team1: ['', ''],
+                    team2: ['', ''],
+                },
+            ]
+        })
 
     const updateEntry = (id: string, patch: Partial<SimpleMatchEntry>) =>
         setEntries((prev) =>
@@ -251,20 +292,65 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 )}
             </div>
 
-            {/* 게임 목록 */}
+            {/* 참석자 명단 */}
             <div className="rounded-lg border">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
+                    <span className="text-sm font-medium">참석자</span>
+                </div>
+                <div className="px-4 py-3">
+                    <AttendeePicker
+                        allPlayers={allPlayers}
+                        attendeeIds={attendeeIds}
+                        onAdd={addAttendee}
+                        onRemove={removeAttendee}
+                        onCreatePlayer={handleCreatePlayer}
+                    />
+                </div>
+            </div>
+
+            {/* 게임 목록 */}
+            <div className="rounded-lg border">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b">
                     <span className="text-sm font-medium">게임 목록</span>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={addEntry}
-                        disabled={courts.length === 0}
-                    >
-                        <Plus className="w-3 h-3" /> 게임 추가
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* 게임 추가 시 자동 채울 시작 시간 / 경기 시간 설정 */}
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground shrink-0">시작</span>
+                            <Input
+                                type="time"
+                                value={baseStart}
+                                onChange={(e) => setBaseStart(e.target.value)}
+                                className="h-7 text-xs w-24"
+                            />
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground shrink-0">경기</span>
+                            <Select
+                                value={String(slotMinutes)}
+                                onValueChange={(v) => setSlotMinutes(Number(v))}
+                            >
+                                <SelectTrigger className="h-7 text-xs w-20">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="20">20분</SelectItem>
+                                    <SelectItem value="30">30분</SelectItem>
+                                    <SelectItem value="40">40분</SelectItem>
+                                    <SelectItem value="60">60분</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={addEntry}
+                            disabled={courts.length === 0}
+                        >
+                            <Plus className="w-3 h-3" /> 게임 추가
+                        </Button>
+                    </div>
                 </div>
 
                 {entries.length === 0 ? (
@@ -286,7 +372,9 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         <TableBody>
                             {entries.map((entry) => {
                                 const isSingles = entry.matchType === 'singles'
-                                const candidates = filterCandidates(allPlayers, entry.matchType)
+                                // 참석자 명단으로 좁힌 뒤 경기 종류별 성별 필터 + 남성→여성 정렬
+                                const attendees = allPlayers.filter((p) => attendeeIds.includes(p.id))
+                                const candidates = sortByGender(filterCandidates(attendees, entry.matchType))
                                 return (
                                     <TableRow key={entry.id} className="align-top">
                                         {/* 코트 선택 — 코트 목록에서 선택 */}
