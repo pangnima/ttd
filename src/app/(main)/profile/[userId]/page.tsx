@@ -93,7 +93,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         fetchPlayerStatsBundle(userId, clubId),
         clubId ? fetchClubRatingHistory(clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
     ])
-    const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
+    // 통계 비공개(statsHidden) 프로필에서는 클럽 레이팅을 노출하지 않는다(헤더·추세 모두).
+    const { clubRating, provisional } = target.statsHidden
+        ? { clubRating: undefined, provisional: false }
+        : deriveHeaderRating(ratingHistory)
 
     return (
         <PageContainer>
