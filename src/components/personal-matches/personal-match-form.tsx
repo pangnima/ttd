@@ -78,6 +78,11 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
         setSets((prev) => prev.filter((_, idx) => idx !== i))
     }
     function updateSet(i: number, field: 'me' | 'opp', val: string) {
+        // 빈 값(전체 삭제)은 NaN으로 보관해 입력란을 비울 수 있게 하고, 제출 시 0으로 정리한다.
+        if (val === '') {
+            setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: NaN } : s))
+            return
+        }
         const num = parseInt(val, 10)
         if (isNaN(num) || num < 0 || num > 99) return
         setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: num } : s))
@@ -117,7 +122,11 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
             playedAt,
             matchType,
             surface: surface || undefined,
-            setScores: sets,
+            // 비워둔 입력(NaN)은 0으로 정리해 저장
+            setScores: sets.map((s) => ({
+                me: Number.isNaN(s.me) ? 0 : s.me,
+                opp: Number.isNaN(s.opp) ? 0 : s.opp,
+            })),
             winner,
             notes: notes || undefined,
         }
@@ -231,7 +240,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                                 <input
                                     type="number"
                                     min={0} max={99}
-                                    value={s.me}
+                                    value={Number.isNaN(s.me) ? '' : s.me}
                                     onChange={(e) => updateSet(i, 'me', e.target.value)}
                                     className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
                                 />
@@ -239,7 +248,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                                 <input
                                     type="number"
                                     min={0} max={99}
-                                    value={s.opp}
+                                    value={Number.isNaN(s.opp) ? '' : s.opp}
                                     onChange={(e) => updateSet(i, 'opp', e.target.value)}
                                     className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
                                 />
