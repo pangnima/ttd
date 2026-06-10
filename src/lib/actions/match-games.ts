@@ -106,7 +106,6 @@ export async function deleteMatchGameAction(
     // 확정 대진표를 삭제한 경우에만 재계산(삭제는 owner만 가능하므로 RPC 권한 충족).
     if (gameBefore?.is_fixed) await recalculateClubRatings(clubId)
 
-    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
     return { ok: true }
 }
@@ -200,7 +199,6 @@ export async function confirmMatchGameAction(
     // 결과 확정 자체는 성공했으므로 재계산 실패는 전체 액션을 실패시키지 않는다(추후 재계산 가능).
     await recalculateClubRatings(clubId)
 
-    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`)
     revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
     return { ok: true }
@@ -269,7 +267,6 @@ export async function updateMatchGameAction(
         .maybeSingle()
     if (gameAfter?.is_fixed) await recalculateClubRatings(clubId)
 
-    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
     return { ok: true, matchGameId: data as string }
 }

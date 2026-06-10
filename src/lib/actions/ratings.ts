@@ -5,6 +5,7 @@
 // RPC가 owner 권한을 강제하므로, 이 함수는 owner 컨텍스트(확정/수정/삭제)에서만 호출한다.
 // 계산은 lib/rating/elo.ts(순수)가 담당하고 이 액션은 조회·영속화만 한다.
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { fetchConfirmedMatchesForRating } from '@/lib/queries/ratings'
 import { replayClubRatings } from '@/lib/rating/elo'
@@ -40,5 +41,8 @@ export async function recalculateClubRatings(clubId: string): Promise<ActionResu
     })
 
     if (error) return { ok: false, error: error.message }
+
+    // 레이팅이 갱신됐으므로 클럽 홈(레이팅 랭킹 카드)을 무효화.
+    revalidatePath(`/clubs/${clubId}`)
     return { ok: true }
 }
