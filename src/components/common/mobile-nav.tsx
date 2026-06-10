@@ -8,6 +8,7 @@ import { Menu, Trophy, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 export function MobileNav() {
     const [open, setOpen] = useState(false)
@@ -105,6 +106,10 @@ export function MobileNav() {
                     )}
                 </nav>
 
+                {/* 테마 토글 — 하단 고정 */}
+                <div className="p-3 border-t border-foreground/5">
+                    <ThemeToggle />
+                </div>
             </SheetContent>
         </Sheet>
     )
