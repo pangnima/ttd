@@ -6,6 +6,7 @@ import { Trophy } from 'lucide-react'
 import { saveMatchResultAction, confirmMatchGameAction, saveCourtSidesAction } from '@/lib/actions/match-games'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { TeamPlayersCell, ScoreCell, type SetScore } from '@/components/match-games/match-game-cell-components'
+import { RatingDeltaBadge } from '@/components/match-games/rating-delta-badge'
 import { AttendanceSummary } from '@/components/match-games/attendance-summary'
 import { matchPlayerIds, restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
 import { sortByGender } from '@/lib/match-games/form-mapping'
@@ -20,6 +21,8 @@ type MatchGameTableProps = {
     members: User[]
     clubId: string
     isOwner?: boolean
+    // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → delta).
+    ratingDeltaByMatch?: Record<string, Record<string, number>>
 }
 
 // 세트 카운트 다수결로 승자 결정.
@@ -54,11 +57,12 @@ type MatchCardItemProps = {
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
     confirmScore: (matchId: string) => void
     editScore: (matchId: string) => void
+    deltas?: Record<string, number>
 }
 
 function MatchCardItem({
     match, matchGame, state, winner, courtSides, isPending, canEdit,
-    getName, getCourtLabel, toggleAdSide, updateScore, confirmScore, editScore,
+    getName, getCourtLabel, toggleAdSide, updateScore, confirmScore, editScore, deltas,
 }: MatchCardItemProps) {
     const sides = courtSides[match.id]
     return (
@@ -76,12 +80,14 @@ function MatchCardItem({
                 {match.matchType === 'singles' ? (
                     <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-muted-foreground shrink-0">P1</span>
-                        <span className={`text-sm flex-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
+                        <span className={`text-sm flex-1 inline-flex items-center gap-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                             {getName(match.player1Id ?? '')}
+                            {matchGame.isFixed && <RatingDeltaBadge delta={deltas?.[match.player1Id ?? '']} />}
                         </span>
                         <span className="text-muted-foreground text-xs mx-1">vs</span>
-                        <span className={`text-sm flex-1 text-right ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
+                        <span className={`text-sm flex-1 inline-flex items-center justify-end gap-1 text-right ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                             {getName(match.player2Id ?? '')}
+                            {matchGame.isFixed && <RatingDeltaBadge delta={deltas?.[match.player2Id ?? '']} />}
                         </span>
                         <span className="text-xs text-muted-foreground shrink-0">P2</span>
                     </div>
@@ -99,6 +105,7 @@ function MatchCardItem({
                                 getName={getName}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
+                                deltas={deltas}
                             />
                         </div>
                         <div>
@@ -113,6 +120,7 @@ function MatchCardItem({
                                 getName={getName}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
+                                deltas={deltas}
                             />
                         </div>
                     </div>
@@ -135,7 +143,7 @@ function MatchCardItem({
     )
 }
 
-export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: MatchGameTableProps) {
+export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ratingDeltaByMatch }: MatchGameTableProps) {
     const [isPending, startTransition] = useTransition()
     const [matchStates, setMatchStates] = useState<MatchStates>(() => {
         const initial: MatchStates = {}
@@ -296,8 +304,9 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                         </td>
                                         <td className="px-3 py-3">
                                             {match.matchType === 'singles' ? (
-                                                <span className={`text-sm transition-colors ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
+                                                <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                                                     {getName(match.player1Id ?? '')}
+                                                    {matchGame.isFixed && <RatingDeltaBadge delta={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']} />}
                                                 </span>
                                             ) : (
                                                 <TeamPlayersCell
@@ -309,13 +318,15 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                     isPending={isPending}
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
+                                                    deltas={ratingDeltaByMatch?.[match.id]}
                                                 />
                                             )}
                                         </td>
                                         <td className="px-3 py-3">
                                             {match.matchType === 'singles' ? (
-                                                <span className={`text-sm transition-colors ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
+                                                <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                                                     {getName(match.player2Id ?? '')}
+                                                    {matchGame.isFixed && <RatingDeltaBadge delta={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']} />}
                                                 </span>
                                             ) : (
                                                 <TeamPlayersCell
@@ -327,6 +338,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                                     isPending={isPending}
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
+                                                    deltas={ratingDeltaByMatch?.[match.id]}
                                                 />
                                             )}
                                         </td>
@@ -383,6 +395,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                                         updateScore={updateScore}
                                         confirmScore={confirmScore}
                                         editScore={editScore}
+                                        deltas={ratingDeltaByMatch?.[match.id]}
                                     />
                                 )
                             })}

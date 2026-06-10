@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -18,7 +18,7 @@ import {
     removeOfficerAction,
 } from '@/lib/actions/club-members'
 import type { MemberWithUser } from '@/lib/queries/clubs'
-import type { ClubMember } from '@/types'
+import type { ClubMember, ClubRating } from '@/types'
 
 type MembersContentProps = {
     clubId: string
@@ -26,6 +26,7 @@ type MembersContentProps = {
     members: MemberWithUser[]
     pendingMembers: MemberWithUser[]
     currentUserRole: ClubMember['role'] | null
+    clubRatings?: Record<string, ClubRating>
 }
 
 export function MembersContent({
@@ -34,13 +35,22 @@ export function MembersContent({
     members,
     pendingMembers,
     currentUserRole,
+    clubRatings = {},
 }: MembersContentProps) {
     const [isPending, startTransition] = useTransition()
+    const [sortByRating, setSortByRating] = useState(false)
 
     const isOwner = currentUserRole === 'owner'
     const canManagePending = currentUserRole === 'owner' || currentUserRole === 'officer'
 
-    const regularMembers = members.filter((m) => !m.user.isGuest)
+    const regularMembers = useMemo(() => {
+        const list = members.filter((m) => !m.user.isGuest)
+        if (!sortByRating) return list
+        // 레이팅순: 경기 이력 있는 멤버 우선, 레이팅 내림차순. 이력 없으면 후순위.
+        return [...list].sort(
+            (a, b) => (clubRatings[b.userId]?.rating ?? -1) - (clubRatings[a.userId]?.rating ?? -1),
+        )
+    }, [members, sortByRating, clubRatings])
     const guestMembers = members.filter((m) => m.user.isGuest)
 
     const handleApprove = (userId: string) =>
@@ -63,9 +73,17 @@ export function MembersContent({
             </div>
 
             <section>
-                <div className="flex items-center gap-2 mb-2">
-                    <h2 className="font-semibold text-sm">정회원</h2>
-                    <Badge variant="secondary" className="text-xs">{regularMembers.length}명</Badge>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                        <h2 className="font-semibold text-sm">정회원</h2>
+                        <Badge variant="secondary" className="text-xs">{regularMembers.length}명</Badge>
+                    </div>
+                    <button
+                        onClick={() => setSortByRating((v) => !v)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        {sortByRating ? '가입순' : '클럽 레이팅순'}
+                    </button>
                 </div>
                 <div className="border rounded-lg divide-y">
                     {regularMembers.map((m) => (
@@ -75,6 +93,7 @@ export function MembersContent({
                                     member={m}
                                     user={m.user}
                                     clubId={clubId}
+                                    clubRating={clubRatings[m.userId]}
                                 />
                             </div>
                             {isOwner && m.role !== 'owner' && (
@@ -122,6 +141,7 @@ export function MembersContent({
                                     member={m}
                                     user={m.user}
                                     clubId={clubId}
+                                    clubRating={clubRatings[m.userId]}
                                 />
                             ))}
                         </div>

@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameById, fetchClubMembersWithGuests } from '@/lib/queries/match-games'
+import { fetchRatingDeltasByMatchGameId } from '@/lib/queries/ratings'
 import { MatchGameDetailContent } from '@/components/match-games/match-game-detail-content'
 
 type MatchGameDetailPageProps = {
@@ -26,5 +27,18 @@ export default async function MatchGameDetailPage({ params }: MatchGameDetailPag
 
     const isOwner = membership?.role === 'owner'
 
-    return <MatchGameDetailContent matchGame={matchGame} members={members} isOwner={isOwner} />
+    // 확정 대진표만 레이팅 변동(▲/▼·요약) 표시.
+    const { byMatch, byUserTotal } = matchGame.isFixed
+        ? await fetchRatingDeltasByMatchGameId(matchGame.matches.map((m) => m.id))
+        : { byMatch: undefined, byUserTotal: undefined }
+
+    return (
+        <MatchGameDetailContent
+            matchGame={matchGame}
+            members={members}
+            isOwner={isOwner}
+            ratingDeltaByMatch={byMatch}
+            ratingChangeTotals={byUserTotal}
+        />
+    )
 }

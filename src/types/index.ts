@@ -35,6 +35,12 @@ export type ClubMember = {
     joinedAt: string
 }
 
+// 클럽별 동적 레이팅(클럽 NTRP). matchesPlayed로 잠정기 판단. docs/rating-system.md
+export type ClubRating = {
+    rating: number
+    matchesPlayed: number
+}
+
 // ── 대진표(MatchGame) ────────────────────────────────
 
 export type MatchType = 'singles' | 'men_doubles' | 'women_doubles' | 'mixed_doubles'

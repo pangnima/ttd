@@ -2,13 +2,16 @@ import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { ProvisionalBadge } from '@/components/common/provisional-badge'
 import { calcWinRate } from '@/lib/dashboard/tokens'
-import type { ClubMember, User } from '@/types'
+import { formatClubRating, isProvisional } from '@/lib/rating/display'
+import type { ClubMember, ClubRating, User } from '@/types'
 
 type MemberListItemProps = {
     member: ClubMember
     user: User
     clubId?: string
+    clubRating?: ClubRating
     wins?: number
     losses?: number
 }
@@ -35,8 +38,9 @@ const handLabel: Record<User['dominantHand'], string> = {
     left: '왼손',
 }
 
-export function MemberListItem({ member, user, clubId, wins, losses }: MemberListItemProps) {
+export function MemberListItem({ member, user, clubId, clubRating, wins, losses }: MemberListItemProps) {
     const winRate = calcWinRate(wins ?? 0, losses ?? 0)
+    const hasClubRating = !!clubRating && clubRating.matchesPlayed > 0
 
     const inner = (
         <>
@@ -66,6 +70,12 @@ export function MemberListItem({ member, user, clubId, wins, losses }: MemberLis
                 </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+                {hasClubRating && (
+                    <Badge variant="outline" className="text-xs font-mono text-cyan-600 border-cyan-500/40 dark:text-cyan-400">
+                        클럽 {formatClubRating(clubRating!.rating)}
+                    </Badge>
+                )}
+                {hasClubRating && isProvisional(clubRating!.matchesPlayed) && <ProvisionalBadge />}
                 <Badge variant="outline" className="text-xs font-mono">
                     NTRP {user.ntrp.toFixed(1)}
                 </Badge>

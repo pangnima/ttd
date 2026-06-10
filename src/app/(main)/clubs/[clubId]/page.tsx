@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameCountByClubId } from '@/lib/queries/match-games'
-import { fetchClubRatingRanking } from '@/lib/queries/ratings'
+import { fetchClubRatingRanking, fetchClubPlayerRatings } from '@/lib/queries/ratings'
 import {
     fetchPendingMembersByClubId,
     fetchClubMatchGameActivity,
@@ -42,12 +42,13 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [club, approvedMembers, myMembership, matchGameCount, ratingRanking] = await Promise.all([
+    const [club, approvedMembers, myMembership, matchGameCount, ratingRanking, clubRatings] = await Promise.all([
         fetchClubById(clubId),
         fetchClubMembers(clubId, 'approved'),
         fetchMyMembership(user.id, clubId),
         fetchMatchGameCountByClubId(clubId),
         fetchClubRatingRanking(clubId),
+        fetchClubPlayerRatings(clubId),
     ])
 
     if (!club) notFound()
@@ -174,14 +175,14 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         전체보기 <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                 </div>
-                <ClubMembersPreview members={regularMembers} maxDisplay={8} />
+                <ClubMembersPreview members={regularMembers} maxDisplay={8} clubRatings={clubRatings} />
             </section>
 
             {/* 게스트 미리보기 */}
             {guestMembers.length > 0 && (
                 <section className="space-y-3">
                     <p className={SECTION_LABEL}>게스트 ({guestMembers.length}명)</p>
-                    <ClubMembersPreview members={guestMembers} maxDisplay={8} />
+                    <ClubMembersPreview members={guestMembers} maxDisplay={8} clubRatings={clubRatings} />
                 </section>
             )}
 

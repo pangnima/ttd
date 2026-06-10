@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
+import { RatingChangeSummary } from '@/components/match-games/rating-change-summary'
 import { PageContainer } from '@/components/common/page-container'
 import type { MatchGame, User } from '@/types'
 
@@ -12,9 +13,13 @@ type MatchGameDetailContentProps = {
     matchGame: MatchGame
     members: User[]
     isOwner: boolean
+    ratingDeltaByMatch?: Record<string, Record<string, number>>
+    ratingChangeTotals?: Array<{ userId: string; total: number }>
 }
 
-export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGameDetailContentProps) {
+export function MatchGameDetailContent({
+    matchGame, members, isOwner, ratingDeltaByMatch, ratingChangeTotals,
+}: MatchGameDetailContentProps) {
     const canEditMatchGame = !matchGame.isFixed || isOwner
 
     return (
@@ -34,11 +39,15 @@ export function MatchGameDetailContent({ matchGame, members, isOwner }: MatchGam
                     </Link>
                 )}
             </div>
+            {matchGame.isFixed && ratingChangeTotals && (
+                <RatingChangeSummary byUserTotal={ratingChangeTotals} members={members} />
+            )}
             <MatchGameTable
                 matchGame={matchGame}
                 members={members}
                 clubId={matchGame.clubId}
                 isOwner={isOwner}
+                ratingDeltaByMatch={ratingDeltaByMatch}
             />
         </PageContainer>
     )

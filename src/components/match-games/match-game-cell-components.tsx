@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, Pencil } from 'lucide-react'
+import { RatingDeltaBadge } from '@/components/match-games/rating-delta-badge'
 
 export type SetScore = { team1: string; team2: string }
 
@@ -14,10 +15,11 @@ type TeamPlayersCellProps = {
     getName: (id: string) => string
     onToggle: (teamKey: 'team1' | 'team2', playerId: string) => void
     justify?: boolean
+    deltas?: Record<string, number>
 }
 
 export function TeamPlayersCell({
-    playerIds, teamKey, winner, isFixed, adPlayerId, isPending, getName, onToggle, justify,
+    playerIds, teamKey, winner, isFixed, adPlayerId, isPending, getName, onToggle, justify, deltas,
 }: TeamPlayersCellProps) {
     if (!playerIds.length) return <span className="text-foreground/55 text-xs">-</span>
     return (
@@ -26,8 +28,9 @@ export function TeamPlayersCell({
                 const isAd = adPlayerId === pid
                 return (
                     <div key={pid} className={`flex items-center gap-1.5 ${justify ? 'justify-between' : ''}`}>
-                        <span className={`text-sm ${justify ? 'flex-1 min-w-0' : ''} ${winner === teamKey ? 'font-bold text-foreground' : 'text-foreground/85'}`}>
+                        <span className={`text-sm ${justify ? 'flex-1 min-w-0' : ''} ${winner === teamKey ? 'font-bold text-foreground' : 'text-foreground/85'} inline-flex items-center gap-1`}>
                             {getName(pid)}
+                            {isFixed && <RatingDeltaBadge delta={deltas?.[pid]} />}
                         </span>
                         {!isFixed ? (
                             <button

@@ -1,11 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { ProvisionalBadge } from '@/components/common/provisional-badge'
+import { formatClubRating } from '@/lib/rating/display'
 import type { User } from '@/types'
 
 type Props = {
     user: User
     clubName?: string
+    clubRating?: number
+    provisional?: boolean
 }
 
 const genderLabel: Record<User['gender'], string> = {
@@ -18,7 +22,7 @@ const handLabel: Record<User['dominantHand'], string> = {
     left: '왼손잡이',
 }
 
-export function MemberProfileHeader({ user, clubName }: Props) {
+export function MemberProfileHeader({ user, clubName, clubRating, provisional }: Props) {
     return (
         <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16 shrink-0">
@@ -41,6 +45,12 @@ export function MemberProfileHeader({ user, clubName }: Props) {
                     <span className="text-sm text-muted-foreground">
                         {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
                     </span>
+                    {clubRating !== undefined && (
+                        <Badge variant="outline" className="text-xs font-mono text-cyan-600 border-cyan-500/40 dark:text-cyan-400">
+                            클럽 {formatClubRating(clubRating)}
+                        </Badge>
+                    )}
+                    {provisional && <ProvisionalBadge />}
                     {user.isGuest ? (
                         <Badge variant="outline" className="text-xs text-muted-foreground">
                             NTRP -

@@ -10,6 +10,7 @@ import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
 import { PartnerRecommendationCard } from '@/components/stats/partner-recommendation-card'
+import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
@@ -17,11 +18,13 @@ import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
 import { aggregatePartnerRecommendations } from '@/lib/analytics/partner'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
 type Props = {
     bundle: AnalyticsBundle
     me: User
     scope: AnalyticsScope
+    ratingHistory?: RatingHistoryPoint[]
 }
 
 function getScopeLabel(scope: AnalyticsScope): string {
@@ -33,7 +36,7 @@ function getScopeLabel(scope: AnalyticsScope): string {
 /**
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
  */
-export async function SelfAnalyticsSection({ bundle, me, scope }: Props) {
+export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }: Props) {
     const surfaceStats = aggregateBySurface(
         {
             matches: bundle.matches,
@@ -99,6 +102,11 @@ export async function SelfAnalyticsSection({ bundle, me, scope }: Props) {
                 <RecentFormCard recentForm={recentForm} />
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
             </div>
+
+            {/* 클럽 레이팅 추세 (클럽 scope에서만) */}
+            {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
+                <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
+            )}
 
             {/* 1:1 맞대결 비교 */}
             <Suspense>
