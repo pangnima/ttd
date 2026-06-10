@@ -20,7 +20,8 @@ const notoSansKR = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://tennis-club.vercel.app'),
+    // 배포 도메인. NEXT_PUBLIC_SITE_URL 미설정 시 기존 값으로 폴백 (로컬/미설정에서도 안전)
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tennis-club.vercel.app'),
     title: {
         default: '테니스 클럽 플랫폼',
         template: '%s | 테니스 클럽',
