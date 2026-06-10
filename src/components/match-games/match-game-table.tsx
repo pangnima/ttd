@@ -6,6 +6,9 @@ import { Trophy } from 'lucide-react'
 import { saveMatchResultAction, confirmMatchGameAction, saveCourtSidesAction } from '@/lib/actions/match-games'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { TeamPlayersCell, ScoreCell, type SetScore } from '@/components/match-games/match-game-cell-components'
+import { AttendanceSummary } from '@/components/match-games/attendance-summary'
+import { matchPlayerIds, restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
+import { sortByGender } from '@/lib/match-games/form-mapping'
 import type { MatchGame, User } from '@/types'
 
 type MatchState = { sets: SetScore[]; confirmed: boolean }
@@ -187,6 +190,24 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
             .sort((a, b) => a.label.localeCompare(b.label))
     })()
 
+    // 전체 참석자 = 모든 경기에 등장한 선수의 합집합 (참석자 명단은 DB에 저장되지 않으므로 근사).
+    const allAttendeeIds = [...new Set(matchGame.matches.flatMap(matchPlayerIds))]
+    // 시간대별 휴식 인원 — 각 시간대에서 어느 경기에도 배정되지 않은 참석자.
+    const restMap = restingIdsBySlot(
+        slotGroups.map((g) => ({ key: g.slotId, playerIds: g.matches.flatMap(matchPlayerIds) })),
+        allAttendeeIds
+    )
+    const restNames = (slotId: string): string[] => {
+        const users = (restMap.get(slotId) ?? [])
+            .map((id) => members.find((m) => m.id === id))
+            .filter((u): u is User => Boolean(u))
+        return sortByGender(users).map((u) => u.nickname)
+    }
+    // 인원별 총 게임수
+    const gameCounts = gameCountsByPlayer(matchGame.matches.map(matchPlayerIds), members).map(
+        ({ player, count }) => ({ id: player.id, name: player.nickname, count })
+    )
+
     function updateScore(matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) {
         setMatchStates((prev) => {
             const sets = [...prev[matchId].sets]
@@ -245,7 +266,14 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                         {slotGroups.flatMap((group) => [
                             <tr key={`header-${group.slotId}`} className="bg-muted/30 border-y border-border">
                                 <td colSpan={5} className="px-3 py-2 text-xs font-semibold text-foreground">
-                                    {group.label}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>{group.label}</span>
+                                        {restNames(group.slotId).length > 0 && (
+                                            <span className="font-normal text-muted-foreground">
+                                                휴식: {restNames(group.slotId).join(', ')}
+                                            </span>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>,
                             ...group.matches.map((match, idx) => {
@@ -327,7 +355,14 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
             <div className="md:hidden space-y-3">
                 {slotGroups.map((group) => (
                     <div key={group.slotId}>
-                        <p className="text-xs font-semibold text-foreground pb-2">{group.label}</p>
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 pb-2">
+                            <p className="text-xs font-semibold text-foreground">{group.label}</p>
+                            {restNames(group.slotId).length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    휴식: {restNames(group.slotId).join(', ')}
+                                </p>
+                            )}
+                        </div>
                         <div className="space-y-2">
                             {group.matches.map((match) => {
                                 const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
@@ -355,6 +390,8 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false }: 
                     </div>
                 ))}
             </div>
+
+            {gameCounts.length > 0 && <AttendanceSummary gameCounts={gameCounts} />}
 
             {canConfirm && (
                 <div className="flex justify-end">

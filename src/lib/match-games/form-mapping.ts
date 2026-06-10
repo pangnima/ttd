@@ -5,6 +5,9 @@ export type FormCourt = {
     id: string
     label: string
     surface: CourtSurface | ''
+    // 자동 배치 전용 설정값. 코트별 고정 경기 종류를 지정한다.
+    // DB Court에는 종류 컬럼이 없어 buildMatchGamePayload는 이 필드를 사용하지 않는다.
+    matchType?: MatchType
 }
 
 /** 게임 목록의 개별 행. courtId로 FormCourt를 참조한다. */

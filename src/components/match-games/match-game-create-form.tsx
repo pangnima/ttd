@@ -18,6 +18,10 @@ import {
 } from '@/components/ui/table'
 import { PlayerSelect } from '@/components/match-games/player-select'
 import { AttendeePicker } from '@/components/match-games/attendee-picker'
+import { AutoGeneratePanel } from '@/components/match-games/auto-generate-panel'
+import { AttendanceSummary } from '@/components/match-games/attendance-summary'
+import { restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
+import type { GenerateResult } from '@/lib/match-games/auto-generate'
 import { cn } from '@/lib/utils'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
@@ -26,6 +30,7 @@ import {
     addMinutes,
     filterCandidates,
     sortByGender,
+    entryPlayerIds,
     collectAttendeeIds,
     matchGameToFormState,
     validateEntries,
@@ -53,6 +58,13 @@ const SLOT_SELECT_ITEMS = [
     { value: '40', label: '40분' },
     { value: '60', label: '60분' },
 ]
+// 코트별 고정 종류 선택 항목 (자동 배치용)
+const MATCH_TYPE_ITEMS: { value: MatchType; label: string }[] = [
+    { value: 'singles', label: '단식' },
+    { value: 'men_doubles', label: '남복' },
+    { value: 'women_doubles', label: '여복' },
+    { value: 'mixed_doubles', label: '혼복' },
+]
 
 type MatchGameCreateFormProps = {
     clubId: string
@@ -60,9 +72,9 @@ type MatchGameCreateFormProps = {
     initialData?: MatchGame
 }
 
-/** 기본 신규 코트 생성 헬퍼 */
+/** 기본 신규 코트 생성 헬퍼. 자동 배치 종류 기본값은 안전한 단식. */
 function makeDefaultCourt(index: number): FormCourt {
-    return { id: genId('court'), label: `${index + 1}코트`, surface: '' }
+    return { id: genId('court'), label: `${index + 1}코트`, surface: '', matchType: 'singles' }
 }
 
 export function MatchGameCreateForm({ clubId, members: initialMembers, initialData }: MatchGameCreateFormProps) {
@@ -87,6 +99,8 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
 
     const [allPlayers, setAllPlayers] = useState<User[]>(initialMembers)
     const [error, setError] = useState<string | null>(null)
+    // 자동 배치 후 채우지 못한 슬롯 안내
+    const [warnings, setWarnings] = useState<string[]>([])
 
     // 게임 추가 시 시간 자동 채우기 설정 — 새로 추가되는 게임에만 적용.
     const [baseStart, setBaseStart] = useState('09:00')   // 첫 게임 시작 시간
@@ -136,6 +150,15 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 team2: e.team2.map((p) => (p === id ? '' : p)) as [string, string],
             }))
         )
+    }
+
+    // ── 자동 배치 결과 반영 ───────────────────────────────────
+    // 생성된 코트(종류 포함)·게임 목록으로 폼 상태를 덮어쓴다. 채우지 못한 슬롯은 경고로 표시.
+    const handleAutoApply = (result: GenerateResult) => {
+        setCourts(result.courts)
+        setEntries(result.entries)
+        setWarnings(result.warnings)
+        setError(null)
     }
 
     // ── 코트 목록 관리 ────────────────────────────────────────
@@ -223,6 +246,33 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
         })
     }
 
+    // ── 휴식 인원·인원별 게임수 요약 (게임 목록 하단) ──────────
+    const attendees = allPlayers.filter((p) => attendeeIds.includes(p.id))
+    // 시간대(startAt|endAt) 단위로 entries를 묶어 시간대별 참가 선수를 모은다.
+    const slotGroups = (() => {
+        const map = new Map<string, { label: string; playerIds: string[] }>()
+        for (const e of entries) {
+            if (!e.startAt || !e.endAt) continue
+            const key = `${e.startAt}|${e.endAt}`
+            const g = map.get(key) ?? { label: `${e.startAt} ~ ${e.endAt}`, playerIds: [] }
+            g.playerIds.push(...entryPlayerIds(e))
+            map.set(key, g)
+        }
+        return [...map.entries()]
+            .map(([key, v]) => ({ key, ...v }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+    })()
+    const restMap = restingIdsBySlot(slotGroups, attendeeIds)
+    const restingBySlot = slotGroups.map((g) => {
+        const users = (restMap.get(g.key) ?? [])
+            .map((id) => attendees.find((p) => p.id === id))
+            .filter((u): u is User => Boolean(u))
+        return { key: g.key, label: g.label, names: sortByGender(users).map((u) => u.nickname) }
+    })
+    const gameCounts = gameCountsByPlayer(entries.map(entryPlayerIds), attendees).map(
+        ({ player, count }) => ({ id: player.id, name: player.nickname, count })
+    )
+
     return (
         <div className="w-full space-y-5">
             {/* 기본 정보 */}
@@ -286,6 +336,21 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {/* 자동 배치용 코트 고정 종류 */}
+                                <Select
+                                    value={court.matchType ?? 'singles'}
+                                    onValueChange={(v) => updateCourt(court.id, { matchType: v as MatchType })}
+                                    items={MATCH_TYPE_ITEMS}
+                                >
+                                    <SelectTrigger className="h-8 text-xs w-24">
+                                        <SelectValue placeholder="종류" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {MATCH_TYPE_ITEMS.map((t) => (
+                                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -315,6 +380,29 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         onRemove={removeAttendee}
                         onCreatePlayer={handleCreatePlayer}
                     />
+                </div>
+            </div>
+
+            {/* 자동 배치 */}
+            <div className="rounded-lg border">
+                <div className="flex items-center justify-between px-4 py-3 border-b">
+                    <span className="text-sm font-medium">자동 배치</span>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                    <AutoGeneratePanel
+                        courts={courts}
+                        attendees={allPlayers.filter((p) => attendeeIds.includes(p.id))}
+                        baseStart={baseStart}
+                        slotMinutes={slotMinutes}
+                        onApply={handleAutoApply}
+                    />
+                    {warnings.length > 0 && (
+                        <ul className="space-y-0.5 text-xs text-amber-600">
+                            {warnings.map((w, i) => (
+                                <li key={i}>⚠ {w}</li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             </div>
 
@@ -491,6 +579,11 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                     </Table>
                 )}
             </div>
+
+            {/* 휴식 인원·인원별 게임수 요약 */}
+            {entries.length > 0 && (
+                <AttendanceSummary restingBySlot={restingBySlot} gameCounts={gameCounts} />
+            )}
 
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
