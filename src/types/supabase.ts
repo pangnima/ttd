@@ -468,9 +468,15 @@ export type Database = {
           id: string
           match_type: string
           notes: string | null
+          opponent2_dominant_hand: string | null
+          opponent2_name: string | null
+          opponent2_user_id: string | null
           opponent_dominant_hand: string | null
           opponent_name: string
           opponent_user_id: string | null
+          partner_dominant_hand: string | null
+          partner_name: string | null
+          partner_user_id: string | null
           played_at: string
           set_scores: Json
           surface: string | null
@@ -482,9 +488,15 @@ export type Database = {
           id?: string
           match_type: string
           notes?: string | null
+          opponent2_dominant_hand?: string | null
+          opponent2_name?: string | null
+          opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name: string
           opponent_user_id?: string | null
+          partner_dominant_hand?: string | null
+          partner_name?: string | null
+          partner_user_id?: string | null
           played_at: string
           set_scores?: Json
           surface?: string | null
@@ -496,9 +508,15 @@ export type Database = {
           id?: string
           match_type?: string
           notes?: string | null
+          opponent2_dominant_hand?: string | null
+          opponent2_name?: string | null
+          opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name?: string
           opponent_user_id?: string | null
+          partner_dominant_hand?: string | null
+          partner_name?: string | null
+          partner_user_id?: string | null
           played_at?: string
           set_scores?: Json
           surface?: string | null
@@ -507,8 +525,22 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "personal_matches_opponent2_user_id_fkey"
+            columns: ["opponent2_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "personal_matches_opponent_user_id_fkey"
             columns: ["opponent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_matches_partner_user_id_fkey"
+            columns: ["partner_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]

@@ -11,19 +11,7 @@ import {
 } from '@/lib/actions/personal-matches'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
+import { PlayerPicker, type PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import {
     Select,
     SelectContent,
@@ -50,26 +38,28 @@ const SURFACE_SELECT_ITEMS: { value: string; label: string }[] = [
     ...SURFACE_OPTIONS,
 ]
 
-const HAND_OPTIONS: { value: 'right' | 'left'; label: string }[] = [
-    { value: 'right', label: '오른손' },
-    { value: 'left', label: '왼손' },
-]
-
-type InputMode = 'member' | 'external'
+const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
 export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
 
-    // 초기 모드: 기존 데이터에 opponentUserId가 있으면 member, 없으면 external
-    const initialMode: InputMode = initialData?.opponentUserId ? 'member' : 'external'
-    const [inputMode, setInputMode] = useState<InputMode>(initialMode)
-    const [comboOpen, setComboOpen] = useState(false)
-
-    const [opponentUserId, setOpponentUserId] = useState<string | undefined>(initialData?.opponentUserId)
-    const [opponentName, setOpponentName] = useState(initialData?.opponentName ?? '')
-    const [opponentHand, setOpponentHand] = useState<'right' | 'left' | ''>(initialData?.opponentDominantHand ?? '')
+    const [opponent, setOpponent] = useState<PlayerPickerValue>({
+        userId: initialData?.opponentUserId,
+        name: initialData?.opponentName ?? '',
+        hand: initialData?.opponentDominantHand ?? '',
+    })
+    const [partner, setPartner] = useState<PlayerPickerValue>({
+        userId: initialData?.partnerUserId,
+        name: initialData?.partnerName ?? '',
+        hand: initialData?.partnerDominantHand ?? '',
+    })
+    const [opponent2, setOpponent2] = useState<PlayerPickerValue>({
+        userId: initialData?.opponent2UserId,
+        name: initialData?.opponent2Name ?? '',
+        hand: initialData?.opponent2DominantHand ?? '',
+    })
     const [playedAt, setPlayedAt] = useState(initialData?.playedAt ?? new Date().toISOString().slice(0, 10))
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
@@ -79,27 +69,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
     )
     const [notes, setNotes] = useState(initialData?.notes ?? '')
 
-    const selectedCandidate = opponentCandidates.find((c) => c.id === opponentUserId)
-
-    function selectMember(candidate: OpponentCandidate) {
-        setOpponentUserId(candidate.id)
-        setOpponentName(candidate.name)
-        setComboOpen(false)
-    }
-
-    function switchToExternal() {
-        setInputMode('external')
-        setOpponentUserId(undefined)
-        setOpponentName('')
-        setOpponentHand('')
-    }
-
-    function switchToMember() {
-        setInputMode('member')
-        setOpponentUserId(undefined)
-        setOpponentName('')
-        setOpponentHand('')
-    }
+    const isDoubles = DOUBLES_TYPES.includes(matchType)
 
     function addSet() {
         setSets((prev) => [...prev, { me: 6, opp: 0 }])
@@ -117,16 +87,33 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
         e.preventDefault()
         setError(null)
 
-        if (!opponentName.trim() && !opponentUserId) {
+        if (!opponent.name.trim() && !opponent.userId) {
             setError('상대를 선택하거나 이름을 입력해주세요.')
             return
         }
+        if (isDoubles) {
+            if (!partner.name.trim() && !partner.userId) {
+                setError('복식은 내 파트너를 입력해주세요.')
+                return
+            }
+            if (!opponent2.name.trim() && !opponent2.userId) {
+                setError('복식은 상대팀 2번째 선수를 입력해주세요.')
+                return
+            }
+        }
 
         const input: PersonalMatchInput = {
-            opponentName: opponentName.trim() || (selectedCandidate?.name ?? ''),
-            opponentUserId: opponentUserId,
-            // 손잡이는 직접 입력(외부 상대) 모드에서만 저장
-            opponentDominantHand: inputMode === 'external' && opponentHand ? opponentHand : undefined,
+            opponentName: opponent.name.trim(),
+            opponentUserId: opponent.userId,
+            // 손잡이는 직접 입력(회원 미선택) 모드에서만 저장
+            opponentDominantHand: !opponent.userId && opponent.hand ? opponent.hand : undefined,
+            // 복식 전용 필드 (단식이면 액션에서 NULL 처리)
+            partnerName: partner.name.trim() || undefined,
+            partnerUserId: partner.userId,
+            partnerDominantHand: !partner.userId && partner.hand ? partner.hand : undefined,
+            opponent2Name: opponent2.name.trim() || undefined,
+            opponent2UserId: opponent2.userId,
+            opponent2DominantHand: !opponent2.userId && opponent2.hand ? opponent2.hand : undefined,
             playedAt,
             matchType,
             surface: surface || undefined,
@@ -152,100 +139,53 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <div className={`${CARD_BASE} p-5 space-y-4`}>
-                {/* 상대 선택 */}
+                {/* 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
                 <div>
-                    <div className="flex items-center justify-between mb-1">
-                        <label className={`${labelClass} mb-0`}>상대 *</label>
-                        {opponentCandidates.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={inputMode === 'member' ? switchToExternal : switchToMember}
-                                className="text-xs text-muted-foreground hover:text-foreground"
-                            >
-                                {inputMode === 'member' ? '직접 입력' : '클럽 회원 선택'}
-                            </button>
-                        )}
-                    </div>
-
-                    {inputMode === 'member' ? (
-                        <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                            <PopoverTrigger
-                                type="button"
-                                className={`${inputClass} text-left flex items-center justify-between`}
-                            >
-                                {selectedCandidate ? (
-                                    <span>
-                                        {selectedCandidate.name}
-                                        {selectedCandidate.ntrp ? ` (${selectedCandidate.ntrp})` : ''}
-                                        {selectedCandidate.isGuest ? ' (게스트)' : ''}
-                                    </span>
-                                ) : (
-                                    <span className="text-muted-foreground">클럽 회원 검색...</span>
-                                )}
-                            </PopoverTrigger>
-                            <PopoverContent className="w-72 p-0" align="start">
-                                <Command>
-                                    <CommandInput placeholder="이름으로 검색..." />
-                                    <CommandList>
-                                        <CommandEmpty>검색 결과가 없습니다</CommandEmpty>
-                                        <CommandGroup>
-                                            {opponentCandidates.map((c) => (
-                                                <CommandItem
-                                                    key={c.id}
-                                                    value={c.name}
-                                                    onSelect={() => selectMember(c)}
-                                                >
-                                                    <span>{c.name}</span>
-                                                    {c.ntrp && <span className="ml-1 text-muted-foreground">({c.ntrp})</span>}
-                                                    {c.isGuest && <span className="ml-1 text-muted-foreground text-xs">게스트</span>}
-                                                    {c.clubNames.length > 0 && (
-                                                        <span className="ml-auto text-muted-foreground text-xs">
-                                                            {c.clubNames[0]}
-                                                        </span>
-                                                    )}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    ) : (
-                        <input
-                            type="text"
-                            value={opponentName}
-                            onChange={(e) => setOpponentName(e.target.value)}
-                            placeholder="상대방 이름 또는 닉네임"
-                            className={inputClass}
-                        />
-                    )}
-
-                    {/* 손잡이 (직접 입력 상대만) */}
-                    {inputMode === 'external' && (
-                        <div className="mt-2">
-                            <p className="text-xs text-muted-foreground mb-1">상대 손잡이 (선택)</p>
-                            <div className="grid grid-cols-2 gap-1.5">
-                                {HAND_OPTIONS.map(({ value, label }) => {
-                                    const active = opponentHand === value
-                                    return (
-                                        <button
-                                            key={value}
-                                            type="button"
-                                            onClick={() => setOpponentHand(active ? '' : value)}
-                                            className={`py-2 text-xs rounded-md border transition-all ${
-                                                active
-                                                    ? 'border-primary bg-primary/10 text-primary font-semibold'
-                                                    : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
-                                            }`}
-                                        >
-                                            {label}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    <label className={labelClass}>경기 타입 *</label>
+                    <Select
+                        value={matchType}
+                        onValueChange={(v) => v && setMatchType(v as MatchType)}
+                        items={MATCH_TYPES}
+                    >
+                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {MATCH_TYPES.map((t) => (
+                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
+
+                {/* 내 파트너 (복식 전용) */}
+                {isDoubles && (
+                    <PlayerPicker
+                        label="내 파트너 *"
+                        candidates={opponentCandidates}
+                        value={partner}
+                        onChange={setPartner}
+                        placeholder="파트너 이름 또는 닉네임"
+                    />
+                )}
+
+                {/* 상대 (단식: 1명 / 복식: 상대팀 선수 1·2) */}
+                <PlayerPicker
+                    label={isDoubles ? '상대팀 선수 1 *' : '상대 *'}
+                    candidates={opponentCandidates}
+                    value={opponent}
+                    onChange={setOpponent}
+                    placeholder="상대방 이름 또는 닉네임"
+                />
+                {isDoubles && (
+                    <PlayerPicker
+                        label="상대팀 선수 2 *"
+                        candidates={opponentCandidates}
+                        value={opponent2}
+                        onChange={setOpponent2}
+                        placeholder="상대방 이름 또는 닉네임"
+                    />
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -259,40 +199,22 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                         />
                     </div>
                     <div>
-                        <label className={labelClass}>경기 타입 *</label>
+                        <label className={labelClass}>코트 표면 (선택)</label>
                         <Select
-                            value={matchType}
-                            onValueChange={(v) => v && setMatchType(v as MatchType)}
-                            items={MATCH_TYPES}
+                            value={surface}
+                            onValueChange={(v) => setSurface(v as CourtSurface | '')}
+                            items={SURFACE_SELECT_ITEMS}
                         >
                             <SelectTrigger className="w-full bg-background border-input focus:border-ring">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {MATCH_TYPES.map((t) => (
-                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                {SURFACE_SELECT_ITEMS.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
-
-                <div>
-                    <label className={labelClass}>코트 표면 (선택)</label>
-                    <Select
-                        value={surface}
-                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
-                        items={SURFACE_SELECT_ITEMS}
-                    >
-                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {SURFACE_SELECT_ITEMS.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </div>
 
                 <div>

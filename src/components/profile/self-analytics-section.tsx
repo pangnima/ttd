@@ -74,7 +74,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     )
 
     const partnerRecommendations = aggregatePartnerRecommendations(
-        { matches: bundle.matches },
+        { matches: bundle.matches, personalMatches: bundle.personalMatches },
         me.id,
     )
 

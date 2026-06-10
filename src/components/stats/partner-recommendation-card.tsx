@@ -18,6 +18,23 @@ const MATCH_TYPE_LABEL: Record<string, string> = {
 
 function PartnerRow({ rec, userMap }: { rec: PartnerRec; userMap: Map<string, User> }) {
     const user = userMap.get(rec.partnerId)
+    // 외부(개인 경기 직접 입력) 파트너는 userMap에 없음 → 프로필 링크 없이 이름만 표시
+    const isExternal = !user
+    const record = `${rec.wins}승 ${rec.losses}패${rec.draws > 0 ? ` ${rec.draws}무` : ''}`
+
+    if (isExternal) {
+        const name = rec.partnerName ?? rec.partnerId.replace(/^name:/, '')
+        return (
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground/90 truncate">{name}</span>
+                <span className="text-sm text-foreground/80 shrink-0 ml-2">
+                    {record}
+                    <span className="ml-1.5 text-foreground/85">{rec.winRate}%</span>
+                </span>
+            </div>
+        )
+    }
+
     const name = user?.name ?? user?.nickname ?? rec.partnerId.slice(0, 8)
     const ntrp = user?.ntrp ? ` (${user.ntrp})` : ''
     const isGuest = user?.isGuest ?? false
@@ -35,7 +52,7 @@ function PartnerRow({ rec, userMap }: { rec: PartnerRec; userMap: Map<string, Us
                 {isGuest && <GuestBadge />}
             </div>
             <span className="text-sm text-foreground/80 shrink-0 ml-2">
-                {rec.wins}승 {rec.losses}패{rec.draws > 0 ? ` ${rec.draws}무` : ''}
+                {record}
                 <span className="ml-1.5 text-foreground/85">{rec.winRate}%</span>
             </span>
         </div>

@@ -1,13 +1,14 @@
 import type { MatchType } from '@/types'
 import {
-    type BundleWithMatches,
+    type BundleWithMatches, type BundleWithPersonal,
     getMatchOutcome, calcWinRate,
 } from '@/lib/analytics/shared'
 
 // ── 파트너 추천 집계 ─────────────────────────────────────────────────────
 
 export type PartnerRec = {
-    partnerId: string
+    partnerId: string        // 회원: users.id, 외부: `name:{이름}` 키
+    partnerName?: string     // 외부 파트너 표시명 (회원은 userMap에서 해석)
     matchType: MatchType
     wins: number
     losses: number
@@ -25,20 +26,38 @@ export type PartnerRecommendations = {
 type DoubleMatchType = 'men_doubles' | 'women_doubles' | 'mixed_doubles'
 const DOUBLES_TYPES: DoubleMatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
+type PartnerAcc = { wins: number; losses: number; draws: number; total: number; name?: string }
+
 /**
  * 복식 매치에서 같은 팀 파트너별 전적을 집계하여 추천 목록 반환.
  * 2경기 이상 함께 뛴 파트너만 포함하며, 승률 내림차순 정렬.
- * 개인 매치(PersonalMatch)에는 파트너 정보가 없으므로 클럽 매치만 사용.
+ * 클럽 복식(team1/team2) + 개인 복식(personalMatches.partner*) 모두 반영한다.
  */
 export function aggregatePartnerRecommendations(
-    bundle: BundleWithMatches,
+    bundle: BundleWithMatches & Partial<BundleWithPersonal>,
     userId: string,
 ): PartnerRecommendations {
     // 복식 타입별 파트너별 집계 맵
-    const maps: Record<DoubleMatchType, Map<string, { wins: number; losses: number; draws: number; total: number }>> = {
+    const maps: Record<DoubleMatchType, Map<string, PartnerAcc>> = {
         men_doubles: new Map(),
         women_doubles: new Map(),
         mixed_doubles: new Map(),
+    }
+
+    function addOutcome(
+        doublesType: DoubleMatchType,
+        partnerKey: string,
+        outcome: 'win' | 'loss' | 'draw',
+        name?: string,
+    ) {
+        const map = maps[doublesType]
+        const rec = map.get(partnerKey) ?? { wins: 0, losses: 0, draws: 0, total: 0 }
+        rec.total++
+        if (outcome === 'win') rec.wins++
+        else if (outcome === 'loss') rec.losses++
+        else rec.draws++
+        if (name && !rec.name) rec.name = name
+        map.set(partnerKey, rec)
     }
 
     // 클럽 복식 매치
@@ -55,25 +74,31 @@ export function aggregatePartnerRecommendations(
         // 같은 팀 동료(자신 제외)
         for (const partnerId of myTeam) {
             if (partnerId === userId) continue
-            const map = maps[doublesType]
-            const rec = map.get(partnerId) ?? { wins: 0, losses: 0, draws: 0, total: 0 }
-            rec.total++
-            if (outcome === 'win') rec.wins++
-            else if (outcome === 'loss') rec.losses++
-            else rec.draws++
-            map.set(partnerId, rec)
+            addOutcome(doublesType, partnerId, outcome)
         }
+    }
+
+    // 개인 복식 매치 (파트너 정보가 있을 때만)
+    for (const pm of bundle.personalMatches ?? []) {
+        if (!DOUBLES_TYPES.includes(pm.matchType as DoubleMatchType)) continue
+        const doublesType = pm.matchType as DoubleMatchType
+        // 회원 파트너는 userId 키, 외부 파트너는 `name:{이름}` 키
+        const partnerKey = pm.partnerUserId ?? (pm.partnerName ? `name:${pm.partnerName}` : null)
+        if (!partnerKey) continue
+        const outcome = pm.winner === 'me' ? 'win' : pm.winner === 'opponent' ? 'loss' : 'draw'
+        addOutcome(doublesType, partnerKey, outcome, pm.partnerUserId ? undefined : pm.partnerName)
     }
 
     function toSortedRecs(
         doublesType: DoubleMatchType,
-        map: Map<string, { wins: number; losses: number; draws: number; total: number }>,
+        map: Map<string, PartnerAcc>,
     ): PartnerRec[] {
         const recs: PartnerRec[] = []
         for (const [partnerId, rec] of map.entries()) {
             if (rec.total < 2) continue   // 2경기 이상 필터
             recs.push({
                 partnerId,
+                partnerName: rec.name,
                 matchType: doublesType,
                 wins: rec.wins,
                 losses: rec.losses,

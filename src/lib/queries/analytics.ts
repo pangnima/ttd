@@ -99,9 +99,10 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
         userId,
     )
 
-    // userMap: H2H 상대 + 매치 참가자 이름 표시용
+    // userMap: H2H 상대 + 매치 참가자 + 개인 복식 파트너(파트너 추천 카드 이름 표시용)
+    const partnerUserIds = filteredPersonalMatches.flatMap((pm) => (pm.partnerUserId ? [pm.partnerUserId] : []))
     const opponentUserIds = extractUnifiedH2hIds(h2hList)
-    const userMap = await buildUserMap(matches, userId, opponentUserIds)
+    const userMap = await buildUserMap(matches, userId, [...opponentUserIds, ...partnerUserIds])
 
     return {
         stats,

@@ -48,37 +48,44 @@ export function buildHeadToHeadList(
         }
     }
 
-    // 개인 매치
+    // 개인 매치 (복식이면 상대 #1·#2 각각 1경기로 누적 — 클럽 복식과 동일 규칙)
+    const addPersonalOpponent = (
+        opponentUserId: string | undefined,
+        opponentName: string | undefined,
+        outcome: 'win' | 'loss' | 'draw',
+        sets: { me: number; opp: number }[],
+    ) => {
+        let key: string
+        let entryUserId: string | null
+        let entryName: string | null
+        if (opponentUserId) {
+            key = opponentUserId
+            entryUserId = opponentUserId
+            entryName = opponentName ?? null
+        } else if (opponentName) {
+            key = `name:${opponentName}`
+            entryUserId = null
+            entryName = opponentName
+        } else {
+            return
+        }
+        const existing: UnifiedHeadToHead = map.get(key) ?? {
+            opponentUserId: entryUserId,
+            opponentName: entryName,
+            matches: 0, wins: 0, losses: 0, draws: 0, setsWon: 0, setsLost: 0,
+        }
+        existing.matches++
+        if (outcome === 'win') existing.wins++
+        else if (outcome === 'loss') existing.losses++
+        else existing.draws++
+        for (const s of sets) { existing.setsWon += s.me; existing.setsLost += s.opp }
+        map.set(key, existing)
+    }
+
     for (const pm of bundle.personalMatches) {
         const outcome = pm.winner === 'me' ? 'win' : pm.winner === 'opponent' ? 'loss' : 'draw'
-
-        if (pm.opponentUserId) {
-            const key = pm.opponentUserId
-            const existing: UnifiedHeadToHead = map.get(key) ?? {
-                opponentUserId: pm.opponentUserId,
-                opponentName: pm.opponentName ?? null,
-                matches: 0, wins: 0, losses: 0, draws: 0, setsWon: 0, setsLost: 0,
-            }
-            existing.matches++
-            if (outcome === 'win') existing.wins++
-            else if (outcome === 'loss') existing.losses++
-            else existing.draws++
-            for (const s of pm.setScores) { existing.setsWon += s.me; existing.setsLost += s.opp }
-            map.set(key, existing)
-        } else if (pm.opponentName) {
-            const key = `name:${pm.opponentName}`
-            const existing: UnifiedHeadToHead = map.get(key) ?? {
-                opponentUserId: null,
-                opponentName: pm.opponentName,
-                matches: 0, wins: 0, losses: 0, draws: 0, setsWon: 0, setsLost: 0,
-            }
-            existing.matches++
-            if (outcome === 'win') existing.wins++
-            else if (outcome === 'loss') existing.losses++
-            else existing.draws++
-            for (const s of pm.setScores) { existing.setsWon += s.me; existing.setsLost += s.opp }
-            map.set(key, existing)
-        }
+        addPersonalOpponent(pm.opponentUserId, pm.opponentName, outcome, pm.setScores)
+        addPersonalOpponent(pm.opponent2UserId, pm.opponent2Name, outcome, pm.setScores)
     }
 
     // 총 경기 내림차순 정렬
@@ -144,11 +151,14 @@ export function aggregateHeadToHeadUnified(
         entries.push({ id: m.id, date, outcome: o, score: scoreStr, source: 'club' })
     }
 
-    // 개인 매치
+    // 개인 매치 (복식이면 상대 #1·#2 중 하나라도 일치하면 집계)
     for (const pm of bundle.personalMatches) {
         const matched = opponentKey.userId
-            ? pm.opponentUserId === opponentKey.userId
-            : (!pm.opponentUserId && pm.opponentName === opponentKey.name)
+            ? (pm.opponentUserId === opponentKey.userId || pm.opponent2UserId === opponentKey.userId)
+            : (
+                (!pm.opponentUserId && pm.opponentName === opponentKey.name) ||
+                (!pm.opponent2UserId && !!pm.opponent2Name && pm.opponent2Name === opponentKey.name)
+            )
         if (!matched) continue
 
         const o: 'W' | 'L' | 'D' = pm.winner === 'me' ? 'W' : pm.winner === 'opponent' ? 'L' : 'D'

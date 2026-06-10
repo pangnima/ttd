@@ -127,6 +127,14 @@ export type PersonalMatch = {
     opponentName: string
     opponentUserId?: string  // 클럽 회원과 연결된 경우 users.id, 외부 상대는 undefined
     opponentDominantHand?: 'right' | 'left'  // 외부 상대 직접 입력 시 손잡이 (회원/미입력은 undefined)
+    // ── 복식 전용: 내 파트너 (단식이면 모두 undefined) ──
+    partnerUserId?: string
+    partnerName?: string
+    partnerDominantHand?: 'right' | 'left'
+    // ── 복식 전용: 상대팀 2번째 선수 (단식이면 모두 undefined) ──
+    opponent2UserId?: string
+    opponent2Name?: string
+    opponent2DominantHand?: 'right' | 'left'
     playedAt: string        // "2025-04-12"
     matchType: MatchType
     surface?: CourtSurface

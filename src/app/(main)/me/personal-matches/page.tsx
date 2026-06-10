@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
-import { PersonalMatchListItem } from '@/components/personal-matches/personal-match-list-item'
+import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
@@ -38,11 +38,7 @@ export default async function PersonalMatchesPage() {
                     </Link>
                 </div>
             ) : (
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
-                    {matches.map((m) => (
-                        <PersonalMatchListItem key={m.id} match={m} />
-                    ))}
-                </div>
+                <PersonalMatchList matches={matches} />
             )}
         </PageContainer>
     )

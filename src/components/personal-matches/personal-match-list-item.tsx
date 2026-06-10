@@ -20,15 +20,23 @@ export function PersonalMatchListItem({ match: m }: Props) {
         })
     }
 
+    // 복식이면 상대팀 2명을 병기 (상대 #2가 있을 때만)
+    const opponentLabel = m.opponent2Name
+        ? `${m.opponentName} · ${m.opponent2Name}`
+        : m.opponentName
+
     return (
         <div className="flex items-center justify-between p-4">
             <div className="space-y-0.5 flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
-                    vs <span className="text-foreground">{m.opponentName}</span>
+                    vs <span className="text-foreground">{opponentLabel}</span>
                     <span className={`ml-2 text-base ${PERSONAL_OUTCOME_STYLE[m.winner]}`}>
                         {PERSONAL_OUTCOME_LABEL[m.winner]}
                     </span>
                 </p>
+                {m.partnerName && (
+                    <p className="text-xs text-muted-foreground">파트너: {m.partnerName}</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                     {m.playedAt}
                     <span className="mx-1 text-muted-foreground">·</span>
