@@ -616,6 +616,14 @@ export type Database = {
           win_count: number
         }[]
       }
+      get_club_member_counts: {
+        Args: { p_club_ids: string[] }
+        Returns: {
+          club_id: string
+          guest: number
+          regular: number
+        }[]
+      }
       get_club_win_rate_ranking: {
         Args: { p_club_id: string; p_min_matches?: number }
         Returns: {

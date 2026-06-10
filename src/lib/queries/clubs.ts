@@ -117,23 +117,14 @@ export async function fetchClubMemberCounts(
     if (clubIds.length === 0) return counts
 
     const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('club_members')
-        .select('club_id, users(is_guest)')
-        .in('club_id', clubIds)
-        .eq('status', 'approved')
+    // RLS상 비가입 클럽의 club_members는 직접 조회할 수 없으므로, SECURITY DEFINER RPC로 집계값만 가져온다.
+    const { data, error } = await supabase.rpc('get_club_member_counts', {
+        p_club_ids: clubIds,
+    })
     if (error || !data) return counts
 
     for (const row of data) {
-        const user = row.users as { is_guest: boolean | null } | null
-        if (!user) continue
-        const entry = counts.get(row.club_id) ?? { regular: 0, guest: 0 }
-        if (user.is_guest) {
-            entry.guest += 1
-        } else {
-            entry.regular += 1
-        }
-        counts.set(row.club_id, entry)
+        counts.set(row.club_id, { regular: row.regular, guest: row.guest })
     }
 
     return counts

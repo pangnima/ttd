@@ -51,7 +51,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 type="button"
                 onClick={handleCancel}
                 disabled={isPending}
-                className="text-xs border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
+                className="text-xs whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
             >
                 취소
             </button>
@@ -60,7 +60,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 type="button"
                 onClick={handleApply}
                 disabled={isPending}
-                className="text-xs border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
+                className="text-xs whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
             >
                 가입 신청
             </button>
@@ -78,19 +78,19 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                     <p className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors truncate">
                         {club.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-foreground/60">
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-foreground/60 overflow-hidden">
                         {club.region && (
-                            <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {club.region}
+                            <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
+                                <MapPin className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{club.region}</span>
                             </span>
                         )}
-                        <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
+                        <span className="flex items-center gap-1 shrink-0 whitespace-nowrap">
+                            <Users className="w-3 h-3 shrink-0" />
                             정회원 {regularCount}
                         </span>
                         {guestCount > 0 && (
-                            <span className="text-foreground/45">
+                            <span className="text-foreground/45 shrink-0 whitespace-nowrap">
                                 · 게스트 {guestCount}
                             </span>
                         )}
@@ -99,9 +99,9 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 <ChevronRight className="w-4 h-4 text-foreground/45 shrink-0" />
             </Link>
 
-            {/* 오른쪽: 상태 pill + 액션 버튼 */}
+            {/* 오른쪽: 상태 pill + 액션 버튼 (고정폭 + 세로 스택으로 카드 간 너비 통일) */}
             {(pill || actionButton) && (
-                <div className="flex items-center gap-2 shrink-0 px-4 border-l border-border">
+                <div className="flex flex-col items-center justify-center gap-1 shrink-0 w-24 px-2 border-l border-border">
                     {pill}
                     {actionButton}
                 </div>
