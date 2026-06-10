@@ -85,6 +85,100 @@ export type Database = {
           },
         ]
       }
+      club_player_ratings: {
+        Row: {
+          club_id: string
+          matches_played: number
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          matches_played?: number
+          rating?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          matches_played?: number
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_player_ratings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_player_ratings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_rating_history: {
+        Row: {
+          club_id: string
+          created_at: string
+          delta: number
+          id: string
+          match_id: string | null
+          rating_after: number
+          rating_before: number
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          delta: number
+          id?: string
+          match_id?: string | null
+          rating_after: number
+          rating_before: number
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          match_id?: string | null
+          rating_after?: number
+          rating_before?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_rating_history_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_rating_history_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_game_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_rating_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           created_at: string
@@ -496,6 +590,10 @@ export type Database = {
             Args: { p_club_id: string; p_gender?: string; p_nickname: string }
             Returns: string
           }
+      apply_club_rating_snapshot: {
+        Args: { p_club_id: string; p_snapshot: Json }
+        Returns: undefined
+      }
       create_match_game: {
         Args: {
           p_club_id: string
