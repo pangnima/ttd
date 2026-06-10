@@ -16,7 +16,7 @@ export default async function MainLayout({
     const profileHref = user ? `/profile/${user.id}` : null
 
     return (
-        <div className="flex h-screen bg-background">
+        <div className="flex h-dvh bg-background">
             <Sidebar matchGameHref={matchGameHref} profileHref={profileHref} />
             <div className="flex flex-col flex-1 min-w-0">
                 <Header />

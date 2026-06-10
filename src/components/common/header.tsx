@@ -50,7 +50,7 @@ export function Header() {
     }, [])
 
     return (
-        <header className="h-14 border-b border-foreground/5 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3">
+        <header className="min-h-14 border-b border-foreground/5 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
             <MobileNav />
             <Link href="/clubs" className="font-semibold text-sm md:hidden">
                 🎾 테니스 클럽

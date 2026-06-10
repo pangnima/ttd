@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/theme-provider'
@@ -33,6 +33,13 @@ export const metadata: Metadata = {
         locale: 'ko_KR',
         type: 'website',
     },
+}
+
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    // 노치/홈 인디케이터 영역까지 활용 + safe-area-inset env() 값 활성화
+    viewportFit: 'cover',
 }
 
 export default function RootLayout({
