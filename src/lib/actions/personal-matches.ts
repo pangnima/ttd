@@ -7,6 +7,7 @@ import type { CourtSurface, MatchType, PersonalMatchSetScore, PersonalMatchWinne
 export type PersonalMatchInput = {
     opponentName: string
     opponentUserId?: string  // 클럽 회원 선택 시 설정, 외부 상대는 undefined
+    opponentDominantHand?: 'right' | 'left'  // 외부 상대 직접 입력 시 손잡이
     playedAt: string
     matchType: MatchType
     surface?: CourtSurface
@@ -39,6 +40,7 @@ export async function createPersonalMatchAction(
         user_id: user.id,
         opponent_name: input.opponentName.trim(),
         opponent_user_id: input.opponentUserId ?? null,
+        opponent_dominant_hand: input.opponentDominantHand ?? null,
         played_at: input.playedAt,
         match_type: input.matchType,
         surface: input.surface ?? null,
@@ -70,6 +72,7 @@ export async function updatePersonalMatchAction(
         .update({
             opponent_name: input.opponentName.trim(),
             opponent_user_id: input.opponentUserId ?? null,
+            opponent_dominant_hand: input.opponentDominantHand ?? null,
             played_at: input.playedAt,
             match_type: input.matchType,
             surface: input.surface ?? null,

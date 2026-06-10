@@ -15,12 +15,20 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
         <section className="space-y-3">
             <div className="flex items-center justify-between">
                 <p className={SECTION_LABEL}>개인 경기 기록</p>
-                <Link
-                    href="/me/personal-matches"
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    전체 보기 →
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link
+                        href="/me/personal-matches/new"
+                        className="inline-flex items-center gap-1 text-xs border border-border rounded-[4px] px-2.5 py-1 text-foreground hover:border-input transition-colors"
+                    >
+                        + 경기 추가
+                    </Link>
+                    <Link
+                        href="/me/personal-matches"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        전체 보기 →
+                    </Link>
+                </div>
             </div>
             <div className={CARD_BASE}>
                 {recent.length === 0 ? (

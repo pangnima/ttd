@@ -12,6 +12,7 @@ function mapPersonalMatchRow(row: PersonalMatchRow): PersonalMatch {
         userId: row.user_id,
         opponentName: row.opponent_name,
         opponentUserId: row.opponent_user_id ?? undefined,
+        opponentDominantHand: (row.opponent_dominant_hand as 'right' | 'left' | null) ?? undefined,
         playedAt: row.played_at,
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface) ?? undefined,

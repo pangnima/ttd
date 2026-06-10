@@ -468,6 +468,7 @@ export type Database = {
           id: string
           match_type: string
           notes: string | null
+          opponent_dominant_hand: string | null
           opponent_name: string
           opponent_user_id: string | null
           played_at: string
@@ -481,6 +482,7 @@ export type Database = {
           id?: string
           match_type: string
           notes?: string | null
+          opponent_dominant_hand?: string | null
           opponent_name: string
           opponent_user_id?: string | null
           played_at: string
@@ -494,6 +496,7 @@ export type Database = {
           id?: string
           match_type?: string
           notes?: string | null
+          opponent_dominant_hand?: string | null
           opponent_name?: string
           opponent_user_id?: string | null
           played_at?: string

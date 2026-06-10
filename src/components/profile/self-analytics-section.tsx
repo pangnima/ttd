@@ -14,8 +14,10 @@ import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
+import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
 import { aggregatePartnerRecommendations } from '@/lib/analytics/partner'
+import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
@@ -74,6 +76,10 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const partnerRecommendations = aggregatePartnerRecommendations(
         { matches: bundle.matches },
         me.id,
+    )
+
+    const opponentHandStats = aggregateByOpponentHand(
+        { personalMatches: bundle.personalMatches, userMap: bundle.userMap },
     )
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
@@ -136,6 +142,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <NtrpDifferentialCard ntrpStats={ntrpStats} />
                 <StrengthWeaknessCard diagnosis={diagnosis} />
+                <OpponentHandStatsCard handStats={opponentHandStats} />
             </div>
 
             {/* AI 코칭 */}

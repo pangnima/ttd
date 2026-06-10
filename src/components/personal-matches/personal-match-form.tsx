@@ -24,6 +24,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 
 type Props = {
     initialData?: PersonalMatch
@@ -35,6 +42,17 @@ const MATCH_TYPES: { value: MatchType; label: string }[] = [
     { value: 'men_doubles', label: '남복' },
     { value: 'women_doubles', label: '여복' },
     { value: 'mixed_doubles', label: '혼복' },
+]
+
+// 코트 표면 select 항목 ('' = 미지정)
+const SURFACE_SELECT_ITEMS: { value: string; label: string }[] = [
+    { value: '', label: '미지정' },
+    ...SURFACE_OPTIONS,
+]
+
+const HAND_OPTIONS: { value: 'right' | 'left'; label: string }[] = [
+    { value: 'right', label: '오른손' },
+    { value: 'left', label: '왼손' },
 ]
 
 type InputMode = 'member' | 'external'
@@ -51,6 +69,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
 
     const [opponentUserId, setOpponentUserId] = useState<string | undefined>(initialData?.opponentUserId)
     const [opponentName, setOpponentName] = useState(initialData?.opponentName ?? '')
+    const [opponentHand, setOpponentHand] = useState<'right' | 'left' | ''>(initialData?.opponentDominantHand ?? '')
     const [playedAt, setPlayedAt] = useState(initialData?.playedAt ?? new Date().toISOString().slice(0, 10))
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
@@ -72,12 +91,14 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
         setInputMode('external')
         setOpponentUserId(undefined)
         setOpponentName('')
+        setOpponentHand('')
     }
 
     function switchToMember() {
         setInputMode('member')
         setOpponentUserId(undefined)
         setOpponentName('')
+        setOpponentHand('')
     }
 
     function addSet() {
@@ -104,6 +125,8 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
         const input: PersonalMatchInput = {
             opponentName: opponentName.trim() || (selectedCandidate?.name ?? ''),
             opponentUserId: opponentUserId,
+            // 손잡이는 직접 입력(외부 상대) 모드에서만 저장
+            opponentDominantHand: inputMode === 'external' && opponentHand ? opponentHand : undefined,
             playedAt,
             matchType,
             surface: surface || undefined,
@@ -196,6 +219,32 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                             className={inputClass}
                         />
                     )}
+
+                    {/* 손잡이 (직접 입력 상대만) */}
+                    {inputMode === 'external' && (
+                        <div className="mt-2">
+                            <p className="text-xs text-muted-foreground mb-1">상대 손잡이 (선택)</p>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {HAND_OPTIONS.map(({ value, label }) => {
+                                    const active = opponentHand === value
+                                    return (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            onClick={() => setOpponentHand(active ? '' : value)}
+                                            className={`py-2 text-xs rounded-md border transition-all ${
+                                                active
+                                                    ? 'border-primary bg-primary/10 text-primary font-semibold'
+                                                    : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -211,30 +260,39 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                     </div>
                     <div>
                         <label className={labelClass}>경기 타입 *</label>
-                        <select
+                        <Select
                             value={matchType}
-                            onChange={(e) => setMatchType(e.target.value as MatchType)}
-                            className={inputClass}
+                            onValueChange={(v) => v && setMatchType(v as MatchType)}
+                            items={MATCH_TYPES}
                         >
-                            {MATCH_TYPES.map((t) => (
-                                <option key={t.value} value={t.value}>{t.label}</option>
-                            ))}
-                        </select>
+                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MATCH_TYPES.map((t) => (
+                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
                 <div>
                     <label className={labelClass}>코트 표면 (선택)</label>
-                    <select
+                    <Select
                         value={surface}
-                        onChange={(e) => setSurface(e.target.value as CourtSurface | '')}
-                        className={inputClass}
+                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
+                        items={SURFACE_SELECT_ITEMS}
                     >
-                        <option value="">미지정</option>
-                        {SURFACE_OPTIONS.map((s) => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                    </select>
+                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SURFACE_SELECT_ITEMS.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div>
