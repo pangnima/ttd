@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameCountByClubId } from '@/lib/queries/match-games'
+import { fetchClubRatingRanking } from '@/lib/queries/ratings'
 import {
     fetchPendingMembersByClubId,
     fetchClubMatchGameActivity,
@@ -19,6 +20,7 @@ import { PendingMembersPanel } from '@/components/club-dashboard/pending-members
 import { MatchGameActivityCard } from '@/components/club-dashboard/match-game-activity-card'
 import { WinRateRankingCard } from '@/components/club-dashboard/win-rate-ranking-card'
 import { ActivityRankingCard } from '@/components/club-dashboard/activity-ranking-card'
+import { RatingRankingCard } from '@/components/club-dashboard/rating-ranking-card'
 import {
     CARD_BASE,
     SECTION_LABEL,
@@ -40,11 +42,12 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [club, approvedMembers, myMembership, matchGameCount] = await Promise.all([
+    const [club, approvedMembers, myMembership, matchGameCount, ratingRanking] = await Promise.all([
         fetchClubById(clubId),
         fetchClubMembers(clubId, 'approved'),
         fetchMyMembership(user.id, clubId),
         fetchMatchGameCountByClubId(clubId),
+        fetchClubRatingRanking(clubId),
     ])
 
     if (!club) notFound()
@@ -180,6 +183,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <p className={SECTION_LABEL}>게스트 ({guestMembers.length}명)</p>
                     <ClubMembersPreview members={guestMembers} maxDisplay={8} />
                 </section>
+            )}
+
+            {/* 클럽 레이팅 랭킹 (승인 멤버에게 공개) */}
+            {myMembership?.status === 'approved' && ratingRanking.length > 0 && (
+                <RatingRankingCard clubId={clubId} entries={ratingRanking} />
             )}
 
             {/* ── 운영자/임원 전용 운영 섹션 ────────────────────────────── */}

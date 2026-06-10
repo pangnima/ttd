@@ -40,7 +40,7 @@ function mapRoundRow(row: RoundRow & { time_slots: TimeSlotRow[] }): Round {
 //   단식에서 player1 = team1, player2 = team2 로 매핑되는 규약에 따름.
 // player1Id/player2Id(단식)와 team1/team2(복식)는 상호 배제 —
 //   matchType이 'singles'이면 player1/2만, 복식이면 team1/2만 유효.
-function mapMatchRow(row: MatchRow): Match {
+export function mapMatchRow(row: MatchRow): Match {
     let result: MatchResult | undefined
     if (row.result_sets && row.winner_id) {
         const sets = (row.result_sets as Array<{ team1: number; team2: number }>)

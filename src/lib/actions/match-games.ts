@@ -8,6 +8,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { recalculateClubRatings } from './ratings'
 import type { Court, Match, MatchType, Round } from '@/types'
 
 // temp_id 패턴: 클라이언트는 임시 UUID로 courts/rounds/timeSlots를 연결하고,
@@ -88,6 +89,13 @@ export async function deleteMatchGameAction(
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
 
+    // 확정 대진표 삭제는 레이팅 모집단을 바꾸므로 삭제 전 is_fixed 여부를 확인해 둔다.
+    const { data: gameBefore } = await supabase
+        .from('match_games')
+        .select('is_fixed')
+        .eq('id', matchGameId)
+        .maybeSingle()
+
     const { error } = await supabase
         .from('match_games')
         .delete()
@@ -95,6 +103,10 @@ export async function deleteMatchGameAction(
 
     if (error) return { ok: false, error: error.message }
 
+    // 확정 대진표를 삭제한 경우에만 재계산(삭제는 owner만 가능하므로 RPC 권한 충족).
+    if (gameBefore?.is_fixed) await recalculateClubRatings(clubId)
+
+    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
     return { ok: true }
 }
@@ -184,6 +196,11 @@ export async function confirmMatchGameAction(
 
     if (error) return { ok: false, error: error.message }
 
+    // 확정으로 이 대진표의 경기가 통계·레이팅 모집단에 편입됐으므로 클럽 레이팅 재계산.
+    // 결과 확정 자체는 성공했으므로 재계산 실패는 전체 액션을 실패시키지 않는다(추후 재계산 가능).
+    await recalculateClubRatings(clubId)
+
+    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`)
     revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
     return { ok: true }
@@ -244,6 +261,15 @@ export async function updateMatchGameAction(
         return { ok: false, error: msg }
     }
 
+    // 확정 대진표를 수정한 경우에만 레이팅 재계산(확정 수정은 owner만 가능 → RPC 권한 충족).
+    const { data: gameAfter } = await supabase
+        .from('match_games')
+        .select('is_fixed')
+        .eq('id', matchGameId)
+        .maybeSingle()
+    if (gameAfter?.is_fixed) await recalculateClubRatings(clubId)
+
+    revalidatePath(`/clubs/${clubId}`)
     revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
     return { ok: true, matchGameId: data as string }
 }
