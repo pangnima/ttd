@@ -162,7 +162,11 @@ export async function saveCourtSidesAction(
 
     if (error) return { ok: false, error: error.message }
 
-    revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
+    // 코트 배치는 클라이언트 state(courtSides)가 즉시 반영하므로 페이지 전체 재조회가 불필요하다.
+    // revalidatePath를 호출하면 매 토글마다 무거운 대진표 쿼리들이 재실행되어 UI가 잠기므로 생략한다.
+    // 저장된 값은 다음 전체 로드 시 DB에서 자연스럽게 동기화된다. (clubId/matchGameId는 시그니처 호환을 위해 유지)
+    void clubId
+    void matchGameId
     return { ok: true }
 }
 
@@ -199,8 +203,9 @@ export async function confirmMatchGameAction(
     // 결과 확정 자체는 성공했으므로 재계산 실패는 전체 액션을 실패시키지 않는다(추후 재계산 가능).
     await recalculateClubRatings(clubId)
 
-    revalidatePath(`/clubs/${clubId}/match-games`)
-    revalidatePath(`/clubs/${clubId}/match-games/${matchGameId}`)
+    // 목록(완료/진행중 배지)과 상세(확정 잠금·레이팅 변동)를 모두 갱신해야 한다.
+    // 'layout' 옵션으로 match-games 하위(상세 포함)를 한 번에 무효화해 중복 호출을 제거.
+    revalidatePath(`/clubs/${clubId}/match-games`, 'layout')
     return { ok: true }
 }
 

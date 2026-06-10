@@ -11,7 +11,6 @@ type TeamPlayersCellProps = {
     winner: 'team1' | 'team2' | 'draw' | null
     isFixed: boolean
     adPlayerId: string | null
-    isPending: boolean
     getName: (id: string) => string
     onToggle: (teamKey: 'team1' | 'team2', playerId: string) => void
     justify?: boolean
@@ -19,7 +18,7 @@ type TeamPlayersCellProps = {
 }
 
 export function TeamPlayersCell({
-    playerIds, teamKey, winner, isFixed, adPlayerId, isPending, getName, onToggle, justify, deltas,
+    playerIds, teamKey, winner, isFixed, adPlayerId, getName, onToggle, justify, deltas,
 }: TeamPlayersCellProps) {
     if (!playerIds.length) return <span className="text-foreground/55 text-xs">-</span>
     return (
@@ -35,7 +34,6 @@ export function TeamPlayersCell({
                         {!isFixed ? (
                             <button
                                 onClick={() => onToggle(teamKey, pid)}
-                                disabled={isPending}
                                 className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
                             >
                                 {isAd ? '애드(백)' : '듀스(포)'}

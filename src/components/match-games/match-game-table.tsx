@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
-import { Trophy } from 'lucide-react'
+import { Trophy, Loader2 } from 'lucide-react'
 import { saveMatchResultAction, confirmMatchGameAction, saveCourtSidesAction } from '@/lib/actions/match-games'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { TeamPlayersCell, ScoreCell, type SetScore } from '@/components/match-games/match-game-cell-components'
@@ -101,7 +101,6 @@ function MatchCardItem({
                                 winner={winner}
                                 isFixed={matchGame.isFixed}
                                 adPlayerId={sides?.team1 ?? null}
-                                isPending={isPending}
                                 getName={getName}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
@@ -116,7 +115,6 @@ function MatchCardItem({
                                 winner={winner}
                                 isFixed={matchGame.isFixed}
                                 adPlayerId={sides?.team2 ?? null}
-                                isPending={isPending}
                                 getName={getName}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
@@ -246,10 +244,15 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
         const current = courtSides[matchId]
         const newAdId = current[teamKey] === playerId ? null : playerId
         const nextSides = { ...current, [teamKey]: newAdId }
+        // 낙관적 업데이트: 클라이언트 state를 즉시 반영해 버튼이 곧바로 반응하게 한다.
         setCourtSides((prev) => ({ ...prev, [matchId]: nextSides }))
-        startTransition(async () => {
-            await saveCourtSidesAction(clubId, matchGame.id, matchId, nextSides.team1, nextSides.team2)
-        })
+        // 저장은 fire-and-forget (공유 transition 미사용 → 다른 입력/버튼을 잠그지 않음).
+        // 실패 시에만 이전 값으로 롤백한다.
+        void saveCourtSidesAction(clubId, matchGame.id, matchId, nextSides.team1, nextSides.team2).then(
+            (res) => {
+                if (!res.ok) setCourtSides((prev) => ({ ...prev, [matchId]: current }))
+            }
+        )
     }
 
     const allConfirmed = matchGame.matches.length > 0 && matchGame.matches.every((m) => matchStates[m.id]?.confirmed)
@@ -315,7 +318,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
                                                     winner={winner}
                                                     isFixed={matchGame.isFixed}
                                                     adPlayerId={sides?.team1 ?? null}
-                                                    isPending={isPending}
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
@@ -335,7 +337,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
                                                     winner={winner}
                                                     isFixed={matchGame.isFixed}
                                                     adPlayerId={sides?.team2 ?? null}
-                                                    isPending={isPending}
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
@@ -414,8 +415,8 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
                         disabled={isPending}
                         className="gap-1.5 rounded-full font-semibold px-5"
                     >
-                        <Trophy className="w-3.5 h-3.5" />
-                        결과 확정
+                        {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
+                        {isPending ? '확정 중...' : '결과 확정'}
                     </Button>
                 </div>
             )}
