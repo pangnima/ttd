@@ -327,13 +327,53 @@
 
 ---
 
+### Week 14: 클럽 동적 레이팅 시스템 (NTRP ELO) ✅ (2026-06-10)
+
+> 가입 시 자가 선언하는 정적 `users.ntrp`와 별개로, **클럽마다 독립적으로 운영되는 동적 레이팅(클럽 NTRP)** 신설.
+> 클럽 가입 시 2.5에서 시작해 확정 경기 결과로 자동 변동. 알고리즘 단일 진실: `docs/rating-system.md`.
+
+#### 알고리즘 / 엔진 (커밋 2b38d5e)
+- [x] NTRP 스케일 ELO 설계 — 기대승률 `1/(1+10^((Rb-Ra)/D))` (D=1.0), 변동 `K·marginFactor·(S−E)`
+  - 의외성 반영: 강자의 예상 승은 소폭, 약자의 이변승은 크게 상승 (ELO 기대값 항이 자동 처리)
+  - 잠정기 차등 K(0.20/<10경기, 0.10 이후), 세트·게임 차 마진 가중(1.0~1.5), 경계 클램프 [1.0,7.0]
+- [x] `src/lib/rating/` 순수 엔진 신설 — `constants.ts`, `elo.ts`(`expectedScore`/`marginFactor`/`replayClubRatings`)
+- [x] `vitest` 도입 + `elo.test.ts` 16케이스(손계산 일치·결정성·경계·복식) 통과
+- [x] `docs/rating-system.md` 명세서 작성 (알고리즘 + 참고 자료 + Worked Examples)
+
+#### DB / 재계산 파이프라인 (커밋 98e99b9, a3972f9, 97326a6)
+- [x] 마이그레이션 `0018_club_rating_system` 적용 (Supabase MCP)
+  - `club_player_ratings` (club_id, user_id) PK — 게스트 포함, 기본 2.5
+  - `club_rating_history` — 경기별 rating_before/after/delta (추세·감사·변동폭용)
+  - RLS: approved 멤버만 SELECT, 쓰기는 SECURITY DEFINER RPC `apply_club_rating_snapshot`로만
+- [x] 전체 결정적 재계산(Full Recompute) — `lib/queries/ratings.ts` 조회 → 순수 엔진 replay → RPC 영속화
+  - `lib/actions/ratings.ts`의 `recalculateClubRatings` — 경기 확정/수정/삭제(확정 대진표 한정) 트리거 연결
+- [x] owner용 수동 재계산 버튼 (클럽 설정) — 과거 경기 백필·문제 복구용
+
+#### 레이팅 노출 (커밋 0d3465d, f574bec)
+- [x] 클럽 홈 — "클럽 레이팅 랭킹" 카드(소수 3자리, 잠정 뱃지) + 멤버 미리보기 클럽 NTRP 병기
+- [x] 멤버 목록 — 클럽+글로벌 NTRP 병기, 잠정 뱃지, 클럽 레이팅순 정렬 토글
+- [x] 경기 상세 — 확정 경기 선수별 변동폭(▲/▼) + 상단 변동 요약 카드
+- [x] 프로필 — 클럽 레이팅 추세 SVG 스파크라인 + 헤더 클럽 레이팅 뱃지
+  - 비공개(`statsHidden`) 프로필은 타인에게 클럽 레이팅·추세 미노출
+- [x] 공용: `ProvisionalBadge`, `formatClubRating`/`isProvisional`, `ClubRating` 타입(types/index.ts 승격)
+- [x] `verify` 스킬로 전 화면 실제 구동 검증 (백필→랭킹·병기·정렬·변동폭·요약·추세 전부 확인, 콘솔 0 errors)
+
+> **결정 기록 (Week 14)**
+> - 통합(개인) NTRP는 수동 유지, 클럽 NTRP만 동적 — 둘을 별도 저장소로 분리(클럽별 독립)
+> - 표시는 연속 소수 3자리(UTR·동적 NTRP 관행: 내부 연속값 운영 + 표시), 게스트도 포함·잠정
+> - 알고리즘은 테스트 가능한 순수 TS, 영속화만 RPC — 기존 `lib/analytics/*` 순수함수 패턴과 정합
+> - ELO 순차 의존성 + 확정 경기 편집 가능성 → 증분 대신 클럽 단위 전체 재계산(멱등·결정적)
+> - 비공개 프로필 정책: 프로필 페이지에서만 클럽 레이팅 차단, 클럽 랭킹·멤버 목록 등 집계 뷰는 글로벌 NTRP와 동일하게 노출 유지
+
+---
+
 ## 앞으로 개선해야할 점
 
 ### 중기: 기술 부채 / 품질 개선
 <!-- 완료: d9c38e9 에러 바운더리·로딩 일관화, Week 13 레이아웃 통일·린트 정리 -->
 - [ ] **통계 단일 소스화** — `lib/analytics/*`(순수함수) vs `lib/queries/stats.ts`(RPC) 이중 경로 통합. 현재 두 경로가 동일 수치를 내나 유지 비용과 불일치 리스크 잠재 (가장 큰 기술 부채)
 - [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 시작됨)
-- [ ] **통계 단위 테스트** — `lib/analytics/*` 순수함수에 고정 픽스처 Vitest 테스트 작성 (회귀 방지)
+- [ ] **통계 단위 테스트** — `lib/analytics/*` 순수함수에 고정 픽스처 Vitest 테스트 작성 (회귀 방지). _Vitest는 Week 14 레이팅 엔진(`lib/rating/elo.test.ts`)으로 도입 완료 — analytics 모듈은 미적용_
 - [ ] **최근 폼 정렬 개선** — 클럽 경기는 일 단위 날짜만 있어 같은 날 경기 순서가 UUID에 의존. `match_game_matches.created_at` 컬럼 추가 시 더 정확한 정렬 가능
 - [ ] **데드 RPC 정리** — `get_user_match_stats` v1 DROP 마이그레이션
 - [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)

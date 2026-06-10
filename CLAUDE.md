@@ -126,6 +126,10 @@ src/
 - [x] Week 11: 잔여 카드 5종 + 정리 + 고위험 리팩토링
 - [x] Week 12: 클럽 대시보드 신설 + 개인 화면 역할 분리
 - [x] Week 13: 레이아웃 full-width 통일 (PageContainer) + 통계 검증 + SQL 버전관리 시작 (0016)
+- [x] Week 14: 클럽 동적 레이팅 시스템 (NTRP ELO, 0018 마이그레이션)
+  - [x] 순수 엔진 `lib/rating/` + vitest (명세: docs/rating-system.md)
+  - [x] club_player_ratings/club_rating_history + 전체 재계산 파이프라인
+  - [x] 레이팅 노출 (랭킹·멤버 병기·경기 변동폭·프로필 추세, 비공개 차단)
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록
   - [ ] leaked password protection 활성화
