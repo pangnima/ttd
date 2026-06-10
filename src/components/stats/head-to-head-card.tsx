@@ -105,11 +105,11 @@ function H2HDetail({
                     <p className="text-xs text-muted-foreground">전체 경기 내역</p>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
                         {detail.matches.map((m) => (
-                            <div key={m.id} className="flex items-center justify-between text-sm py-1 border-b border-border last:border-0">
-                                <span className="text-muted-foreground text-xs">{m.date}</span>
-                                <span className="text-muted-foreground text-xs">{SOURCE_LABEL[m.source]}</span>
-                                <span className="text-foreground text-xs">{m.score || '—'}</span>
-                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
+                            <div key={m.id} className="flex items-center gap-3 text-sm py-1 border-b border-border last:border-0">
+                                <span className="w-20 shrink-0 text-left text-muted-foreground text-xs">{m.date}</span>
+                                <span className="w-8 shrink-0 text-left text-muted-foreground text-xs">{SOURCE_LABEL[m.source]}</span>
+                                <span className="flex-1 min-w-0 text-left text-foreground text-xs truncate">{m.score || '—'}</span>
+                                <span className={`inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
                                     {H2H_OUTCOME_LABEL[m.outcome]}
                                 </span>
                             </div>
