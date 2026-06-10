@@ -1,6 +1,22 @@
 export const CARD_BASE = 'rounded-xl border border-border bg-card'
 export const CARD_HOVER = 'hover:bg-muted/50 transition-colors'
-export const SECTION_LABEL = 'text-[22px] font-bold tracking-tight text-foreground'
+
+/**
+ * 시맨틱 타이포 스케일 — 제목과 본문 간극 압축 + 본문 가독성 상향.
+ * 한 곳에서 위계를 관리해 컴포넌트 간 일관성을 유지한다.
+ */
+export const TYPO = {
+    pageTitle: 'text-2xl font-semibold tracking-tight text-foreground', // 페이지 h1 (24px)
+    sectionLabel: 'text-lg font-semibold tracking-tight text-foreground', // 섹션 헤더 (18px)
+    cardTitle: 'text-[15px] font-semibold leading-snug text-foreground', // 카드 제목 (15px)
+    body: 'text-[15px] text-foreground', // 본문 기본 (15px)
+    bodyMuted: 'text-[15px] text-muted-foreground',
+    label: 'text-sm text-muted-foreground', // 라벨/보조 (14px)
+    meta: 'text-xs text-muted-foreground', // 진짜 메타만 (12px)
+} as const
+
+/** 섹션 헤더 — TYPO.sectionLabel과 동일 값(기존 호출부 호환용 alias) */
+export const SECTION_LABEL = TYPO.sectionLabel
 export const PILL_BASE = 'inline-flex items-center text-xs px-2 py-0.5 rounded-[4px] border'
 export const EMPTY_BLOCK =
     'rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground text-sm text-center py-8'

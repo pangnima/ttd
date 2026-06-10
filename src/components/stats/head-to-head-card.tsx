@@ -36,7 +36,7 @@ function StatBlock({ label, value }: { label: string; value: string | number }) 
     return (
         <div className="text-center">
             <p className="text-xl font-bold text-foreground">{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
         </div>
     )
 }
@@ -56,7 +56,7 @@ function H2HDetail({
                 <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">{myName}</p>
                     <p className="text-3xl font-bold text-foreground">{detail.myWins}</p>
-                    <p className="text-xs text-muted-foreground mt-1">승 ({detail.winRate}%)</p>
+                    <p className="text-sm text-muted-foreground mt-1">승 ({detail.winRate}%)</p>
                 </div>
                 <div className="flex flex-col items-center justify-center">
                     <p className="text-xs text-muted-foreground mb-1">총 {detail.totalMatches}경기</p>
@@ -68,7 +68,7 @@ function H2HDetail({
                 <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">{opponentDisplayName}</p>
                     <p className="text-3xl font-bold text-foreground">{detail.myLosses}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         승 ({calcWinRate(detail.myLosses, detail.myWins) ?? 0}%)
                     </p>
                 </div>

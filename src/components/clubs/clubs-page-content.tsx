@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { ClubListRow } from '@/components/clubs/club-list-row'
-import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { SECTION_LABEL, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 import { Plus, Search, Users } from 'lucide-react'
 import type { ClubMemberCount } from '@/lib/queries/clubs'
@@ -35,7 +35,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
             {/* 헤더 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">클럽 목록</h1>
+                    <h1 className={TYPO.pageTitle}>클럽 목록</h1>
                     <p className="text-sm text-muted-foreground mt-0.5">가입할 클럽을 찾아보세요</p>
                 </div>
                 <Link
@@ -48,13 +48,13 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
             </div>
 
             {/* 검색 */}
-            <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative max-w-2xl">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                     placeholder="클럽 이름·지역으로 검색"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 bg-background border-input"
+                    className="h-12 pl-11 text-base bg-background border-input"
                 />
             </div>
 

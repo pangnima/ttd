@@ -20,14 +20,14 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                             {activity.fixedCount}
                             <span className={`text-sm font-normal ml-1 ${TEXT_META}`}>개</span>
                         </p>
-                        <p className={`text-xs ${TEXT_MUTED}`}>확정 완료</p>
+                        <p className={`text-sm ${TEXT_MUTED}`}>확정 완료</p>
                     </div>
                     <div className="space-y-1">
                         <p className="text-2xl font-bold text-foreground">
                             {activity.pendingCount}
                             <span className={`text-sm font-normal ml-1 ${TEXT_META}`}>개</span>
                         </p>
-                        <p className={`text-xs ${TEXT_MUTED}`}>진행 예정</p>
+                        <p className={`text-sm ${TEXT_MUTED}`}>진행 예정</p>
                     </div>
                 </div>
 

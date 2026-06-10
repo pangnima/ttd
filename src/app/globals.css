@@ -49,39 +49,40 @@
 }
 
 :root {
-  /* 라이트 모드 회색 사다리: background(가라앉음) < sidebar < card/popover(떠오름) */
-  --background: oklch(0.965 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(0.995 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(0.995 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* 라이트 모드 쿨 뉴트럴(hue 256, 옅은 chroma): background(가라앉음) < sidebar < card/popover(떠오름) */
+  /* background↔card 명도차를 벌리고 border를 또렷하게 해 그림자 없이 영역을 구분한다 */
+  --background: oklch(0.955 0.005 256);
+  --foreground: oklch(0.19 0.012 256);
+  --card: oklch(0.999 0.001 256);
+  --card-foreground: oklch(0.19 0.012 256);
+  --popover: oklch(0.999 0.001 256);
+  --popover-foreground: oklch(0.19 0.012 256);
+  --primary: oklch(0.23 0.012 256);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.93 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.93 0 0);
-  --muted-foreground: oklch(0.44 0 0);
-  --accent: oklch(0.93 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.93 0.005 256);
+  --secondary-foreground: oklch(0.23 0.012 256);
+  --muted: oklch(0.935 0.005 256);
+  --muted-foreground: oklch(0.47 0.012 256);
+  --accent: oklch(0.93 0.006 256);
+  --accent-foreground: oklch(0.23 0.012 256);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.86 0 0);
-  --input: oklch(0.86 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.835 0.006 256);
+  --input: oklch(0.835 0.006 256);
+  --ring: oklch(0.62 0.02 256);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.955 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: oklch(0.945 0.005 256);
+  --sidebar-foreground: oklch(0.19 0.012 256);
+  --sidebar-primary: oklch(0.23 0.012 256);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.86 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.93 0.006 256);
+  --sidebar-accent-foreground: oklch(0.23 0.012 256);
+  --sidebar-border: oklch(0.835 0.006 256);
+  --sidebar-ring: oklch(0.62 0.02 256);
 }
 
 .dark {
@@ -124,6 +125,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* 본문 기본 폰트 플로어 상향 (명시적 text-* 없는 텍스트 가독성) */
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.5;
   }
   html {
     @apply font-sans;

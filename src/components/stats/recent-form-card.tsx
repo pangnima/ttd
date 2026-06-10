@@ -37,7 +37,7 @@ export function RecentFormCard({ recentForm }: Props) {
                 )}
             </div>
             {/* 방향 설명 */}
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-xs text-muted-foreground/70">
                 ← 과거&nbsp;&nbsp;&nbsp;최신 →
             </p>
             {/* 집계 요약 */}

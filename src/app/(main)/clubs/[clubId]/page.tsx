@@ -151,15 +151,15 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 {ownerMember && (
                     <div className="flex items-center gap-3 px-4 py-3">
                         <Crown className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-xs ${TEXT_MUTED} w-16 shrink-0`}>운영자</span>
-                        <span className="text-sm text-foreground/85">{ownerMember.user.name}</span>
+                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>운영자</span>
+                        <span className="text-[15px] font-medium text-foreground/90">{ownerMember.user.name}</span>
                     </div>
                 )}
                 {club.region && (
                     <div className="flex items-center gap-3 px-4 py-3">
                         <MapPin className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-xs ${TEXT_MUTED} w-16 shrink-0`}>지역</span>
-                        <span className="text-sm text-foreground/85">{club.region}</span>
+                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>지역</span>
+                        <span className="text-[15px] font-medium text-foreground/90">{club.region}</span>
                     </div>
                 )}
             </div>
