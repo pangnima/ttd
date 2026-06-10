@@ -5,10 +5,10 @@
 export const RATING_SCALE_D = 1.0
 
 /** 잠정기(경기 수 < PROVISIONAL_THRESHOLD) 최대 변동폭. */
-export const K_PROVISIONAL = 0.2
+export const K_PROVISIONAL = 0.1
 
 /** 정착 후 최대 변동폭. */
-export const K_BASE = 0.1
+export const K_BASE = 0.05
 
 /** 잠정기 경기 수 경계. */
 export const PROVISIONAL_THRESHOLD = 10

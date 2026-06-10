@@ -65,51 +65,51 @@ describe('marginFactor', () => {
 })
 
 describe('pickK', () => {
-    it('잠정기(<10경기)는 0.20', () => {
+    it('잠정기(<10경기)는 0.10', () => {
         expect(pickK(0)).toBe(K_PROVISIONAL)
         expect(pickK(9)).toBe(K_PROVISIONAL)
     })
-    it('정착(>=10경기)은 0.10', () => {
+    it('정착(>=10경기)은 0.05', () => {
         expect(pickK(10)).toBe(K_BASE)
     })
 })
 
 describe('computeMatchDelta — docs §2.8 Worked Examples', () => {
-    // 예시 1: 이변승. A 2.5 가 B 4.0 을 6-4,6-4 로 이김 (정착 K=0.10, mf=1.10).
-    it('이변승은 +0.107', () => {
+    // 예시 1: 이변승. A 2.5 가 B 4.0 을 6-4,6-4 로 이김 (정착 K=0.05, mf=1.10).
+    it('이변승은 +0.053', () => {
         const delta = computeMatchDelta({
             selfRating: 2.5,
             oppRating: 4.0,
             selfScore: 1,
-            k: 0.1,
+            k: 0.05,
             margin: 1.1,
         })
-        expect(delta).toBeCloseTo(0.1066, 3)
+        expect(delta).toBeCloseTo(0.0533, 3)
     })
-    // 예시 2: 강자 예상 압승. B 4.0 이 A 2.5 를 6-1,6-2 로 이김 (K=0.10, mf=1.30).
-    it('강자 압승은 거의 불변 +0.004', () => {
+    // 예시 2: 강자 예상 압승. B 4.0 이 A 2.5 를 6-1,6-2 로 이김 (K=0.05, mf=1.30).
+    it('강자 압승은 거의 불변 +0.002', () => {
         const delta = computeMatchDelta({
             selfRating: 4.0,
             oppRating: 2.5,
             selfScore: 1,
-            k: 0.1,
+            k: 0.05,
             margin: 1.3,
         })
-        expect(delta).toBeCloseTo(0.004, 3)
+        expect(delta).toBeCloseTo(0.002, 3)
     })
 })
 
 describe('replayClubRatings', () => {
-    // 예시 3: 잠정기 신규 강자. C 2.5 가 D 2.5 를 6-1,6-0 으로 이김 (둘 다 첫 경기 K=0.20).
-    it('잠정기 신규 강자는 2.500 → 2.642 로 빠르게 상승', () => {
+    // 예시 3: 잠정기 신규 강자. C 2.5 가 D 2.5 를 6-1,6-0 으로 이김 (둘 다 첫 경기 K=0.10).
+    it('잠정기 신규 강자는 2.500 → 2.571 로 빠르게 상승', () => {
         const { ratings } = replayClubRatings([
             singles('m1', 'C', 'D', 'team1', [
                 { team1: 6, team2: 1 },
                 { team1: 6, team2: 0 },
             ]),
         ])
-        expect(roundRating(ratings.get('C')!.rating)).toBeCloseTo(2.642, 3)
-        expect(roundRating(ratings.get('D')!.rating)).toBeCloseTo(2.358, 3)
+        expect(roundRating(ratings.get('C')!.rating)).toBeCloseTo(2.571, 3)
+        expect(roundRating(ratings.get('D')!.rating)).toBeCloseTo(2.429, 3)
         expect(ratings.get('C')!.matchesPlayed).toBe(1)
     })
 
