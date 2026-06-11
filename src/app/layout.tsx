@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Noto_Sans_KR } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 
@@ -13,10 +14,12 @@ const geistMono = Geist_Mono({
     subsets: ['latin'],
 })
 
-const notoSansKR = Noto_Sans_KR({
-    variable: '--font-noto-kr',
-    subsets: ['latin'],
-    weight: ['400', '500', '700', '900'],
+// Pretendard 가변폰트 자체 호스팅 (Google Fonts 미제공 → next/font/local)
+const pretendard = localFont({
+    src: './fonts/PretendardVariable.woff2',
+    variable: '--font-pretendard',
+    display: 'swap',
+    weight: '45 920', // 가변 axis 범위
 })
 
 export const metadata: Metadata = {
@@ -51,7 +54,7 @@ export default function RootLayout({
         <html
             lang="ko"
             suppressHydrationWarning
-            className={`${geistSans.variable} ${geistMono.variable} ${notoSansKR.variable} h-full antialiased`}
+            className={`${pretendard.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
         >
             <body className="min-h-full bg-background">
                 <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
