@@ -19,7 +19,7 @@ import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
 import { aggregatePartnerRecommendations } from '@/lib/analytics/partner'
 import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
 type Props = {
@@ -31,7 +31,7 @@ type Props = {
 
 function getScopeLabel(scope: AnalyticsScope): string {
     if (scope.kind === 'personal') return '클럽 외 개인 경기 통계'
-    if (scope.kind === 'club') return `${scope.clubName} 클럽 경기 통계`
+    if (scope.kind === 'club') return `${scope.clubName} 경기 통계`
     return '클럽 + 개인 경기 통합 통계'
 }
 
@@ -86,10 +86,14 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
 
     return (
         <div className="space-y-8">
-            {/* 종합 통계 — 세트 표기 숨김 (심플하게) */}
+            {/* 전적 통계 (4칸) — 세트 표기 숨김(심플), scope는 칩으로 노출 */}
             <section className="space-y-3">
-                <p className="text-sm text-foreground/60">{getScopeLabel(scope)}</p>
-                <p className={SECTION_LABEL}>종합 통계</p>
+                <div className="flex items-center gap-2">
+                    <p className={SECTION_LABEL}>전적 통계</p>
+                    <span className={`${PILL_BASE} text-primary border-primary/30 bg-primary/10 font-medium`}>
+                        {getScopeLabel(scope)}
+                    </span>
+                </div>
                 <StatsQuadGrid
                     gender={me.gender}
                     singles={bundle.stats.singles}
@@ -109,12 +113,29 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
             </div>
 
-            {/* 클럽 레이팅 추세 (클럽 scope에서만) */}
+            {/* 파트너 추천 + 개인 경기 미리보기 (2col) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PartnerRecommendationCard
+                    recommendations={partnerRecommendations}
+                    userMap={bundle.userMap}
+                    gender={me.gender}
+                />
+                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+            </div>
+
+            {/* ── 심화 진단 (3col) ─────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <NtrpDifferentialCard ntrpStats={ntrpStats} />
+                <StrengthWeaknessCard diagnosis={diagnosis} />
+                <OpponentHandStatsCard handStats={opponentHandStats} />
+            </div>
+
+            {/* 클럽 레이팅 추세 (클럽 scope에서만) — 1:1 맞대결 바로 위 */}
             {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
                 <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
             )}
 
-            {/* 1:1 맞대결 비교 */}
+            {/* 1:1 맞대결 비교 (full) */}
             <Suspense>
                 <HeadToHeadCard
                     h2hList={bundle.h2hList}
@@ -128,24 +149,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 />
             </Suspense>
 
-            {/* 나와 잘 맞는 파트너 추천 */}
-            <PartnerRecommendationCard
-                recommendations={partnerRecommendations}
-                userMap={bundle.userMap}
-                gender={me.gender}
-            />
-
-            {/* 개인 경기 미리보기 */}
-            <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
-
-            {/* ── 심화 진단 (하단) ─────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <NtrpDifferentialCard ntrpStats={ntrpStats} />
-                <StrengthWeaknessCard diagnosis={diagnosis} />
-                <OpponentHandStatsCard handStats={opponentHandStats} />
-            </div>
-
-            {/* AI 코칭 */}
+            {/* AI 코칭 (full) */}
             <AICoachingCard
                 initialResult={aiResult}
                 initialGeneratedAt={aiGeneratedAt}

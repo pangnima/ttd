@@ -33,6 +33,27 @@ export const EMPTY_PLAYER_STATS: PlayerStats = {
     byMatchType: [],
 }
 
+/** 여러 PlayerStats를 합산해 '전체' 카드용 단일 PlayerStats 생성. winRate는 무승부 제외 재계산. */
+export function combinePlayerStats(...parts: PlayerStats[]): PlayerStats {
+    const a = parts.reduce(
+        (s, p) => ({
+            wins: s.wins + p.wins,
+            losses: s.losses + p.losses,
+            draws: s.draws + p.draws,
+            totalMatches: s.totalMatches + p.totalMatches,
+            setsWon: s.setsWon + p.setsWon,
+            setsLost: s.setsLost + p.setsLost,
+        }),
+        { wins: 0, losses: 0, draws: 0, totalMatches: 0, setsWon: 0, setsLost: 0 },
+    )
+    const decisive = a.wins + a.losses
+    return {
+        ...a,
+        winRate: decisive === 0 ? 0 : Math.round((a.wins / decisive) * 100),
+        byMatchType: [],
+    }
+}
+
 export type HeadToHead = {
     opponentId: string
     wins: number

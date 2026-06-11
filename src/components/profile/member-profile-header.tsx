@@ -64,7 +64,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional }:
 
                 {clubName && (
                     <p className="text-xs text-muted-foreground">
-                        {clubName} 클럽 기준 통계
+                        {clubName} 기준 통계
                     </p>
                 )}
             </div>

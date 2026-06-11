@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Trophy, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
@@ -9,15 +9,20 @@ import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
     currentPath?: string
-    /** 가입한 클럽 목록 (layout에서 주입, 대진표 하위 메뉴로 노출) */
+    /** 가입한 클럽 목록 (layout에서 주입, 대진표·개인 분석 하위 메뉴로 노출) */
     clubs?: { id: string; name: string }[]
-    /** 동적으로 생성된 프로필 링크 (layout에서 주입, 아이콘은 클라이언트에서 직접 렌더링) */
-    profileHref?: string | null
+    /** 로그인 사용자 id (개인 분석 하위 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
+    userId?: string | null
 }
 
-export function Sidebar({ currentPath, clubs = [], profileHref }: SidebarProps) {
+export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
     const activePath = currentPath ?? pathname
+    // 개인 분석 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
+    const onProfile = activePath.startsWith('/profile/')
+    const currentScope = searchParams.get('scope') ?? 'total'
+    const scopeActive = (scope: string) => onProfile && currentScope === scope
 
     const navLinkClass = (active: boolean) =>
         cn(
@@ -52,15 +57,31 @@ export function Sidebar({ currentPath, clubs = [], profileHref }: SidebarProps) 
                     </Link>
                 ))}
 
-                {/* 내 분석: 로그인한 경우에만 노출 (아이콘은 직렬화 문제 방지를 위해 클라이언트에서 직접 렌더링) */}
-                {profileHref && (
-                    <Link
-                        href={profileHref}
-                        className={navLinkClass(activePath.startsWith('/profile/'))}
-                    >
-                        <BarChart3 className="w-4 h-4 shrink-0" />
-                        내 분석
-                    </Link>
+                {/* 개인 분석: 전체/개인/클럽별 하위 메뉴를 항상 펼쳐서 노출 (로그인 시) */}
+                {userId && (
+                    <div className="pt-0.5">
+                        <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
+                            <BarChart3 className="w-4 h-4 shrink-0" />
+                            개인 분석
+                        </div>
+                        <div className="space-y-0.5">
+                            <Link href={`/profile/${userId}?scope=total`} className={cn(navLinkClass(scopeActive('total')), 'pl-9 text-[13px]')}>
+                                전체
+                            </Link>
+                            <Link href={`/profile/${userId}?scope=personal`} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
+                                개인
+                            </Link>
+                            {clubs.map((club) => (
+                                <Link
+                                    key={club.id}
+                                    href={`/profile/${userId}?scope=${club.id}`}
+                                    className={cn(navLinkClass(scopeActive(club.id)), 'pl-9 text-[13px]')}
+                                >
+                                    {club.name}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
                 )}
 
                 {/* 대진표: 가입 클럽별 하위 메뉴를 항상 펼쳐서 노출 */}

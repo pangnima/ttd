@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, Trophy, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,8 @@ type MobileNavProps = {
 export function MobileNav({ clubs = [] }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
-    const [profileHref, setProfileHref] = useState<string | null>(null)
+    const searchParams = useSearchParams()
+    const [userId, setUserId] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -25,14 +26,18 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
 
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (!isMounted || !user) return
-            // 프로필 링크 설정
-            setProfileHref(`/profile/${user.id}`)
+            setUserId(user.id)
         })
 
         return () => {
             isMounted = false
         }
     }, [])
+
+    // 개인 분석 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
+    const onProfile = pathname.startsWith('/profile/')
+    const currentScope = searchParams.get('scope') ?? 'total'
+    const scopeActive = (scope: string) => onProfile && currentScope === scope
 
     const navLinkClass = (active: boolean) =>
         cn(
@@ -71,16 +76,32 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                         </Link>
                     ))}
 
-                    {/* 내 분석 (동적 프로필 링크) */}
-                    {profileHref && (
-                        <Link
-                            href={profileHref}
-                            onClick={() => setOpen(false)}
-                            className={navLinkClass(pathname.startsWith('/profile/'))}
-                        >
-                            <BarChart3 className="w-4 h-4" />
-                            내 분석
-                        </Link>
+                    {/* 개인 분석: 전체/개인/클럽별 하위 메뉴를 항상 펼쳐서 노출 (로그인 시) */}
+                    {userId && (
+                        <div className="pt-0.5">
+                            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground/70">
+                                <BarChart3 className="w-4 h-4" />
+                                개인 분석
+                            </div>
+                            <div className="space-y-1">
+                                <Link href={`/profile/${userId}?scope=total`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('total')), 'pl-9 text-[13px]')}>
+                                    전체
+                                </Link>
+                                <Link href={`/profile/${userId}?scope=personal`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
+                                    개인
+                                </Link>
+                                {clubs.map((club) => (
+                                    <Link
+                                        key={club.id}
+                                        href={`/profile/${userId}?scope=${club.id}`}
+                                        onClick={() => setOpen(false)}
+                                        className={cn(navLinkClass(scopeActive(club.id)), 'pl-9 text-[13px]')}
+                                    >
+                                        {club.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     {/* 대진표: 가입 클럽별 하위 메뉴를 항상 펼쳐서 노출 */}

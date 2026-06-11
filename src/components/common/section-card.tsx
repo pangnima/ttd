@@ -29,7 +29,7 @@ export function SectionCard({
     contentClass = 'p-4',
 }: Props) {
     return (
-        <section className="space-y-3">
+        <section className="space-y-3 h-full flex flex-col">
             <div className="flex items-center justify-between">
                 <p className={SECTION_LABEL}>{title}</p>
                 {headerRight}
@@ -37,7 +37,7 @@ export function SectionCard({
             {isEmpty ? (
                 <div className={EMPTY_BLOCK}>{emptyMessage}</div>
             ) : (
-                <div className={`${CARD_BASE} ${contentClass}`}>{children}</div>
+                <div className={`${CARD_BASE} ${contentClass} flex-1`}>{children}</div>
             )}
         </section>
     )

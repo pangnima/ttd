@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import type { User } from '@/types'
 import type { PlayerStats } from '@/lib/stats'
+import { combinePlayerStats } from '@/lib/stats'
 import { StatsQuadCard } from '@/components/stats/stats-quad-card'
 import { StatsPrivacyToggle } from '@/components/stats/stats-privacy-toggle'
 import { toggleStatsHiddenAction } from '@/lib/actions/profile'
@@ -19,6 +20,8 @@ type Props = {
     editable?: boolean
     statsHidden?: boolean
     showSets?: boolean
+    // 있으면 섹션 헤더(라벨) 렌더, 없으면 생략 (호출부에서 라벨을 직접 관리할 때)
+    label?: string
 }
 
 export function StatsQuadGrid({
@@ -31,6 +34,7 @@ export function StatsQuadGrid({
     editable = false,
     statsHidden = false,
     showSets = true,
+    label,
 }: Props) {
     const [revealed, setRevealed] = useState(false)
     const [, startTransition] = useTransition()
@@ -47,8 +51,12 @@ export function StatsQuadGrid({
         })
     }
 
-    const showMenDoubles = gender !== 'female'
-    const showWomenDoubles = gender !== 'male'
+    // 4칸 고정을 위해 성별에 따라 남복/여복 중 정확히 1개만 노출 (female=여복, 그 외=남복)
+    const showWomenDoubles = gender === 'female'
+    const genderDoubles = showWomenDoubles ? womenDoubles : menDoubles
+    const genderDoublesType = showWomenDoubles ? 'women_doubles' : 'men_doubles'
+    // '전체' 종합 카드 = 4분기 합산 (winRate 재계산)
+    const totalStats = combinePlayerStats(singles, menDoubles, womenDoubles, mixedDoubles)
 
     const isLocked = privacy === 'locked'
     const isSelf = privacy === 'self'
@@ -57,17 +65,19 @@ export function StatsQuadGrid({
 
     return (
         <section className="space-y-3">
-            <div className="flex items-center justify-between">
-                <p className={SECTION_LABEL}>내 전적 통계</p>
-                {editable && (
-                    <StatsPrivacyToggle hidden={statsHidden} />
-                )}
-            </div>
+            {(label || editable) && (
+                <div className="flex items-center justify-between">
+                    {label ? <p className={SECTION_LABEL}>{label}</p> : <span />}
+                    {editable && (
+                        <StatsPrivacyToggle hidden={statsHidden} />
+                    )}
+                </div>
+            )}
             <div className="relative">
-                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
+                <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
+                    <StatsQuadCard variant="neutral" stats={totalStats} masked={isLocked} showSets={showSets} />
                     <StatsQuadCard matchType="singles" stats={singles} masked={isLocked} showSets={showSets} />
-                    {showMenDoubles && <StatsQuadCard matchType="men_doubles" stats={menDoubles} masked={isLocked} showSets={showSets} />}
-                    {showWomenDoubles && <StatsQuadCard matchType="women_doubles" stats={womenDoubles} masked={isLocked} showSets={showSets} />}
+                    <StatsQuadCard matchType={genderDoublesType} stats={genderDoubles} masked={isLocked} showSets={showSets} />
                     <StatsQuadCard matchType="mixed_doubles" stats={mixedDoubles} masked={isLocked} showSets={showSets} />
                 </div>
 

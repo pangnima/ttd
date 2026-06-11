@@ -15,7 +15,7 @@ export function RecentFormCard({ recentForm }: Props) {
 
     return (
         <SectionCard
-            title="최근 폼"
+            title="최근 경기 승패"
             isEmpty={last10.length === 0}
             emptyMessage="경기 데이터가 없습니다"
             contentClass="p-4 space-y-4"

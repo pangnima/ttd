@@ -11,7 +11,6 @@ import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
 import { AnalyticsModeTabs } from '@/components/stats/analytics-mode-tabs'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
 type Props = {
@@ -67,7 +66,6 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         return (
             <PageContainer>
                 <div className="space-y-4">
-                    <h2 className={SECTION_LABEL}>내 분석</h2>
                     <MemberProfileHeader
                         user={target}
                         clubName={scope.kind === 'club' ? scope.clubName : club?.name}

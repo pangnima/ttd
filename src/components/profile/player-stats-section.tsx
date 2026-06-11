@@ -42,6 +42,7 @@ export function PlayerStatsSection({ bundle, gender, userId, privacy, editable, 
                 privacy={privacy}
                 editable={editable}
                 statsHidden={statsHidden}
+                label="전적 통계"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
