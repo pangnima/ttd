@@ -28,10 +28,10 @@ export function AnalyticsModeTabs({ scope, clubs, basePath = '/me/analytics' }: 
             : 'total'
 
     return (
-        <div className="flex w-full md:w-auto gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            {/* 전체 탭 */}
+        <div className="flex w-full md:w-auto gap-0.5 overflow-x-auto rounded-lg border border-border bg-muted/30 p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* 통합 탭 */}
             <TabButton
-                label="전체"
+                label="통합"
                 value="total"
                 active={currentKey === 'total'}
                 onClick={handleChange}
@@ -72,7 +72,7 @@ function TabButton({
         <button
             type="button"
             onClick={() => onClick(value)}
-            className={`flex-1 md:flex-none px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                 active
                     ? 'bg-background text-foreground shadow-sm border border-border'
                     : 'text-muted-foreground hover:text-foreground hover:bg-background/50'

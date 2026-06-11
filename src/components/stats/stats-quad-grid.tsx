@@ -74,7 +74,7 @@ export function StatsQuadGrid({
                 </div>
             )}
             <div className="relative">
-                <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
+                <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
                     <StatsQuadCard variant="neutral" stats={totalStats} masked={isLocked} showSets={showSets} />
                     <StatsQuadCard matchType="singles" stats={singles} masked={isLocked} showSets={showSets} />
                     <StatsQuadCard matchType={genderDoublesType} stats={genderDoubles} masked={isLocked} showSets={showSets} />

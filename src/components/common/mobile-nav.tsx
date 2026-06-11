@@ -85,7 +85,7 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                             </div>
                             <div className="space-y-1">
                                 <Link href={`/profile/${userId}?scope=total`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('total')), 'pl-9 text-[13px]')}>
-                                    전체
+                                    통합
                                 </Link>
                                 <Link href={`/profile/${userId}?scope=personal`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                     개인
