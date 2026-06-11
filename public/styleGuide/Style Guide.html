@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Baseline — Style Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  html, body { margin: 0; background: #d9d8d1; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 28px 0; }
+  .guide-page {
+    width: 1180px; height: 1000px;
+    background: var(--bg); overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,.14);
+  }
+  @media print {
+    html, body { background: #fff; }
+    .pages { gap: 0; padding: 0; }
+    .guide-page { box-shadow: none; break-after: page; page-break-after: always; }
+    @page { size: 1180px 1000px; margin: 0; }
+  }
+  /* cover */
+  .cover { position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: 64px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="layout.jsx"></script>
+<script type="text/babel" src="screens-system.jsx"></script>
+<script type="text/babel" src="screens-guide2.jsx"></script>
+
+<script type="text/babel">
+const { GuideFoundations, GuideType, GuideComponents, GuidePrinciples, GuideActions, GuideStates, BallMark, Wordmark } = window;
+
+function Page({ children, cls }) {
+  return <div className={'guide-page theme-light ' + (cls || '')}>{children}</div>;
+}
+
+function Cover() {
+  return (
+    <Page cls="cover scr">
+      <div style={{ position: 'absolute', right: -80, bottom: -80, opacity: .9 }}><BallMark size={420} /></div>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Wordmark mark={34} size={22} />
+        <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '.1em' }}>v1.0 · 2025</span>
+      </div>
+      <div style={{ position: 'relative' }}>
+        <div className="eyebrow" style={{ marginBottom: 18 }}>DESIGN SYSTEM · SPORTY MINIMAL</div>
+        <div className="disp" style={{ fontSize: 92, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-.03em', lineHeight: .98 }}>Style<br />Guide</div>
+        <div style={{ fontSize: 17, color: 'var(--muted)', marginTop: 24, maxWidth: 520, lineHeight: 1.6 }}>
+          테니스 클럽 관리 + 경기 분석 플랫폼을 위한 디자인 시스템. 컬러 · 타이포그래피 · 컴포넌트 · 원칙.
+        </div>
+      </div>
+      <div style={{ position: 'relative', display: 'flex', gap: 10 }}>
+        {['Foundations', 'Typography', 'Components', 'Actions', 'States', 'Principles'].map((t) => (
+          <span key={t} style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', background: 'var(--surface)', border: '1px solid var(--border)', padding: '7px 13px', borderRadius: 'var(--r-sm)' }}>{t}</span>
+        ))}
+      </div>
+    </Page>
+  );
+}
+
+function Doc() {
+  return (
+    <div className="pages">
+      <Cover />
+      <Page><GuideFoundations /></Page>
+      <Page><GuideType /></Page>
+      <Page><GuideComponents /></Page>
+      <Page><GuideActions /></Page>
+      <Page><GuideStates /></Page>
+      <Page><GuidePrinciples /></Page>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Doc />);
+</script>
+</body>
+</html>
