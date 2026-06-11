@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import type { PersonalMatch, MatchType, CourtSurface, PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { PersonalMatch, MatchType, CourtSurface, PersonalMatchSetScore } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
+import type { PastOpponent } from '@/lib/queries/personal-matches'
 import {
-    createPersonalMatchAction,
+    createPersonalMatchesAction,
     updatePersonalMatchAction,
     type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
@@ -23,6 +24,7 @@ import {
 type Props = {
     initialData?: PersonalMatch
     opponentCandidates?: OpponentCandidate[]
+    pastOpponents?: PastOpponent[]
 }
 
 const MATCH_TYPES: { value: MatchType; label: string }[] = [
@@ -40,7 +42,7 @@ const SURFACE_SELECT_ITEMS: { value: string; label: string }[] = [
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
-export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Props) {
+export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [] }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
@@ -63,16 +65,15 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
     const [playedAt, setPlayedAt] = useState(initialData?.playedAt ?? new Date().toISOString().slice(0, 10))
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
-    const [winner, setWinner] = useState<PersonalMatchWinner>(initialData?.winner ?? 'me')
     const [sets, setSets] = useState<PersonalMatchSetScore[]>(
-        initialData?.setScores?.length ? initialData.setScores : [{ me: 6, opp: 0 }]
+        initialData?.setScores?.length ? initialData.setScores : [{ me: 0, opp: 0 }]
     )
     const [notes, setNotes] = useState(initialData?.notes ?? '')
 
     const isDoubles = DOUBLES_TYPES.includes(matchType)
 
     function addSet() {
-        setSets((prev) => [...prev, { me: 6, opp: 0 }])
+        setSets((prev) => [...prev, { me: 0, opp: 0 }])
     }
     function removeSet(i: number) {
         setSets((prev) => prev.filter((_, idx) => idx !== i))
@@ -88,26 +89,28 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
         setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: num } : s))
     }
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault()
-        setError(null)
+    // 선수 입력 완료 여부 — 회원 선택은 userId, 비회원은 이름 + 손잡이(필수)까지 입력돼야 한다.
+    function isPlayerFilled(p: PlayerPickerValue): boolean {
+        if (p.userId) return true
+        return !!p.name.trim() && !!p.hand
+    }
+    // 세트 유효성 — 양쪽 점수가 0~99 정수이고 0-0(미입력) 세트가 아니어야 한다.
+    function isSetValid(s: PersonalMatchSetScore): boolean {
+        if (Number.isNaN(s.me) || Number.isNaN(s.opp)) return false
+        if (s.me === 0 && s.opp === 0) return false
+        return true
+    }
 
-        if (!opponent.name.trim() && !opponent.userId) {
-            setError('상대를 선택하거나 이름을 입력해주세요.')
-            return
-        }
-        if (isDoubles) {
-            if (!partner.name.trim() && !partner.userId) {
-                setError('복식은 내 파트너를 입력해주세요.')
-                return
-            }
-            if (!opponent2.name.trim() && !opponent2.userId) {
-                setError('복식은 상대팀 2번째 선수를 입력해주세요.')
-                return
-            }
-        }
+    const isValid =
+        isPlayerFilled(opponent) &&
+        (!isDoubles || (isPlayerFilled(partner) && isPlayerFilled(opponent2))) &&
+        !!playedAt &&
+        sets.length > 0 &&
+        sets.every(isSetValid)
 
-        const input: PersonalMatchInput = {
+    // setScores를 제외한 공통 입력 필드
+    function buildBaseInput(): Omit<PersonalMatchInput, 'setScores'> {
+        return {
             opponentName: opponent.name.trim(),
             opponentUserId: opponent.userId,
             // 손잡이는 직접 입력(회원 미선택) 모드에서만 저장
@@ -122,18 +125,31 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
             playedAt,
             matchType,
             surface: surface || undefined,
-            // 비워둔 입력(NaN)은 0으로 정리해 저장
-            setScores: sets.map((s) => ({
-                me: Number.isNaN(s.me) ? 0 : s.me,
-                opp: Number.isNaN(s.opp) ? 0 : s.opp,
-            })),
-            winner,
             notes: notes || undefined,
         }
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        setError(null)
+
+        if (!isValid) {
+            setError('필수 항목을 모두 정확히 입력해주세요.')
+            return
+        }
+
+        const base = buildBaseInput()
+        const cleanSets = sets.map((s) => ({
+            me: Number.isNaN(s.me) ? 0 : s.me,
+            opp: Number.isNaN(s.opp) ? 0 : s.opp,
+        }))
+
         startTransition(async () => {
             const res = initialData
-                ? await updatePersonalMatchAction(initialData.id, input)
-                : await createPersonalMatchAction(input)
+                // 수정: 기존 한 레코드를 그대로 유지 (모든 세트 포함, winner 자동 판정)
+                ? await updatePersonalMatchAction(initialData.id, { ...base, setScores: cleanSets })
+                // 신규: 세트마다 개별 경기로 분리 저장
+                : await createPersonalMatchesAction(cleanSets.map((s) => ({ ...base, setScores: [s] })))
             if (res.error) {
                 setError(res.error)
             } else {
@@ -144,9 +160,11 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
 
     const inputClass = 'w-full rounded-[4px] border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
     const labelClass = 'text-sm font-medium text-foreground block mb-1'
+    // 세트 스코어 우측 라벨 (상대/상대팀 표시 이름)
+    const opponentLabel = opponent.name.trim() || '상대'
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 mx-auto w-full max-w-2xl">
             <div className={`${CARD_BASE} p-5 space-y-4`}>
                 {/* 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
                 <div>
@@ -172,6 +190,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                     <PlayerPicker
                         label="내 파트너 *"
                         candidates={opponentCandidates}
+                        pastOpponents={pastOpponents}
                         value={partner}
                         onChange={setPartner}
                         placeholder="파트너 이름 또는 닉네임"
@@ -182,6 +201,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                 <PlayerPicker
                     label={isDoubles ? '상대팀 선수 1 *' : '상대 *'}
                     candidates={opponentCandidates}
+                    pastOpponents={pastOpponents}
                     value={opponent}
                     onChange={setOpponent}
                     placeholder="상대방 이름 또는 닉네임"
@@ -190,6 +210,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                     <PlayerPicker
                         label="상대팀 선수 2 *"
                         candidates={opponentCandidates}
+                        pastOpponents={pastOpponents}
                         value={opponent2}
                         onChange={setOpponent2}
                         placeholder="상대방 이름 또는 닉네임"
@@ -233,6 +254,13 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                             + 세트 추가
                         </button>
                     </div>
+                    {/* 왼쪽=나(등록유저), 오른쪽=상대 라벨 */}
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="w-10" />
+                        <span className="w-16 text-center text-xs text-muted-foreground truncate">나</span>
+                        <span className="w-3" />
+                        <span className="w-16 text-center text-xs text-muted-foreground truncate">{opponentLabel}</span>
+                    </div>
                     <div className="space-y-2">
                         {sets.map((s, i) => (
                             <div key={i} className="flex items-center gap-2">
@@ -244,7 +272,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                                     onChange={(e) => updateSet(i, 'me', e.target.value)}
                                     className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
                                 />
-                                <span className="text-muted-foreground">-</span>
+                                <span className="w-3 text-center text-muted-foreground">-</span>
                                 <input
                                     type="number"
                                     min={0} max={99}
@@ -260,29 +288,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                             </div>
                         ))}
                     </div>
-                </div>
-
-                <div>
-                    <label className={labelClass}>결과 *</label>
-                    <div className="flex gap-2">
-                        {(['me', 'opponent', 'draw'] as PersonalMatchWinner[]).map((w) => {
-                            const label = w === 'me' ? '내가 이겼다' : w === 'opponent' ? '상대가 이겼다' : '무승부'
-                            return (
-                                <button
-                                    key={w}
-                                    type="button"
-                                    onClick={() => setWinner(w)}
-                                    className={`flex-1 py-2 text-sm rounded-[4px] border transition-colors ${
-                                        winner === w
-                                            ? 'border-primary bg-primary/10 text-foreground'
-                                            : 'border-border text-muted-foreground hover:border-input'
-                                    }`}
-                                >
-                                    {label}
-                                </button>
-                            )
-                        })}
-                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">세트마다 점수가 높은 쪽이 승리한 개별 경기로 저장됩니다.</p>
                 </div>
 
                 <div>
@@ -302,8 +308,8 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
             <div className="flex gap-3">
                 <button
                     type="submit"
-                    disabled={isPending}
-                    className="flex-1 py-2.5 text-sm font-medium bg-foreground text-background rounded-[4px] hover:opacity-90 transition-opacity disabled:opacity-40"
+                    disabled={isPending || !isValid}
+                    className="flex-1 py-2.5 text-sm font-medium bg-foreground text-background rounded-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     {isPending ? '저장 중...' : initialData ? '수정 완료' : '경기 저장'}
                 </button>

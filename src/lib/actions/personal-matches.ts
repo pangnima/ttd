@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { CourtSurface, MatchType, PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { CourtSurface, MatchType, PersonalMatchSetScore } from '@/types'
+import { resolveMatchWinner } from '@/lib/personal-matches/winner'
 
 export type PersonalMatchInput = {
     opponentName: string
@@ -19,7 +20,7 @@ export type PersonalMatchInput = {
     matchType: MatchType
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]
-    winner: PersonalMatchWinner
+    // winner는 입력받지 않고 setScores로부터 자동 판정한다.
     notes?: string
 }
 
@@ -27,6 +28,10 @@ const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubl
 
 function isDoubles(matchType: MatchType): boolean {
     return DOUBLES_TYPES.includes(matchType)
+}
+
+function isValidScore(n: number): boolean {
+    return Number.isInteger(n) && n >= 0 && n <= 99
 }
 
 function validateInput(input: PersonalMatchInput): string | null {
@@ -39,7 +44,12 @@ function validateInput(input: PersonalMatchInput): string | null {
         if (!input.partnerName?.trim() && !input.partnerUserId) return '복식은 내 파트너를 입력해주세요.'
         if (!input.opponent2Name?.trim() && !input.opponent2UserId) return '복식은 상대팀 2번째 선수를 입력해주세요.'
     }
-    if (!['me', 'opponent', 'draw'].includes(input.winner)) return '결과를 선택해주세요.'
+    // 세트 검증: 1개 이상, 각 세트 점수가 0~99 정수, 0-0(미입력) 세트 금지
+    if (!input.setScores.length) return '세트 스코어를 입력해주세요.'
+    for (const s of input.setScores) {
+        if (!isValidScore(s.me) || !isValidScore(s.opp)) return '세트 스코어를 올바르게 입력해주세요.'
+        if (s.me === 0 && s.opp === 0) return '0-0 세트는 저장할 수 없습니다.'
+    }
     return null
 }
 
@@ -62,25 +72,34 @@ function buildPersonalMatchRow(input: PersonalMatchInput) {
         match_type: input.matchType,
         surface: input.surface ?? null,
         set_scores: input.setScores,
-        winner: input.winner,
+        // winner는 세트 점수로부터 자동 판정 (수동 선택 제거)
+        winner: resolveMatchWinner(input.setScores),
         notes: input.notes?.trim() || null,
     }
 }
 
-export async function createPersonalMatchAction(
-    input: PersonalMatchInput,
+/**
+ * 여러 세트를 각각 개별 경기로 분리 저장한다.
+ * 신규 등록 시 입력한 세트마다 하나의 PersonalMatchInput(단일 세트)을 받아 일괄 INSERT.
+ */
+export async function createPersonalMatchesAction(
+    inputs: PersonalMatchInput[],
 ): Promise<{ error: string | null }> {
-    const validationError = validateInput(input)
-    if (validationError) return { error: validationError }
+    if (!inputs.length) return { error: '저장할 경기가 없습니다.' }
+    for (const input of inputs) {
+        const validationError = validateInput(input)
+        if (validationError) return { error: validationError }
+    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    const { error } = await supabase.from('personal_matches').insert({
+    const rows = inputs.map((input) => ({
         user_id: user.id,
         ...buildPersonalMatchRow(input),
-    })
+    }))
+    const { error } = await supabase.from('personal_matches').insert(rows)
 
     if (error) return { error: '경기 저장에 실패했습니다.' }
 
