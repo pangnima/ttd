@@ -1,30 +1,32 @@
 import Link from 'next/link'
+
 import { LoginForm } from '@/components/auth/login-form'
+import { LoginHero } from '@/components/auth/login-hero'
+import { TYPO } from '@/lib/dashboard/tokens'
 
 export default function LoginPage() {
     return (
-        <div className="h-full flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
-                <Link href="/" className="flex items-center gap-2.5 mb-10">
-                    <div className="w-8 h-8 rounded-md border border-foreground/20 flex items-center justify-center text-foreground text-sm font-bold bg-foreground/5">
-                        TC
-                    </div>
-                    <span className="text-sm font-medium tracking-widest uppercase text-foreground/60">
-                        Tennis Club
-                    </span>
-                </Link>
+        <div className="grid h-screen w-full lg:grid-cols-2">
+            <LoginHero />
 
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-foreground">로그인</h1>
-                    <p className="mt-1 text-sm text-foreground/40">
+            <div className="flex items-center justify-center overflow-y-auto bg-background px-6 py-10 lg:justify-start lg:pl-16 xl:pl-24">
+                <div className="w-full max-w-sm">
+                    <p className={TYPO.monoLabel}>WELCOME BACK</p>
+                    <h1 className="type-headline mt-2 text-foreground">다시 만나서 반가워요</h1>
+                    <p className="mt-2 text-sm text-muted-foreground">
                         계정이 없으신가요?{' '}
-                        <Link href="/signup" className="text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
+                        <Link
+                            href="/signup"
+                            className="font-semibold text-foreground underline underline-offset-2 hover:opacity-80"
+                        >
                             회원가입
                         </Link>
                     </p>
-                </div>
 
-                <LoginForm />
+                    <div className="mt-8">
+                        <LoginForm />
+                    </div>
+                </div>
             </div>
         </div>
     )
