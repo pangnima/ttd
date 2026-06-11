@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ClubSelector } from '@/components/match-games/club-selector'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
 import {
     AlertDialog,
@@ -26,8 +25,8 @@ type MatchGamesPageContentProps = {
     matchGames: MatchGame[]
     members: User[]
     isMember: boolean
-    myClubs: Club[]
     isOwner: boolean
+    currentUserId: string
 }
 
 export function MatchGamesPageContent({
@@ -36,8 +35,8 @@ export function MatchGamesPageContent({
     matchGames,
     members,
     isMember,
-    myClubs,
     isOwner,
+    currentUserId,
 }: MatchGamesPageContentProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -81,22 +80,16 @@ export function MatchGamesPageContent({
 
     return (
         <PageContainer>
-            {/* 클럽 선택 */}
-            <div>
-                <ClubSelector clubs={myClubs} currentClubId={clubId} />
-            </div>
-
             {/* 헤더 */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">대진표</h1>
-                    {club && <p className="text-sm text-muted-foreground mt-0.5">{club.name}</p>}
-                </div>
+            <div className="flex items-center justify-between gap-2">
+                <h1 className="text-2xl font-bold text-foreground">
+                    {club ? `${club.name} 대진표` : '대진표'}
+                </h1>
                 <Link
                     href={`/clubs/${clubId}/match-games/new`}
-                    className="flex items-center gap-1.5 text-sm border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-foreground/35 hover:text-foreground transition-colors"
+                    className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
                 >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4" />
                     대진표 만들기
                 </Link>
             </div>
@@ -116,13 +109,22 @@ export function MatchGamesPageContent({
                 <>
                     {/* 최신 대진표 */}
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium tracking-widest uppercase text-foreground">
-                                최신 대진표
-                            </span>
+                        <div className="flex items-end justify-between gap-2">
+                            <div className="min-w-0">
+                                <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
+                                    최신 대진표
+                                </span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <p className="text-base font-semibold text-foreground truncate">{latestMatchGame!.name}</p>
+                                    <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                                        <Calendar className="w-3 h-3" />
+                                        {latestMatchGame!.date}
+                                    </span>
+                                </div>
+                            </div>
                             <Link
                                 href={`/clubs/${clubId}/match-games/${latestMatchGame!.id}`}
-                                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             >
                                 상세 보기 →
                             </Link>
@@ -132,6 +134,7 @@ export function MatchGamesPageContent({
                             members={members}
                             clubId={clubId}
                             isOwner={isOwner}
+                            currentUserId={currentUserId}
                         />
                     </div>
 
@@ -140,7 +143,7 @@ export function MatchGamesPageContent({
                         <div className="space-y-3">
                             <div className="flex items-center gap-3">
                                 <div className="h-px flex-1 bg-border" />
-                                <span className="text-[11px] font-medium tracking-widest uppercase text-muted-foreground shrink-0">
+                                <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground shrink-0">
                                     이전 대진표
                                 </span>
                                 <div className="h-px flex-1 bg-border" />

@@ -10,33 +10,23 @@ import { mainNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
-export function MobileNav() {
+type MobileNavProps = {
+    clubs?: { id: string; name: string }[]
+}
+
+export function MobileNav({ clubs = [] }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
-    const [matchGameHref, setMatchGameHref] = useState<string | null>(null)
     const [profileHref, setProfileHref] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
         const supabase = createClient()
 
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
             if (!isMounted || !user) return
-
             // 프로필 링크 설정
-            if (isMounted) setProfileHref(`/profile/${user.id}`)
-
-            // 첫 가입 클럽 대진표 링크 설정
-            const { data } = await supabase
-                .from('club_members')
-                .select('club_id')
-                .eq('user_id', user.id)
-                .eq('status', 'approved')
-                .limit(1)
-                .maybeSingle()
-            if (isMounted && data) {
-                setMatchGameHref(`/clubs/${data.club_id}/match-games`)
-            }
+            setProfileHref(`/profile/${user.id}`)
         })
 
         return () => {
@@ -93,16 +83,29 @@ export function MobileNav() {
                         </Link>
                     )}
 
-                    {/* 대진표: 가입 클럽 있을 때 클럽리스트 바로 아래 노출 */}
-                    {matchGameHref && (
-                        <Link
-                            href={matchGameHref}
-                            onClick={() => setOpen(false)}
-                            className={navLinkClass(pathname.includes('/match-games'))}
-                        >
-                            <Trophy className="w-4 h-4" />
-                            대진표
-                        </Link>
+                    {/* 대진표: 가입 클럽별 하위 메뉴를 항상 펼쳐서 노출 */}
+                    {clubs.length > 0 && (
+                        <div className="pt-0.5">
+                            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground/70">
+                                <Trophy className="w-4 h-4" />
+                                대진표
+                            </div>
+                            <div className="space-y-1">
+                                {clubs.map((club) => (
+                                    <Link
+                                        key={club.id}
+                                        href={`/clubs/${club.id}/match-games`}
+                                        onClick={() => setOpen(false)}
+                                        className={cn(
+                                            navLinkClass(pathname.startsWith(`/clubs/${club.id}/match-games`)),
+                                            'pl-9 text-[13px]'
+                                        )}
+                                    >
+                                        {club.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </nav>
 

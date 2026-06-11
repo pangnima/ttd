@@ -9,12 +9,13 @@ import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 type SidebarProps = {
     currentPath?: string
-    matchGameHref?: string | null
+    /** 가입한 클럽 목록 (layout에서 주입, 대진표 하위 메뉴로 노출) */
+    clubs?: { id: string; name: string }[]
     /** 동적으로 생성된 프로필 링크 (layout에서 주입, 아이콘은 클라이언트에서 직접 렌더링) */
     profileHref?: string | null
 }
 
-export function Sidebar({ currentPath, matchGameHref, profileHref }: SidebarProps) {
+export function Sidebar({ currentPath, clubs = [], profileHref }: SidebarProps) {
     const pathname = usePathname()
     const activePath = currentPath ?? pathname
 
@@ -62,15 +63,28 @@ export function Sidebar({ currentPath, matchGameHref, profileHref }: SidebarProp
                     </Link>
                 )}
 
-                {/* 대진표: 가입 클럽 있을 때 클럽리스트 바로 아래 노출 */}
-                {matchGameHref && (
-                    <Link
-                        href={matchGameHref}
-                        className={navLinkClass(activePath.includes('/match-games'))}
-                    >
-                        <Trophy className="w-4 h-4 shrink-0" />
-                        대진표
-                    </Link>
+                {/* 대진표: 가입 클럽별 하위 메뉴를 항상 펼쳐서 노출 */}
+                {clubs.length > 0 && (
+                    <div className="pt-0.5">
+                        <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
+                            <Trophy className="w-4 h-4 shrink-0" />
+                            대진표
+                        </div>
+                        <div className="space-y-0.5">
+                            {clubs.map((club) => (
+                                <Link
+                                    key={club.id}
+                                    href={`/clubs/${club.id}/match-games`}
+                                    className={cn(
+                                        navLinkClass(activePath.startsWith(`/clubs/${club.id}/match-games`)),
+                                        'pl-9 text-[13px]'
+                                    )}
+                                >
+                                    {club.name}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
                 )}
             </nav>
 

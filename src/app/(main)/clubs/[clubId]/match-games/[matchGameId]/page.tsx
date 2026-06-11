@@ -39,6 +39,7 @@ export default async function MatchGameDetailPage({ params }: MatchGameDetailPag
             isOwner={isOwner}
             ratingDeltaByMatch={byMatch}
             ratingChangeTotals={byUserTotal}
+            currentUserId={user.id}
         />
     )
 }

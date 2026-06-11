@@ -15,10 +15,11 @@ type MatchGameDetailContentProps = {
     isOwner: boolean
     ratingDeltaByMatch?: Record<string, Record<string, number>>
     ratingChangeTotals?: Array<{ userId: string; total: number }>
+    currentUserId?: string
 }
 
 export function MatchGameDetailContent({
-    matchGame, members, isOwner, ratingDeltaByMatch, ratingChangeTotals,
+    matchGame, members, isOwner, ratingDeltaByMatch, ratingChangeTotals, currentUserId,
 }: MatchGameDetailContentProps) {
     const canEditMatchGame = !matchGame.isFixed || isOwner
 
@@ -48,6 +49,7 @@ export function MatchGameDetailContent({
                 clubId={matchGame.clubId}
                 isOwner={isOwner}
                 ratingDeltaByMatch={ratingDeltaByMatch}
+                currentUserId={currentUserId}
             />
         </PageContainer>
     )

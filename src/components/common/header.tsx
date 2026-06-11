@@ -19,7 +19,11 @@ type UserDisplay = {
     profileImage?: string | null
 }
 
-export function Header() {
+type HeaderProps = {
+    clubs?: { id: string; name: string }[]
+}
+
+export function Header({ clubs = [] }: HeaderProps) {
     const [userDisplay, setUserDisplay] = useState<UserDisplay | null>(null)
 
     useEffect(() => {
@@ -51,7 +55,7 @@ export function Header() {
 
     return (
         <header className="min-h-14 border-b border-foreground/5 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
-            <MobileNav />
+            <MobileNav clubs={clubs} />
             <Link href="/clubs" className="font-semibold text-sm md:hidden">
                 🎾 테니스 클럽
             </Link>
