@@ -5,7 +5,7 @@ export function RatingDeltaBadge({ delta }: { delta?: number }) {
     const up = delta > 0
     return (
         <span
-            className={`text-[10px] font-mono shrink-0 ${up ? 'text-emerald-500' : 'text-rose-500'}`}
+            className={`text-[10px] font-mono shrink-0 ${up ? 'text-win' : 'text-loss'}`}
         >
             {up ? '▲' : '▼'}{Math.abs(delta).toFixed(3)}
         </span>

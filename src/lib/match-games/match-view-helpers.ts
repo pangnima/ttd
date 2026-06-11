@@ -35,10 +35,10 @@ export type MatchViewProps = {
 }
 
 // ── 공유 스타일 상수 ────────────────────────────────
-// 시간 텍스트 / "내 경기" 강조 — 시안 포인트 컬러 (데스크탑·모바일·매트릭스 동기화용 공용 상수)
-export const SLOT_TIME_CLASS = 'text-cyan-600 dark:text-cyan-400'
-export const SELF_ROW_CLASS = 'bg-cyan-500/10 border-l-4 border-l-cyan-500'
-export const SELF_CARD_CLASS = 'border-cyan-500/50 bg-cyan-500/10'
+// 시간 텍스트 = info(블루 데이터) / "내 경기" 강조 = accent-lime(시그니처)
+export const SLOT_TIME_CLASS = 'text-info'
+export const SELF_ROW_CLASS = 'bg-accent-lime/10 border-l-4 border-l-accent-lime'
+export const SELF_CARD_CLASS = 'border-accent-lime/50 bg-accent-lime/10'
 
 // ── 순수 함수 ────────────────────────────────
 

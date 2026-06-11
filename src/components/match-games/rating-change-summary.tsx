@@ -24,7 +24,7 @@ export function RatingChangeSummary({ byUserTotal, members }: Props) {
                         return (
                             <div key={e.userId} className="flex items-center gap-1.5">
                                 <span className="text-sm text-foreground">{nameOf(e.userId)}</span>
-                                <span className={`text-sm font-mono ${up ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                <span className={`text-sm font-mono ${up ? 'text-win' : 'text-loss'}`}>
                                     {up ? '▲' : '▼'}{Math.abs(e.total).toFixed(3)}
                                 </span>
                             </div>

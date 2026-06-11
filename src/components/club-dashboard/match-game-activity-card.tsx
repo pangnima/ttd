@@ -35,7 +35,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                     <div className="flex items-center gap-2 pt-3 border-t border-border">
                         <Calendar className={`w-3.5 h-3.5 shrink-0 ${TEXT_MUTED}`} />
                         <span className={`text-xs ${TEXT_MUTED}`}>다음 예정</span>
-                        <span className={`${PILL_BASE} text-[10px] border-blue-500/50 text-blue-600 bg-blue-500/8 dark:border-blue-400/40 dark:text-blue-400 dark:bg-blue-400/8`}>
+                        <span className={`${PILL_BASE} text-[10px] border-info/40 text-info bg-info/10`}>
                             {formatShortDate(activity.nextGame.date)}
                         </span>
                         <Link
@@ -70,7 +70,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <span className={`text-xs ${TEXT_MUTED}`}>{formatShortDate(g.date)}</span>
-                                    <span className={`${PILL_BASE} text-[10px] ${g.isFixed ? 'border-emerald-600/50 text-emerald-700 bg-emerald-500/8 dark:border-emerald-400/40 dark:text-emerald-400 dark:bg-emerald-400/8' : 'border-border text-muted-foreground'}`}>
+                                    <span className={`${PILL_BASE} text-[10px] ${g.isFixed ? 'border-win/40 text-win bg-win/10' : 'border-border text-muted-foreground'}`}>
                                         {g.isFixed ? '확정' : '예정'}
                                     </span>
                                 </div>

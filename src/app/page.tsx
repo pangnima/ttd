@@ -33,7 +33,7 @@ export default function LandingPage() {
                 <div className="relative z-10 mt-16 sm:mt-20 text-center px-4">
                     <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight leading-none">
                         <span className="block text-foreground">우리 클럽의</span>
-                        <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-cyan-300">
+                        <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-win via-accent-lime to-info">
                             테니스
                         </span>
                     </h1>

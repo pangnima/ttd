@@ -18,7 +18,7 @@ export function StrengthWeaknessCard({ diagnosis }: Props) {
         >
             {strengths.length > 0 && (
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-widest uppercase text-emerald-700 dark:text-emerald-400/80">강점</p>
+                        <p className="text-xs font-semibold tracking-widest uppercase text-win">강점</p>
                         <ul className="space-y-2">
                             {strengths.map((item, i) => (
                                 <li key={i} className="text-sm">
@@ -31,7 +31,7 @@ export function StrengthWeaknessCard({ diagnosis }: Props) {
                 )}
                 {weaknesses.length > 0 && (
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-widest uppercase text-amber-700 dark:text-amber-400/80">개선 포인트</p>
+                        <p className="text-xs font-semibold tracking-widest uppercase text-loss">개선 포인트</p>
                         <ul className="space-y-2">
                             {weaknesses.map((item, i) => (
                                 <li key={i} className="text-sm">

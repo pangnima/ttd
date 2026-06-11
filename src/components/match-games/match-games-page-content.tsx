@@ -164,9 +164,9 @@ export function MatchGamesPageContent({
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    <span className={`text-[11px] px-2 py-0.5 rounded-[4px] border ${
+                                                    <span className={`text-[11px] px-2 py-0.5 rounded-sm border ${
                                                         mg.isFixed
-                                                            ? 'border-cyan-400/40 text-cyan-400/80 bg-cyan-400/8'
+                                                            ? 'border-win/40 text-win bg-win/10'
                                                             : 'border-border text-muted-foreground'
                                                     }`}>
                                                         {mg.isFixed ? '완료' : '진행중'}
@@ -176,7 +176,7 @@ export function MatchGamesPageContent({
                                             </div>
                                         </Link>
                                         <button
-                                            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-foreground/45 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                                            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-foreground/45 hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
                                             onClick={() => setDeleteTarget(mg)}
                                             disabled={isPending}
                                         >
@@ -189,7 +189,7 @@ export function MatchGamesPageContent({
                     )}
 
                     <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-                        <AlertDialogContent className="bg-zinc-950 border border-foreground/10 text-foreground">
+                        <AlertDialogContent className="bg-card border border-border text-foreground">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-foreground">대진표 삭제</AlertDialogTitle>
                                 <AlertDialogDescription className="text-foreground/50">
@@ -202,7 +202,7 @@ export function MatchGamesPageContent({
                                     취소
                                 </AlertDialogCancel>
                                 <AlertDialogAction
-                                    className="bg-red-500/80 hover:bg-red-500 text-foreground border-0"
+                                    className="bg-destructive hover:bg-destructive/90 text-white border-0"
                                     onClick={handleDelete}
                                     disabled={isPending}
                                 >

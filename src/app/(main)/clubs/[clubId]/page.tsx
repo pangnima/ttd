@@ -82,7 +82,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             <span
                                 className={`${PILL_BASE} ${
                                     club.isPublic
-                                        ? 'border-emerald-400/40 text-emerald-400/85 bg-emerald-400/8'
+                                        ? 'border-win/40 text-win bg-win/10'
                                         : 'border-foreground/20 text-foreground/60'
                                 }`}
                             >

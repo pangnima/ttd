@@ -42,13 +42,16 @@ function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
     const padX = 4
     const padY = 8
     const stepX = (W - padX * 2) / (series.length - 1 || 1)
-    const coords = series
-        .map((v, i) => {
-            const x = padX + i * stepX
-            const y = padY + (1 - (v - min) / range) * (H - padY * 2)
-            return `${x.toFixed(1)},${y.toFixed(1)}`
-        })
-        .join(' ')
+    const pts = series.map((v, i) => {
+        const x = padX + i * stepX
+        const y = padY + (1 - (v - min) / range) * (H - padY * 2)
+        return { x, y }
+    })
+    const coords = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    // 라인 아래 코트그린 area-fill
+    const areaD = `M ${pts[0].x.toFixed(1)},${(H - padY).toFixed(1)} ` +
+        pts.map((p) => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') +
+        ` L ${pts[pts.length - 1].x.toFixed(1)},${(H - padY).toFixed(1)} Z`
 
     return (
         <div className="space-y-3">
@@ -57,7 +60,7 @@ function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
                     <span className="text-2xl font-bold font-mono tabular-nums text-foreground">
                         {formatClubRating(current)}
                     </span>
-                    <span className={`text-sm font-mono ${up ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <span className={`text-sm font-mono ${up ? 'text-win' : 'text-loss'}`}>
                         {up ? '▲' : '▼'}{Math.abs(change).toFixed(3)}
                     </span>
                     {isProvisional(matchesPlayed) && <ProvisionalBadge />}
@@ -65,10 +68,17 @@ function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
                 <span className={`text-[11px] ${TEXT_MUTED}`}>{matchesPlayed}경기</span>
             </div>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16" preserveAspectRatio="none" role="img" aria-label="클럽 레이팅 추세">
+                <defs>
+                    <linearGradient id="trend-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--win)" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="var(--win)" stopOpacity={0} />
+                    </linearGradient>
+                </defs>
+                <path d={areaD} fill="url(#trend-area)" stroke="none" />
                 <polyline
                     points={coords}
                     fill="none"
-                    className="stroke-cyan-500 dark:stroke-cyan-400"
+                    className="stroke-win"
                     strokeWidth={2}
                     strokeLinejoin="round"
                     strokeLinecap="round"

@@ -4,9 +4,10 @@
  */
 
 // ── 클럽 매치용 (win/loss/draw/unknown) ─────────────────────────────
+// Baseline: 승=코트그린(win), 패=클레이(loss). 색 + W/L 글자 이중표기로 색각 접근성 확보.
 export const OUTCOME_STYLE: Record<'win' | 'loss' | 'draw' | 'unknown', string> = {
-    win: 'border-emerald-600/50 text-emerald-700 bg-emerald-500/10 dark:border-emerald-400/40 dark:text-emerald-400/80 dark:bg-emerald-400/8',
-    loss: 'border-red-600/50 text-red-700 bg-red-500/10 dark:border-red-400/40 dark:text-red-400/80 dark:bg-red-400/8',
+    win: 'border-win/40 text-win bg-win/10',
+    loss: 'border-loss/40 text-loss bg-loss/10',
     draw: 'border-border text-muted-foreground bg-muted/50',
     unknown: 'border-border text-muted-foreground bg-muted/30',
 }
@@ -20,15 +21,15 @@ export const OUTCOME_LABEL: Record<'win' | 'loss' | 'draw' | 'unknown', string> 
 
 // ── 최근 폼 배지용 (W/L/D 문자 기반) ────────────────────────────────
 export const FORM_BADGE_STYLE: Record<'W' | 'L' | 'D', string> = {
-    W: 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 dark:text-emerald-400',
-    L: 'bg-red-500/20 text-red-700 border border-red-500/30 dark:text-red-400',
+    W: 'bg-win/20 text-win border border-win/30',
+    L: 'bg-loss/20 text-loss border border-loss/30',
     D: 'bg-muted text-muted-foreground border border-border',
 }
 
 // ── H2H 상세 패널용 (W/L/D 문자 기반, 인라인 border 포함) ────────────
 export const H2H_OUTCOME_STYLE: Record<'W' | 'L' | 'D', string> = {
-    W: 'bg-green-500/20 text-green-600 border-green-500/30 dark:text-green-400',
-    L: 'bg-red-500/20 text-red-600 border-red-500/30 dark:text-red-400',
+    W: 'bg-win/20 text-win border-win/30',
+    L: 'bg-loss/20 text-loss border-loss/30',
     D: 'bg-muted text-muted-foreground border-border',
 }
 
@@ -40,8 +41,8 @@ export const H2H_OUTCOME_LABEL: Record<'W' | 'L' | 'D', string> = {
 
 // ── 개인 경기용 (me/opponent/draw) ────────────────────────────────────
 export const PERSONAL_OUTCOME_STYLE: Record<'me' | 'opponent' | 'draw', string> = {
-    me: 'text-green-600 font-bold dark:text-green-400',
-    opponent: 'text-red-500 font-bold dark:text-red-400',
+    me: 'text-win font-bold',
+    opponent: 'text-loss font-bold',
     draw: 'text-muted-foreground font-bold',
 }
 

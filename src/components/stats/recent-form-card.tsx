@@ -26,7 +26,7 @@ export function RecentFormCard({ recentForm }: Props) {
                     {last10.map((outcome, i) => (
                         <span
                             key={i}
-                            className={`w-7 h-7 rounded-[4px] text-xs font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
+                            className={`w-7 h-7 rounded-sm text-xs font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
                         >
                             {outcome}
                         </span>
@@ -42,8 +42,8 @@ export function RecentFormCard({ recentForm }: Props) {
             </p>
             {/* 집계 요약 */}
             <div className="flex gap-4 text-sm text-muted-foreground">
-                <span><span className="text-emerald-600 font-semibold dark:text-emerald-400">{recentWins}</span>승</span>
-                <span><span className="text-red-600 font-semibold dark:text-red-400">{recentLosses}</span>패</span>
+                <span><span className="text-win font-semibold">{recentWins}</span>승</span>
+                <span><span className="text-loss font-semibold">{recentLosses}</span>패</span>
                 {recentDraws > 0 && <span><span className="text-muted-foreground font-semibold">{recentDraws}</span>무</span>}
             </div>
         </SectionCard>

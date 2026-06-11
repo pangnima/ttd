@@ -68,7 +68,7 @@ export function PasswordChangeForm() {
                 </p>
             )}
             {state?.success && (
-                <p className="text-sm text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-3 py-2 dark:text-emerald-400">
+                <p className="text-sm text-win bg-win/10 border border-win/20 rounded-md px-3 py-2">
                     비밀번호가 변경되었습니다.
                 </p>
             )}

@@ -7,9 +7,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* [중요] 모든 텍스트 Pretendard. mono 역할도 Pretendard + tabular-nums로 대체 */
   --font-sans: var(--font-pretendard), var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-pretendard), var(--font-geist-mono), monospace;
   --font-heading: var(--font-sans);
+  /* Baseline 시그니처/시맨틱 컬러 */
+  --color-accent-lime: var(--accent-lime);
+  --color-accent-lime-foreground: var(--accent-lime-foreground);
+  --color-win: var(--win);
+  --color-win-foreground: var(--win-foreground);
+  --color-loss: var(--loss);
+  --color-loss-foreground: var(--loss-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,84 +49,104 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Baseline radius: 최대 8px 상한(pill은 아바타·점·프로그레스만 별도) */
+  --radius-xs: 0.125rem; /* 2px — 배지·태그 */
+  --radius-sm: 0.25rem;  /* 4px — 칩·인풋 */
+  --radius-md: 0.375rem; /* 6px — 버튼·토글 */
+  --radius-lg: 0.5rem;   /* 8px — 카드·패널 */
+  --radius-xl: 0.75rem;  /* 12px — 모달·헤더 */
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
+  --radius-4xl: 1rem;
 }
 
 :root {
-  /* 라이트 모드 쿨 뉴트럴(hue 256, 옅은 chroma): background(가라앉음) < sidebar < card/popover(떠오름) */
-  /* background↔card 명도차를 벌리고 border를 또렷하게 해 그림자 없이 영역을 구분한다 */
-  --background: oklch(0.955 0.005 256);
-  --foreground: oklch(0.19 0.012 256);
-  --card: oklch(0.999 0.001 256);
-  --card-foreground: oklch(0.19 0.012 256);
-  --popover: oklch(0.999 0.001 256);
-  --popover-foreground: oklch(0.19 0.012 256);
-  --primary: oklch(0.23 0.012 256);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.93 0.005 256);
-  --secondary-foreground: oklch(0.23 0.012 256);
-  --muted: oklch(0.935 0.005 256);
-  --muted-foreground: oklch(0.47 0.012 256);
-  --accent: oklch(0.93 0.006 256);
-  --accent-foreground: oklch(0.23 0.012 256);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.835 0.006 256);
-  --input: oklch(0.835 0.006 256);
-  --ring: oklch(0.62 0.02 256);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.945 0.005 256);
-  --sidebar-foreground: oklch(0.19 0.012 256);
-  --sidebar-primary: oklch(0.23 0.012 256);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0.006 256);
-  --sidebar-accent-foreground: oklch(0.23 0.012 256);
-  --sidebar-border: oklch(0.835 0.006 256);
-  --sidebar-ring: oklch(0.62 0.02 256);
+  /* Baseline 라이트 — 따뜻한 페이퍼 톤: background < surface-2(secondary/muted) < card/popover */
+  /* 깊이는 1px 보더 우선, 그림자 없이 영역을 구분한다 */
+  --background: #f3f2ec; /* 페이퍼 배경 */
+  --foreground: #1a1a16; /* ink — 본문 */
+  --card: #ffffff;       /* surface — 카드·패널 */
+  --card-foreground: #1a1a16;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a16;
+  --primary: #1a1a16;    /* charcoal — 프라이머리 액션 */
+  --primary-foreground: #f4f4ee;
+  --secondary: #ecebe3;  /* surface-2 — 인셋·헤더 */
+  --secondary-foreground: #1a1a16;
+  --muted: #ecebe3;
+  --muted-foreground: #74746a; /* 보조 텍스트 */
+  --accent: #ecebe3;
+  --accent-foreground: #1a1a16;
+  --destructive: oklch(0.577 0.245 27.325); /* 위험 액션(삭제)만 빨강 유지 */
+  --border: #e4e3d9;     /* 1px 에어라인 */
+  --input: #e4e3d9;
+  --ring: #c8f24e;       /* lime 포커스 링 */
+  /* Baseline 시그니처/시맨틱 */
+  --accent-lime: #c8f24e;
+  --accent-lime-foreground: #1a1a16;
+  --win: #1f8a52;        /* 코트그린 — 승·긍정 */
+  --win-foreground: #ffffff;
+  --loss: #c8623a;       /* 클레이 — 패·부정 (빨강 아님) */
+  --loss-foreground: #ffffff;
+  --info: #2f60fb;       /* 일렉트릭블루 — 리그·보조 데이터 */
+  --info-foreground: #ffffff;
+  --chart-1: #1f8a52;
+  --chart-2: #2f60fb;
+  --chart-3: #c8623a;
+  --chart-4: #c8f24e;
+  --chart-5: #74746a;
+  --radius: 0.5rem; /* 8px — 카드 기준 */
+  --sidebar: #ecebe3;
+  --sidebar-foreground: #1a1a16;
+  --sidebar-primary: #1a1a16;
+  --sidebar-primary-foreground: #f4f4ee;
+  --sidebar-accent: #e4e3d9;
+  --sidebar-accent-foreground: #1a1a16;
+  --sidebar-border: #e4e3d9;
+  --sidebar-ring: #c8f24e;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Baseline 다크 — 잉크 톤 */
+  --background: #0f0f11;
+  --foreground: #f4f4ee; /* light ink */
+  --card: #17171a;
+  --card-foreground: #f4f4ee;
+  --popover: #17171a;
+  --popover-foreground: #f4f4ee;
+  --primary: #f4f4ee;    /* light ink — 프라이머리 액션 */
+  --primary-foreground: #1a1a16;
+  --secondary: #1e1e22;  /* surface-2 */
+  --secondary-foreground: #f4f4ee;
+  --muted: #1e1e22;
+  --muted-foreground: #8d8d84;
+  --accent: #1e1e22;
+  --accent-foreground: #f4f4ee;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: #28282c;
+  --input: #28282c;
+  --ring: #d2f24e;
+  --accent-lime: #d2f24e;
+  --accent-lime-foreground: #1a1a16;
+  --win: #3ac983;
+  --win-foreground: #0f0f11;
+  --loss: #e1875a;
+  --loss-foreground: #0f0f11;
+  --info: #5b8def;
+  --info-foreground: #0f0f11;
+  --chart-1: #3ac983;
+  --chart-2: #5b8def;
+  --chart-3: #e1875a;
+  --chart-4: #d2f24e;
+  --chart-5: #8d8d84;
+  --sidebar: #17171a;
+  --sidebar-foreground: #f4f4ee;
+  --sidebar-primary: #f4f4ee;
+  --sidebar-primary-foreground: #1a1a16;
+  --sidebar-accent: #1e1e22;
+  --sidebar-accent-foreground: #f4f4ee;
+  --sidebar-border: #28282c;
+  --sidebar-ring: #d2f24e;
 }
 
 @layer base {
@@ -138,5 +168,49 @@
   label[for],
   a[href] {
     cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Baseline 타이포 스케일 (전부 Pretendard) */
+  .type-display {
+    font-weight: 800;
+    font-size: clamp(2.5rem, 6vw, 4.75rem); /* ~76px */
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .type-headline {
+    font-weight: 800;
+    font-size: 1.875rem; /* 30px */
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .type-title {
+    font-weight: 700;
+    font-size: 1.1875rem; /* 19px */
+    line-height: 1.2;
+  }
+  .type-body {
+    font-weight: 400;
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.5;
+  }
+  .type-caption {
+    font-weight: 400;
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.5;
+  }
+  /* "Mono Label" 역할 — JetBrains Mono 대신 Pretendard + tabular-nums */
+  .type-mono-label {
+    font-weight: 500;
+    font-size: 0.6875rem; /* 11px */
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 스코어(6-3 7-5)·숫자 정렬용 */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }

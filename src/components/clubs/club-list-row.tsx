@@ -31,7 +31,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
 
     const pill =
         isOwner && membershipStatus === 'approved' ? (
-            <span className={`${PILL_BASE} border-cyan-400/40 text-cyan-400/85 bg-cyan-400/8`}>
+            <span className={`${PILL_BASE} border-info/40 text-info bg-info/10`}>
                 OWNER
             </span>
         ) : membershipStatus === 'approved' ? (

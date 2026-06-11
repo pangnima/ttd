@@ -253,7 +253,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                                     className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
                                 />
                                 {sets.length > 1 && (
-                                    <button type="button" onClick={() => removeSet(i)} className="text-xs text-red-400 hover:text-red-600">
+                                    <button type="button" onClick={() => removeSet(i)} className="text-xs text-destructive/80 hover:text-destructive">
                                         삭제
                                     </button>
                                 )}
@@ -297,7 +297,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [] }: Prop
                 </div>
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="flex gap-3">
                 <button

@@ -36,7 +36,7 @@ export function TeamPlayersCell({
                         {hideSideToggle ? null : !isFixed ? (
                             <button
                                 onClick={() => onToggle(teamKey, pid)}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-cyan-400/50 text-cyan-400/80 bg-cyan-400/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
+                                className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-info/50 text-info bg-info/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
                             >
                                 {isAd ? '애드(백)' : '듀스(포)'}
                             </button>
@@ -111,7 +111,7 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                 placeholder="P2"
             />
             <button
-                className={`${confirmCls} rounded-md border border-cyan-400/30 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-colors disabled:opacity-40`}
+                className={`${confirmCls} rounded-md border border-info/30 text-info hover:bg-info/10 hover:border-info/50 transition-colors disabled:opacity-40`}
                 onClick={onConfirm}
                 disabled={isPending}
             >

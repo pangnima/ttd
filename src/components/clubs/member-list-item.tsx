@@ -71,7 +71,7 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 {hasClubRating && (
-                    <Badge variant="outline" className="text-xs font-mono text-cyan-600 border-cyan-500/40 dark:text-cyan-400">
+                    <Badge variant="outline" className="text-xs font-mono text-info border-info/40">
                         클럽 {formatClubRating(clubRating!.rating)}
                     </Badge>
                 )}
@@ -81,7 +81,7 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
                 </Badge>
                 <Badge
                     variant={roleBadgeVariant[member.role]}
-                    className={member.role === 'officer' ? 'text-xs text-blue-600 border-blue-300' : 'text-xs'}
+                    className={member.role === 'officer' ? 'text-xs text-info border-info/40' : 'text-xs'}
                 >
                     {roleLabel[member.role]}
                 </Badge>

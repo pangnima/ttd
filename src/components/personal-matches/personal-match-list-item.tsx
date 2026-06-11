@@ -69,7 +69,7 @@ export function PersonalMatchListItem({ match: m }: Props) {
                 <button
                     onClick={handleDelete}
                     disabled={isPending}
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
+                    className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40"
                 >
                     삭제
                 </button>

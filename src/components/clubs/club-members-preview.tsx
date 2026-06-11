@@ -30,7 +30,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                             </p>
                             <div className="flex items-center gap-1">
                                 {clubRating && clubRating.matchesPlayed > 0 && (
-                                    <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400">
+                                    <span className="text-xs font-mono text-info">
                                         {formatClubRating(clubRating.rating)}
                                     </span>
                                 )}

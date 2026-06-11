@@ -36,7 +36,7 @@ export function RecalculateRatingsButton({ clubId }: Props) {
                 {isPending ? '재계산 중…' : '레이팅 재계산'}
             </Button>
             {message && (
-                <span className={`text-xs ${message.ok ? 'text-emerald-500' : 'text-destructive'}`}>
+                <span className={`text-xs ${message.ok ? 'text-win' : 'text-destructive'}`}>
                     {message.text}
                 </span>
             )}

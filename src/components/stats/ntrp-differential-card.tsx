@@ -7,10 +7,11 @@ type Props = {
 
 type BucketDef = { key: keyof NtrpDiffStats; label: string; color: string }
 
+// 상대 난도 카테고리 — 상위(클레이=난적) / 동급(블루=중립 데이터) / 하위(코트그린=우세)
 const BUCKETS: BucketDef[] = [
-    { key: 'stronger', label: '상위 상대', color: 'text-purple-600 dark:text-purple-400' },
-    { key: 'peer', label: '동급 상대', color: 'text-cyan-600 dark:text-cyan-400' },
-    { key: 'weaker', label: '하위 상대', color: 'text-emerald-600 dark:text-emerald-400' },
+    { key: 'stronger', label: '상위 상대', color: 'text-loss' },
+    { key: 'peer', label: '동급 상대', color: 'text-info' },
+    { key: 'weaker', label: '하위 상대', color: 'text-win' },
 ]
 
 export function NtrpDifferentialCard({ ntrpStats }: Props) {

@@ -46,7 +46,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional }:
                         {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
                     </span>
                     {clubRating !== undefined && (
-                        <Badge variant="outline" className="text-xs font-mono text-cyan-600 border-cyan-500/40 dark:text-cyan-400">
+                        <Badge variant="outline" className="text-xs font-mono text-info border-info/40">
                             클럽 {formatClubRating(clubRating)}
                         </Badge>
                     )}

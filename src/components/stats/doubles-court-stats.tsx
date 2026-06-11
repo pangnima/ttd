@@ -21,7 +21,7 @@ function CourtBar({ label, stat }: { label: string; stat: DoublesCourtStats['ad'
             </div>
             <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-400/60 to-cyan-400/30 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-info/70 to-info/40 transition-all"
                     style={{ width: `${barWidth}%` }}
                 />
             </div>
