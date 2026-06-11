@@ -20,8 +20,19 @@ type AutoGeneratePanelProps = {
 export function AutoGeneratePanel({ courts, attendees, baseStart, slotMinutes, onApply }: AutoGeneratePanelProps) {
     const [rounds, setRounds] = useState(3)
 
-    const ready = courts.length > 0 && attendees.length > 0 && rounds > 0
+    const ready = courts.length > 0 && attendees.length > 0 && !Number.isNaN(rounds) && rounds > 0
     const defaultNtrp = attendees.length > 0 ? computeDefaultNtrp(attendees) : 0
+
+    // 빈 값(전체 삭제)은 NaN으로 보관해 입력란을 비울 수 있게 하고, 자동 배치 시 ready 가드로 차단한다.
+    const handleRoundsChange = (val: string) => {
+        if (val === '') {
+            setRounds(NaN)
+            return
+        }
+        const num = parseInt(val, 10)
+        if (isNaN(num) || num < 1 || num > 20) return
+        setRounds(num)
+    }
 
     const handleGenerate = () => {
         const result = generateMatchGame({
@@ -47,8 +58,8 @@ export function AutoGeneratePanel({ courts, attendees, baseStart, slotMinutes, o
                     type="number"
                     min={1}
                     max={20}
-                    value={rounds}
-                    onChange={(e) => setRounds(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                    value={Number.isNaN(rounds) ? '' : rounds}
+                    onChange={(e) => handleRoundsChange(e.target.value)}
                     className="h-8 text-xs w-16"
                 />
             </div>

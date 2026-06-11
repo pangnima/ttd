@@ -138,6 +138,15 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
     const addAttendee = (id: string) =>
         setAttendeeIds((prev) => (!id || prev.includes(id) ? prev : [...prev, id]))
 
+    // 정회원 전체를 한 번에 명단에 추가 (게스트 제외, 이미 추가된 인원은 중복 방지).
+    const addAllAttendees = () =>
+        setAttendeeIds((prev) => {
+            const extra = allPlayers
+                .filter((p) => !p.isGuest && !prev.includes(p.id))
+                .map((p) => p.id)
+            return [...prev, ...extra]
+        })
+
     // 명단에서 제거하면서, 해당 선수가 배정된 게임 슬롯도 자동으로 비운다.
     const removeAttendee = (id: string) => {
         setAttendeeIds((prev) => prev.filter((x) => x !== id))
@@ -246,29 +255,46 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
         })
     }
 
-    // ── 휴식 인원·인원별 게임수 요약 (게임 목록 하단) ──────────
+    // ── 게임 목록 그룹핑 + 휴식 인원·인원별 게임수 요약 ──────────
     const attendees = allPlayers.filter((p) => attendeeIds.includes(p.id))
-    // 시간대(startAt|endAt) 단위로 entries를 묶어 시간대별 참가 선수를 모은다.
-    const slotGroups = (() => {
-        const map = new Map<string, { label: string; playerIds: string[] }>()
+    // 시간 미지정(편집 중 빈 값) 엔트리를 모으는 그룹 키
+    const NO_TIME_KEY = '__no_time__'
+    // 시간대(startAt|endAt) 단위로 entries를 묶어 렌더링한다. 그룹 내부는 코트 순서로 정렬.
+    const renderGroups = (() => {
+        const courtOrder = new Map(courts.map((c, i) => [c.id, i]))
+        const map = new Map<string, { key: string; label: string; entries: SimpleMatchEntry[] }>()
         for (const e of entries) {
-            if (!e.startAt || !e.endAt) continue
-            const key = `${e.startAt}|${e.endAt}`
-            const g = map.get(key) ?? { label: `${e.startAt} ~ ${e.endAt}`, playerIds: [] }
-            g.playerIds.push(...entryPlayerIds(e))
+            const hasTime = Boolean(e.startAt && e.endAt)
+            const key = hasTime ? `${e.startAt}|${e.endAt}` : NO_TIME_KEY
+            const label = hasTime ? `${e.startAt} ~ ${e.endAt}` : '시간 미지정'
+            const g = map.get(key) ?? { key, label, entries: [] }
+            g.entries.push(e)
             map.set(key, g)
         }
-        return [...map.entries()]
-            .map(([key, v]) => ({ key, ...v }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+        const groups = [...map.values()]
+        groups.forEach((g) =>
+            g.entries.sort((a, b) => (courtOrder.get(a.courtId) ?? 999) - (courtOrder.get(b.courtId) ?? 999))
+        )
+        // 시간 미지정 그룹은 항상 맨 아래, 나머지는 시작 시각 오름차순
+        return groups.sort((a, b) => {
+            if (a.key === NO_TIME_KEY) return 1
+            if (b.key === NO_TIME_KEY) return -1
+            return a.label.localeCompare(b.label)
+        })
     })()
+    // 시간대별 휴식 인원 (시간 미지정 그룹 제외)
+    const slotGroups = renderGroups
+        .filter((g) => g.key !== NO_TIME_KEY)
+        .map((g) => ({ key: g.key, playerIds: g.entries.flatMap(entryPlayerIds) }))
     const restMap = restingIdsBySlot(slotGroups, attendeeIds)
-    const restingBySlot = slotGroups.map((g) => {
-        const users = (restMap.get(g.key) ?? [])
-            .map((id) => attendees.find((p) => p.id === id))
-            .filter((u): u is User => Boolean(u))
-        return { key: g.key, label: g.label, names: sortByGender(users).map((u) => u.nickname) }
-    })
+    const restNamesBySlot = new Map<string, string[]>(
+        slotGroups.map((g) => {
+            const users = (restMap.get(g.key) ?? [])
+                .map((id) => attendees.find((p) => p.id === id))
+                .filter((u): u is User => Boolean(u))
+            return [g.key, sortByGender(users).map((u) => u.nickname)]
+        })
+    )
     const gameCounts = gameCountsByPlayer(entries.map(entryPlayerIds), attendees).map(
         ({ player, count }) => ({ id: player.id, name: player.nickname, count })
     )
@@ -377,6 +403,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         allPlayers={allPlayers}
                         attendeeIds={attendeeIds}
                         onAdd={addAttendee}
+                        onAddAll={addAllAttendees}
                         onRemove={removeAttendee}
                         onCreatePlayer={handleCreatePlayer}
                     />
@@ -468,7 +495,20 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {entries.map((entry) => {
+                            {renderGroups.flatMap((group) => [
+                                <TableRow key={`header-${group.key}`} className="bg-muted/30 hover:bg-muted/30">
+                                    <TableCell colSpan={6} className="py-2">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <span className="text-xs font-semibold text-foreground">{group.label}</span>
+                                            {(restNamesBySlot.get(group.key)?.length ?? 0) > 0 && (
+                                                <span className="text-xs font-normal text-muted-foreground">
+                                                    휴식: {restNamesBySlot.get(group.key)!.join(', ')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>,
+                                ...group.entries.map((entry) => {
                                 const isSingles = entry.matchType === 'singles'
                                 // 참석자 명단으로 좁힌 뒤 경기 종류별 성별 필터 + 남성→여성 정렬
                                 const attendees = allPlayers.filter((p) => attendeeIds.includes(p.id))
@@ -574,15 +614,16 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                         </TableCell>
                                     </TableRow>
                                 )
-                            })}
+                                }),
+                            ])}
                         </TableBody>
                     </Table>
                 )}
             </div>
 
-            {/* 휴식 인원·인원별 게임수 요약 */}
+            {/* 인원별 게임수 요약 (휴식 인원은 게임 목록 시간대 헤더에 인라인 표시) */}
             {entries.length > 0 && (
-                <AttendanceSummary restingBySlot={restingBySlot} gameCounts={gameCounts} />
+                <AttendanceSummary gameCounts={gameCounts} />
             )}
 
             {error && <p className="text-sm text-destructive text-center">{error}</p>}
