@@ -2,10 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Trophy, Loader2 } from 'lucide-react'
 import { saveMatchResultAction, confirmMatchGameAction, saveCourtSidesAction } from '@/lib/actions/match-games'
 import { AttendanceSummary } from '@/components/match-games/attendance-summary'
+import { MatchConfirmFooter } from '@/components/match-games/match-confirm-footer'
 import { MatchListView } from '@/components/match-games/match-list-view'
 import { MatchGridView } from '@/components/match-games/match-grid-view'
 import { MatchViewToggle, readViewMode } from '@/components/match-games/match-view-toggle'
@@ -130,8 +129,6 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
         )
     }
 
-    const allConfirmed = matchGame.matches.length > 0 && matchGame.matches.every((m) => matchStates[m.id]?.confirmed)
-    const canConfirm = isOwner && allConfirmed && !matchGame.isFixed
     const canEdit = !matchGame.isFixed || isOwner
 
     // 두 뷰에 동일하게 내려주는 공유 props.
@@ -153,19 +150,14 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
 
             {gameCounts.length > 0 && <AttendanceSummary gameCounts={gameCounts} />}
 
-            {canConfirm && (
-                <div className="flex justify-end">
-                    <Button
-                        size="sm"
-                        onClick={() => startTransition(async () => { await confirmMatchGameAction(clubId, matchGame.id) })}
-                        disabled={isPending}
-                        className="gap-1.5 rounded-full font-semibold px-5"
-                    >
-                        {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
-                        {isPending ? '확정 중...' : '결과 확정'}
-                    </Button>
-                </div>
-            )}
+            <MatchConfirmFooter
+                matchGame={matchGame}
+                matchStates={matchStates}
+                isOwner={isOwner}
+                isPending={isPending}
+                getCourtLabel={getCourtLabel}
+                onConfirm={() => startTransition(async () => { await confirmMatchGameAction(clubId, matchGame.id) })}
+            />
         </div>
     )
 }
