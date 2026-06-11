@@ -55,7 +55,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
             >
                 취소
             </button>
-        ) : membershipStatus === null ? (
+        ) : (membershipStatus === null || membershipStatus === 'rejected') ? (
             <button
                 type="button"
                 onClick={handleApply}

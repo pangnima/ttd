@@ -23,6 +23,14 @@ export async function applyToClubAction(clubId: string): Promise<{ error: string
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { error: '로그인이 필요합니다.' }
 
+    // 이전에 거절된 신청 row가 남아 있으면 PK(user_id, club_id) 충돌을 피하기 위해 먼저 제거
+    await supabase
+        .from('club_members')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('club_id', clubId)
+        .eq('status', 'rejected')
+
     const { error } = await supabase
         .from('club_members')
         .insert({ user_id: user.id, club_id: clubId, role: 'member', status: 'pending' })

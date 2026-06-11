@@ -27,7 +27,14 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
         )
         : allClubs
 
-    const myClubs = filtered.filter((c) => membershipMap.get(c.id)?.status === 'approved')
+    // 운영 클럽(오너·임원)을 "내 클럽" 섹션 최상단으로
+    const ROLE_ORDER: Record<ClubMember['role'], number> = { owner: 0, officer: 1, member: 2 }
+    const myClubs = filtered
+        .filter((c) => membershipMap.get(c.id)?.status === 'approved')
+        .sort((a, b) =>
+            (ROLE_ORDER[membershipMap.get(a.id)!.role] ?? 9) -
+            (ROLE_ORDER[membershipMap.get(b.id)!.role] ?? 9)
+        )
     const otherClubs = filtered.filter((c) => membershipMap.get(c.id)?.status !== 'approved')
 
     return (
