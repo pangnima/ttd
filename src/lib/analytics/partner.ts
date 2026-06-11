@@ -1,4 +1,4 @@
-import type { MatchType } from '@/types'
+import type { MatchType, User } from '@/types'
 import {
     type BundleWithMatches, type BundleWithPersonal,
     getMatchOutcome, calcWinRate,
@@ -30,7 +30,7 @@ type PartnerAcc = { wins: number; losses: number; draws: number; total: number; 
 
 /**
  * 복식 매치에서 같은 팀 파트너별 전적을 집계하여 추천 목록 반환.
- * 2경기 이상 함께 뛴 파트너만 포함하며, 승률 내림차순 정렬.
+ * 5경기 이상 함께 뛴 파트너만 포함하며, 승률 내림차순 정렬.
  * 클럽 복식(team1/team2) + 개인 복식(personalMatches.partner*) 모두 반영한다.
  */
 export function aggregatePartnerRecommendations(
@@ -95,7 +95,7 @@ export function aggregatePartnerRecommendations(
     ): PartnerRec[] {
         const recs: PartnerRec[] = []
         for (const [partnerId, rec] of map.entries()) {
-            if (rec.total < 2) continue   // 2경기 이상 필터
+            if (rec.total < 5) continue   // 5경기 이상 필터
             recs.push({
                 partnerId,
                 partnerName: rec.name,
@@ -115,4 +115,37 @@ export function aggregatePartnerRecommendations(
         womenDoubles: toSortedRecs('women_doubles', maps.women_doubles),
         mixedDoubles: toSortedRecs('mixed_doubles', maps.mixed_doubles),
     }
+}
+
+/**
+ * 성별에 맞는 복식 종목을 한 목록으로 합친다.
+ * 남: 남복+혼복 / 여: 여복+혼복 / 그 외: 전체. (남복 파트너는 남성, 혼복 파트너는 여성이라 중복 없음)
+ */
+export function flattenPartnersByGender(
+    recs: PartnerRecommendations,
+    gender: User['gender'],
+): PartnerRec[] {
+    if (gender === 'male') return [...recs.menDoubles, ...recs.mixedDoubles]
+    if (gender === 'female') return [...recs.womenDoubles, ...recs.mixedDoubles]
+    return [...recs.menDoubles, ...recs.womenDoubles, ...recs.mixedDoubles]
+}
+
+/**
+ * "나와 잘 맞는 파트너" 카드용 — 승률 minWinRate 이상만 추려
+ * 승률 내림차순(동률 시 경기 수 많은 순)으로 정렬한다.
+ */
+export function selectGoodPartners(list: PartnerRec[], minWinRate = 55): PartnerRec[] {
+    return list
+        .filter((r) => r.winRate >= minWinRate)
+        .sort((a, b) => b.winRate - a.winRate || b.total - a.total)
+}
+
+/**
+ * "승률이 낮은 파트너" 카드용 — 승률 threshold 미만만 추려
+ * 승률 오름차순(동률 시 경기 수 많은 순)으로 정렬한다.
+ */
+export function selectLowWinRatePartners(list: PartnerRec[], threshold = 40): PartnerRec[] {
+    return list
+        .filter((r) => r.winRate < threshold)
+        .sort((a, b) => a.winRate - b.winRate || b.total - a.total)
 }

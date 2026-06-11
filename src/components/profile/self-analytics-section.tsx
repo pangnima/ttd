@@ -9,14 +9,20 @@ import { NtrpDifferentialCard } from '@/components/stats/ntrp-differential-card'
 import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
-import { PartnerRecommendationCard } from '@/components/stats/partner-recommendation-card'
+import { StatRankingCard, type StatRankingEntry } from '@/components/stats/stat-ranking-card'
 import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
-import { aggregatePartnerRecommendations } from '@/lib/analytics/partner'
+import {
+    aggregatePartnerRecommendations, flattenPartnersByGender,
+    selectGoodPartners, selectLowWinRatePartners, type PartnerRec,
+} from '@/lib/analytics/partner'
+import {
+    selectStrongOpponents, selectWeakOpponents, type OpponentRec,
+} from '@/lib/analytics/head-to-head'
 import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
@@ -33,6 +39,19 @@ function getScopeLabel(scope: AnalyticsScope): string {
     if (scope.kind === 'personal') return '클럽 외 개인 경기 통계'
     if (scope.kind === 'club') return `${scope.clubName} 경기 통계`
     return '클럽 + 개인 경기 통합 통계'
+}
+
+// StatRankingCard 엔트리 매핑 (회원은 id, 외부는 `name:{이름}` 키로 통일)
+function partnerToEntry(r: PartnerRec): StatRankingEntry {
+    return { key: r.partnerId, fallbackName: r.partnerName, wins: r.wins, losses: r.losses, draws: r.draws, winRate: r.winRate }
+}
+
+function opponentToEntry(o: OpponentRec): StatRankingEntry {
+    return {
+        key: o.opponentUserId ?? `name:${o.opponentName}`,
+        fallbackName: o.opponentName ?? undefined,
+        wins: o.wins, losses: o.losses, draws: o.draws, winRate: o.winRate,
+    }
 }
 
 /**
@@ -73,10 +92,17 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         me.ntrp ?? null,
     )
 
-    const partnerRecommendations = aggregatePartnerRecommendations(
-        { matches: bundle.matches, personalMatches: bundle.personalMatches },
-        me.id,
+    const partners = flattenPartnersByGender(
+        aggregatePartnerRecommendations(
+            { matches: bundle.matches, personalMatches: bundle.personalMatches },
+            me.id,
+        ),
+        me.gender,
     )
+    const goodPartnerEntries = selectGoodPartners(partners).map(partnerToEntry)
+    const lowPartnerEntries = selectLowWinRatePartners(partners).map(partnerToEntry)
+    const strongOpponentEntries = selectStrongOpponents(bundle.h2hList).map(opponentToEntry)
+    const weakOpponentEntries = selectWeakOpponents(bundle.h2hList).map(opponentToEntry)
 
     const opponentHandStats = aggregateByOpponentHand(
         { personalMatches: bundle.personalMatches, userMap: bundle.userMap },
@@ -113,15 +139,36 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
             </div>
 
-            {/* 파트너 추천 + 개인 경기 미리보기 (2col) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <PartnerRecommendationCard
-                    recommendations={partnerRecommendations}
+            {/* 잘 맞는 파트너 · 승률 낮은 파트너 · 강한 상대 · 약한 상대 (4col) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatRankingCard
+                    title="나와 잘 맞는 파트너"
+                    entries={goodPartnerEntries}
                     userMap={bundle.userMap}
-                    gender={me.gender}
+                    emptyText="5경기 이상 함께 뛰고 승률 55% 이상인 파트너가 아직 없어요"
                 />
-                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+                <StatRankingCard
+                    title="승률이 낮은 파트너"
+                    entries={lowPartnerEntries}
+                    userMap={bundle.userMap}
+                    emptyText="5경기 이상 함께 뛴 파트너 중 승률 40% 미만이 없어요"
+                />
+                <StatRankingCard
+                    title="내가 강한 상대"
+                    entries={strongOpponentEntries}
+                    userMap={bundle.userMap}
+                    emptyText="10경기 이상 맞붙어 승률 60% 이상인 상대가 아직 없어요"
+                />
+                <StatRankingCard
+                    title="내가 약한 상대"
+                    entries={weakOpponentEntries}
+                    userMap={bundle.userMap}
+                    emptyText="10경기 이상 맞붙고 승률 40% 미만인 상대가 아직 없어요"
+                />
             </div>
+
+            {/* 개인 경기 기록 (full) — 파트너/상대 행 하단으로 이동 */}
+            <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
 
             {/* ── 심화 진단 (3col) ─────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

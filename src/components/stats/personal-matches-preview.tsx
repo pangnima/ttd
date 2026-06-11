@@ -18,7 +18,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                 <div className="flex items-center gap-2">
                     <Link
                         href="/me/personal-matches/new"
-                        className="inline-flex items-center gap-1 text-xs border border-border rounded-[4px] px-2.5 py-1 text-foreground hover:border-input transition-colors"
+                        className="inline-flex items-center gap-1 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
                         + 경기 추가
                     </Link>
