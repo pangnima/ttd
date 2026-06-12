@@ -68,9 +68,9 @@ function StatRow({ entry, userMap }: { entry: StatRankingEntry; userMap: Map<str
  */
 export function StatRankingCard({ title, entries, userMap, emptyText, maxRows = 5 }: Props) {
     return (
-        <section className="space-y-3">
+        <section className="space-y-3 h-full flex flex-col">
             <p className={SECTION_LABEL}>{title}</p>
-            <div className={`${CARD_BASE} p-4`}>
+            <div className={`${CARD_BASE} p-4 flex-1`}>
                 {entries.length > 0 ? (
                     <div className="space-y-2">
                         {entries.slice(0, maxRows).map((entry) => (

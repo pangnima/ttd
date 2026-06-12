@@ -105,7 +105,8 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const weakOpponentEntries = selectWeakOpponents(bundle.h2hList).map(opponentToEntry)
 
     const opponentHandStats = aggregateByOpponentHand(
-        { personalMatches: bundle.personalMatches, userMap: bundle.userMap },
+        { matches: bundle.matches, personalMatches: bundle.personalMatches, userMap: bundle.userMap },
+        me.id,
     )
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
@@ -140,7 +141,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             </div>
 
             {/* 잘 맞는 파트너 · 승률 낮은 파트너 · 강한 상대 · 약한 상대 (4col) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
                 <StatRankingCard
                     title="나와 잘 맞는 파트너"
                     entries={goodPartnerEntries}
@@ -171,7 +172,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
 
             {/* ── 심화 진단 (3col) ─────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
                 <NtrpDifferentialCard ntrpStats={ntrpStats} />
                 <StrengthWeaknessCard diagnosis={diagnosis} />
                 <OpponentHandStatsCard handStats={opponentHandStats} />

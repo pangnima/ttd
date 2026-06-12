@@ -35,7 +35,7 @@ export function SectionCard({
                 {headerRight}
             </div>
             {isEmpty ? (
-                <div className={EMPTY_BLOCK}>{emptyMessage}</div>
+                <div className={`${EMPTY_BLOCK} flex-1 flex items-center justify-center`}>{emptyMessage}</div>
             ) : (
                 <div className={`${CARD_BASE} ${contentClass} flex-1`}>{children}</div>
             )}
