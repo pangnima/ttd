@@ -53,7 +53,7 @@ export function MatchGridView({
                                 {courts.map((court) => {
                                     const match = matrix.get(matchMatrixKey(court.id, slot.slotId))
                                     return (
-                                        <td key={court.id} className="border-b border-border p-1.5 align-top min-w-[10rem]">
+                                        <td key={court.id} className="border-b border-border p-1.5 align-top h-full min-w-[10rem]">
                                             {match ? (
                                                 <MatchGridCell
                                                     match={match}

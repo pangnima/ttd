@@ -141,7 +141,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
 
     return (
         <div className="space-y-3">
-            <div className="flex justify-end">
+            <div className="flex justify-end pb-3 border-b border-border">
                 <MatchViewToggle mode={viewMode} />
             </div>
 

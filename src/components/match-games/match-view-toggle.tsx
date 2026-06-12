@@ -30,7 +30,7 @@ export function MatchViewToggle({ mode }: MatchViewToggleProps) {
     }
 
     return (
-        <div className="inline-flex gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
+        <div className="inline-flex gap-0.5 rounded-lg bg-muted/30 p-0.5">
             <ToggleButton
                 label="리스트"
                 active={mode === 'list'}

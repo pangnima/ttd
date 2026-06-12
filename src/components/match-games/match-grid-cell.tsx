@@ -43,10 +43,10 @@ export function MatchGridCell({
 
     return (
         <div className={cn(
-            'h-full rounded-lg border border-border bg-card p-2 space-y-2',
+            'h-full flex flex-col rounded-lg border border-border bg-card p-2 gap-2',
             isSelf && SELF_CARD_CLASS
         )}>
-            <span className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
+            <span className={`inline-flex self-start items-center text-[10px] px-1.5 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
                 {MATCH_TYPE_LABELS[match.matchType]}
             </span>
 
@@ -76,7 +76,7 @@ export function MatchGridCell({
                 />
             </div>
 
-            <div className="pt-1.5 border-t border-border">
+            <div className="mt-auto pt-1.5 border-t border-border">
                 <ScoreCell
                     sets={state.sets}
                     confirmed={state.confirmed}
