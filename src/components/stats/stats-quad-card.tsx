@@ -37,8 +37,8 @@ export function StatsQuadCard({ matchType, stats, variant = 'match', masked, sho
                     {style.label}
                 </span>
                 <span className="text-3xl font-bold text-foreground leading-none">
+                    {showRateSuffix && <span className="text-base font-normal text-foreground/75 mr-0.5">승률</span>}
                     {winRateLabel}
-                    {showRateSuffix && <span className="text-base font-normal text-foreground/75 ml-0.5">승률</span>}
                 </span>
             </div>
 

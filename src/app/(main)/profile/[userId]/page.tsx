@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchUserById } from '@/lib/queries/users'
@@ -17,7 +16,6 @@ import { combinePlayerStats, type PlayerStats } from '@/lib/stats'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
-import { AnalyticsModeTabs } from '@/components/stats/analytics-mode-tabs'
 import { PageContainer } from '@/components/common/page-container'
 
 type Props = {
@@ -85,28 +83,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
         const headerStats = deriveHeaderStats(bundle.stats, aggregateRecentForm(bundle, userId))
 
-        // 탭 렌더용 간략 클럽 목록
-        const clubsForTab = myClubs.map((c) => ({ id: c.id, name: c.name }))
-
         return (
             <PageContainer>
-                <div className="space-y-4">
-                    <MemberProfileHeader
-                        user={target}
-                        clubName={scope.kind === 'club' ? scope.clubName : club?.name}
-                        clubRating={clubRating}
-                        provisional={provisional}
-                        clubRank={clubRank}
-                        stats={headerStats}
-                    />
-                    <Suspense>
-                        <AnalyticsModeTabs
-                            scope={scope}
-                            clubs={clubsForTab}
-                            basePath={`/profile/${userId}`}
-                        />
-                    </Suspense>
-                </div>
+                <MemberProfileHeader
+                    user={target}
+                    clubName={scope.kind === 'club' ? scope.clubName : club?.name}
+                    clubRating={clubRating}
+                    provisional={provisional}
+                    clubRank={clubRank}
+                    stats={headerStats}
+                />
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
         )
