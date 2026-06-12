@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameCountByClubId } from '@/lib/queries/match-games'
-import { fetchClubRatingRanking, fetchClubPlayerRatings } from '@/lib/queries/ratings'
+import { fetchClubRatingRanking, fetchClubPlayerRatings, fetchConfirmedMatchesForRating } from '@/lib/queries/ratings'
+import { aggregateClubMemberForms } from '@/lib/analytics/club-form'
 import {
     fetchPendingMembersByClubId,
     fetchClubMatchGameActivity,
@@ -20,7 +21,7 @@ import { PendingMembersPanel } from '@/components/club-dashboard/pending-members
 import { MatchGameActivityCard } from '@/components/club-dashboard/match-game-activity-card'
 import { WinRateRankingCard } from '@/components/club-dashboard/win-rate-ranking-card'
 import { ActivityRankingCard } from '@/components/club-dashboard/activity-ranking-card'
-import { RatingRankingCard } from '@/components/club-dashboard/rating-ranking-card'
+import { ClubRankingCard } from '@/components/club-dashboard/club-ranking-card'
 import {
     CARD_BASE,
     SECTION_LABEL,
@@ -52,6 +53,12 @@ export default async function ClubPage({ params }: ClubPageProps) {
     ])
 
     if (!club) notFound()
+
+    // 클럽 랭킹용 승/패·최근폼: 승인 멤버 + 랭킹이 있을 때만 확정 경기 추가 페치
+    const clubMatches = myMembership?.status === 'approved' && ratingRanking.length > 0
+        ? await fetchConfirmedMatchesForRating(clubId)
+        : null
+    const formsByUser = clubMatches ? aggregateClubMemberForms(clubMatches.matches) : null
 
     const regularMembers = approvedMembers.filter((m) => !m.user.isGuest)
     const guestMembers = approvedMembers.filter((m) => m.user.isGuest)
@@ -186,9 +193,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 </section>
             )}
 
-            {/* 클럽 레이팅 랭킹 (승인 멤버에게 공개) */}
+            {/* 클럽 랭킹 (승인 멤버에게 공개) */}
             {myMembership?.status === 'approved' && ratingRanking.length > 0 && (
-                <RatingRankingCard clubId={clubId} entries={ratingRanking} />
+                <ClubRankingCard clubId={clubId} entries={ratingRanking} forms={formsByUser ?? new Map()} />
             )}
 
             {/* ── 운영자/임원 전용 운영 섹션 ────────────────────────────── */}
