@@ -23,8 +23,9 @@ const pretendard = localFont({
 })
 
 export const metadata: Metadata = {
-    // 배포 도메인. NEXT_PUBLIC_SITE_URL 미설정 시 기존 값으로 폴백 (로컬/미설정에서도 안전)
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tennis-club.vercel.app'),
+    // 배포 도메인. NEXT_PUBLIC_SITE_URL 미설정/빈 값이면 기본 도메인으로 폴백.
+    // (|| 사용: .env.local에 빈 문자열로 존재해도 안전하게 폴백)
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://ttd-kohl.vercel.app'),
     title: {
         default: '테니스 클럽 플랫폼',
         template: '%s | 테니스 클럽',
