@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { randomAvatarPath } from '@/lib/default-images'
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -45,23 +46,28 @@ export async function signupAction(
     })
     if (error) return { error: error.message }
 
-    // 프로필 사진 업로드 (선택)
+    // 프로필 사진 (선택) — 업로드가 없으면 기본 아바타를 랜덤 배정
     const avatar = formData.get('avatar') as File | null
-    if (avatar && avatar.size > 0 && data.user) {
-        const ext = avatar.name.split('.').pop()
-        const path = `${data.user.id}/avatar.${ext}`
-        const { error: upErr } = await supabase.storage
-            .from('avatars')
-            .upload(path, avatar, { upsert: true })
-        if (!upErr) {
-            const { data: urlData } = supabase.storage
+    if (data.user) {
+        let profileImage = randomAvatarPath()
+        if (avatar && avatar.size > 0) {
+            const ext = avatar.name.split('.').pop()
+            const path = `${data.user.id}/avatar.${ext}`
+            const { error: upErr } = await supabase.storage
                 .from('avatars')
-                .getPublicUrl(path)
-            await supabase
-                .from('users')
-                .update({ profile_image: urlData.publicUrl })
-                .eq('id', data.user.id)
+                .upload(path, avatar, { upsert: true })
+            if (!upErr) {
+                const { data: urlData } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(path)
+                profileImage = urlData.publicUrl
+            }
+            // 업로드 실패 시 randomAvatarPath() 폴백 유지
         }
+        await supabase
+            .from('users')
+            .update({ profile_image: profileImage })
+            .eq('id', data.user.id)
     }
 
     revalidatePath('/', 'layout')

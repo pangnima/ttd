@@ -8,6 +8,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { randomClubLogoPath } from '@/lib/default-images'
 
 async function uploadClubLogo(
     supabase: Awaited<ReturnType<typeof createClient>>,
@@ -52,13 +53,14 @@ export async function createClubAction(
 
     if (error) return { error: error.message }
 
+    // 로고 (선택) — 업로드가 없거나 실패하면 기본 로고를 랜덤 배정
     const logo = formData.get('logo') as File | null
+    let logoUrl: string | null = null
     if (logo && logo.size > 0) {
-        const logoUrl = await uploadClubLogo(supabase, data.id, logo)
-        if (logoUrl) {
-            await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', data.id)
-        }
+        logoUrl = await uploadClubLogo(supabase, data.id, logo)
     }
+    if (!logoUrl) logoUrl = randomClubLogoPath()
+    await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', data.id)
 
     revalidatePath('/clubs', 'layout')
     redirect(`/clubs/${data.id}`)
