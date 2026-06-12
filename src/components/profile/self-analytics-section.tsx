@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { AnalyticsBundle, AnalyticsScope } from '@/lib/queries/analytics'
 import type { User } from '@/types'
 import { StatsQuadGrid } from '@/components/stats/stats-quad-grid'
+import { StatsPrivacyToggle } from '@/components/stats/stats-privacy-toggle'
 import { HeadToHeadCard } from '@/components/stats/head-to-head-card'
 import { RecentFormCard } from '@/components/stats/recent-form-card'
 import { SurfaceStatsCard } from '@/components/stats/surface-stats-card'
@@ -115,11 +116,14 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         <div className="space-y-8">
             {/* 전적 통계 (4칸) — 세트 표기 숨김(심플), scope는 칩으로 노출 */}
             <section className="space-y-3">
-                <div className="flex items-center gap-2">
-                    <p className={SECTION_LABEL}>전적 통계</p>
-                    <span className={`${PILL_BASE} text-primary border-primary/30 bg-primary/10 font-medium`}>
-                        {getScopeLabel(scope)}
-                    </span>
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <p className={SECTION_LABEL}>전적 통계</p>
+                        <span className={`${PILL_BASE} text-primary border-primary/30 bg-primary/10 font-medium`}>
+                            {getScopeLabel(scope)}
+                        </span>
+                    </div>
+                    <StatsPrivacyToggle hidden={me.statsHidden} />
                 </div>
                 <StatsQuadGrid
                     gender={me.gender}
@@ -128,8 +132,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     womenDoubles={bundle.stats.womenDoubles}
                     mixedDoubles={bundle.stats.mixedDoubles}
                     privacy={me.statsHidden ? 'self' : 'public'}
-                    editable={true}
-                    statsHidden={me.statsHidden}
                     showSets={false}
                 />
             </section>

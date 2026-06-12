@@ -37,7 +37,7 @@ export function StatsQuadCard({ matchType, stats, variant = 'match', masked, sho
                     {style.label}
                 </span>
                 <span className="text-3xl font-bold text-foreground leading-none">
-                    {showRateSuffix && <span className="text-base font-normal text-foreground/75 mr-0.5">승률</span>}
+                    {showRateSuffix && <span className="text-xs font-normal text-foreground/70 mr-1.5">승률</span>}
                     {winRateLabel}
                 </span>
             </div>
@@ -45,15 +45,15 @@ export function StatsQuadCard({ matchType, stats, variant = 'match', masked, sho
             {/* 승·패·무 — 들어간 내부 블록 3칸 */}
             <div className="grid grid-cols-3 gap-2 mt-3">
                 <div className="rounded-lg bg-background/50 py-2.5 text-center">
-                    <p className="text-2xl font-bold text-foreground">{masked ? '*' : stats.wins}</p>
+                    <p className={`text-2xl font-bold ${masked ? 'text-foreground/70' : 'text-win'}`}>{masked ? '*' : stats.wins}</p>
                     <p className="text-xs text-foreground/70 mt-0.5">승</p>
                 </div>
                 <div className="rounded-lg bg-background/50 py-2.5 text-center">
-                    <p className="text-2xl font-bold text-foreground">{masked ? '*' : stats.losses}</p>
+                    <p className={`text-2xl font-bold ${masked ? 'text-foreground/70' : 'text-loss'}`}>{masked ? '*' : stats.losses}</p>
                     <p className="text-xs text-foreground/70 mt-0.5">패</p>
                 </div>
                 <div className="rounded-lg bg-background/50 py-2.5 text-center">
-                    <p className="text-2xl font-bold text-foreground">{masked ? '*' : stats.draws}</p>
+                    <p className={`text-2xl font-bold ${masked ? 'text-foreground/70' : 'text-muted-foreground'}`}>{masked ? '*' : stats.draws}</p>
                     <p className="text-xs text-foreground/70 mt-0.5">무</p>
                 </div>
             </div>
