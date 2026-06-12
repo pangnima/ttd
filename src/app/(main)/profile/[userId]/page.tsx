@@ -13,6 +13,8 @@ import {
 import { isProvisional } from '@/lib/rating/display'
 import { aggregateRecentForm, type RecentFormResult } from '@/lib/analytics/form'
 import { combinePlayerStats, type PlayerStats } from '@/lib/stats'
+import type { ProfileSummary } from '@/components/profile/profile-summary-row'
+import type { MatchType } from '@/types'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
@@ -42,6 +44,26 @@ function deriveHeaderStats(stats: QuarterStats, form: RecentFormResult): { games
     const overall = combinePlayerStats(stats.singles, stats.menDoubles, stats.womenDoubles, stats.mixedDoubles)
     const winStreak = form.currentStreak?.type === 'W' ? form.currentStreak.length : 0
     return { games: overall.totalMatches, winRate: overall.winRate, winStreak }
+}
+
+// 비클럽 scope(본인) 헤더 요약: 승률 링 + 보조 행. 주력 종목 = 경기 수 최다 종류.
+function deriveSummary(stats: QuarterStats, form: RecentFormResult): ProfileSummary {
+    const overall = combinePlayerStats(stats.singles, stats.menDoubles, stats.womenDoubles, stats.mixedDoubles)
+    const counts: Array<[MatchType, number]> = [
+        ['singles', stats.singles.totalMatches],
+        ['men_doubles', stats.menDoubles.totalMatches],
+        ['women_doubles', stats.womenDoubles.totalMatches],
+        ['mixed_doubles', stats.mixedDoubles.totalMatches],
+    ]
+    const top = counts.reduce((a, b) => (b[1] > a[1] ? b : a))
+    return {
+        winRate: overall.winRate,
+        wins: overall.wins,
+        losses: overall.losses,
+        draws: overall.draws,
+        streak: form.currentStreak,
+        topMatchType: top[1] > 0 ? top[0] : undefined,
+    }
 }
 
 export default async function MemberProfilePage({ params, searchParams }: Props) {
@@ -81,7 +103,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         ])
         const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
         const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
-        const headerStats = deriveHeaderStats(bundle.stats, aggregateRecentForm(bundle, userId))
+        const form = aggregateRecentForm(bundle, userId)
+        const headerStats = deriveHeaderStats(bundle.stats, form)
+        // 클럽 scope는 티어 헤더, 그 외는 승률 링 요약 헤더
+        const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats, form) : undefined
 
         return (
             <PageContainer>
@@ -92,6 +117,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     provisional={provisional}
                     clubRank={clubRank}
                     stats={headerStats}
+                    summary={summary}
                 />
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>

@@ -12,8 +12,10 @@ import { PersonalMatchesPreview } from '@/components/stats/personal-matches-prev
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
 import { StatRankingCard, type StatRankingEntry } from '@/components/stats/stat-ranking-card'
 import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
+import { PersonalTrendCard } from '@/components/stats/personal-trend-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
+import { aggregateResultTimeline } from '@/lib/analytics/trend'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
@@ -110,6 +112,17 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         me.id,
     )
 
+    // 비클럽 scope에서 레이팅 추세 자리를 채울 누적 승−패 시계열
+    const trendTimeline = aggregateResultTimeline(
+        { matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: bundle.personalMatches },
+        me.id,
+    )
+
+    // 파트너/상대 랭킹 4종이 모두 비면 그리드 자체를 숨긴다(빈 카드 도배 방지).
+    const hasAnyRanking =
+        goodPartnerEntries.length > 0 || lowPartnerEntries.length > 0 ||
+        strongOpponentEntries.length > 0 || weakOpponentEntries.length > 0
+
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
     return (
@@ -142,33 +155,35 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
             </div>
 
-            {/* 잘 맞는 파트너 · 승률 낮은 파트너 · 강한 상대 · 약한 상대 (4col) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-                <StatRankingCard
-                    title="나와 잘 맞는 파트너"
-                    entries={goodPartnerEntries}
-                    userMap={bundle.userMap}
-                    emptyText="5경기 이상 함께 뛰고 승률 55% 이상인 파트너가 아직 없어요"
-                />
-                <StatRankingCard
-                    title="승률이 낮은 파트너"
-                    entries={lowPartnerEntries}
-                    userMap={bundle.userMap}
-                    emptyText="5경기 이상 함께 뛴 파트너 중 승률 40% 미만이 없어요"
-                />
-                <StatRankingCard
-                    title="내가 강한 상대"
-                    entries={strongOpponentEntries}
-                    userMap={bundle.userMap}
-                    emptyText="10경기 이상 맞붙어 승률 60% 이상인 상대가 아직 없어요"
-                />
-                <StatRankingCard
-                    title="내가 약한 상대"
-                    entries={weakOpponentEntries}
-                    userMap={bundle.userMap}
-                    emptyText="10경기 이상 맞붙고 승률 40% 미만인 상대가 아직 없어요"
-                />
-            </div>
+            {/* 잘 맞는 파트너 · 승률 낮은 파트너 · 강한 상대 · 약한 상대 (4col) — 전부 비면 숨김 */}
+            {hasAnyRanking && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
+                    <StatRankingCard
+                        title="나와 잘 맞는 파트너"
+                        entries={goodPartnerEntries}
+                        userMap={bundle.userMap}
+                        emptyText="5경기 이상 함께 뛰고 승률 55% 이상인 파트너가 아직 없어요"
+                    />
+                    <StatRankingCard
+                        title="승률이 낮은 파트너"
+                        entries={lowPartnerEntries}
+                        userMap={bundle.userMap}
+                        emptyText="5경기 이상 함께 뛴 파트너 중 승률 40% 미만이 없어요"
+                    />
+                    <StatRankingCard
+                        title="내가 강한 상대"
+                        entries={strongOpponentEntries}
+                        userMap={bundle.userMap}
+                        emptyText="10경기 이상 맞붙어 승률 60% 이상인 상대가 아직 없어요"
+                    />
+                    <StatRankingCard
+                        title="내가 약한 상대"
+                        entries={weakOpponentEntries}
+                        userMap={bundle.userMap}
+                        emptyText="10경기 이상 맞붙고 승률 40% 미만인 상대가 아직 없어요"
+                    />
+                </div>
+            )}
 
             {/* 개인 경기 기록 (full) — 파트너/상대 행 하단으로 이동 */}
             <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
@@ -180,10 +195,12 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <OpponentHandStatsCard handStats={opponentHandStats} />
             </div>
 
-            {/* 클럽 레이팅 추세 (클럽 scope에서만) — 1:1 맞대결 바로 위 */}
-            {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
-                <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
-            )}
+            {/* 추세 (1:1 맞대결 바로 위) — 클럽 scope=레이팅 추세, 그 외=누적 승−패 추세 */}
+            {scope.kind === 'club'
+                ? ratingHistory && ratingHistory.length > 0 && (
+                    <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
+                )
+                : <PersonalTrendCard timeline={trendTimeline} />}
 
             {/* 1:1 맞대결 비교 (full) */}
             <Suspense>
