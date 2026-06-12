@@ -7,5 +7,5 @@ export type NavItem = {
 }
 
 export const mainNavItems: NavItem[] = [
-    { href: '/clubs', label: '클럽리스트', icon: Users },
+    { href: '/clubs', label: '클럽 찾기', icon: Users },
 ]

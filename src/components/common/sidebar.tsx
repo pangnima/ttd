@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Trophy, BarChart3 } from 'lucide-react'
+import { BarChart3, UsersRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
@@ -19,10 +19,14 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const activePath = currentPath ?? pathname
-    // 개인 분석 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
+    // 내 전적 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
     const onProfile = activePath.startsWith('/profile/')
     const currentScope = searchParams.get('scope') ?? 'total'
     const scopeActive = (scope: string) => onProfile && currentScope === scope
+
+    // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위(/clubs/[id]/...)는
+    // "내가 가입한 클럽" 트리가 담당하므로 prefix 매칭을 쓰지 않는다.
+    const mainActive = (href: string) => activePath === href || activePath === `${href}/new`
 
     const navLinkClass = (active: boolean) =>
         cn(
@@ -50,19 +54,19 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                     <Link
                         key={href}
                         href={href}
-                        className={navLinkClass(activePath === href || activePath.startsWith(`${href}/`))}
+                        className={navLinkClass(mainActive(href))}
                     >
                         <Icon className="w-4 h-4 shrink-0" />
                         {label}
                     </Link>
                 ))}
 
-                {/* 개인 분석: 전체/개인/클럽별 하위 메뉴를 항상 펼쳐서 노출 (로그인 시) */}
+                {/* 내 전적: 클럽 무관 통합/개인 전적 (로그인 시) */}
                 {userId && (
-                    <div className="pt-0.5">
+                    <div className="mt-2 pt-2 border-t border-border/40">
                         <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
                             <BarChart3 className="w-4 h-4 shrink-0" />
-                            개인 분석
+                            내 전적
                         </div>
                         <div className="space-y-0.5">
                             <Link href={`/profile/${userId}?scope=total`} className={cn(navLinkClass(scopeActive('total')), 'pl-9 text-[13px]')}>
@@ -71,38 +75,38 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                             <Link href={`/profile/${userId}?scope=personal`} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                 개인
                             </Link>
-                            {clubs.map((club) => (
-                                <Link
-                                    key={club.id}
-                                    href={`/profile/${userId}?scope=${club.id}`}
-                                    className={cn(navLinkClass(scopeActive(club.id)), 'pl-9 text-[13px]')}
-                                >
-                                    {club.name}
-                                </Link>
-                            ))}
                         </div>
                     </div>
                 )}
 
-                {/* 대진표: 가입 클럽별 하위 메뉴를 항상 펼쳐서 노출 */}
+                {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 묶어 트리 형태로 노출 */}
                 {clubs.length > 0 && (
-                    <div className="pt-0.5">
+                    <div className="mt-2 pt-2 border-t border-border/40">
                         <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
-                            <Trophy className="w-4 h-4 shrink-0" />
-                            대진표
+                            <UsersRound className="w-4 h-4 shrink-0" />
+                            내가 가입한 클럽
                         </div>
-                        <div className="space-y-0.5">
+                        <div className="space-y-2">
                             {clubs.map((club) => (
-                                <Link
-                                    key={club.id}
-                                    href={`/clubs/${club.id}/match-games`}
-                                    className={cn(
-                                        navLinkClass(activePath.startsWith(`/clubs/${club.id}/match-games`)),
-                                        'pl-9 text-[13px]'
-                                    )}
-                                >
-                                    {club.name}
-                                </Link>
+                                <div key={club.id}>
+                                    {/* 클럽명 — 통합/개인과 동일 스타일(pl-9). 하위 홈/대진표/내 전적은 한 뎁스 더(pl-14). */}
+                                    <p className="flex items-center gap-3 px-3 py-2.5 pl-9 rounded-lg text-[13px] font-medium text-muted-foreground truncate">
+                                        {club.name}
+                                    </p>
+                                    <div className="space-y-0.5">
+                                        <Link href={`/clubs/${club.id}`} className={cn(navLinkClass(activePath === `/clubs/${club.id}`), 'pl-14 text-[13px]')}>
+                                            홈
+                                        </Link>
+                                        <Link href={`/clubs/${club.id}/match-games`} className={cn(navLinkClass(activePath.startsWith(`/clubs/${club.id}/match-games`)), 'pl-14 text-[13px]')}>
+                                            대진표
+                                        </Link>
+                                        {userId && (
+                                            <Link href={`/profile/${userId}?scope=${club.id}`} className={cn(navLinkClass(scopeActive(club.id)), 'pl-14 text-[13px]')}>
+                                                내 전적
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
