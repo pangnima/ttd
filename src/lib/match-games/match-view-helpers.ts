@@ -1,5 +1,6 @@
 import type { MatchGame, Match } from '@/types'
 import type { SetScore } from '@/components/match-games/match-game-cell-components'
+import type { RatingChange } from '@/lib/queries/ratings'
 
 // ── 공유 타입 ────────────────────────────────
 
@@ -23,8 +24,8 @@ export type MatchViewProps = {
     isPending: boolean
     canEdit: boolean
     currentUserId?: string
-    // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → delta).
-    ratingDeltaByMatch?: Record<string, Record<string, number>>
+    // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → {before, after}).
+    ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
     getName: (id: string) => string
     getCourtLabel: (courtId: string) => string
     restNames: (slotId: string) => string[]

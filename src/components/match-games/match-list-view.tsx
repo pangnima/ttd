@@ -2,7 +2,7 @@
 
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { TeamPlayersCell, ScoreCell } from '@/components/match-games/match-game-cell-components'
-import { RatingDeltaBadge } from '@/components/match-games/rating-delta-badge'
+import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
 import { MatchCardItem } from '@/components/match-games/match-card-item'
 import { matchPlayerIds } from '@/lib/match-games/attendance-stats'
 import {
@@ -75,7 +75,7 @@ export function MatchListView({
                                             {match.matchType === 'singles' ? (
                                                 <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                                                     {getName(match.player1Id ?? '')}
-                                                    {matchGame.isFixed && <RatingDeltaBadge delta={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']} />}
+                                                    {matchGame.isFixed && <TierDeltaBadge before={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']?.before} after={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']?.after} />}
                                                 </span>
                                             ) : (
                                                 <TeamPlayersCell
@@ -94,7 +94,7 @@ export function MatchListView({
                                             {match.matchType === 'singles' ? (
                                                 <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                                                     {getName(match.player2Id ?? '')}
-                                                    {matchGame.isFixed && <RatingDeltaBadge delta={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']} />}
+                                                    {matchGame.isFixed && <TierDeltaBadge before={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']?.before} after={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']?.after} />}
                                                 </span>
                                             ) : (
                                                 <TeamPlayersCell

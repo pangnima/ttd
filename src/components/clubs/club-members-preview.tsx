@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { TierEmblem } from '@/components/common/tier-emblem'
 import { CARD_BASE, CARD_HOVER } from '@/lib/dashboard/tokens'
-import { formatClubRating } from '@/lib/rating/display'
 import type { MemberWithUser } from '@/lib/queries/clubs'
 import type { ClubRating } from '@/types'
 
@@ -24,22 +24,27 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                         <Avatar className="w-8 h-8 shrink-0">
                             <AvatarFallback className="text-xs text-foreground/75">{m.user.name[0]}</AvatarFallback>
                         </Avatar>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium text-foreground/90 truncate">
                                 {m.role === 'owner' ? '👑 ' : ''}{m.user.name}
                             </p>
                             <div className="flex items-center gap-1">
-                                {clubRating && clubRating.matchesPlayed > 0 && (
-                                    <span className="text-xs font-mono text-info">
-                                        {formatClubRating(clubRating.rating)}
-                                    </span>
-                                )}
                                 <span className="text-xs text-foreground/55 font-mono">
                                     {m.user.ntrp.toFixed(1)}
                                 </span>
                                 {m.user.isGuest && <GuestBadge />}
                             </div>
                         </div>
+                        {clubRating && clubRating.matchesPlayed > 0 && (
+                            <TierEmblem
+                                rating={clubRating.rating}
+                                matchesPlayed={clubRating.matchesPlayed}
+                                showLabel={false}
+                                showProvisional={false}
+                                size={24}
+                                className="shrink-0"
+                            />
+                        )}
                     </>
                 )
 

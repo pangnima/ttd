@@ -1,7 +1,8 @@
 'use client'
 
 import { Check, Pencil } from 'lucide-react'
-import { RatingDeltaBadge } from '@/components/match-games/rating-delta-badge'
+import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
+import type { RatingChange } from '@/lib/queries/ratings'
 
 export type SetScore = { team1: string; team2: string }
 
@@ -14,7 +15,7 @@ type TeamPlayersCellProps = {
     getName: (id: string) => string
     onToggle: (teamKey: 'team1' | 'team2', playerId: string) => void
     justify?: boolean
-    deltas?: Record<string, number>
+    deltas?: Record<string, RatingChange>
     // 단식 등 코트 사이드 개념이 없는 경우 듀스/애드 토글을 숨긴다.
     hideSideToggle?: boolean
 }
@@ -31,7 +32,7 @@ export function TeamPlayersCell({
                     <div key={pid} className={`flex items-center gap-1.5 ${justify ? 'justify-between' : ''}`}>
                         <span className={`text-sm ${justify ? 'flex-1 min-w-0' : ''} ${winner === teamKey ? 'font-bold text-foreground' : 'text-foreground/85'} inline-flex items-center gap-1`}>
                             {getName(pid)}
-                            {isFixed && <RatingDeltaBadge delta={deltas?.[pid]} />}
+                            {isFixed && <TierDeltaBadge before={deltas?.[pid]?.before} after={deltas?.[pid]?.after} />}
                         </span>
                         {hideSideToggle ? null : !isFixed ? (
                             <button

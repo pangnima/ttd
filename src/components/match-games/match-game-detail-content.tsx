@@ -7,14 +7,15 @@ import { cn } from '@/lib/utils'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
 import { RatingChangeSummary } from '@/components/match-games/rating-change-summary'
 import { PageContainer } from '@/components/common/page-container'
+import type { RatingChange } from '@/lib/queries/ratings'
 import type { MatchGame, User } from '@/types'
 
 type MatchGameDetailContentProps = {
     matchGame: MatchGame
     members: User[]
     isOwner: boolean
-    ratingDeltaByMatch?: Record<string, Record<string, number>>
-    ratingChangeTotals?: Array<{ userId: string; total: number }>
+    ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
+    ratingChangeTotals?: Array<{ userId: string } & RatingChange>
     currentUserId?: string
 }
 

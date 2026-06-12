@@ -33,9 +33,9 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
         )
 
     return (
-        <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 bg-card">
+        <aside className="hidden md:flex w-60 flex-col shrink-0 border-r border-foreground/5 dark:border-foreground/10 bg-card">
             {/* 로고 영역 */}
-            <div className="h-14 flex items-center px-5 border-b border-foreground/5">
+            <div className="h-14 flex items-center px-5 border-b border-foreground/5 dark:border-foreground/10">
                 <Link href="/clubs" className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                         T
@@ -110,7 +110,7 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
             </nav>
 
             {/* 테마 토글 — 하단 고정 */}
-            <div className="p-3 border-t border-foreground/5">
+            <div className="p-3 border-t border-foreground/5 dark:border-foreground/10">
                 <ThemeToggle />
             </div>
         </aside>

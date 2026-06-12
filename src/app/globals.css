@@ -123,8 +123,8 @@
   --accent: #1e1e22;
   --accent-foreground: #f4f4ee;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: #28282c;
-  --input: #28282c;
+  --border: #3f3f45;     /* 카드/배경 대비 ~1.7:1 — 시인성 확보(구 #28282c는 ~1.2:1) */
+  --input: #3f3f45;
   --ring: #d2f24e;
   --accent-lime: #d2f24e;
   --accent-lime-foreground: #1a1a16;
@@ -145,7 +145,7 @@
   --sidebar-primary-foreground: #1a1a16;
   --sidebar-accent: #1e1e22;
   --sidebar-accent-foreground: #f4f4ee;
-  --sidebar-border: #28282c;
+  --sidebar-border: #3f3f45;
   --sidebar-ring: #d2f24e;
 }
 

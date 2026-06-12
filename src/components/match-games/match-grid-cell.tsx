@@ -8,6 +8,7 @@ import {
     type MatchState, type CourtSideState,
 } from '@/lib/match-games/match-view-helpers'
 import { cn } from '@/lib/utils'
+import type { RatingChange } from '@/lib/queries/ratings'
 import type { MatchGame } from '@/types'
 
 type MatchGridCellProps = {
@@ -19,7 +20,7 @@ type MatchGridCellProps = {
     canEdit: boolean
     currentUserId?: string
     getName: (id: string) => string
-    deltas?: Record<string, number>
+    deltas?: Record<string, RatingChange>
     toggleAdSide: (matchId: string, teamKey: 'team1' | 'team2', playerId: string) => void
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
     confirmScore: (matchId: string) => void

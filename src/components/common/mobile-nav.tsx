@@ -131,7 +131,7 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                 </nav>
 
                 {/* 테마 토글 — 하단 고정 */}
-                <div className="p-3 border-t border-foreground/5">
+                <div className="p-3 border-t border-foreground/5 dark:border-foreground/10">
                     <ThemeToggle />
                 </div>
             </SheetContent>

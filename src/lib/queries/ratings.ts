@@ -86,10 +86,15 @@ export async function fetchClubRatingHistory(
     }))
 }
 
-// 대진표(여러 match)의 경기별·선수별 레이팅 변동. byUserTotal은 대진표 전체 합계(내림차순).
+// 경기 전/후 클럽 레이팅(계급·포인트 변동 환산용).
+export type RatingChange = { before: number; after: number }
+
+// 대진표(여러 match)의 경기별·선수별 레이팅 변동.
+// byMatch: matchId → (userId → {before, after}).
+// byUserTotal: 선수별 (대진표 첫 경기 before → 마지막 경기 after) 순변동. 순상승폭 내림차순.
 export type MatchGameRatingDeltas = {
-    byMatch: Record<string, Record<string, number>>
-    byUserTotal: Array<{ userId: string; total: number }>
+    byMatch: Record<string, Record<string, RatingChange>>
+    byUserTotal: Array<{ userId: string } & RatingChange>
 }
 
 export async function fetchRatingDeltasByMatchGameId(
@@ -100,22 +105,27 @@ export async function fetchRatingDeltasByMatchGameId(
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('club_rating_history')
-        .select('match_id, user_id, delta')
+        .select('match_id, user_id, rating_before, rating_after, created_at')
         .in('match_id', matchIds)
+        .order('created_at', { ascending: true })
     if (error || !data) return { byMatch: {}, byUserTotal: [] }
 
-    const byMatch: Record<string, Record<string, number>> = {}
-    const totals = new Map<string, number>()
+    const byMatch: Record<string, Record<string, RatingChange>> = {}
+    // created_at 오름차순 순회 → 선수별 첫 before / 마지막 after 누적.
+    const net = new Map<string, RatingChange>()
     for (const row of data) {
         if (!row.match_id) continue
-        const delta = Number(row.delta)
-        ;(byMatch[row.match_id] ??= {})[row.user_id] = delta
-        totals.set(row.user_id, (totals.get(row.user_id) ?? 0) + delta)
+        const before = Number(row.rating_before)
+        const after = Number(row.rating_after)
+        ;(byMatch[row.match_id] ??= {})[row.user_id] = { before, after }
+        const cur = net.get(row.user_id)
+        if (cur) cur.after = after
+        else net.set(row.user_id, { before, after })
     }
 
-    const byUserTotal = [...totals.entries()]
-        .map(([userId, total]) => ({ userId, total }))
-        .sort((a, b) => b.total - a.total)
+    const byUserTotal = [...net.entries()]
+        .map(([userId, c]) => ({ userId, before: c.before, after: c.after }))
+        .sort((a, b) => (b.after - b.before) - (a.after - a.before))
 
     return { byMatch, byUserTotal }
 }

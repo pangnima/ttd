@@ -14,6 +14,7 @@ import {
     buildSlotGroups, getWinnerSide,
     type MatchStates, type CourtSideState, type MatchViewProps,
 } from '@/lib/match-games/match-view-helpers'
+import type { RatingChange } from '@/lib/queries/ratings'
 import type { MatchGame, User } from '@/types'
 
 type MatchGameTableProps = {
@@ -21,8 +22,8 @@ type MatchGameTableProps = {
     members: User[]
     clubId: string
     isOwner?: boolean
-    // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → delta).
-    ratingDeltaByMatch?: Record<string, Record<string, number>>
+    // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → {before, after}).
+    ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
     // 현재 로그인 사용자 id — 본인이 참가한 경기를 강조하는 데 사용.
     currentUserId?: string
 }

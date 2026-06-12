@@ -268,7 +268,7 @@ npx tsc --noEmit     # 타입 에러 확인
 ```
 
 ## 관리자 계정
-admin@admin.com / 123123
+pangnima@gmail.com / 123123
 
 ## 절대 하지 말 것
 - `any` 타입 사용 금지

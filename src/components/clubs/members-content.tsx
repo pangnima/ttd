@@ -82,7 +82,7 @@ export function MembersContent({
                         onClick={() => setSortByRating((v) => !v)}
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        {sortByRating ? '가입순' : '클럽 레이팅순'}
+                        {sortByRating ? '가입순' : '계급순'}
                     </button>
                 </div>
                 <div className="border rounded-lg divide-y">

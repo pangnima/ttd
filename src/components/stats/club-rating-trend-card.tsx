@@ -1,6 +1,7 @@
 import { SectionCard } from '@/components/common/section-card'
-import { ProvisionalBadge } from '@/components/common/provisional-badge'
-import { formatClubRating, isProvisional } from '@/lib/rating/display'
+import { TierEmblem } from '@/components/common/tier-emblem'
+import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
+import { TIER_LABELS, getTier } from '@/lib/rating/tier'
 import { TEXT_MUTED } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
@@ -28,9 +29,7 @@ export function ClubRatingTrendCard({ points, clubName }: Props) {
 function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
     const start = points[0].ratingBefore
     const current = points[points.length - 1].ratingAfter
-    const change = current - start
     const matchesPlayed = points.length
-    const up = change >= 0
 
     // 시작 레이팅 → 각 경기 후 레이팅을 잇는 시계열.
     const series = [start, ...points.map((p) => p.ratingAfter)]
@@ -56,14 +55,9 @@ function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
     return (
         <div className="space-y-3">
             <div className="flex items-end justify-between gap-2">
-                <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold font-mono tabular-nums text-foreground">
-                        {formatClubRating(current)}
-                    </span>
-                    <span className={`text-sm font-mono ${up ? 'text-win' : 'text-loss'}`}>
-                        {up ? '▲' : '▼'}{Math.abs(change).toFixed(3)}
-                    </span>
-                    {isProvisional(matchesPlayed) && <ProvisionalBadge />}
+                <div className="flex items-center gap-3">
+                    <TierEmblem rating={current} matchesPlayed={matchesPlayed} />
+                    <TierDeltaBadge before={start} after={current} />
                 </div>
                 <span className={`text-[11px] ${TEXT_MUTED}`}>{matchesPlayed}경기</span>
             </div>
@@ -85,9 +79,9 @@ function TrendBody({ points }: { points: RatingHistoryPoint[] }) {
                     vectorEffect="non-scaling-stroke"
                 />
             </svg>
-            <div className={`flex justify-between text-[11px] ${TEXT_MUTED} font-mono`}>
-                <span>시작 {formatClubRating(start)}</span>
-                <span>현재 {formatClubRating(current)}</span>
+            <div className={`flex justify-between text-[11px] ${TEXT_MUTED}`}>
+                <span>시작 {TIER_LABELS[getTier(start)]}</span>
+                <span>현재 {TIER_LABELS[getTier(current)]}</span>
             </div>
         </div>
     )

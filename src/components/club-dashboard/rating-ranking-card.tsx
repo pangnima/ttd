@@ -2,8 +2,7 @@ import Link from 'next/link'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { RankBadge } from '@/components/common/rank-badge'
 import { GuestBadge } from '@/components/common/guest-badge'
-import { ProvisionalBadge } from '@/components/common/provisional-badge'
-import { formatClubRating, isProvisional } from '@/lib/rating/display'
+import { TierEmblem } from '@/components/common/tier-emblem'
 import type { ClubRatingRankingEntry } from '@/lib/queries/ratings'
 
 type RatingRankingCardProps = {
@@ -46,14 +45,11 @@ export function RatingRankingCard({ clubId, entries }: RatingRankingCardProps) {
                                                 <p className="text-sm text-foreground truncate leading-tight">{name}</p>
                                             )}
                                             {isGuest && <GuestBadge />}
-                                            {isProvisional(entry.matchesPlayed) && <ProvisionalBadge />}
                                         </div>
                                         <p className={`text-[11px] ${TEXT_MUTED}`}>{entry.matchesPlayed}경기</p>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-xl font-bold font-mono text-foreground leading-tight tabular-nums">
-                                            {formatClubRating(entry.rating)}
-                                        </p>
+                                    <div className="shrink-0">
+                                        <TierEmblem rating={entry.rating} matchesPlayed={entry.matchesPlayed} />
                                     </div>
                                 </div>
                             )

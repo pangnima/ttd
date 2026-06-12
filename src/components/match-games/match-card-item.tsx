@@ -2,9 +2,10 @@
 
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { TeamPlayersCell, ScoreCell } from '@/components/match-games/match-game-cell-components'
-import { RatingDeltaBadge } from '@/components/match-games/rating-delta-badge'
+import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
 import { SELF_CARD_CLASS, type MatchState, type CourtSideState, type WinnerSide } from '@/lib/match-games/match-view-helpers'
 import { cn } from '@/lib/utils'
+import type { RatingChange } from '@/lib/queries/ratings'
 import type { MatchGame } from '@/types'
 
 type MatchCardItemProps = {
@@ -21,7 +22,7 @@ type MatchCardItemProps = {
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
     confirmScore: (matchId: string) => void
     editScore: (matchId: string) => void
-    deltas?: Record<string, number>
+    deltas?: Record<string, RatingChange>
     isSelfRow?: boolean
 }
 
@@ -51,12 +52,12 @@ export function MatchCardItem({
                         <span className="text-xs text-muted-foreground shrink-0">P1</span>
                         <span className={`text-sm flex-1 inline-flex items-center gap-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                             {getName(match.player1Id ?? '')}
-                            {matchGame.isFixed && <RatingDeltaBadge delta={deltas?.[match.player1Id ?? '']} />}
+                            {matchGame.isFixed && <TierDeltaBadge before={deltas?.[match.player1Id ?? '']?.before} after={deltas?.[match.player1Id ?? '']?.after} />}
                         </span>
                         <span className="text-muted-foreground text-xs mx-1">vs</span>
                         <span className={`text-sm flex-1 inline-flex items-center justify-end gap-1 text-right ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
                             {getName(match.player2Id ?? '')}
-                            {matchGame.isFixed && <RatingDeltaBadge delta={deltas?.[match.player2Id ?? '']} />}
+                            {matchGame.isFixed && <TierDeltaBadge before={deltas?.[match.player2Id ?? '']?.before} after={deltas?.[match.player2Id ?? '']?.after} />}
                         </span>
                         <span className="text-xs text-muted-foreground shrink-0">P2</span>
                     </div>

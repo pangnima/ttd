@@ -54,7 +54,7 @@ export function Header({ clubs = [] }: HeaderProps) {
     }, [])
 
     return (
-        <header className="min-h-14 border-b border-foreground/5 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
+        <header className="min-h-14 border-b border-foreground/5 dark:border-foreground/10 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
             <MobileNav clubs={clubs} />
             <Link href="/clubs" className="font-semibold text-sm md:hidden">
                 🎾 테니스 클럽

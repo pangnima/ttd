@@ -2,9 +2,8 @@ import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
-import { ProvisionalBadge } from '@/components/common/provisional-badge'
+import { TierEmblem } from '@/components/common/tier-emblem'
 import { calcWinRate } from '@/lib/dashboard/tokens'
-import { formatClubRating, isProvisional } from '@/lib/rating/display'
 import type { ClubMember, ClubRating, User } from '@/types'
 
 type MemberListItemProps = {
@@ -71,11 +70,8 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 {hasClubRating && (
-                    <Badge variant="outline" className="text-xs font-mono text-info border-info/40">
-                        클럽 {formatClubRating(clubRating!.rating)}
-                    </Badge>
+                    <TierEmblem rating={clubRating!.rating} matchesPlayed={clubRating!.matchesPlayed} />
                 )}
-                {hasClubRating && isProvisional(clubRating!.matchesPlayed) && <ProvisionalBadge />}
                 <Badge variant="outline" className="text-xs font-mono">
                     NTRP {user.ntrp.toFixed(1)}
                 </Badge>

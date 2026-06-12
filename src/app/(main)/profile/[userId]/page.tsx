@@ -5,8 +5,15 @@ import { fetchUserById } from '@/lib/queries/users'
 import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
 import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
-import { fetchClubRatingHistory, type RatingHistoryPoint } from '@/lib/queries/ratings'
+import {
+    fetchClubRatingHistory,
+    fetchClubRatingRanking,
+    type ClubRatingRankingEntry,
+    type RatingHistoryPoint,
+} from '@/lib/queries/ratings'
 import { isProvisional } from '@/lib/rating/display'
+import { aggregateRecentForm, type RecentFormResult } from '@/lib/analytics/form'
+import { combinePlayerStats, type PlayerStats } from '@/lib/stats'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
@@ -22,6 +29,21 @@ type Props = {
 function deriveHeaderRating(history: RatingHistoryPoint[]): { clubRating?: number; provisional: boolean } {
     if (history.length === 0) return { clubRating: undefined, provisional: false }
     return { clubRating: history[history.length - 1].ratingAfter, provisional: isProvisional(history.length) }
+}
+
+// 레이팅 랭킹에서 본인 순위(1-based). 행 없으면 undefined.
+function rankOf(ranking: ClubRatingRankingEntry[], userId: string): number | undefined {
+    const i = ranking.findIndex((r) => r.userId === userId)
+    return i >= 0 ? i + 1 : undefined
+}
+
+type QuarterStats = { singles: PlayerStats; menDoubles: PlayerStats; womenDoubles: PlayerStats; mixedDoubles: PlayerStats }
+
+// 헤더 3대 스탯: 경기 수·승률(무승부 제외)·현재 연승(연승 중 아니면 0).
+function deriveHeaderStats(stats: QuarterStats, form: RecentFormResult): { games: number; winRate: number; winStreak: number } {
+    const overall = combinePlayerStats(stats.singles, stats.menDoubles, stats.womenDoubles, stats.mixedDoubles)
+    const winStreak = form.currentStreak?.type === 'W' ? form.currentStreak.length : 0
+    return { games: overall.totalMatches, winRate: overall.winRate, winStreak }
 }
 
 export default async function MemberProfilePage({ params, searchParams }: Props) {
@@ -54,11 +76,14 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
 
         const bundle = await fetchAnalyticsBundle(userId, { scope })
 
-        // 클럽 scope일 때만 레이팅 추세/헤더 뱃지 표시
-        const ratingHistory = scope.kind === 'club'
-            ? await fetchClubRatingHistory(scope.clubId, userId)
-            : []
+        // 클럽 scope일 때만 레이팅 추세/순위/헤더 뱃지 표시
+        const [ratingHistory, ranking] = await Promise.all([
+            scope.kind === 'club' ? fetchClubRatingHistory(scope.clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
+            scope.kind === 'club' ? fetchClubRatingRanking(scope.clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
+        ])
         const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
+        const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
+        const headerStats = deriveHeaderStats(bundle.stats, aggregateRecentForm(bundle, userId))
 
         // 탭 렌더용 간략 클럽 목록
         const clubsForTab = myClubs.map((c) => ({ id: c.id, name: c.name }))
@@ -71,6 +96,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                         clubName={scope.kind === 'club' ? scope.clubName : club?.name}
                         clubRating={clubRating}
                         provisional={provisional}
+                        clubRank={clubRank}
+                        stats={headerStats}
                     />
                     <Suspense>
                         <AnalyticsModeTabs
@@ -87,14 +114,24 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
 
     // 타인 프로필: 공개 요약 통계
     const privacy = target.statsHidden ? 'locked' : 'public'
-    const [bundle, ratingHistory] = await Promise.all([
+    const showStats = !target.statsHidden
+    const [bundle, ratingHistory, ranking] = await Promise.all([
         fetchPlayerStatsBundle(userId, clubId),
         clubId ? fetchClubRatingHistory(clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
+        clubId && showStats ? fetchClubRatingRanking(clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
     ])
-    // 통계 비공개(statsHidden) 프로필에서는 클럽 레이팅을 노출하지 않는다(헤더·추세 모두).
-    const { clubRating, provisional } = target.statsHidden
-        ? { clubRating: undefined, provisional: false }
-        : deriveHeaderRating(ratingHistory)
+    // 통계 비공개(statsHidden) 프로필에서는 클럽 레이팅·스탯·순위를 노출하지 않는다(헤더·추세 모두).
+    const { clubRating, provisional } = showStats
+        ? deriveHeaderRating(ratingHistory)
+        : { clubRating: undefined, provisional: false }
+    const clubRank = clubId && showStats ? rankOf(ranking, userId) : undefined
+    // 타인 번들에는 personalMatches가 없으므로 [] 보강(클럽 scope라 개인 경기 무관).
+    const headerStats = showStats
+        ? deriveHeaderStats(
+              bundle.stats,
+              aggregateRecentForm({ matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: [] }, userId),
+          )
+        : undefined
 
     return (
         <PageContainer>
@@ -103,6 +140,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 clubName={club?.name}
                 clubRating={clubRating}
                 provisional={provisional}
+                clubRank={clubRank}
+                stats={headerStats}
             />
             <PlayerStatsSection
                 bundle={bundle}
