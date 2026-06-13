@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { BarChart3, UsersRound } from 'lucide-react'
+import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
+import { ClubNavTree } from '@/components/common/club-nav-tree'
 
 type SidebarProps = {
     currentPath?: string
@@ -49,7 +50,7 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
             </div>
 
             {/* 메인 네비게이션 */}
-            <nav className="flex-1 p-3 space-y-0.5">
+            <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5">
                 {mainNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
@@ -79,38 +80,8 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                     </div>
                 )}
 
-                {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 묶어 트리 형태로 노출 */}
-                {clubs.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-border/40">
-                        <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
-                            <UsersRound className="w-4 h-4 shrink-0" />
-                            내가 가입한 클럽
-                        </div>
-                        <div className="space-y-2">
-                            {clubs.map((club) => (
-                                <div key={club.id}>
-                                    {/* 클럽명 — 통합/개인과 동일 스타일(pl-9). 하위 홈/대진표/내 전적은 한 뎁스 더(pl-14). */}
-                                    <p className="flex items-center gap-3 px-3 py-2.5 pl-9 rounded-lg text-[13px] font-medium text-muted-foreground truncate">
-                                        {club.name}
-                                    </p>
-                                    <div className="space-y-0.5">
-                                        <Link href={`/clubs/${club.id}`} className={cn(navLinkClass(activePath === `/clubs/${club.id}`), 'pl-14 text-[13px]')}>
-                                            홈
-                                        </Link>
-                                        <Link href={`/clubs/${club.id}/match-games`} className={cn(navLinkClass(activePath.startsWith(`/clubs/${club.id}/match-games`)), 'pl-14 text-[13px]')}>
-                                            대진표
-                                        </Link>
-                                        {userId && (
-                                            <Link href={`/profile/${userId}?scope=${club.id}`} className={cn(navLinkClass(scopeActive(club.id)), 'pl-14 text-[13px]')}>
-                                                내 전적
-                                            </Link>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
+                <ClubNavTree clubs={clubs} userId={userId} variant="desktop" />
             </nav>
 
             {/* 테마 토글 — 하단 고정 */}

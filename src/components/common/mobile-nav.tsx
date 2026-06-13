@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Menu, BarChart3, UsersRound } from 'lucide-react'
+import { Menu, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
+import { ClubNavTree } from '@/components/common/club-nav-tree'
 
 type MobileNavProps = {
     clubs?: { id: string; name: string }[]
@@ -57,15 +58,15 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
             >
                 <Menu className="w-5 h-5" />
             </SheetTrigger>
-            <SheetContent side="left" className="w-56 p-0 flex flex-col">
-                <SheetHeader className="px-4 py-4 border-b">
+            <SheetContent side="left" className="w-56 p-0 gap-0">
+                <SheetHeader className="h-14 justify-center px-4 py-0 border-b">
                     <SheetTitle className="text-base font-semibold text-left">
                         🎾 테니스 클럽
                     </SheetTitle>
                 </SheetHeader>
 
                 {/* 메인 네비게이션 */}
-                <nav className="flex-1 p-3 space-y-1">
+                <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
                     {mainNavItems.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}
@@ -96,42 +97,12 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                         </div>
                     )}
 
-                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 묶어 트리 형태로 노출 */}
-                    {clubs.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10">
-                            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground/70">
-                                <UsersRound className="w-4 h-4" />
-                                내가 가입한 클럽
-                            </div>
-                            <div className="space-y-2">
-                                {clubs.map((club) => (
-                                    <div key={club.id}>
-                                        {/* 클럽명 — 통합/개인과 동일 스타일(pl-9). 하위 홈/대진표/내 전적은 한 뎁스 더(pl-14). */}
-                                        <p className="flex items-center gap-3 px-3 py-2 pl-9 rounded-md text-[13px] font-medium text-sidebar-foreground truncate">
-                                            {club.name}
-                                        </p>
-                                        <div className="space-y-1">
-                                            <Link href={`/clubs/${club.id}`} onClick={() => setOpen(false)} className={cn(navLinkClass(pathname === `/clubs/${club.id}`), 'pl-14 text-[13px]')}>
-                                                홈
-                                            </Link>
-                                            <Link href={`/clubs/${club.id}/match-games`} onClick={() => setOpen(false)} className={cn(navLinkClass(pathname.startsWith(`/clubs/${club.id}/match-games`)), 'pl-14 text-[13px]')}>
-                                                대진표
-                                            </Link>
-                                            {userId && (
-                                                <Link href={`/profile/${userId}?scope=${club.id}`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive(club.id)), 'pl-14 text-[13px]')}>
-                                                    내 전적
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
+                    <ClubNavTree clubs={clubs} userId={userId} variant="mobile" onNavigate={() => setOpen(false)} />
                 </nav>
 
-                {/* 테마 토글 — 하단 고정 */}
-                <div className="p-3 border-t border-foreground/5 dark:border-foreground/10">
+                {/* 테마 토글 — 하단 고정 (노치/홈 인디케이터 기기 대비 safe-area 패딩) */}
+                <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-foreground/5 dark:border-foreground/10">
                     <ThemeToggle />
                 </div>
             </SheetContent>
