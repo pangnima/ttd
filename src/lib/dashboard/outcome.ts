@@ -4,7 +4,6 @@
  */
 
 // ── 클럽 매치용 (win/loss/draw/unknown) ─────────────────────────────
-// Baseline: 승=코트그린(win), 패=클레이(loss). 색 + W/L 글자 이중표기로 색각 접근성 확보.
 export const OUTCOME_STYLE: Record<'win' | 'loss' | 'draw' | 'unknown', string> = {
     win: 'border-win/40 text-win bg-win/10',
     loss: 'border-loss/40 text-loss bg-loss/10',

@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 세그먼트 토글 — 단식/복식 등 2~N개 분기 선택(가이드 Inputs 섹션).
+ * 세그먼트 토글 — 단식/복식 등 2~N개 분기 선택.
  * 컨트롤드 컴포넌트. 트랙은 surface-2, 활성 세그먼트는 surface(card)로 떠오름.
  */
 type SegmentedOption<T extends string> = {

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 결과 칩 — 승/패/무를 색 + 글자(W/L/D) 이중표기.
+ * 결과 칩 — 승/패/무를 색 + 글자(W/L/D) 이중표기.
  * 패배는 빨강이 아닌 클레이(loss). 색각 접근성을 위해 글자를 항상 노출.
  */
 type ResultOutcome = 'W' | 'L' | 'D'

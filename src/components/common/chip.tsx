@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 칩 — 가이드 Components(Chips) 재현.
+ * 칩 — 채움/틴트/외곽선 변형 지원.
  * variant: 채움(solid)·틴트(soft)·외곽선(outline)
  * tone: 시맨틱 색 (win/loss/info/lime/neutral/ink)
  */

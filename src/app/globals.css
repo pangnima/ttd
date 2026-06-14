@@ -11,7 +11,7 @@
   --font-sans: var(--font-pretendard), var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-pretendard), var(--font-geist-mono), monospace;
   --font-heading: var(--font-sans);
-  /* Baseline 시그니처/시맨틱 컬러 */
+  /* 시그니처/시맨틱 컬러 */
   --color-accent-lime: var(--accent-lime);
   --color-accent-lime-foreground: var(--accent-lime-foreground);
   --color-win: var(--win);
@@ -49,7 +49,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Baseline radius: 최대 8px 상한(pill은 아바타·점·프로그레스만 별도) */
+  /* radius: 최대 8px 상한(pill은 아바타·점·프로그레스만 별도) */
   --radius-xs: 0.125rem; /* 2px — 배지·태그 */
   --radius-sm: 0.25rem;  /* 4px — 칩·인풋 */
   --radius-md: 0.375rem; /* 6px — 버튼·토글 */
@@ -61,7 +61,7 @@
 }
 
 :root {
-  /* Baseline 라이트 — 따뜻한 페이퍼 톤: background < surface-2(secondary/muted) < card/popover */
+  /* 라이트 — 따뜻한 페이퍼 톤: background < surface-2(secondary/muted) < card/popover */
   /* 깊이는 1px 보더 우선, 그림자 없이 영역을 구분한다 */
   --background: #f3f2ec; /* 페이퍼 배경 */
   --foreground: #1a1a16; /* ink — 본문 */
@@ -81,7 +81,7 @@
   --border: #e4e3d9;     /* 1px 에어라인 */
   --input: #e4e3d9;
   --ring: #c8f24e;       /* lime 포커스 링 */
-  /* Baseline 시그니처/시맨틱 */
+  /* 시그니처/시맨틱 */
   --accent-lime: #c8f24e;
   --accent-lime-foreground: #1a1a16;
   --win: #1f8a52;        /* 코트그린 — 승·긍정 */
@@ -107,7 +107,7 @@
 }
 
 .dark {
-  /* Baseline 다크 — 잉크 톤 */
+  /* 다크 — 잉크 톤 */
   --background: #0f0f11;
   --foreground: #f4f4ee; /* light ink */
   --card: #17171a;
@@ -172,7 +172,7 @@
 }
 
 @layer components {
-  /* Baseline 타이포 스케일 (전부 Pretendard) */
+  /* 타이포 스케일 (전부 Pretendard) */
   .type-display {
     font-weight: 800;
     font-size: clamp(2.5rem, 6vw, 4.75rem); /* ~76px */

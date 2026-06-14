@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline status-dot 칩 — 점 + 라벨. 활동중/부상/리그진행/휴식 등 상태 표기.
+ * status-dot 칩 — 점 + 라벨. 활동중/부상/리그진행/휴식 등 상태 표기.
  */
 type StatusTone = 'win' | 'loss' | 'info' | 'neutral'
 

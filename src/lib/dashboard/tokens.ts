@@ -1,9 +1,8 @@
-// Baseline: 카드·패널 radius 8px(rounded-lg), 그림자 없이 1px 보더 우선
 export const CARD_BASE = 'rounded-lg border border-border bg-card'
 export const CARD_HOVER = 'hover:bg-muted/50 transition-colors'
 
 /**
- * 시맨틱 타이포 스케일 — Baseline 가이드 위계(Display/Headline/Title/Body/Caption/Mono Label).
+ * 시맨틱 타이포 스케일 — 가이드 위계(Display/Headline/Title/Body/Caption/Mono Label).
  * 한 곳에서 위계를 관리해 컴포넌트 간 일관성을 유지한다. (.type-* 유틸은 globals.css 정의)
  */
 export const TYPO = {
@@ -42,7 +41,7 @@ export const FORM_INPUT_BASE = [
 /** 폼 라벨 공통 스타일 (auth/profile 폼에서 공유) */
 export const FORM_LABEL_BASE = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
-/** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) — Baseline 시맨틱 */
+/** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
     strength: 'text-win', // 강점 → 코트그린
     weakness: 'text-loss', // 개선 → 클레이

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 승률 도넛 — 코트그린 링 + 중앙 % 라벨.
+ * 승률 도넛 — 코트그린 링 + 중앙 % 라벨.
  * value: 0~100 (null이면 데이터 없음 처리)
  */
 type WinRateDonutProps = {

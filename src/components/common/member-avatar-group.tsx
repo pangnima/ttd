@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } fr
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 멤버 아바타 그룹 — 겹침 표시 + 초과 인원 +N 카운트.
+ * 멤버 아바타 그룹 — 겹침 표시 + 초과 인원 +N 카운트.
  * highlightId가 있으면 해당 멤버에 lime 링으로 강조.
  */
 type AvatarMember = {

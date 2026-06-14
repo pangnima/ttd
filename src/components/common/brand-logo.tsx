@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Baseline 브랜드 로고 — 라임 테니스공 아이콘 + BASELINE 워드마크.
+ * 브랜드 로고 — 라임 테니스공 아이콘 + 워드마크.
  * 다크/라이트 패널 어디서나 쓰이도록 워드마크 색은 currentColor(부모 text-*)로 상속.
  */
 type BrandLogoProps = {
