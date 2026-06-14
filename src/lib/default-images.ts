@@ -4,13 +4,17 @@
 
 const AVATAR_FILES = [
     'avatar-ball.png', 'avatar-bounce.png', 'avatar-bull.png', 'avatar-can.png',
-    'avatar-court.png', 'avatar-net.png', 'avatar-racket.png', 'avatar-serve.png',
-    'avatar-sunset.png', 'avatar-trophy.png',
+    'avatar-clay.png', 'avatar-court.png', 'avatar-duo.png', 'avatar-fireball.png',
+    'avatar-flag.png', 'avatar-grass.png', 'avatar-lights.png', 'avatar-medal.png',
+    'avatar-mountain.png', 'avatar-net.png', 'avatar-racket.png', 'avatar-serve.png',
+    'avatar-starnight.png', 'avatar-sunset.png', 'avatar-trophy.png', 'avatar-wave.png',
 ] as const
 
 const CLUB_LOGO_FILES = [
-    'logo-ace.png', 'logo-base.png', 'logo-champ.png', 'logo-court.png', 'logo-cross.png',
-    'logo-net.png', 'logo-optic.png', 'logo-serve.png', 'logo-spin.png', 'logo-target.png',
+    'logo-ace.png', 'logo-base.png', 'logo-bolt.png', 'logo-champ.png', 'logo-court.png',
+    'logo-cross.png', 'logo-crown.png', 'logo-flame.png', 'logo-net.png', 'logo-optic.png',
+    'logo-peak.png', 'logo-serve.png', 'logo-shield.png', 'logo-spin.png', 'logo-star.png',
+    'logo-target.png', 'logo-topspin.png', 'logo-tour.png', 'logo-volley.png', 'logo-wing.png',
 ] as const
 
 function pick<T>(arr: readonly T[]): T {
