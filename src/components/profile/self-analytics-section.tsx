@@ -122,6 +122,22 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
+    // 1:1 맞대결 카드 — 개인 경기 기록과 50/50 배치 또는 단독(클럽 scope) 렌더에 재사용
+    const headToHead = (
+        <Suspense>
+            <HeadToHeadCard
+                h2hList={bundle.h2hList}
+                bundle={{
+                    matches: bundle.matches,
+                    gameMetaById: bundle.gameMetaById,
+                    personalMatches: bundle.personalGames,
+                }}
+                userId={me.id}
+                userMap={bundle.userMap}
+            />
+        </Suspense>
+    )
+
     return (
         <div className="space-y-8">
             {/* 전적 통계 (4칸) — 세트 표기 숨김(심플), scope는 칩으로 노출 */}
@@ -162,19 +178,26 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <StrengthWeaknessCard diagnosis={diagnosis} />
             </div>
 
-            {/* 개인 경기 기록(좌 50%) + 코트 표면·손잡이 세로 스택(우 50%) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
-                <div className="space-y-6">
-                    <SurfaceStatsCard surfaceStats={surfaceStats} />
-                    <OpponentHandStatsCard handStats={opponentHandStats} />
-                    <DoublesCourtStatsCard court={doublesCourtStats} />
-                </div>
+            {/* 코트 표면 · 상대 손잡이 · 복식 코트 성향 — 1행 3칸 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <SurfaceStatsCard surfaceStats={surfaceStats} />
+                <OpponentHandStatsCard handStats={opponentHandStats} />
+                <DoublesCourtStatsCard court={doublesCourtStats} />
             </div>
 
             {/* 클럽 레이팅 추세 (클럽 scope 전용) */}
             {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
                 <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
+            )}
+
+            {/* 개인 경기 기록 + 1:1 맞대결 비교 — 1행 50/50 (클럽 scope는 개인 기록 숨김 → 맞대결만 풀폭) */}
+            {scope.kind === 'club' ? (
+                headToHead
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+                    {headToHead}
+                </div>
             )}
 
             {/* 개인 레이팅 추세 (개인 scope — 개인 경기가 있을 때) */}
@@ -184,20 +207,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     provisional={personalRating.provisional}
                 />
             )}
-
-            {/* 1:1 맞대결 비교 (full) */}
-            <Suspense>
-                <HeadToHeadCard
-                    h2hList={bundle.h2hList}
-                    bundle={{
-                        matches: bundle.matches,
-                        gameMetaById: bundle.gameMetaById,
-                        personalMatches: bundle.personalGames,
-                    }}
-                    userId={me.id}
-                    userMap={bundle.userMap}
-                />
-            </Suspense>
 
             {/* AI 코칭 (full) */}
             <AICoachingCard
