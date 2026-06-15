@@ -47,7 +47,7 @@ function deriveHeaderStats(stats: QuarterStats, form: RecentFormResult): { games
 }
 
 // 비클럽 scope(본인) 헤더 요약: 승률 링 + 보조 행. 주력 종목 = 경기 수 최다 종류.
-function deriveSummary(stats: QuarterStats, form: RecentFormResult): ProfileSummary {
+function deriveSummary(stats: QuarterStats): ProfileSummary {
     const overall = combinePlayerStats(stats.singles, stats.menDoubles, stats.womenDoubles, stats.mixedDoubles)
     const counts: Array<[MatchType, number]> = [
         ['singles', stats.singles.totalMatches],
@@ -61,7 +61,6 @@ function deriveSummary(stats: QuarterStats, form: RecentFormResult): ProfileSumm
         wins: overall.wins,
         losses: overall.losses,
         draws: overall.draws,
-        streak: form.currentStreak,
         topMatchType: top[1] > 0 ? top[0] : undefined,
     }
 }
@@ -106,7 +105,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const form = aggregateRecentForm(bundle, userId)
         const headerStats = deriveHeaderStats(bundle.stats, form)
         // 클럽 scope는 티어 헤더, 그 외는 승률 링 요약 헤더
-        const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats, form) : undefined
+        const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats) : undefined
 
         return (
             <PageContainer>
@@ -118,6 +117,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     clubRank={clubRank}
                     stats={headerStats}
                     summary={summary}
+                    recentForm={form}
                 />
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>

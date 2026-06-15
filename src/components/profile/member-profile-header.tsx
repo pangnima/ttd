@@ -6,9 +6,11 @@ import { ProfileTierProgress } from '@/components/profile/profile-tier-progress'
 import { ProfileStatRow } from '@/components/profile/profile-stat-row'
 import { ProfileSummaryRow, type ProfileSummary } from '@/components/profile/profile-summary-row'
 import { WinRateRing } from '@/components/stats/win-rate-ring'
+import { RecentFormStrip } from '@/components/stats/recent-form-strip'
 import { getTier, TIER_LABELS, TIER_TEXT } from '@/lib/rating/tier'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
+import type { RecentFormResult } from '@/lib/analytics/form'
 import type { User } from '@/types'
 
 type Props = {
@@ -22,12 +24,14 @@ type Props = {
     stats?: { games: number; winStreak: number }
     /** 티어가 없는 비클럽 scope(본인) 전용 요약 — 승률 링 + 보조 행 노출 */
     summary?: ProfileSummary
+    /** 최근 경기 폼 (본인 전용) — W/L/D 박스 스트립 노출 */
+    recentForm?: RecentFormResult
 }
 
 const genderLabel: Record<User['gender'], string> = { male: '남', female: '여' }
 const handLabel: Record<User['dominantHand'], string> = { right: '오른손잡이', left: '왼손잡이' }
 
-export function MemberProfileHeader({ user, clubName, clubRating, provisional, clubRank, stats, summary }: Props) {
+export function MemberProfileHeader({ user, clubName, clubRating, provisional, clubRank, stats, summary, recentForm }: Props) {
     const hasTier = clubRating !== undefined
     const tier = hasTier ? getTier(clubRating) : null
     // 티어가 없는 비클럽 scope에서는 승률 링을 좌측 히어로 슬롯에 채운다.
@@ -89,6 +93,10 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                     {showSummary && summary
                         ? <ProfileSummaryRow {...summary} />
                         : stats && <ProfileStatRow {...stats} />}
+
+                    {recentForm && (
+                        <RecentFormStrip last10={recentForm.last10} currentStreak={recentForm.currentStreak} />
+                    )}
 
                     {clubName && <p className="text-xs text-muted-foreground">{clubName} 기준 통계</p>}
                 </div>

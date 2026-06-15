@@ -4,7 +4,6 @@ import type { User } from '@/types'
 import { StatsQuadGrid } from '@/components/stats/stats-quad-grid'
 import { StatsPrivacyToggle } from '@/components/stats/stats-privacy-toggle'
 import { HeadToHeadCard } from '@/components/stats/head-to-head-card'
-import { RecentFormCard } from '@/components/stats/recent-form-card'
 import { SurfaceStatsCard } from '@/components/stats/surface-stats-card'
 import { NtrpDifferentialCard } from '@/components/stats/ntrp-differential-card'
 import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
@@ -17,7 +16,6 @@ import { RivalAnalysisCard } from '@/components/stats/rival-analysis-card'
 import { PartnerChemistryCard } from '@/components/stats/partner-chemistry-card'
 import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
-import { aggregateRecentForm } from '@/lib/analytics/form'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
@@ -66,7 +64,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         },
         me.id,
     )
-    const recentForm = aggregateRecentForm(timeBundle, me.id)
     const ntrpUserMap = new Map([...bundle.userMap.entries()].map(([id, u]) => [id, { ntrp: u.ntrp }]))
     const ntrpStats = aggregateByNtrpDiff(
         { matches: bundle.matches, userMap: ntrpUserMap },
@@ -132,12 +129,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 />
             </section>
 
-            {/* 최근 폼 + 코트 표면 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <RecentFormCard recentForm={recentForm} />
-                <SurfaceStatsCard surfaceStats={surfaceStats} />
-            </div>
-
             {/* 내 승률 추이 + 경기 활동 히트맵 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <WinRateTrendCard years={trendYears} />
@@ -152,8 +143,11 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 </div>
             )}
 
-            {/* 개인 경기 기록 (full) */}
-            <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+            {/* 개인 경기 기록 + 코트 표면별 성적 (2col) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+                <SurfaceStatsCard surfaceStats={surfaceStats} />
+            </div>
 
             {/* ── 심화 진단 (3col) ─────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
