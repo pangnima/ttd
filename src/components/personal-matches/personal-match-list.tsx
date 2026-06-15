@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
-import { PersonalMatchListItem } from '@/components/personal-matches/personal-match-list-item'
+import { groupByMonth } from '@/lib/personal-matches/grouping'
+import { deletePersonalMatchAction } from '@/lib/actions/personal-matches'
+import { PersonalMatchMonthGroup } from '@/components/personal-matches/personal-match-month-group'
 
 type Filter = 'all' | 'singles' | 'doubles'
 
@@ -17,10 +19,25 @@ type Props = {
     matches: PersonalMatch[]
 }
 
-/**
- * 개인 경기 목록 + 단식/복식 필터 탭.
- * 데이터는 서버에서 이미 로드되어 클라이언트에서 matchType 기준으로 필터링한다.
- */
+function MatchActions({ id }: { id: string }) {
+    const [isPending, startTransition] = useTransition()
+    function handleDelete() {
+        if (!confirm('이 경기 기록을 삭제할까요?')) return
+        startTransition(async () => { await deletePersonalMatchAction(id) })
+    }
+    return (
+        <span className="flex items-center gap-1.5 ml-1">
+            <Link href={`/me/personal-matches/${id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                수정
+            </Link>
+            <button onClick={handleDelete} disabled={isPending} className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
+                삭제
+            </button>
+        </span>
+    )
+}
+
+/** 개인 경기 목록 — 단식/복식 필터 + 월별 그룹 카드. */
 export function PersonalMatchList({ matches }: Props) {
     const [filter, setFilter] = useState<Filter>('all')
 
@@ -29,9 +46,10 @@ export function PersonalMatchList({ matches }: Props) {
         if (filter === 'singles') return m.matchType === 'singles'
         return m.matchType !== 'singles'
     })
+    const groups = groupByMonth(visible)
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-5">
             <div className="flex gap-1.5">
                 {FILTERS.map(({ value, label }) => {
                     const active = filter === value
@@ -52,7 +70,7 @@ export function PersonalMatchList({ matches }: Props) {
                 })}
             </div>
 
-            {visible.length === 0 ? (
+            {groups.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground text-sm text-center py-12">
                     해당하는 경기 기록이 없습니다.{' '}
                     <Link href="/me/personal-matches/new" className="underline underline-offset-2 hover:text-foreground">
@@ -60,11 +78,9 @@ export function PersonalMatchList({ matches }: Props) {
                     </Link>
                 </div>
             ) : (
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
-                    {visible.map((m) => (
-                        <PersonalMatchListItem key={m.id} match={m} />
-                    ))}
-                </div>
+                groups.map((group) => (
+                    <PersonalMatchMonthGroup key={group.ym} group={group} renderActions={(id) => <MatchActions id={id} />} />
+                ))
             )}
         </div>
     )

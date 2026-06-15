@@ -63,6 +63,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         hand: initialData?.opponent2DominantHand ?? '',
     })
     const [playedAt, setPlayedAt] = useState(initialData?.playedAt ?? new Date().toISOString().slice(0, 10))
+    const [playedTime, setPlayedTime] = useState(initialData?.playedTime ?? '')
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
     const [sets, setSets] = useState<PersonalMatchSetScore[]>(
@@ -105,6 +106,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         isPlayerFilled(opponent) &&
         (!isDoubles || (isPlayerFilled(partner) && isPlayerFilled(opponent2))) &&
         !!playedAt &&
+        !!playedTime &&
         sets.length > 0 &&
         sets.every(isSetValid)
 
@@ -123,6 +125,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             opponent2UserId: opponent2.userId,
             opponent2DominantHand: !opponent2.userId && opponent2.hand ? opponent2.hand : undefined,
             playedAt,
+            playedTime: playedTime || undefined,
             matchType,
             surface: surface || undefined,
             notes: notes || undefined,
@@ -229,22 +232,32 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         />
                     </div>
                     <div>
-                        <label className={labelClass}>코트 표면 (선택)</label>
-                        <Select
-                            value={surface}
-                            onValueChange={(v) => setSurface(v as CourtSurface | '')}
-                            items={SURFACE_SELECT_ITEMS}
-                        >
-                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {SURFACE_SELECT_ITEMS.map((s) => (
-                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <label className={labelClass}>경기 시각 *</label>
+                        <input
+                            type="time"
+                            value={playedTime}
+                            onChange={(e) => setPlayedTime(e.target.value)}
+                            className={inputClass}
+                            required
+                        />
                     </div>
+                </div>
+                <div>
+                    <label className={labelClass}>코트 표면 (선택)</label>
+                    <Select
+                        value={surface}
+                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
+                        items={SURFACE_SELECT_ITEMS}
+                    >
+                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SURFACE_SELECT_ITEMS.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div>

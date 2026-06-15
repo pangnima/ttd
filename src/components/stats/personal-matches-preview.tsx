@@ -1,15 +1,16 @@
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
-import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
-import { PERSONAL_OUTCOME_LABEL, PERSONAL_OUTCOME_STYLE } from '@/lib/dashboard/outcome'
-import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
+import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { groupByMonth } from '@/lib/personal-matches/grouping'
+import { PersonalMatchMonthGroup } from '@/components/personal-matches/personal-match-month-group'
 
 type Props = {
     personalMatches: PersonalMatch[]
 }
 
 export function PersonalMatchesPreview({ personalMatches }: Props) {
-    const recent = personalMatches.slice(0, 5)
+    const recent = personalMatches.slice(0, 8)
+    const groups = groupByMonth(recent)
 
     return (
         <section className="space-y-3">
@@ -30,37 +31,20 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                     </Link>
                 </div>
             </div>
-            <div className={CARD_BASE}>
-                {recent.length === 0 ? (
-                    <div className="p-4 text-sm text-muted-foreground text-center py-8">
-                        기록된 개인 경기가 없습니다.{' '}
-                        <Link href="/me/personal-matches/new" className="text-primary hover:underline">
-                            첫 경기 입력하기
-                        </Link>
-                    </div>
-                ) : (
-                    <ul className="divide-y divide-border">
-                        {recent.map((pm) => {
-                            const scoreStr = pm.setScores.map((s) => `${s.me}-${s.opp}`).join(', ')
-                            return (
-                                <li key={pm.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                                    <span className={`w-5 tabular-nums ${PERSONAL_OUTCOME_STYLE[pm.winner] ?? PERSONAL_OUTCOME_STYLE.draw}`}>
-                                        {PERSONAL_OUTCOME_LABEL[pm.winner] ?? '무'}
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-foreground truncate">vs {pm.opponentName}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {MATCH_TYPE_LABELS[pm.matchType] ?? pm.matchType}
-                                            {scoreStr && ` · ${scoreStr}`}
-                                        </p>
-                                    </div>
-                                    <span className="text-xs text-muted-foreground tabular-nums shrink-0">{pm.playedAt}</span>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                )}
-            </div>
+            {groups.length === 0 ? (
+                <div className={EMPTY_BLOCK}>
+                    기록된 개인 경기가 없습니다.{' '}
+                    <Link href="/me/personal-matches/new" className="text-primary hover:underline">
+                        첫 경기 입력하기
+                    </Link>
+                </div>
+            ) : (
+                <div className="space-y-5">
+                    {groups.map((group) => (
+                        <PersonalMatchMonthGroup key={group.ym} group={group} />
+                    ))}
+                </div>
+            )}
         </section>
     )
 }
