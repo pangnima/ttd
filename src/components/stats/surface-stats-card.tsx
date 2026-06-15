@@ -1,5 +1,5 @@
 import type { SurfaceStats } from '@/lib/analytics/surface'
-import { SURFACE_LABELS } from '@/lib/dashboard/surface'
+import { SURFACE_LABELS, SURFACE_BAR_CLASS } from '@/lib/dashboard/surface'
 import { SectionCard } from '@/components/common/section-card'
 
 type Props = {
@@ -28,7 +28,7 @@ export function SurfaceStatsCard({ surfaceStats }: Props) {
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                            className="h-full rounded-full bg-info transition-all"
+                            className={`h-full rounded-full transition-all ${SURFACE_BAR_CLASS[surface] ?? 'bg-info'}`}
                             style={{ width: `${wl.winRate}%` }}
                         />
                     </div>

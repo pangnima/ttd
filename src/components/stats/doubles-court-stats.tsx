@@ -4,7 +4,13 @@ import { SectionCard } from '@/components/common/section-card'
 
 type Props = { court: DoublesCourtStats }
 
-function CourtBar({ label, stat }: { label: string; stat: DoublesCourtStats['ad'] }) {
+// 코트 사이드별 막대 색상 (애드/백핸드=바이올렛, 듀스/포핸드=블루)
+const COURT_BAR_CLASS: Record<'ad' | 'deuce', string> = {
+    ad: 'from-violet-500/70 to-violet-500/40 dark:from-violet-400/70 dark:to-violet-400/40',
+    deuce: 'from-sky-500/70 to-sky-500/40 dark:from-sky-400/70 dark:to-sky-400/40',
+}
+
+function CourtBar({ label, stat, side }: { label: string; stat: DoublesCourtStats['ad']; side: 'ad' | 'deuce' }) {
     const rate = calcWinRate(stat.wins, stat.losses)
     const barWidth = rate ?? 0
 
@@ -21,7 +27,7 @@ function CourtBar({ label, stat }: { label: string; stat: DoublesCourtStats['ad'
             </div>
             <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-info/70 to-info/40 transition-all"
+                    className={`h-full rounded-full bg-gradient-to-r transition-all ${COURT_BAR_CLASS[side]}`}
                     style={{ width: `${barWidth}%` }}
                 />
             </div>
@@ -40,8 +46,8 @@ export function DoublesCourtStatsCard({ court }: Props) {
             emptyMessage="복식 경기 데이터가 없습니다"
             contentClass="p-4 space-y-4"
         >
-            <CourtBar label="애드코트 (백핸드)" stat={court.ad} />
-            <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} />
+            <CourtBar label="애드코트 (백핸드)" stat={court.ad} side="ad" />
+            <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} side="deuce" />
             <p className="text-xs text-foreground/70 border-t border-foreground/5 pt-2">
                 * 복식 경기 기준. 코트 미지정 경기는 듀스에 포함.
             </p>

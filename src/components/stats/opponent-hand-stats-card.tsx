@@ -10,6 +10,12 @@ const HAND_LABELS: Record<keyof OpponentHandStats, string> = {
     left: '왼손 상대',
 }
 
+// 손잡이별 막대 색상 (오른손=블루, 왼손=바이올렛)
+const HAND_BAR_CLASS: Record<keyof OpponentHandStats, string> = {
+    right: 'bg-sky-500 dark:bg-sky-400',
+    left: 'bg-violet-500 dark:bg-violet-400',
+}
+
 export function OpponentHandStatsCard({ handStats }: Props) {
     const entries = (Object.entries(handStats) as [keyof OpponentHandStats, OpponentHandStats[keyof OpponentHandStats]][])
         .filter(([, wl]) => wl.total > 0)
@@ -32,7 +38,7 @@ export function OpponentHandStatsCard({ handStats }: Props) {
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                            className="h-full rounded-full bg-info transition-all"
+                            className={`h-full rounded-full transition-all ${HAND_BAR_CLASS[hand]}`}
                             style={{ width: `${wl.winRate}%` }}
                         />
                     </div>
