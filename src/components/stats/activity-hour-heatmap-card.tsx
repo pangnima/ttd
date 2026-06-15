@@ -55,7 +55,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             ) : (
                 <div className="flex-1 overflow-x-auto">
                 <div
-                    className="grid min-w-[480px] gap-[3px] sm:min-w-0"
+                    className="grid h-full min-w-[480px] gap-[3px] sm:min-w-0"
                     style={{
                         gridTemplateColumns: 'auto repeat(24, minmax(0, 1fr))',
                         gridTemplateRows: 'repeat(7, minmax(0, 1fr)) auto',

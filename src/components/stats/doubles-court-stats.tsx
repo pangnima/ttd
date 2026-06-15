@@ -6,8 +6,8 @@ type Props = { court: DoublesCourtStats }
 
 // 코트 사이드별 막대 색상 (애드/백핸드=바이올렛, 듀스/포핸드=블루)
 const COURT_BAR_CLASS: Record<'ad' | 'deuce', string> = {
-    ad: 'from-violet-500/70 to-violet-500/40 dark:from-violet-400/70 dark:to-violet-400/40',
-    deuce: 'from-sky-500/70 to-sky-500/40 dark:from-sky-400/70 dark:to-sky-400/40',
+    ad: 'bg-violet-500 dark:bg-violet-400',
+    deuce: 'bg-sky-500 dark:bg-sky-400',
 }
 
 function CourtBar({ label, stat, side }: { label: string; stat: DoublesCourtStats['ad']; side: 'ad' | 'deuce' }) {
@@ -27,7 +27,7 @@ function CourtBar({ label, stat, side }: { label: string; stat: DoublesCourtStat
             </div>
             <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden">
                 <div
-                    className={`h-full rounded-full bg-gradient-to-r transition-all ${COURT_BAR_CLASS[side]}`}
+                    className={`h-full rounded-full transition-all ${COURT_BAR_CLASS[side]}`}
                     style={{ width: `${barWidth}%` }}
                 />
             </div>

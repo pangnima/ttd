@@ -160,12 +160,11 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
         const key = h.opponentUserId!
         const u = userMap.get(key)
         const label = h.opponentName ?? u?.name ?? key.slice(0, 8)
-        const ntrp = u?.ntrp ? ` (${u.ntrp})` : ''
-        return { value: key, label: `${label}${ntrp}` }
+        return { value: key, label: `${label} (${h.matches}경기)` }
     })
     const externalItems = externalOpponents.map((h) => ({
         value: `name:${h.opponentName}`,
-        label: `${h.opponentName} (외부)`,
+        label: `${h.opponentName} (외부 · ${h.matches}경기)`,
     }))
     const opponentItems = [...memberItems, ...externalItems]
 
@@ -185,10 +184,9 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
                                     const key = h.opponentUserId!
                                     const u = userMap.get(key)
                                     const label = h.opponentName ?? u?.name ?? key.slice(0, 8)
-                                    const ntrp = u?.ntrp ? ` (${u.ntrp})` : ''
                                     return (
                                         <SelectItem key={key} value={key}>
-                                            {label}{ntrp}
+                                            {label} ({h.matches}경기)
                                         </SelectItem>
                                     )
                                 })}
@@ -201,7 +199,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
                                     const key = `name:${h.opponentName}`
                                     return (
                                         <SelectItem key={key} value={key}>
-                                            {h.opponentName} (외부)
+                                            {h.opponentName} (외부 · {h.matches}경기)
                                         </SelectItem>
                                     )
                                 })}
