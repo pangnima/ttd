@@ -146,14 +146,15 @@ export async function fetchMatchesByUser(userId: string, clubId?: string): Promi
     matches: Match[]
     gameMetaById: Record<string, MatchGameMeta>
     courtSurfaceByMatchId: Record<string, CourtSurface | null>
+    matchTimeById: Record<string, string | null>
 }> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_game_matches')
-        .select('*, match_games(id, name, date, club_id, is_fixed), court:match_game_courts(surface)')
+        .select('*, match_games(id, name, date, club_id, is_fixed), court:match_game_courts(surface), time_slot:match_game_time_slots(start_at)')
         .or(`player1_id.eq.${userId},player2_id.eq.${userId},team1.cs.{${userId}},team2.cs.{${userId}}`)
         .eq('status', 'finished')
-    if (error || !data) return { matches: [], gameMetaById: {}, courtSurfaceByMatchId: {} }
+    if (error || !data) return { matches: [], gameMetaById: {}, courtSurfaceByMatchId: {}, matchTimeById: {} }
 
     // 클라이언트 집계와 RPC 통계(is_fixed=true 기준)의 모집단을 통일.
     const fixedData = data.filter((row) => {
@@ -163,11 +164,15 @@ export async function fetchMatchesByUser(userId: string, clubId?: string): Promi
 
     const gameMetaById: Record<string, MatchGameMeta> = {}
     const courtSurfaceByMatchId: Record<string, CourtSurface | null> = {}
+    const matchTimeById: Record<string, string | null> = {}
     for (const row of fixedData) {
         const g = row.match_games as { id: string; name: string; date: string; club_id: string } | null
         if (g) gameMetaById[g.id] = { id: g.id, name: g.name, date: g.date, clubId: g.club_id }
         const c = row.court as { surface: string | null } | null
         courtSurfaceByMatchId[row.id] = (c?.surface as CourtSurface) ?? null
+        const ts = row.time_slot as { start_at: string | null } | null
+        // 'HH:MM:SS' → 'HH:MM' (요일×시간 히트맵용)
+        matchTimeById[row.id] = ts?.start_at ? ts.start_at.slice(0, 5) : null
     }
 
     const allMatches = fixedData.map((row) => mapMatchRow(row as MatchRow))
@@ -175,7 +180,7 @@ export async function fetchMatchesByUser(userId: string, clubId?: string): Promi
         ? allMatches.filter((m) => gameMetaById[m.matchGameId]?.clubId === clubId)
         : allMatches
 
-    return { matches, gameMetaById, courtSurfaceByMatchId }
+    return { matches, gameMetaById, courtSurfaceByMatchId, matchTimeById }
 }
 
 export async function fetchClubMembersWithGuests(clubId: string): Promise<User[]> {

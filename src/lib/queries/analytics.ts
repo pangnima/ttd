@@ -34,6 +34,7 @@ export type AnalyticsBundle = {
     matches: Match[]
     gameMetaById: Awaited<ReturnType<typeof fetchMatchesByUser>>['gameMetaById']
     courtSurfaceByMatchId: Awaited<ReturnType<typeof fetchMatchesByUser>>['courtSurfaceByMatchId']
+    matchTimeById: Awaited<ReturnType<typeof fetchMatchesByUser>>['matchTimeById']
     personalMatches: PersonalMatch[]
     userMap: Map<string, User>
 }
@@ -61,7 +62,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
     const { scope } = options
 
     // 전체 매치를 한 번 fetch 후 JS로 scope 필터
-    const [{ matches: allMatches, gameMetaById, courtSurfaceByMatchId }, personalMatches] = await Promise.all([
+    const [{ matches: allMatches, gameMetaById, courtSurfaceByMatchId, matchTimeById }, personalMatches] = await Promise.all([
         fetchMatchesByUser(userId),
         fetchPersonalMatchesByUser(userId),
     ])
@@ -110,6 +111,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
         matches,
         gameMetaById,
         courtSurfaceByMatchId,
+        matchTimeById,
         personalMatches: filteredPersonalMatches,
         userMap,
     }

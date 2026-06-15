@@ -17,6 +17,7 @@ export type PersonalMatchInput = {
     opponent2UserId?: string
     opponent2DominantHand?: 'right' | 'left'
     playedAt: string
+    playedTime?: string  // 'HH:MM' (선택)
     matchType: MatchType
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]
@@ -37,6 +38,8 @@ function isValidScore(n: number): boolean {
 function validateInput(input: PersonalMatchInput): string | null {
     if (!input.opponentName.trim()) return '상대 이름을 입력해주세요.'
     if (!input.playedAt) return '경기 날짜를 입력해주세요.'
+    if (!input.playedTime) return '경기 시각을 입력해주세요.'
+    if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return '경기 시각 형식이 올바르지 않습니다.'
     if (!['singles', 'men_doubles', 'women_doubles', 'mixed_doubles'].includes(input.matchType)) {
         return '올바른 경기 타입을 선택해주세요.'
     }
@@ -69,6 +72,7 @@ function buildPersonalMatchRow(input: PersonalMatchInput) {
         opponent2_user_id: doubles ? (input.opponent2UserId ?? null) : null,
         opponent2_dominant_hand: doubles ? (input.opponent2DominantHand ?? null) : null,
         played_at: input.playedAt,
+        played_time: input.playedTime || null,
         match_type: input.matchType,
         surface: input.surface ?? null,
         set_scores: input.setScores,

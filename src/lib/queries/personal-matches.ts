@@ -20,6 +20,8 @@ function mapPersonalMatchRow(row: PersonalMatchRow): PersonalMatch {
         opponent2Name: row.opponent2_name ?? undefined,
         opponent2DominantHand: (row.opponent2_dominant_hand as 'right' | 'left' | null) ?? undefined,
         playedAt: row.played_at,
+        // Postgres time은 'HH:MM:SS'로 오므로 'HH:MM'로 자른다
+        playedTime: row.played_time ? row.played_time.slice(0, 5) : undefined,
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface) ?? undefined,
         setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],
