@@ -2,15 +2,14 @@ import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
 import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
-import { PersonalMatchMonthGroup } from '@/components/personal-matches/personal-match-month-group'
+import { PersonalMatchMonthBrowser } from '@/components/personal-matches/personal-match-month-browser'
 
 type Props = {
     personalMatches: PersonalMatch[]
 }
 
 export function PersonalMatchesPreview({ personalMatches }: Props) {
-    const recent = personalMatches.slice(0, 8)
-    const groups = groupByMonth(recent)
+    const groups = groupByMonth(personalMatches)
 
     return (
         <section className="space-y-3">
@@ -39,11 +38,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                     </Link>
                 </div>
             ) : (
-                <div className="space-y-5">
-                    {groups.map((group) => (
-                        <PersonalMatchMonthGroup key={group.ym} group={group} />
-                    ))}
-                </div>
+                <PersonalMatchMonthBrowser groups={groups} />
             )}
         </section>
     )
