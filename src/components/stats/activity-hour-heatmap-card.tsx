@@ -53,8 +53,9 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             {isEmpty ? (
                 <p className={`text-xs ${TEXT_MUTED}`}>이 기간에 시간 기록이 있는 경기가 없습니다.</p>
             ) : (
+                <div className="flex-1 overflow-x-auto">
                 <div
-                    className="grid flex-1 gap-[3px]"
+                    className="grid min-w-[480px] gap-[3px] sm:min-w-0"
                     style={{
                         gridTemplateColumns: 'auto repeat(24, minmax(0, 1fr))',
                         gridTemplateRows: 'repeat(7, minmax(0, 1fr)) auto',
@@ -79,6 +80,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
                             {h % 2 === 0 ? h : ''}
                         </span>
                     ))}
+                </div>
                 </div>
             )}
             <p className={`text-xs ${TEXT_MUTED}`}>

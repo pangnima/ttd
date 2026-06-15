@@ -21,7 +21,7 @@ export function StatsPrivacyToggle({ hidden }: Props) {
     }
 
     return (
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1">
+        <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1">
             <label
                 htmlFor={id}
                 className={`inline-flex items-center gap-1 text-xs transition-colors ${

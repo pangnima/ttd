@@ -116,14 +116,16 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         <div className="space-y-8">
             {/* 전적 통계 (4칸) — 세트 표기 숨김(심플), scope는 칩으로 노출 */}
             <section className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <p className={SECTION_LABEL}>전적 통계</p>
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <p className={`${SECTION_LABEL} shrink-0`}>전적 통계</p>
                         <span className={`${PILL_BASE} text-primary border-primary/30 bg-primary/10 font-medium`}>
                             {getScopeLabel(scope)}
                         </span>
                     </div>
-                    <StatsPrivacyToggle hidden={me.statsHidden} />
+                    <div className="ml-auto">
+                        <StatsPrivacyToggle hidden={me.statsHidden} />
+                    </div>
                 </div>
                 <StatsQuadGrid
                     gender={me.gender}

@@ -50,7 +50,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                 {/* 티어 방패 (클럽 레이팅 있을 때만). 모바일=상단 중앙 / 데스크톱=좌측. 강조 위해 크게. */}
                 {hasTier && tier && (
                     <div className="flex flex-col items-center gap-1 shrink-0 self-center sm:self-auto">
-                        <TierIcon tier={tier} size={124} />
+                        <TierIcon tier={tier} className="h-[100px] sm:h-[124px]" />
                         <span className={cn('text-sm font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
                     </div>
                 )}
@@ -58,7 +58,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                 {/* 개인 경기 레이팅 티어 방패 (비클럽 scope·경기 있을 때). 승/패/무 텍스트 병기. */}
                 {hasPersonalTier && personalTier && (
                     <div className="flex flex-col items-center gap-1 shrink-0 self-center sm:self-auto">
-                        <TierIcon tier={personalTier} size={124} />
+                        <TierIcon tier={personalTier} className="h-[100px] sm:h-[124px]" />
                         <span className={cn('text-sm font-bold', TIER_TEXT[personalTier])}>{TIER_LABELS[personalTier]}</span>
                         {summary && (
                             <span className="text-xs tabular-nums">
@@ -87,7 +87,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                             </Avatar>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-2xl font-bold leading-tight">{user.name}</h1>
+                                    <h1 className="text-xl sm:text-2xl font-bold leading-tight">{user.name}</h1>
                                     <span className="text-sm text-muted-foreground">({user.nickname})</span>
                                     {user.isGuest && <GuestBadge />}
                                 </div>

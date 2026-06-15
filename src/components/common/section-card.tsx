@@ -30,9 +30,9 @@ export function SectionCard({
 }: Props) {
     return (
         <section className="space-y-3 h-full flex flex-col">
-            <div className="flex items-center justify-between">
-                <p className={SECTION_LABEL}>{title}</p>
-                {headerRight}
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <p className={`${SECTION_LABEL} shrink-0`}>{title}</p>
+                {headerRight && <div className="ml-auto">{headerRight}</div>}
             </div>
             {isEmpty ? (
                 <div className={`${EMPTY_BLOCK} flex-1 flex items-center justify-center`}>{emptyMessage}</div>

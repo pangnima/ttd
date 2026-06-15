@@ -24,17 +24,26 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
     const opponentLabel = m.opponent2Name ? `${m.opponentName} · ${m.opponent2Name}` : m.opponentName
 
     return (
-        <div className="flex items-center gap-3 px-3 py-3">
+        <div className="flex items-stretch gap-3 px-3 py-3">
             <span className={`w-1 self-stretch rounded-full ${result.bar}`} aria-hidden />
-            <div className="w-9 text-center shrink-0">
+            <div className="w-9 text-center shrink-0 self-center">
                 <div className="text-lg font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
                 <div className="text-[10px] mt-0.5 text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
             </div>
 
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                    <span className="text-muted-foreground">vs </span>{opponentLabel}
-                </p>
+                {/* 1행: 상대 이름 ↔ 결과 배지(+액션). 세트는 이름 폭을 침범하지 않도록 아래 줄로 분리. */}
+                <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground truncate min-w-0">
+                        <span className="text-muted-foreground">vs </span>{opponentLabel}
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`px-2 py-1 rounded-[4px] text-xs font-bold ${result.badge}`}>{result.label}</span>
+                        {actions}
+                    </div>
+                </div>
+
+                {/* 2행: 종류·표면·파트너 */}
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span className={`${PILL_BASE} ${getMatchTypeBadgeClass(m.matchType)}`}>
                         {MATCH_TYPE_LABELS[m.matchType]}
@@ -46,21 +55,22 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                         <span className="text-[11px] text-muted-foreground truncate">· 파트너 {m.partnerName}</span>
                     )}
                 </div>
-            </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-                {m.setScores.map((s, i) => (
-                    <span
-                        key={i}
-                        className={`px-1.5 py-1 rounded-[4px] text-xs font-semibold tabular-nums ${
-                            s.me > s.opp ? 'bg-win/15 text-win' : s.me < s.opp ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground'
-                        }`}
-                    >
-                        {s.me}-{s.opp}
-                    </span>
-                ))}
-                <span className={`ml-1 px-2 py-1 rounded-[4px] text-xs font-bold ${result.badge}`}>{result.label}</span>
-                {actions}
+                {/* 3행: 세트 스코어 (전체 폭 사용, 많으면 wrap) */}
+                {m.setScores.length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        {m.setScores.map((s, i) => (
+                            <span
+                                key={i}
+                                className={`px-1.5 py-1 rounded-[4px] text-xs font-semibold tabular-nums ${
+                                    s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
+                                }`}
+                            >
+                                {s.me}-{s.opp}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )

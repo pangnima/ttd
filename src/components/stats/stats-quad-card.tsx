@@ -36,7 +36,7 @@ export function StatsQuadCard({ matchType, stats, variant = 'match', masked, sho
                 <span className={`${PILL_BASE} ${style.textClass} ${style.borderClass} ${style.bgClass}`}>
                     {style.label}
                 </span>
-                <span className="text-3xl font-bold text-foreground leading-none">
+                <span className="text-2xl sm:text-3xl font-bold text-foreground leading-none">
                     {showRateSuffix && <span className="text-xs font-normal text-foreground/70 mr-1.5">승률</span>}
                     {winRateLabel}
                 </span>

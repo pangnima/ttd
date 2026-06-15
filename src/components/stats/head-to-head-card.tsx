@@ -54,8 +54,8 @@ function H2HDetail({
         <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2 text-center border-b border-border pb-4">
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">{myName}</p>
-                    <p className="text-3xl font-bold text-foreground">{detail.myWins}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2 truncate">{myName}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{detail.myWins}</p>
                     <p className="text-sm text-muted-foreground mt-1">승 ({detail.winRate}%)</p>
                 </div>
                 <div className="flex flex-col items-center justify-center">
@@ -66,8 +66,8 @@ function H2HDetail({
                     )}
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">{opponentDisplayName}</p>
-                    <p className="text-3xl font-bold text-foreground">{detail.myLosses}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2 truncate">{opponentDisplayName}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{detail.myLosses}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                         승 ({calcWinRate(detail.myLosses, detail.myWins) ?? 0}%)
                     </p>
@@ -171,10 +171,10 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
 
     return (
         <section className="space-y-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className={SECTION_LABEL}>1:1 맞대결 비교</p>
+            <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
+                <p className={`${SECTION_LABEL} shrink-0`}>1:1 맞대결 비교</p>
                 <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)} items={opponentItems}>
-                    <SelectTrigger className="w-[200px] h-8 text-sm">
+                    <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm">
                         <SelectValue placeholder="상대 선택" />
                     </SelectTrigger>
                     <SelectContent>
