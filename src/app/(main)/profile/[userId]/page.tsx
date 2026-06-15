@@ -111,7 +111,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats) : undefined
         // 개인 경기 레이팅(온더플라이). 개인 탭은 티어 방패로, 통합 탭은 요약 칩으로 쓴다. 클럽 scope는 불필요.
         const personalRatingSnapshot = scope.kind !== 'club'
-            ? replayPersonalRatings(bundle.personalMatches, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
+            ? replayPersonalRatings(bundle.personalGames, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
             : null
         const personalRating = personalRatingSnapshot && personalRatingSnapshot.matchesPlayed > 0
             ? { rating: personalRatingSnapshot.rating, provisional: personalRatingSnapshot.provisional }

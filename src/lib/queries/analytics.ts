@@ -2,6 +2,7 @@ import 'server-only'
 
 import { fetchMatchesByUser } from '@/lib/queries/match-games'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { buildUserMap, extractUnifiedH2hIds } from '@/lib/queries/_shared'
 import { aggregateByMatchType } from '@/lib/analytics/match-type'
 import { buildHeadToHeadList } from '@/lib/analytics/head-to-head'
@@ -35,7 +36,10 @@ export type AnalyticsBundle = {
     gameMetaById: Awaited<ReturnType<typeof fetchMatchesByUser>>['gameMetaById']
     courtSurfaceByMatchId: Awaited<ReturnType<typeof fetchMatchesByUser>>['courtSurfaceByMatchId']
     matchTimeById: Awaited<ReturnType<typeof fetchMatchesByUser>>['matchTimeById']
+    // 표시용 원본 (레코드 1건 = 카드 1개)
     personalMatches: PersonalMatch[]
+    // 통계용 분해본 (세트 1개 = 게임 1개). 집계·레이팅 경로 전용
+    personalGames: PersonalMatch[]
     userMap: Map<string, User>
 }
 
@@ -82,9 +86,12 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
         filteredPersonalMatches = personalMatches
     }
 
+    // 통계용 분해본: 세트 1개 = 게임 1개 (집계·레이팅 경로 전용)
+    const personalGames = explodePersonalMatchSets(filteredPersonalMatches)
+
     // 종합 통계: 순수함수 집계
     const matchTypeSummary = aggregateByMatchType(
-        { matches, personalMatches: filteredPersonalMatches },
+        { matches, personalMatches: personalGames },
         userId,
     )
     const stats = {
@@ -96,7 +103,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
 
     // H2H 목록: 순수함수 집계
     const h2hList = buildHeadToHeadList(
-        { matches, gameMetaById, personalMatches: filteredPersonalMatches },
+        { matches, gameMetaById, personalMatches: personalGames },
         userId,
     )
 
@@ -113,6 +120,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
         courtSurfaceByMatchId,
         matchTimeById,
         personalMatches: filteredPersonalMatches,
+        personalGames,
         userMap,
     }
 }

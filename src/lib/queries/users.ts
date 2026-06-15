@@ -23,6 +23,7 @@ export function mapUserRow(row: UserRow): User {
         gender: (row.gender ?? 'male') as User['gender'],
         dominantHand: (row.dominant_hand ?? 'right') as User['dominantHand'],
         ntrp: row.ntrp ?? 0,
+        personalNtrp: row.personal_ntrp != null ? Number(row.personal_ntrp) : undefined,
         tennisStartDate: row.tennis_start_date ?? '',
         createdAt: row.created_at,
         isGuest: row.is_guest ?? false,
@@ -55,7 +56,8 @@ export async function fetchUsersByIds(ids: string[]): Promise<User[]> {
 export type OpponentCandidate = {
     id: string
     name: string
-    ntrp?: number
+    ntrp?: number          // 정적 자가선언 NTRP (fallback)
+    personalNtrp?: number  // 동적 개인 NTRP(개인경기 기반 캐시). 있으면 프리필 우선
     isGuest: boolean
     clubNames: string[]
 }
@@ -66,7 +68,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('club_members')
-        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, is_guest)')
+        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, personal_ntrp, is_guest)')
         .eq('status', 'approved')
         .neq('user_id', userId)
 
@@ -74,7 +76,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
 
     const map = new Map<string, OpponentCandidate>()
     for (const row of data) {
-        const u = row.users as { id: string; name: string; ntrp: number | null; is_guest: boolean } | null
+        const u = row.users as { id: string; name: string; ntrp: number | null; personal_ntrp: number | null; is_guest: boolean } | null
         const club = row.clubs as { name: string } | null
         if (!u) continue
         const existing = map.get(u.id)
@@ -85,6 +87,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
                 id: u.id,
                 name: u.name,
                 ntrp: u.ntrp ?? undefined,
+                personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
                 isGuest: u.is_guest ?? false,
                 clubNames: club ? [club.name] : [],
             })

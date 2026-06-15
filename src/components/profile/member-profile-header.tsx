@@ -9,6 +9,7 @@ import { RatingSummaryRow, type RatingSummary } from '@/components/profile/ratin
 import { WinRateRing } from '@/components/stats/win-rate-ring'
 import { RecentFormStrip } from '@/components/stats/recent-form-strip'
 import { getTier, TIER_LABELS, TIER_TEXT } from '@/lib/rating/tier'
+import { effectiveNtrp } from '@/lib/rating/display'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 import type { RecentFormResult } from '@/lib/analytics/form'
@@ -44,8 +45,8 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
     const personalTier = personalRating ? getTier(personalRating.rating) : null
     // 티어(클럽/개인)가 모두 없을 때만 승률 링을 좌측 히어로 슬롯에 채운다.
     const showSummary = !hasTier && !!summary
-    // NTRP 배지: 개인 레이팅이 있으면 현재 레이팅(연속값)을 소수점 3자리로, 없으면 자가선언값.
-    const ntrpDisplay = personalRating ? personalRating.rating.toFixed(3) : user.ntrp.toFixed(1)
+    // NTRP 배지: 본인은 온더플라이 개인 레이팅(소수 3자리), 타인은 진화 NTRP 캐시(있으면)→가입 시드.
+    const ntrpDisplay = personalRating ? personalRating.rating.toFixed(3) : effectiveNtrp(user).toFixed(1)
 
     return (
         <div className={cn(CARD_BASE, 'p-5 sm:p-6')}>

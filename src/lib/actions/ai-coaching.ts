@@ -5,6 +5,7 @@ import { createHash } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateByMatchType } from '@/lib/analytics/match-type'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
@@ -88,7 +89,9 @@ export async function generateAICoachingAction(): Promise<AICoachingAction> {
         fetchPlayerStatsBundle(user.id, undefined),
         fetchPersonalMatchesByUser(user.id),
     ])
-    const bundle: CoachingBundle = { ...playerBundle, personalMatches }
+    // 동호인 경기: 세트 1개 = 게임 1개. 코칭 통계도 게임 단위로 집계한다
+    // (최소 3경기 게이트는 게임 수 기준으로 적용됨).
+    const bundle: CoachingBundle = { ...playerBundle, personalMatches: explodePersonalMatchSets(personalMatches) }
     const { singles, menDoubles, womenDoubles, mixedDoubles } = bundle.stats
     const clubTotalMatches = singles.totalMatches + menDoubles.totalMatches + womenDoubles.totalMatches + mixedDoubles.totalMatches
     const totalMatches = clubTotalMatches + bundle.personalMatches.length

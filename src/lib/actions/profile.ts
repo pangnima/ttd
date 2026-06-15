@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 
 export async function updateProfileAction(
     _prevState: { error: string } | null,
@@ -38,6 +39,9 @@ export async function updateProfileAction(
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id)
     if (error) return { error: error.message }
+
+    // 가입 NTRP(시드)가 바뀌면 개인 NTRP 캐시도 새 시드 기준으로 재계산(best-effort).
+    await recomputePersonalNtrp(user.id)
 
     revalidatePath('/profile/settings')
     revalidatePath('/me/analytics')

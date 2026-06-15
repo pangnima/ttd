@@ -9,3 +9,11 @@ export function formatClubRating(rating: number): string {
 export function isProvisional(matchesPlayed: number): boolean {
     return matchesPlayed < PROVISIONAL_THRESHOLD
 }
+
+/**
+ * 표시/분석에 쓸 유효 NTRP — 개인경기 기반 진화값(personalNtrp)이 있으면 그것을, 없으면 가입 시드(ntrp)를 쓴다.
+ * 0/미설정(게스트)은 시드 그대로 반환.
+ */
+export function effectiveNtrp(u: { ntrp: number; personalNtrp?: number }): number {
+    return u.personalNtrp != null && u.personalNtrp > 0 ? u.personalNtrp : u.ntrp
+}

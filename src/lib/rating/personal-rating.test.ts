@@ -33,6 +33,20 @@ describe('resolveOpponentRating — fallback 체인', () => {
         const r = resolveOpponentRating(m, null, (id) => (id === 'u1' ? 3.0 : id === 'u2' ? 4.0 : null))
         expect(r).toBe(3.5)
     })
+    it('① 복식은 저장된 상대1·2 NTRP 평균', () => {
+        const m = pm({
+            id: '1', playedAt: '2025-01-01', winner: 'me', matchType: 'men_doubles',
+            opponentNtrp: 3.0, opponent2Ntrp: 5.0,
+        })
+        expect(resolveOpponentRating(m, null, noResolver)).toBe(4.0)
+    })
+    it('① 복식 상대2 NTRP만 없으면 상대1 값 사용', () => {
+        const m = pm({
+            id: '1', playedAt: '2025-01-01', winner: 'me', matchType: 'men_doubles',
+            opponentNtrp: 3.0,
+        })
+        expect(resolveOpponentRating(m, null, noResolver)).toBe(3.0)
+    })
     it('③ 등록 상대 정보 없으면 본인 ntrp(동급 가정)', () => {
         const m = pm({ id: '1', playedAt: '2025-01-01', winner: 'me', opponentName: '외부' })
         expect(resolveOpponentRating(m, 4.5, noResolver)).toBe(4.5)
@@ -110,15 +124,39 @@ describe('replayPersonalRatings — 잠정기 K 전환', () => {
 })
 
 describe('replayPersonalRatings — 복식', () => {
-    it('복식도 상대팀 평균 대비 나만 갱신(파트너 무시)', () => {
+    it('파트너 NTRP 미설정이면 기존과 동일(내 레이팅만 사용)', () => {
         const m = pm({
             id: '1', playedAt: '2025-01-01', winner: 'me', matchType: 'men_doubles',
             opponentNtrp: 3.5, partnerUserId: 'strong-partner', setScores: [{ me: 6, opp: 3 }],
         })
         const snap = replayPersonalRatings([m], null, noResolver)
-        // 파트너 강함과 무관하게 상대팀 3.5 대비 내 승리만 반영
+        // 파트너 강도 정보가 없으면 selfSide=내 레이팅 → 상대팀 3.5 대비 승리 반영
         expect(snap.history[0].oppRating).toBe(3.5)
         expect(snap.rating).toBeGreaterThan(DEFAULT_RATING)
+    })
+
+    it('강한 파트너 NTRP가 반영되면 같은 승리라도 상승폭이 작다', () => {
+        const base = {
+            id: '1', playedAt: '2025-01-01', winner: 'me' as PersonalMatchWinner, matchType: 'men_doubles' as const,
+            opponentNtrp: 3.0, opponent2Ntrp: 3.0, setScores: [{ me: 6, opp: 4 }],
+        }
+        // 파트너 정보 없음 → selfSide 2.5
+        const weak = replayPersonalRatings([pm(base)], null, noResolver)
+        // 강한 파트너(6.0) → selfSide (2.5+6.0)/2 = 4.25 → 기대승률↑ → 상승폭↓
+        const strong = replayPersonalRatings([pm({ ...base, partnerNtrp: 6.0 })], null, noResolver)
+        expect(strong.history[0].delta).toBeGreaterThan(0)
+        expect(strong.history[0].delta).toBeLessThan(weak.history[0].delta)
+    })
+
+    it('파트너 NTRP는 회원 ntrp로도 보강된다', () => {
+        const m = pm({
+            id: '1', playedAt: '2025-01-01', winner: 'me', matchType: 'men_doubles',
+            opponentNtrp: 3.0, opponent2Ntrp: 3.0, partnerUserId: 'p1', setScores: [{ me: 6, opp: 4 }],
+        })
+        const noPartner = replayPersonalRatings([pm({ ...m, partnerUserId: undefined })], null, noResolver)
+        const memberPartner = replayPersonalRatings([m], null, (id) => (id === 'p1' ? 6.0 : null))
+        // 회원 파트너 강도(6.0)가 반영되어 상승폭이 더 작아야 한다
+        expect(memberPartner.history[0].delta).toBeLessThan(noPartner.history[0].delta)
     })
 })
 

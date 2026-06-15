@@ -3,6 +3,7 @@ import type { PersonalMatch } from '@/types'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
+import { resolveSetWinner } from '@/lib/personal-matches/winner'
 
 type Props = {
     match: PersonalMatch
@@ -18,10 +19,28 @@ const RESULT = {
 } as const
 
 // 개인 경기 1건 카드. 코트·경기시간은 데이터가 없어 미표기.
+// 동호인 경기: 세트 1개 = 게임 1개. 단일 세트는 WIN/LOSS, 멀티 세트는 'N승 M패' 전적으로 표시.
 export function PersonalMatchCard({ match: m, actions }: Props) {
     const [, mm, dd] = m.playedAt.split('-')
     const result = RESULT[m.winner]
     const opponentLabel = m.opponent2Name ? `${m.opponentName} · ${m.opponent2Name}` : m.opponentName
+
+    // 세트(게임) 전적 집계
+    const tally = m.setScores.reduce(
+        (acc, s) => {
+            const w = resolveSetWinner(s)
+            if (w === 'me') acc.wins++
+            else if (w === 'opponent') acc.losses++
+            else acc.draws++
+            return acc
+        },
+        { wins: 0, losses: 0, draws: 0 },
+    )
+    const isMultiSet = m.setScores.length > 1
+    // 멀티 세트는 전적 라벨, 단일/무세트는 기존 WIN/LOSS/무 배지 라벨. 색은 우세(m.winner) 기준 유지.
+    const resultLabel = isMultiSet
+        ? `${tally.wins}승 ${tally.losses}패${tally.draws > 0 ? ` ${tally.draws}무` : ''}`
+        : result.label
 
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
@@ -38,7 +57,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                         <span className="text-muted-foreground">vs </span>{opponentLabel}
                     </p>
                     <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`px-2 py-1 rounded-[4px] text-xs font-bold ${result.badge}`}>{result.label}</span>
+                        <span className={`px-2 py-1 rounded-[4px] text-xs font-bold ${result.badge}`}>{resultLabel}</span>
                         {actions}
                     </div>
                 </div>

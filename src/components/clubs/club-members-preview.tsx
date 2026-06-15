@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { TierEmblem } from '@/components/common/tier-emblem'
 import { CARD_BASE, CARD_HOVER } from '@/lib/dashboard/tokens'
+import { effectiveNtrp } from '@/lib/rating/display'
 import type { MemberWithUser } from '@/lib/queries/clubs'
 import type { ClubRating } from '@/types'
 
@@ -30,7 +31,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                             </p>
                             <div className="flex items-center gap-1">
                                 <span className="text-xs text-foreground/55 font-mono">
-                                    {m.user.ntrp.toFixed(1)}
+                                    {effectiveNtrp(m.user).toFixed(1)}
                                 </span>
                                 {m.user.isGuest && <GuestBadge />}
                             </div>

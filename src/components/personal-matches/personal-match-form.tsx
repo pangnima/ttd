@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PersonalMatch, MatchType, CourtSurface, PersonalMatchSetScore } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
@@ -12,7 +12,9 @@ import {
 } from '@/lib/actions/personal-matches'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
-import { PlayerPicker, type PlayerPickerValue } from '@/components/personal-matches/player-picker'
+import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
+import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
+import { AdDeuceToggle } from '@/components/personal-matches/ad-deuce-toggle'
 import {
     Select,
     SelectContent,
@@ -34,22 +36,14 @@ const MATCH_TYPES: { value: MatchType; label: string }[] = [
     { value: 'mixed_doubles', label: '혼복' },
 ]
 
-// 코트 표면 select 항목 ('' = 미지정)
-const SURFACE_SELECT_ITEMS: { value: string; label: string }[] = [
-    { value: '', label: '미지정' },
-    ...SURFACE_OPTIONS,
-]
-
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
-// 상대(팀) 수준 NTRP 선택 항목 (1.0~7.0, 0.5 단위). '' = 모름/미입력.
-const NTRP_SELECT_ITEMS: { value: string; label: string }[] = [
-    { value: '', label: '모름 / 미입력' },
-    ...Array.from({ length: 13 }, (_, i) => {
-        const v = (1 + i * 0.5).toFixed(1)
-        return { value: v, label: v }
-    }),
-]
+// 상대(팀) NTRP 입력 유효성 — 비어있지 않고 1.0~7.0 범위의 수여야 한다.
+function isNtrpValid(v: string): boolean {
+    if (v.trim() === '') return false
+    const n = Number(v)
+    return Number.isFinite(n) && n >= 1 && n <= 7
+}
 
 export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [] }: Props) {
     const router = useRouter()
@@ -75,9 +69,16 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     const [playedTime, setPlayedTime] = useState(initialData?.playedTime ?? '')
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
-    // 상대(팀) 수준 NTRP — Select API에 맞춰 문자열로 보관('' = 미입력)
+    // 선수별 NTRP — number input 문자열로 보관('' = 미입력). 소수 원본값 유지.
+    // opponentNtrp = 단식 상대 / 복식 상대1
     const [opponentNtrp, setOpponentNtrp] = useState<string>(
-        initialData?.opponentNtrp != null ? initialData.opponentNtrp.toFixed(1) : ''
+        initialData?.opponentNtrp != null ? String(initialData.opponentNtrp) : ''
+    )
+    const [opponent2Ntrp, setOpponent2Ntrp] = useState<string>(
+        initialData?.opponent2Ntrp != null ? String(initialData.opponent2Ntrp) : ''
+    )
+    const [partnerNtrp, setPartnerNtrp] = useState<string>(
+        initialData?.partnerNtrp != null ? String(initialData.partnerNtrp) : ''
     )
     const [sets, setSets] = useState<PersonalMatchSetScore[]>(
         initialData?.setScores?.length ? initialData.setScores : [{ me: 0, opp: 0 }]
@@ -85,30 +86,6 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     const [notes, setNotes] = useState(initialData?.notes ?? '')
 
     const isDoubles = DOUBLES_TYPES.includes(matchType)
-
-    // 등록 회원 상대를 고르면 그 회원의 ntrp(복식은 상대1·2 평균)를 상대 수준에 자동 프리필.
-    // 첫 렌더(수정 모드의 저장값 유지)는 건너뛰고, 이후 상대 선택이 바뀔 때만 제안한다.
-    const ntrpById = useRef<Map<string, number>>(
-        new Map(opponentCandidates.filter((c) => c.ntrp != null).map((c) => [c.id, c.ntrp as number]))
-    )
-    const didMount = useRef(false)
-    useEffect(() => {
-        if (!didMount.current) {
-            didMount.current = true
-            return
-        }
-        const ids = [opponent.userId, isDoubles ? opponent2.userId : undefined].filter(
-            (id): id is string => !!id
-        )
-        const known = ids
-            .map((id) => ntrpById.current.get(id))
-            .filter((n): n is number => typeof n === 'number' && n > 0)
-        if (known.length > 0) {
-            const avg = known.reduce((s, n) => s + n, 0) / known.length
-            // 0.5 단위로 반올림해 셀렉트 항목과 일치시킨다.
-            setOpponentNtrp((Math.round(avg * 2) / 2).toFixed(1))
-        }
-    }, [opponent.userId, opponent2.userId, isDoubles])
 
     function addSet() {
         setSets((prev) => [...prev, { me: 0, opp: 0 }])
@@ -126,6 +103,13 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         if (isNaN(num) || num < 0 || num > 99) return
         setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: num } : s))
     }
+    // 세트별 애드/듀스 갱신 (복식). undefined = 미지정(둘 다 듀스).
+    function setMyAd(i: number, v: 'me' | 'partner' | undefined) {
+        setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, myAd: v } : s))
+    }
+    function setOppAd(i: number, v: 'opponent' | 'opponent2' | undefined) {
+        setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, oppAd: v } : s))
+    }
 
     // 선수 입력 완료 여부 — 회원 선택은 userId, 비회원은 이름 + 손잡이(필수)까지 입력돼야 한다.
     function isPlayerFilled(p: PlayerPickerValue): boolean {
@@ -139,11 +123,21 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         return true
     }
 
+    // 파트너 NTRP는 선택 — 비어있으면 통과, 입력 시 유효해야 함.
+    const partnerNtrpOk = partnerNtrp.trim() === '' || isNtrpValid(partnerNtrp)
+
     const isValid =
         isPlayerFilled(opponent) &&
-        (!isDoubles || (isPlayerFilled(partner) && isPlayerFilled(opponent2))) &&
+        isNtrpValid(opponentNtrp) &&
+        (!isDoubles || (
+            isPlayerFilled(partner) &&
+            isPlayerFilled(opponent2) &&
+            isNtrpValid(opponent2Ntrp) &&
+            partnerNtrpOk
+        )) &&
         !!playedAt &&
         !!playedTime &&
+        !!surface &&
         sets.length > 0 &&
         sets.every(isSetValid)
 
@@ -158,9 +152,11 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             partnerName: partner.name.trim() || undefined,
             partnerUserId: partner.userId,
             partnerDominantHand: !partner.userId && partner.hand ? partner.hand : undefined,
+            partnerNtrp: isDoubles && partnerNtrp ? Number(partnerNtrp) : undefined,
             opponent2Name: opponent2.name.trim() || undefined,
             opponent2UserId: opponent2.userId,
             opponent2DominantHand: !opponent2.userId && opponent2.hand ? opponent2.hand : undefined,
+            opponent2Ntrp: isDoubles && opponent2Ntrp ? Number(opponent2Ntrp) : undefined,
             playedAt,
             playedTime: playedTime || undefined,
             matchType,
@@ -183,14 +179,17 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         const cleanSets = sets.map((s) => ({
             me: Number.isNaN(s.me) ? 0 : s.me,
             opp: Number.isNaN(s.opp) ? 0 : s.opp,
+            // 애드/듀스는 복식에서만 보존(단식은 제외)
+            ...(isDoubles && s.myAd ? { myAd: s.myAd } : {}),
+            ...(isDoubles && s.oppAd ? { oppAd: s.oppAd } : {}),
         }))
 
         startTransition(async () => {
             const res = initialData
                 // 수정: 기존 한 레코드를 그대로 유지 (모든 세트 포함, winner 자동 판정)
                 ? await updatePersonalMatchAction(initialData.id, { ...base, setScores: cleanSets })
-                // 신규: 세트마다 개별 경기로 분리 저장
-                : await createPersonalMatchesAction(cleanSets.map((s) => ({ ...base, setScores: [s] })))
+                // 신규: 모든 세트를 담은 단일 경기 1건으로 저장 (winner는 세트 승수로 자동 판정)
+                : await createPersonalMatchesAction([{ ...base, setScores: cleanSets }])
             if (res.error) {
                 setError(res.error)
             } else {
@@ -226,34 +225,67 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                     </Select>
                 </div>
 
-                {/* 내 파트너 (복식 전용) */}
-                {isDoubles && (
-                    <PlayerPicker
-                        label="내 파트너 *"
-                        candidates={opponentCandidates}
-                        pastOpponents={pastOpponents}
-                        value={partner}
-                        onChange={setPartner}
-                        placeholder="파트너 이름 또는 닉네임"
-                    />
-                )}
+                {isDoubles ? (
+                    <>
+                        {/* 내 팀 (나 + 파트너) */}
+                        <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
+                                <span className="text-xs text-muted-foreground">나 + 파트너</span>
+                            </div>
+                            <PlayerNtrpField
+                                label="내 파트너 *"
+                                candidates={opponentCandidates}
+                                pastOpponents={pastOpponents}
+                                player={partner}
+                                onPlayerChange={setPartner}
+                                ntrp={partnerNtrp}
+                                onNtrpChange={setPartnerNtrp}
+                                placeholder="파트너 이름 또는 닉네임"
+                            />
+                        </div>
 
-                {/* 상대 (단식: 1명 / 복식: 상대팀 선수 1·2) */}
-                <PlayerPicker
-                    label={isDoubles ? '상대팀 선수 1 *' : '상대 *'}
-                    candidates={opponentCandidates}
-                    pastOpponents={pastOpponents}
-                    value={opponent}
-                    onChange={setOpponent}
-                    placeholder="상대방 이름 또는 닉네임"
-                />
-                {isDoubles && (
-                    <PlayerPicker
-                        label="상대팀 선수 2 *"
+                        {/* 상대팀 (상대1 + 상대2) */}
+                        <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
+                                <span className="text-xs text-muted-foreground">상대1 + 상대2</span>
+                            </div>
+                            <PlayerNtrpField
+                                label="상대팀 선수 1 *"
+                                candidates={opponentCandidates}
+                                pastOpponents={pastOpponents}
+                                player={opponent}
+                                onPlayerChange={setOpponent}
+                                ntrp={opponentNtrp}
+                                onNtrpChange={setOpponentNtrp}
+                                ntrpRequired
+                                placeholder="상대방 이름 또는 닉네임"
+                            />
+                            <PlayerNtrpField
+                                label="상대팀 선수 2 *"
+                                candidates={opponentCandidates}
+                                pastOpponents={pastOpponents}
+                                player={opponent2}
+                                onPlayerChange={setOpponent2}
+                                ntrp={opponent2Ntrp}
+                                onNtrpChange={setOpponent2Ntrp}
+                                ntrpRequired
+                                placeholder="상대방 이름 또는 닉네임"
+                            />
+                        </div>
+                    </>
+                ) : (
+                    /* 단식: 상대 1명 + NTRP */
+                    <PlayerNtrpField
+                        label="상대 *"
                         candidates={opponentCandidates}
                         pastOpponents={pastOpponents}
-                        value={opponent2}
-                        onChange={setOpponent2}
+                        player={opponent}
+                        onPlayerChange={setOpponent}
+                        ntrp={opponentNtrp}
+                        onNtrpChange={setOpponentNtrp}
+                        ntrpRequired
                         placeholder="상대방 이름 또는 닉네임"
                     />
                 )}
@@ -280,42 +312,23 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         />
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClass}>코트 표면 (선택)</label>
-                        <Select
-                            value={surface}
-                            onValueChange={(v) => setSurface(v as CourtSurface | '')}
-                            items={SURFACE_SELECT_ITEMS}
-                        >
-                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {SURFACE_SELECT_ITEMS.map((s) => (
-                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <label className={labelClass}>{isDoubles ? '상대팀 수준' : '상대 수준'} (선택)</label>
-                        <Select
-                            value={opponentNtrp}
-                            onValueChange={(v) => setOpponentNtrp(v ?? '')}
-                            items={NTRP_SELECT_ITEMS}
-                        >
-                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {NTRP_SELECT_ITEMS.map((n) => (
-                                    <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="mt-1 text-xs text-muted-foreground">개인 레이팅(NTRP) 계산에 사용됩니다.</p>
-                    </div>
+                <div>
+                    <label className={labelClass}>코트 표면 *</label>
+                    <Select
+                        value={surface}
+                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
+                        items={SURFACE_OPTIONS}
+                    >
+                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                            <SelectValue placeholder="선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SURFACE_OPTIONS.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-xs text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
                 </div>
 
                 <div>
@@ -334,32 +347,57 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                     </div>
                     <div className="space-y-2">
                         {sets.map((s, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground w-10">{i + 1}세트</span>
-                                <input
-                                    type="number"
-                                    min={0} max={99}
-                                    value={Number.isNaN(s.me) ? '' : s.me}
-                                    onChange={(e) => updateSet(i, 'me', e.target.value)}
-                                    className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
-                                />
-                                <span className="w-3 text-center text-muted-foreground">-</span>
-                                <input
-                                    type="number"
-                                    min={0} max={99}
-                                    value={Number.isNaN(s.opp) ? '' : s.opp}
-                                    onChange={(e) => updateSet(i, 'opp', e.target.value)}
-                                    className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
-                                />
-                                {sets.length > 1 && (
-                                    <button type="button" onClick={() => removeSet(i)} className="text-xs text-destructive/80 hover:text-destructive">
-                                        삭제
-                                    </button>
+                            <div key={i} className={isDoubles ? 'rounded-md border border-border/60 p-2 space-y-2' : ''}>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground w-10">{i + 1}세트</span>
+                                    <input
+                                        type="number"
+                                        min={0} max={99}
+                                        value={Number.isNaN(s.me) ? '' : s.me}
+                                        onChange={(e) => updateSet(i, 'me', e.target.value)}
+                                        className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
+                                    />
+                                    <span className="w-3 text-center text-muted-foreground">-</span>
+                                    <input
+                                        type="number"
+                                        min={0} max={99}
+                                        value={Number.isNaN(s.opp) ? '' : s.opp}
+                                        onChange={(e) => updateSet(i, 'opp', e.target.value)}
+                                        className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
+                                    />
+                                    {sets.length > 1 && (
+                                        <button type="button" onClick={() => removeSet(i)} className="text-xs text-destructive/80 hover:text-destructive">
+                                            삭제
+                                        </button>
+                                    )}
+                                </div>
+                                {/* 복식: 세트별 애드/듀스 코트 */}
+                                {isDoubles && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <AdDeuceToggle
+                                            label="내 팀 애드"
+                                            options={[
+                                                { value: 'me', label: '나' },
+                                                { value: 'partner', label: partner.name.trim() || '파트너' },
+                                            ]}
+                                            value={s.myAd}
+                                            onChange={(v) => setMyAd(i, v)}
+                                        />
+                                        <AdDeuceToggle
+                                            label="상대팀 애드"
+                                            options={[
+                                                { value: 'opponent', label: opponent.name.trim() || '상대1' },
+                                                { value: 'opponent2', label: opponent2.name.trim() || '상대2' },
+                                            ]}
+                                            value={s.oppAd}
+                                            onChange={(v) => setOppAd(i, v)}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         ))}
                     </div>
-                    <p className="mt-1.5 text-xs text-muted-foreground">세트마다 점수가 높은 쪽이 승리한 개별 경기로 저장됩니다.</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
                 </div>
 
                 <div>

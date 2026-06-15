@@ -1,6 +1,7 @@
 import type { RivalEntry } from '@/lib/analytics/rival'
 import type { User } from '@/types'
 import { getTier, TIER_LABELS, TIER_STYLE } from '@/lib/rating/tier'
+import { effectiveNtrp } from '@/lib/rating/display'
 import { FORM_BADGE_STYLE } from '@/lib/dashboard/outcome'
 import { PILL_BASE, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { relativeDayLabel } from '@/lib/analytics/date-utils'
@@ -19,7 +20,7 @@ export function RivalRow({ rival, userMap, today }: Props) {
     const user = rival.opponentUserId ? userMap.get(rival.opponentUserId) : undefined
     const name = user?.nickname ?? user?.name ?? rival.opponentName ?? '?'
     const initial = name.slice(0, 1)
-    const tier = user ? getTier(user.ntrp) : null
+    const tier = user ? getTier(effectiveNtrp(user)) : null
 
     return (
         <div className="space-y-2 py-1">

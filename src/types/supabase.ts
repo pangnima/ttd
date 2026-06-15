@@ -470,6 +470,7 @@ export type Database = {
           notes: string | null
           opponent2_dominant_hand: string | null
           opponent2_name: string | null
+          opponent2_ntrp: number | null
           opponent2_user_id: string | null
           opponent_dominant_hand: string | null
           opponent_name: string
@@ -477,6 +478,7 @@ export type Database = {
           opponent_user_id: string | null
           partner_dominant_hand: string | null
           partner_name: string | null
+          partner_ntrp: number | null
           partner_user_id: string | null
           played_at: string
           played_time: string | null
@@ -492,6 +494,7 @@ export type Database = {
           notes?: string | null
           opponent2_dominant_hand?: string | null
           opponent2_name?: string | null
+          opponent2_ntrp?: number | null
           opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name: string
@@ -499,6 +502,7 @@ export type Database = {
           opponent_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null
+          partner_ntrp?: number | null
           partner_user_id?: string | null
           played_at: string
           played_time?: string | null
@@ -514,6 +518,7 @@ export type Database = {
           notes?: string | null
           opponent2_dominant_hand?: string | null
           opponent2_name?: string | null
+          opponent2_ntrp?: number | null
           opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name?: string
@@ -521,6 +526,7 @@ export type Database = {
           opponent_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null
+          partner_ntrp?: number | null
           partner_user_id?: string | null
           played_at?: string
           played_time?: string | null
@@ -571,6 +577,7 @@ export type Database = {
           name: string
           nickname: string
           ntrp: number | null
+          personal_ntrp: number | null
           phone: string | null
           profile_image: string | null
           role: string
@@ -587,6 +594,7 @@ export type Database = {
           name: string
           nickname: string
           ntrp?: number | null
+          personal_ntrp?: number | null
           phone?: string | null
           profile_image?: string | null
           role?: string
@@ -603,6 +611,7 @@ export type Database = {
           name?: string
           nickname?: string
           ntrp?: number | null
+          personal_ntrp?: number | null
           phone?: string | null
           profile_image?: string | null
           role?: string

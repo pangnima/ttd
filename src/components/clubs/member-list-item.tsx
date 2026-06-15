@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { TierEmblem } from '@/components/common/tier-emblem'
 import { calcWinRate } from '@/lib/dashboard/tokens'
+import { effectiveNtrp } from '@/lib/rating/display'
 import type { ClubMember, ClubRating, User } from '@/types'
 
 type MemberListItemProps = {
@@ -73,7 +74,7 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
                     <TierEmblem rating={clubRating!.rating} matchesPlayed={clubRating!.matchesPlayed} />
                 )}
                 <Badge variant="outline" className="text-xs font-mono">
-                    NTRP {user.ntrp.toFixed(1)}
+                    NTRP {effectiveNtrp(user).toFixed(1)}
                 </Badge>
                 <Badge
                     variant={roleBadgeVariant[member.role]}

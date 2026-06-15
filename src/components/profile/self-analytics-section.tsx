@@ -30,6 +30,7 @@ import { aggregateHourHeatmap } from '@/lib/analytics/hour-heatmap'
 import { selectRivals } from '@/lib/analytics/rival'
 import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
+import { effectiveNtrp } from '@/lib/rating/display'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
@@ -51,41 +52,44 @@ function getScopeLabel(scope: AnalyticsScope): string {
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
  */
 export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }: Props) {
-    // 시간순/날짜 집계가 공유하는 번들 부분(클럽 매치 날짜는 gameMetaById에서 해석)
+    // 시간순/날짜 집계가 공유하는 번들 부분(클럽 매치 날짜는 gameMetaById에서 해석).
+    // 개인 경기는 통계용 분해본(세트 1개 = 게임 1개)을 사용한다.
     const timeBundle = {
         matches: bundle.matches,
         gameMetaById: bundle.gameMetaById,
-        personalMatches: bundle.personalMatches,
+        personalMatches: bundle.personalGames,
     }
 
     const surfaceStats = aggregateBySurface(
         {
             matches: bundle.matches,
             courtSurfaceByMatchId: bundle.courtSurfaceByMatchId,
-            personalMatches: bundle.personalMatches,
+            personalMatches: bundle.personalGames,
         },
         me.id,
     )
-    const ntrpUserMap = new Map([...bundle.userMap.entries()].map(([id, u]) => [id, { ntrp: u.ntrp }]))
+    // NTRP 차이 분석은 진화 NTRP(personalNtrp 우선) 기준 — 실제 실력 대비 성적.
+    const ntrpUserMap = new Map([...bundle.userMap.entries()].map(([id, u]) => [id, { ntrp: effectiveNtrp(u) }]))
+    const myEffectiveNtrp = effectiveNtrp(me) || null
     const ntrpStats = aggregateByNtrpDiff(
         { matches: bundle.matches, userMap: ntrpUserMap },
         me.id,
-        me.ntrp ?? null,
+        myEffectiveNtrp,
     )
     const diagnosis = diagnoseStrengthsWeaknesses(
         {
             matches: bundle.matches,
             gameMetaById: bundle.gameMetaById,
-            personalMatches: bundle.personalMatches,
+            personalMatches: bundle.personalGames,
             courtSurfaceByMatchId: bundle.courtSurfaceByMatchId,
             userMap: ntrpUserMap,
         },
         me.id,
-        me.ntrp ?? null,
+        myEffectiveNtrp,
     )
 
     const opponentHandStats = aggregateByOpponentHand(
-        { matches: bundle.matches, personalMatches: bundle.personalMatches, userMap: bundle.userMap },
+        { matches: bundle.matches, personalMatches: bundle.personalGames, userMap: bundle.userMap },
         me.id,
     )
 
@@ -106,7 +110,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     // 개인 경기 승패 기반 개인 레이팅 (온더플라이). 개인 scope 전용 지표 —
     // 통합 scope는 승무패가 클럽+개인 합산이라 모집단이 어긋나므로 계산/노출하지 않는다.
     const personalRating = scope.kind === 'personal'
-        ? replayPersonalRatings(bundle.personalMatches, me.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
+        ? replayPersonalRatings(bundle.personalGames, me.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
         : null
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
@@ -180,7 +184,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     bundle={{
                         matches: bundle.matches,
                         gameMetaById: bundle.gameMetaById,
-                        personalMatches: bundle.personalMatches,
+                        personalMatches: bundle.personalGames,
                     }}
                     userId={me.id}
                     userMap={bundle.userMap}

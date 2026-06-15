@@ -47,18 +47,30 @@ function usableNtrp(n: number | null | undefined): number | null {
     return typeof n === 'number' && n > 0 ? n : null
 }
 
+const DOUBLES_TYPES: PersonalMatch['matchType'][] = ['men_doubles', 'women_doubles', 'mixed_doubles']
+function isDoublesMatch(m: PersonalMatch): boolean {
+    return DOUBLES_TYPES.includes(m.matchType)
+}
+
+function avg(nums: number[]): number {
+    return nums.reduce((s, n) => s + n, 0) / nums.length
+}
+
 /**
  * 한 경기의 상대(팀) 레이팅을 fallback 체인으로 결정한다.
- * ① 저장된 opponentNtrp → ② 등록 상대 ntrp(복식은 상대1·2 평균) → ③ 본인 ntrp(동급 가정) → ④ 기본 2.5.
+ * ① 저장된 NTRP(복식은 상대1·2 평균) → ② 등록 상대 ntrp(복식은 상대1·2 평균) → ③ 본인 ntrp(동급 가정) → ④ 기본 2.5.
  */
 export function resolveOpponentRating(
     m: PersonalMatch,
     selfNtrp: number | null,
     oppNtrpById: OppNtrpResolver,
 ): number {
-    // ① 저장된 추정치
-    const stored = usableNtrp(m.opponentNtrp)
-    if (stored !== null) return stored
+    // ① 저장된 추정치 (복식이면 상대1·2 평균, 있는 값만)
+    const storedOpps = [
+        usableNtrp(m.opponentNtrp),
+        isDoublesMatch(m) ? usableNtrp(m.opponent2Ntrp) : null,
+    ].filter((n): n is number => n !== null)
+    if (storedOpps.length > 0) return avg(storedOpps)
 
     // ② 등록 상대 ntrp (복식은 상대1·2 평균, 둘 중 하나만 있으면 그 값)
     const ids = [m.opponentUserId, m.opponent2UserId].filter((id): id is string => !!id)
@@ -66,11 +78,27 @@ export function resolveOpponentRating(
         .map((id) => usableNtrp(oppNtrpById(id)))
         .filter((n): n is number => n !== null)
     if (known.length > 0) {
-        return known.reduce((s, n) => s + n, 0) / known.length
+        return avg(known)
     }
 
     // ③ 본인 ntrp (동급 가정) → ④ 기본값
     return usableNtrp(selfNtrp) ?? DEFAULT_RATING
+}
+
+/**
+ * 복식에서 '내 팀' 사이드 레이팅을 결정한다(기대승률 계산용).
+ * 단식은 내 현재 레이팅 그대로, 복식은 avg(내 레이팅, 파트너 강도).
+ * 파트너 강도 fallback: ① 저장된 partnerNtrp → ② 파트너 회원 ntrp → ③ 내 레이팅(동급=무영향).
+ */
+export function resolveSelfSideRating(
+    m: PersonalMatch,
+    currentRating: number,
+    partnerNtrpById: OppNtrpResolver,
+): number {
+    if (!isDoublesMatch(m)) return currentRating
+    const memberNtrp = m.partnerUserId ? partnerNtrpById(m.partnerUserId) : undefined
+    const partnerStrength = usableNtrp(m.partnerNtrp) ?? usableNtrp(memberNtrp) ?? currentRating
+    return (currentRating + partnerStrength) / 2
 }
 
 /** winner('me'|'opponent'|'draw') → '나' 입장의 스코어(승1/패0/무0.5). */
@@ -118,7 +146,10 @@ export function replayPersonalRatings(
         const k = pickK(matchesPlayed)
 
         const before = rating
-        const delta = computeMatchDelta({ selfRating: before, oppRating, selfScore, k, margin })
+        // 복식은 파트너 강도를 블렌드한 '내 팀' 사이드 레이팅으로 기대승률을 계산한다.
+        // delta는 팀이 아니라 내 개인 레이팅(before)에 적용한다.
+        const selfSide = resolveSelfSideRating(m, before, oppNtrpById)
+        const delta = computeMatchDelta({ selfRating: selfSide, oppRating, selfScore, k, margin })
         const after = clampRating(before + delta)
 
         rating = after

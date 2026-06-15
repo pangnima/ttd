@@ -8,7 +8,8 @@ export type User = {
     phone: string
     gender: 'male' | 'female'
     dominantHand: 'right' | 'left'
-    ntrp: number
+    ntrp: number            // 가입 시 자가선언 NTRP (불변 시드, 빈 값 방지용)
+    personalNtrp?: number   // 개인경기 기반 동적 NTRP 캐시(진화값). 미보유 시 undefined
     tennisStartDate: string
     createdAt: string
     isGuest: boolean   // true면 게스트 선수 (public.users에 존재하지만 Auth 계정 없음)
@@ -119,6 +120,10 @@ export type PersonalMatchWinner = 'me' | 'opponent' | 'draw'
 export type PersonalMatchSetScore = {
     me: number
     opp: number
+    // 복식 세트별 애드(백) 코트를 맡은 선수 역할 (선택, 단식/미지정은 undefined).
+    // 동호인 경기는 세트마다 사이드가 바뀔 수 있어 세트 단위로 보관한다.
+    myAd?: 'me' | 'partner'
+    oppAd?: 'opponent' | 'opponent2'
 }
 
 export type PersonalMatch = {
@@ -131,17 +136,20 @@ export type PersonalMatch = {
     partnerUserId?: string
     partnerName?: string
     partnerDominantHand?: 'right' | 'left'
+    partnerNtrp?: number    // 복식 파트너 추정 NTRP(선택) — 개인 레이팅 '내 팀' 블렌드에 반영
     // ── 복식 전용: 상대팀 2번째 선수 (단식이면 모두 undefined) ──
     opponent2UserId?: string
     opponent2Name?: string
     opponent2DominantHand?: 'right' | 'left'
+    opponent2Ntrp?: number  // 복식 상대2 추정 NTRP — 개인 레이팅 상대팀 평균에 반영
+    // 애드/듀스 코트는 세트마다 바뀔 수 있어 setScores 각 세트의 myAd/oppAd로 보관한다.
     playedAt: string        // "2025-04-12"
     playedTime?: string     // "18:30" (선택, 요일×시간 히트맵용). 미입력 시 undefined
     matchType: MatchType
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]
     winner: PersonalMatchWinner
-    opponentNtrp?: number   // 상대(팀) 추정 난이도 — 개인 레이팅 ELO의 상대 레이팅. 미입력 시 undefined
+    opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
     createdAt: string
 }
