@@ -136,6 +136,7 @@ export type PersonalMatch = {
     opponent2Name?: string
     opponent2DominantHand?: 'right' | 'left'
     playedAt: string        // "2025-04-12"
+    playedTime?: string     // "18:30" (선택, 요일×시간 히트맵용). 미입력 시 undefined
     matchType: MatchType
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]

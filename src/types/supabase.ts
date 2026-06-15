@@ -478,6 +478,7 @@ export type Database = {
           partner_name: string | null
           partner_user_id: string | null
           played_at: string
+          played_time: string | null
           set_scores: Json
           surface: string | null
           user_id: string
@@ -498,6 +499,7 @@ export type Database = {
           partner_name?: string | null
           partner_user_id?: string | null
           played_at: string
+          played_time?: string | null
           set_scores?: Json
           surface?: string | null
           user_id: string
@@ -518,6 +520,7 @@ export type Database = {
           partner_name?: string | null
           partner_user_id?: string | null
           played_at?: string
+          played_time?: string | null
           set_scores?: Json
           surface?: string | null
           user_id?: string
