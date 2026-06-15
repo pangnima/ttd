@@ -10,23 +10,26 @@ import { NtrpDifferentialCard } from '@/components/stats/ntrp-differential-card'
 import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
-import { StatRankingCard, type StatRankingEntry } from '@/components/stats/stat-ranking-card'
 import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
-import { PersonalTrendCard } from '@/components/stats/personal-trend-card'
+import { WinRateTrendCard } from '@/components/stats/win-rate-trend-card'
+import { ActivityHourHeatmapCard } from '@/components/stats/activity-hour-heatmap-card'
+import { RivalAnalysisCard } from '@/components/stats/rival-analysis-card'
+import { PartnerChemistryCard } from '@/components/stats/partner-chemistry-card'
+import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateRecentForm } from '@/lib/analytics/form'
-import { aggregateResultTimeline } from '@/lib/analytics/trend'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
 import {
-    aggregatePartnerRecommendations, flattenPartnersByGender,
-    selectGoodPartners, selectLowWinRatePartners, type PartnerRec,
-} from '@/lib/analytics/partner'
-import {
-    selectStrongOpponents, selectWeakOpponents, type OpponentRec,
-} from '@/lib/analytics/head-to-head'
-import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
+    listMatchYears,
+    aggregateWeekdayStats,
+    aggregateWeekOfYearStats,
+    aggregateMonthOfYearStats,
+} from '@/lib/analytics/trend-stats'
+import { aggregateHourHeatmap } from '@/lib/analytics/hour-heatmap'
+import { selectRivals } from '@/lib/analytics/rival'
+import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
@@ -44,23 +47,17 @@ function getScopeLabel(scope: AnalyticsScope): string {
     return '클럽 + 개인 경기 통합 통계'
 }
 
-// StatRankingCard 엔트리 매핑 (회원은 id, 외부는 `name:{이름}` 키로 통일)
-function partnerToEntry(r: PartnerRec): StatRankingEntry {
-    return { key: r.partnerId, fallbackName: r.partnerName, wins: r.wins, losses: r.losses, draws: r.draws, winRate: r.winRate }
-}
-
-function opponentToEntry(o: OpponentRec): StatRankingEntry {
-    return {
-        key: o.opponentUserId ?? `name:${o.opponentName}`,
-        fallbackName: o.opponentName ?? undefined,
-        wins: o.wins, losses: o.losses, draws: o.draws, winRate: o.winRate,
-    }
-}
-
 /**
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
  */
 export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }: Props) {
+    // 시간순/날짜 집계가 공유하는 번들 부분(클럽 매치 날짜는 gameMetaById에서 해석)
+    const timeBundle = {
+        matches: bundle.matches,
+        gameMetaById: bundle.gameMetaById,
+        personalMatches: bundle.personalMatches,
+    }
+
     const surfaceStats = aggregateBySurface(
         {
             matches: bundle.matches,
@@ -69,14 +66,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         },
         me.id,
     )
-    const recentForm = aggregateRecentForm(
-        {
-            matches: bundle.matches,
-            gameMetaById: bundle.gameMetaById,
-            personalMatches: bundle.personalMatches,
-        },
-        me.id,
-    )
+    const recentForm = aggregateRecentForm(timeBundle, me.id)
     const ntrpUserMap = new Map([...bundle.userMap.entries()].map(([id, u]) => [id, { ntrp: u.ntrp }]))
     const ntrpStats = aggregateByNtrpDiff(
         { matches: bundle.matches, userMap: ntrpUserMap },
@@ -95,33 +85,26 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         me.ntrp ?? null,
     )
 
-    const partners = flattenPartnersByGender(
-        aggregatePartnerRecommendations(
-            { matches: bundle.matches, personalMatches: bundle.personalMatches },
-            me.id,
-        ),
-        me.gender,
-    )
-    const goodPartnerEntries = selectGoodPartners(partners).map(partnerToEntry)
-    const lowPartnerEntries = selectLowWinRatePartners(partners).map(partnerToEntry)
-    const strongOpponentEntries = selectStrongOpponents(bundle.h2hList).map(opponentToEntry)
-    const weakOpponentEntries = selectWeakOpponents(bundle.h2hList).map(opponentToEntry)
-
     const opponentHandStats = aggregateByOpponentHand(
         { matches: bundle.matches, personalMatches: bundle.personalMatches, userMap: bundle.userMap },
         me.id,
     )
 
-    // 비클럽 scope에서 레이팅 추세 자리를 채울 누적 승−패 시계열
-    const trendTimeline = aggregateResultTimeline(
-        { matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: bundle.personalMatches },
-        me.id,
-    )
+    // ── 고도화 집계 ───────────────────────────────────────────
+    const today = new Date().toISOString().slice(0, 10)
+    const trendYears = listMatchYears(timeBundle, me.id).map((year) => ({
+        year,
+        daily: aggregateWeekdayStats(timeBundle, me.id, year),
+        weekly: aggregateWeekOfYearStats(timeBundle, me.id, year),
+        monthly: aggregateMonthOfYearStats(timeBundle, me.id, year),
+    }))
+    const hourBundle = { ...timeBundle, matchTimeById: bundle.matchTimeById }
+    const weeklyHeatmap = aggregateHourHeatmap(hourBundle, today, 28)   // 최근 4주
+    const monthlyHeatmap = aggregateHourHeatmap(hourBundle, today, 182) // 최근 약 6개월
+    const rivals = selectRivals(timeBundle, me.id, bundle.h2hList)
+    const chemistry = aggregatePartnerChemistry(timeBundle, me.id, me.gender)
 
-    // 파트너/상대 랭킹 4종이 모두 비면 그리드 자체를 숨긴다(빈 카드 도배 방지).
-    const hasAnyRanking =
-        goodPartnerEntries.length > 0 || lowPartnerEntries.length > 0 ||
-        strongOpponentEntries.length > 0 || weakOpponentEntries.length > 0
+    const hasRivalOrPartner = rivals.length > 0 || chemistry.length > 0
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
@@ -155,37 +138,21 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <SurfaceStatsCard surfaceStats={surfaceStats} />
             </div>
 
-            {/* 잘 맞는 파트너 · 승률 낮은 파트너 · 강한 상대 · 약한 상대 (4col) — 전부 비면 숨김 */}
-            {hasAnyRanking && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-                    <StatRankingCard
-                        title="나와 잘 맞는 파트너"
-                        entries={goodPartnerEntries}
-                        userMap={bundle.userMap}
-                        emptyText="5경기 이상 함께 뛰고 승률 55% 이상인 파트너가 아직 없어요"
-                    />
-                    <StatRankingCard
-                        title="승률이 낮은 파트너"
-                        entries={lowPartnerEntries}
-                        userMap={bundle.userMap}
-                        emptyText="5경기 이상 함께 뛴 파트너 중 승률 40% 미만이 없어요"
-                    />
-                    <StatRankingCard
-                        title="내가 강한 상대"
-                        entries={strongOpponentEntries}
-                        userMap={bundle.userMap}
-                        emptyText="10경기 이상 맞붙어 승률 60% 이상인 상대가 아직 없어요"
-                    />
-                    <StatRankingCard
-                        title="내가 약한 상대"
-                        entries={weakOpponentEntries}
-                        userMap={bundle.userMap}
-                        emptyText="10경기 이상 맞붙고 승률 40% 미만인 상대가 아직 없어요"
-                    />
+            {/* 내 승률 추이 + 경기 활동 히트맵 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <WinRateTrendCard years={trendYears} />
+                <ActivityHourHeatmapCard weekly={weeklyHeatmap} monthly={monthlyHeatmap} />
+            </div>
+
+            {/* 라이벌 분석 + 파트너 케미 — 둘 다 비면 숨김 */}
+            {hasRivalOrPartner && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <RivalAnalysisCard rivals={rivals} userMap={bundle.userMap} today={today} />
+                    <PartnerChemistryCard partners={chemistry} userMap={bundle.userMap} />
                 </div>
             )}
 
-            {/* 개인 경기 기록 (full) — 파트너/상대 행 하단으로 이동 */}
+            {/* 개인 경기 기록 (full) */}
             <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
 
             {/* ── 심화 진단 (3col) ─────────────────────────── */}
@@ -195,12 +162,10 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <OpponentHandStatsCard handStats={opponentHandStats} />
             </div>
 
-            {/* 추세 (1:1 맞대결 바로 위) — 클럽 scope=레이팅 추세, 그 외=누적 승−패 추세 */}
-            {scope.kind === 'club'
-                ? ratingHistory && ratingHistory.length > 0 && (
-                    <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
-                )
-                : <PersonalTrendCard timeline={trendTimeline} />}
+            {/* 클럽 레이팅 추세 (클럽 scope 전용) */}
+            {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
+                <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
+            )}
 
             {/* 1:1 맞대결 비교 (full) */}
             <Suspense>
