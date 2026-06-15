@@ -16,7 +16,9 @@ import { ActivityHourHeatmapCard } from '@/components/stats/activity-hour-heatma
 import { RivalAnalysisCard } from '@/components/stats/rival-analysis-card'
 import { PartnerChemistryCard } from '@/components/stats/partner-chemistry-card'
 import { OpponentHandStatsCard } from '@/components/stats/opponent-hand-stats-card'
+import { DoublesCourtStatsCard } from '@/components/stats/doubles-court-stats'
 import { aggregateBySurface } from '@/lib/analytics/surface'
+import { aggregateByDoublesCourtSide } from '@/lib/analytics/doubles-court'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
 import { aggregateByOpponentHand } from '@/lib/analytics/opponent-hand'
 import { diagnoseStrengthsWeaknesses } from '@/lib/analytics/diagnostics'
@@ -93,6 +95,11 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         me.id,
     )
 
+    const doublesCourtStats = aggregateByDoublesCourtSide(
+        { matches: bundle.matches, personalMatches: bundle.personalGames },
+        me.id,
+    )
+
     // ── 고도화 집계 ───────────────────────────────────────────
     const today = new Date().toISOString().slice(0, 10)
     const trendYears = listMatchYears(timeBundle, me.id).map((year) => ({
@@ -161,6 +168,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <div className="space-y-6">
                     <SurfaceStatsCard surfaceStats={surfaceStats} />
                     <OpponentHandStatsCard handStats={opponentHandStats} />
+                    <DoublesCourtStatsCard court={doublesCourtStats} />
                 </div>
             </div>
 
