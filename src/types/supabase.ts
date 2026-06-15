@@ -473,6 +473,7 @@ export type Database = {
           opponent2_user_id: string | null
           opponent_dominant_hand: string | null
           opponent_name: string
+          opponent_ntrp: number | null
           opponent_user_id: string | null
           partner_dominant_hand: string | null
           partner_name: string | null
@@ -494,6 +495,7 @@ export type Database = {
           opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name: string
+          opponent_ntrp?: number | null
           opponent_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null
@@ -515,6 +517,7 @@ export type Database = {
           opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name?: string
+          opponent_ntrp?: number | null
           opponent_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null

@@ -141,6 +141,7 @@ export type PersonalMatch = {
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]
     winner: PersonalMatchWinner
+    opponentNtrp?: number   // 상대(팀) 추정 난이도 — 개인 레이팅 ELO의 상대 레이팅. 미입력 시 undefined
     notes?: string
     createdAt: string
 }

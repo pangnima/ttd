@@ -11,6 +11,7 @@ import {
     type RatingHistoryPoint,
 } from '@/lib/queries/ratings'
 import { isProvisional } from '@/lib/rating/display'
+import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { aggregateRecentForm, type RecentFormResult } from '@/lib/analytics/form'
 import { combinePlayerStats, type PlayerStats } from '@/lib/stats'
 import type { ProfileSummary } from '@/components/profile/profile-summary-row'
@@ -106,6 +107,13 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const headerStats = deriveHeaderStats(bundle.stats, form)
         // 클럽 scope는 티어 헤더, 그 외는 승률 링 요약 헤더
         const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats) : undefined
+        // 비클럽 scope(통합/개인): 개인 경기 승패 기반 개인 레이팅을 헤더에 노출(온더플라이)
+        const personalRatingSnapshot = scope.kind !== 'club'
+            ? replayPersonalRatings(bundle.personalMatches, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
+            : null
+        const personalRating = personalRatingSnapshot && personalRatingSnapshot.matchesPlayed > 0
+            ? { rating: personalRatingSnapshot.rating, provisional: personalRatingSnapshot.provisional }
+            : undefined
 
         return (
             <PageContainer>
@@ -118,6 +126,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     stats={headerStats}
                     summary={summary}
                     recentForm={form}
+                    personalRating={personalRating}
                 />
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>

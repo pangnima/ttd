@@ -10,6 +10,7 @@ import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
 import { AICoachingCard } from '@/components/stats/ai-coaching-card'
 import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
+import { PersonalRatingTrendCard } from '@/components/stats/personal-rating-trend-card'
 import { WinRateTrendCard } from '@/components/stats/win-rate-trend-card'
 import { ActivityHourHeatmapCard } from '@/components/stats/activity-hour-heatmap-card'
 import { RivalAnalysisCard } from '@/components/stats/rival-analysis-card'
@@ -28,6 +29,7 @@ import {
 import { aggregateHourHeatmap } from '@/lib/analytics/hour-heatmap'
 import { selectRivals } from '@/lib/analytics/rival'
 import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
+import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
@@ -101,6 +103,13 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const rivals = selectRivals(timeBundle, me.id, bundle.h2hList)
     const chemistry = aggregatePartnerChemistry(timeBundle, me.id, me.gender)
 
+    // 개인 경기 승패 기반 개인 레이팅 (온더플라이). 클럽 scope에선 personalMatches가 비어 자동 미노출.
+    const personalRating = replayPersonalRatings(
+        bundle.personalMatches,
+        me.ntrp ?? null,
+        (id) => bundle.userMap.get(id)?.ntrp,
+    )
+
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
     return (
@@ -153,6 +162,14 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             {/* 클럽 레이팅 추세 (클럽 scope 전용) */}
             {scope.kind === 'club' && ratingHistory && ratingHistory.length > 0 && (
                 <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
+            )}
+
+            {/* 개인 레이팅 추세 (개인/통합 scope — 개인 경기가 있을 때) */}
+            {personalRating.history.length > 0 && (
+                <PersonalRatingTrendCard
+                    points={personalRating.history}
+                    provisional={personalRating.provisional}
+                />
             )}
 
             {/* 1:1 맞대결 비교 (full) */}

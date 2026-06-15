@@ -21,6 +21,7 @@ export type PersonalMatchInput = {
     matchType: MatchType
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]
+    opponentNtrp?: number  // 상대(팀) 추정 난이도 (1.0~7.0, 선택) — 개인 레이팅 계산용
     // winner는 입력받지 않고 setScores로부터 자동 판정한다.
     notes?: string
 }
@@ -46,6 +47,10 @@ function validateInput(input: PersonalMatchInput): string | null {
     if (isDoubles(input.matchType)) {
         if (!input.partnerName?.trim() && !input.partnerUserId) return '복식은 내 파트너를 입력해주세요.'
         if (!input.opponent2Name?.trim() && !input.opponent2UserId) return '복식은 상대팀 2번째 선수를 입력해주세요.'
+    }
+    // 상대 수준(선택): 입력 시 1.0~7.0 범위
+    if (input.opponentNtrp != null && (input.opponentNtrp < 1 || input.opponentNtrp > 7)) {
+        return '상대 수준은 1.0~7.0 범위로 입력해주세요.'
     }
     // 세트 검증: 1개 이상, 각 세트 점수가 0~99 정수, 0-0(미입력) 세트 금지
     if (!input.setScores.length) return '세트 스코어를 입력해주세요.'
@@ -75,6 +80,7 @@ function buildPersonalMatchRow(input: PersonalMatchInput) {
         played_time: input.playedTime || null,
         match_type: input.matchType,
         surface: input.surface ?? null,
+        opponent_ntrp: input.opponentNtrp ?? null,
         set_scores: input.setScores,
         // winner는 세트 점수로부터 자동 판정 (수동 선택 제거)
         winner: resolveMatchWinner(input.setScores),

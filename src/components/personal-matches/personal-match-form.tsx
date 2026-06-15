@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PersonalMatch, MatchType, CourtSurface, PersonalMatchSetScore } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
@@ -42,6 +42,15 @@ const SURFACE_SELECT_ITEMS: { value: string; label: string }[] = [
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
+// 상대(팀) 수준 NTRP 선택 항목 (1.0~7.0, 0.5 단위). '' = 모름/미입력.
+const NTRP_SELECT_ITEMS: { value: string; label: string }[] = [
+    { value: '', label: '모름 / 미입력' },
+    ...Array.from({ length: 13 }, (_, i) => {
+        const v = (1 + i * 0.5).toFixed(1)
+        return { value: v, label: v }
+    }),
+]
+
 export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [] }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -66,12 +75,40 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     const [playedTime, setPlayedTime] = useState(initialData?.playedTime ?? '')
     const [matchType, setMatchType] = useState<MatchType>(initialData?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(initialData?.surface ?? '')
+    // 상대(팀) 수준 NTRP — Select API에 맞춰 문자열로 보관('' = 미입력)
+    const [opponentNtrp, setOpponentNtrp] = useState<string>(
+        initialData?.opponentNtrp != null ? initialData.opponentNtrp.toFixed(1) : ''
+    )
     const [sets, setSets] = useState<PersonalMatchSetScore[]>(
         initialData?.setScores?.length ? initialData.setScores : [{ me: 0, opp: 0 }]
     )
     const [notes, setNotes] = useState(initialData?.notes ?? '')
 
     const isDoubles = DOUBLES_TYPES.includes(matchType)
+
+    // 등록 회원 상대를 고르면 그 회원의 ntrp(복식은 상대1·2 평균)를 상대 수준에 자동 프리필.
+    // 첫 렌더(수정 모드의 저장값 유지)는 건너뛰고, 이후 상대 선택이 바뀔 때만 제안한다.
+    const ntrpById = useRef<Map<string, number>>(
+        new Map(opponentCandidates.filter((c) => c.ntrp != null).map((c) => [c.id, c.ntrp as number]))
+    )
+    const didMount = useRef(false)
+    useEffect(() => {
+        if (!didMount.current) {
+            didMount.current = true
+            return
+        }
+        const ids = [opponent.userId, isDoubles ? opponent2.userId : undefined].filter(
+            (id): id is string => !!id
+        )
+        const known = ids
+            .map((id) => ntrpById.current.get(id))
+            .filter((n): n is number => typeof n === 'number' && n > 0)
+        if (known.length > 0) {
+            const avg = known.reduce((s, n) => s + n, 0) / known.length
+            // 0.5 단위로 반올림해 셀렉트 항목과 일치시킨다.
+            setOpponentNtrp((Math.round(avg * 2) / 2).toFixed(1))
+        }
+    }, [opponent.userId, opponent2.userId, isDoubles])
 
     function addSet() {
         setSets((prev) => [...prev, { me: 0, opp: 0 }])
@@ -128,6 +165,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             playedTime: playedTime || undefined,
             matchType,
             surface: surface || undefined,
+            opponentNtrp: opponentNtrp ? Number(opponentNtrp) : undefined,
             notes: notes || undefined,
         }
     }
@@ -242,22 +280,42 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         />
                     </div>
                 </div>
-                <div>
-                    <label className={labelClass}>코트 표면 (선택)</label>
-                    <Select
-                        value={surface}
-                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
-                        items={SURFACE_SELECT_ITEMS}
-                    >
-                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {SURFACE_SELECT_ITEMS.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className={labelClass}>코트 표면 (선택)</label>
+                        <Select
+                            value={surface}
+                            onValueChange={(v) => setSurface(v as CourtSurface | '')}
+                            items={SURFACE_SELECT_ITEMS}
+                        >
+                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {SURFACE_SELECT_ITEMS.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <label className={labelClass}>{isDoubles ? '상대팀 수준' : '상대 수준'} (선택)</label>
+                        <Select
+                            value={opponentNtrp}
+                            onValueChange={(v) => setOpponentNtrp(v ?? '')}
+                            items={NTRP_SELECT_ITEMS}
+                        >
+                            <SelectTrigger className="w-full bg-background border-input focus:border-ring">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {NTRP_SELECT_ITEMS.map((n) => (
+                                    <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="mt-1 text-xs text-muted-foreground">개인 레이팅(NTRP) 계산에 사용됩니다.</p>
+                    </div>
                 </div>
 
                 <div>

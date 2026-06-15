@@ -26,6 +26,7 @@ function mapPersonalMatchRow(row: PersonalMatchRow): PersonalMatch {
         surface: (row.surface as CourtSurface) ?? undefined,
         setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],
         winner: row.winner as PersonalMatchWinner,
+        opponentNtrp: row.opponent_ntrp != null ? Number(row.opponent_ntrp) : undefined,
         notes: row.notes ?? undefined,
         createdAt: row.created_at,
     }
