@@ -101,8 +101,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const rivals = selectRivals(timeBundle, me.id, bundle.h2hList)
     const chemistry = aggregatePartnerChemistry(timeBundle, me.id, me.gender)
 
-    const hasRivalOrPartner = rivals.length > 0 || chemistry.length > 0
-
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
     return (
@@ -135,25 +133,21 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <ActivityHourHeatmapCard weekly={weeklyHeatmap} monthly={monthlyHeatmap} />
             </div>
 
-            {/* 라이벌 분석 + 파트너 케미 — 둘 다 비면 숨김 */}
-            {hasRivalOrPartner && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <RivalAnalysisCard rivals={rivals} userMap={bundle.userMap} today={today} />
-                    <PartnerChemistryCard partners={chemistry} userMap={bundle.userMap} />
-                </div>
-            )}
-
-            {/* 개인 경기 기록 + 코트 표면별 성적 (2col) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
-                <SurfaceStatsCard surfaceStats={surfaceStats} />
-            </div>
-
-            {/* ── 심화 진단 (3col) ─────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
+            {/* 진단성 카드 4종 (라이벌 · 파트너 · NTRP 대비 · 강점약점) — 1행 4칸 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+                <RivalAnalysisCard rivals={rivals} userMap={bundle.userMap} today={today} />
+                <PartnerChemistryCard partners={chemistry} userMap={bundle.userMap} />
                 <NtrpDifferentialCard ntrpStats={ntrpStats} />
                 <StrengthWeaknessCard diagnosis={diagnosis} />
-                <OpponentHandStatsCard handStats={opponentHandStats} />
+            </div>
+
+            {/* 개인 경기 기록(좌 50%) + 코트 표면·손잡이 세로 스택(우 50%) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+                <div className="space-y-6">
+                    <SurfaceStatsCard surfaceStats={surfaceStats} />
+                    <OpponentHandStatsCard handStats={opponentHandStats} />
+                </div>
             </div>
 
             {/* 클럽 레이팅 추세 (클럽 scope 전용) */}
