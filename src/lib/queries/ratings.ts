@@ -29,6 +29,28 @@ export async function fetchClubPlayerRatings(
     return result
 }
 
+// 한 사용자의 여러 클럽 현재 레이팅을 한 번에 조회. 반환: clubId → ClubRating.
+// 레이팅 행이 없는(확정 경기 미참여) 클럽은 결과에서 빠진다.
+export async function fetchUserClubRatings(
+    userId: string,
+    clubIds: string[],
+): Promise<Record<string, ClubRating>> {
+    if (clubIds.length === 0) return {}
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('club_player_ratings')
+        .select('club_id, rating, matches_played')
+        .eq('user_id', userId)
+        .in('club_id', clubIds)
+    if (error || !data) return {}
+
+    const result: Record<string, ClubRating> = {}
+    for (const row of data) {
+        result[row.club_id] = { rating: Number(row.rating), matchesPlayed: row.matches_played }
+    }
+    return result
+}
+
 // 클럽 레이팅 랭킹 (레이팅 내림차순). 행은 확정 경기에 참여한 선수만 존재(게스트 포함).
 export type ClubRatingRankingEntry = {
     userId: string

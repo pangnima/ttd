@@ -5,6 +5,7 @@ import { TierIcon } from '@/components/common/tier-icon'
 import { ProfileTierProgress } from '@/components/profile/profile-tier-progress'
 import { ProfileStatRow } from '@/components/profile/profile-stat-row'
 import { ProfileSummaryRow, type ProfileSummary } from '@/components/profile/profile-summary-row'
+import { RatingSummaryRow, type RatingSummary } from '@/components/profile/rating-summary-row'
 import { WinRateRing } from '@/components/stats/win-rate-ring'
 import { RecentFormStrip } from '@/components/stats/recent-form-strip'
 import { getTier, TIER_LABELS, TIER_TEXT } from '@/lib/rating/tier'
@@ -26,17 +27,19 @@ type Props = {
     summary?: ProfileSummary
     /** 최근 경기 폼 (본인 전용) — W/L/D 박스 스트립 노출 */
     recentForm?: RecentFormResult
-    /** 개인 경기 승패 기반 개인 레이팅 (비클럽 scope·본인 전용). 경기 있을 때만 전달됨 */
+    /** 개인 경기 승패 기반 개인 레이팅 (개인 scope·본인 전용). 경기 있을 때만 전달됨 */
     personalRating?: { rating: number; provisional: boolean }
+    /** 통합 scope·본인 전용: 자가선언·개인·가입 클럽별 레이팅 요약 행 */
+    ratingSummary?: RatingSummary
 }
 
 const genderLabel: Record<User['gender'], string> = { male: '남', female: '여' }
 const handLabel: Record<User['dominantHand'], string> = { right: '오른손잡이', left: '왼손잡이' }
 
-export function MemberProfileHeader({ user, clubName, clubRating, provisional, clubRank, stats, summary, recentForm, personalRating }: Props) {
+export function MemberProfileHeader({ user, clubName, clubRating, provisional, clubRank, stats, summary, recentForm, personalRating, ratingSummary }: Props) {
     const hasTier = clubRating !== undefined
     const tier = hasTier ? getTier(clubRating) : null
-    // 비클럽 scope에서 개인 경기 레이팅이 있으면 티어 앰블럼을 좌측 히어로로 노출(승률 링 대체).
+    // 개인 scope에서 개인 경기 레이팅이 있으면 티어 앰블럼을 좌측 히어로로 노출(승률 링 대체).
     const hasPersonalTier = !hasTier && !!personalRating
     const personalTier = personalRating ? getTier(personalRating.rating) : null
     // 티어(클럽/개인)가 모두 없을 때만 승률 링을 좌측 히어로 슬롯에 채운다.
@@ -55,7 +58,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                     </div>
                 )}
 
-                {/* 개인 경기 레이팅 티어 방패 (비클럽 scope·경기 있을 때). 승/패/무 텍스트 병기. */}
+                {/* 개인 경기 레이팅 티어 방패 (개인 scope·경기 있을 때). 승/패/무 텍스트 병기. */}
                 {hasPersonalTier && personalTier && (
                     <div className="flex flex-col items-center gap-1 shrink-0 self-center sm:self-auto">
                         <TierIcon tier={personalTier} className="h-[100px] sm:h-[124px]" />
@@ -99,20 +102,24 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                                 </p>
                             </div>
                         </div>
-                        {user.isGuest ? (
+                        {/* 통합 scope는 우측 요약 행(RatingSummaryRow)이 NTRP를 포함하므로 단일 배지 생략 */}
+                        {!ratingSummary && (user.isGuest ? (
                             <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">NTRP -</Badge>
                         ) : (
                             <Badge variant="outline" className="text-xs font-mono shrink-0">
                                 NTRP {ntrpDisplay}
                             </Badge>
-                        )}
+                        ))}
                     </div>
+
+                    {/* 통합 scope: 자가선언·개인·가입 클럽별 레이팅 요약 칩 */}
+                    {ratingSummary && <RatingSummaryRow {...ratingSummary} />}
 
                     {hasTier && (
                         <ProfileTierProgress rating={clubRating} provisional={provisional} />
                     )}
 
-                    {/* 비클럽 scope(통합/개인): 개인 경기 레이팅 진척바 */}
+                    {/* 개인 scope: 개인 경기 레이팅 진척바 */}
                     {!hasTier && personalRating && (
                         <div className="space-y-1">
                             <p className="text-xs font-medium text-muted-foreground">개인 경기 레이팅</p>

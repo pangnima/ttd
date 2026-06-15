@@ -7,9 +7,11 @@ import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import {
     fetchClubRatingHistory,
     fetchClubRatingRanking,
+    fetchUserClubRatings,
     type ClubRatingRankingEntry,
     type RatingHistoryPoint,
 } from '@/lib/queries/ratings'
+import type { RatingSummary } from '@/components/profile/rating-summary-row'
 import { isProvisional } from '@/lib/rating/display'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { aggregateRecentForm, type RecentFormResult } from '@/lib/analytics/form'
@@ -107,13 +109,26 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const headerStats = deriveHeaderStats(bundle.stats, form)
         // 클럽 scope는 티어 헤더, 그 외는 승률 링 요약 헤더
         const summary = scope.kind !== 'club' ? deriveSummary(bundle.stats) : undefined
-        // 비클럽 scope(통합/개인): 개인 경기 승패 기반 개인 레이팅을 헤더에 노출(온더플라이)
+        // 개인 경기 레이팅(온더플라이). 개인 탭은 티어 방패로, 통합 탭은 요약 칩으로 쓴다. 클럽 scope는 불필요.
         const personalRatingSnapshot = scope.kind !== 'club'
             ? replayPersonalRatings(bundle.personalMatches, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
             : null
         const personalRating = personalRatingSnapshot && personalRatingSnapshot.matchesPlayed > 0
             ? { rating: personalRatingSnapshot.rating, provisional: personalRatingSnapshot.provisional }
             : undefined
+
+        // 통합 탭: 자가선언·개인·가입 클럽별 레이팅을 헤더에 요약(클럽별 본인 레이팅 일괄 조회).
+        let ratingSummary: RatingSummary | undefined
+        if (scope.kind === 'total') {
+            const clubRatingMap = await fetchUserClubRatings(userId, myClubs.map((c) => c.id))
+            const clubs = myClubs
+                .map((c) => {
+                    const r = clubRatingMap[c.id]
+                    return r ? { clubName: c.name, rating: r.rating, provisional: isProvisional(r.matchesPlayed) } : null
+                })
+                .filter((c): c is { clubName: string; rating: number; provisional: boolean } => c !== null)
+            ratingSummary = { selfNtrp: target.ntrp, personal: personalRating, clubs }
+        }
 
         return (
             <PageContainer>
@@ -126,7 +141,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     stats={headerStats}
                     summary={summary}
                     recentForm={form}
-                    personalRating={personalRating}
+                    personalRating={scope.kind === 'personal' ? personalRating : undefined}
+                    ratingSummary={ratingSummary}
                 />
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>

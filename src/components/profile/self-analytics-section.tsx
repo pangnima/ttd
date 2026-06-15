@@ -103,12 +103,11 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const rivals = selectRivals(timeBundle, me.id, bundle.h2hList)
     const chemistry = aggregatePartnerChemistry(timeBundle, me.id, me.gender)
 
-    // 개인 경기 승패 기반 개인 레이팅 (온더플라이). 클럽 scope에선 personalMatches가 비어 자동 미노출.
-    const personalRating = replayPersonalRatings(
-        bundle.personalMatches,
-        me.ntrp ?? null,
-        (id) => bundle.userMap.get(id)?.ntrp,
-    )
+    // 개인 경기 승패 기반 개인 레이팅 (온더플라이). 개인 scope 전용 지표 —
+    // 통합 scope는 승무패가 클럽+개인 합산이라 모집단이 어긋나므로 계산/노출하지 않는다.
+    const personalRating = scope.kind === 'personal'
+        ? replayPersonalRatings(bundle.personalMatches, me.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
+        : null
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
@@ -166,8 +165,8 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 <ClubRatingTrendCard points={ratingHistory} clubName={scope.clubName} />
             )}
 
-            {/* 개인 레이팅 추세 (개인/통합 scope — 개인 경기가 있을 때) */}
-            {personalRating.history.length > 0 && (
+            {/* 개인 레이팅 추세 (개인 scope — 개인 경기가 있을 때) */}
+            {personalRating && personalRating.history.length > 0 && (
                 <PersonalRatingTrendCard
                     points={personalRating.history}
                     provisional={personalRating.provisional}
