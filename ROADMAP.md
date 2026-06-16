@@ -367,6 +367,27 @@
 
 ---
 
+### 코드 점검 / 배포 전 정리 (브랜치 `chore/code-audit-cleanup`)
+
+> 배포 직전 전면 점검 — **저위험·고확신 정리만** 수행. 고위험 대규모 작업은 아래 "기술 부채"로 이관.
+
+- [x] **전적 표시 단일화** — `N승 M패 K무` 문자열 12곳 → `formatRecord`(`lib/dashboard/outcome.ts`)
+- [x] **최근 폼 배지 공용화** — `RecentFormBadges`(size variant) 추출, `club-ranking-card`·`rival-row` 적용
+- [x] **잠재 버그 3건 검증 — 모두 거짓 양성**(코드 변경 없음):
+  - `ratings` 정렬 `date ?? ''` fallback → `match_games!inner` join이 행 존재를 보장
+  - `elo.marginFactor` 0-0 세트 → `total === 0` 가드로 이미 방어
+  - `auto-generate` mixed 팀 구성 → `selectCourtPlayers`가 남2·여2 보장 + `splitTeams`는 비공개 함수
+- [x] **위생 재확인** — `any`/`console.log` 0건, 백업·임시 파일 0개, 미사용 export 0건(`extract*` 헬퍼 전부 사용 중)
+- [x] **빈 `(main)/dashboard/` 폴더 제거** (리다이렉트는 `next.config`가 담당)
+- [x] **CLAUDE.md 폴더 트리 정합화** — actions(+`match-game-courts`·`ratings`), queries(+`ratings`), components(+`landing`), lib(+`rating`·`personal-matches`)
+
+> **판단 기록 (코드 점검)**
+> - `calcWinRate`(`tokens.ts`: null / `analytics/shared.ts`: 0) 두 정의는 반환 시맨틱·레이어가 달라 **통합 보류** — null은 "경기 없음" 구분에 실사용(win-rate-ring)
+> - 날짜 포맷 `format.ts`(ISO·로컬) vs `date-utils.ts`(YYYY-MM-DD·UTC 안전)는 역할이 달라 통합하지 않음
+> - 행 컴포넌트(`RivalRow`/`PartnerChemistryRow`) 제네릭화는 props 폭발 위험으로 미진행 (핵심 중복은 `ProfileLink`/`GuestBadge`로 이미 공용화됨)
+
+---
+
 ## 앞으로 개선해야할 점
 
 ### 중기: 기술 부채 / 품질 개선
@@ -381,6 +402,8 @@
 - [ ] **접근성(a11y)** — 색 대비, ARIA 레이블, 키보드 네비게이션 점검
 - [ ] **모니터링** — Sentry 에러 수집 / Vercel Analytics
 - [ ] **DB 인덱스 점검** — `match_game_matches`의 `team1 @> ARRAY[userId]` 쿼리 성능
+- [ ] **거대 컴포넌트 분할** — `match-game-create-form`(650줄)·`personal-match-form`(435줄) 등 100줄 규칙 초과 컴포넌트를 하위 입력 컴포넌트로 분리 (코드 점검에서 회귀 위험으로 이관)
+- [ ] **auto-generate 비용 점검** — `improveRound` 4중 루프 + `selectCourtPlayers` 조합 탐색. 현재 정상 동작하나 대규모 클럽 대비 휴리스틱 경량화 검토
 
 ### 장기: Phase 5+ 신기능 로드맵
 - [ ] **알림** — 가입 신청/승인, 결과 확정 알림 (Supabase Realtime 또는 Edge Function + push)

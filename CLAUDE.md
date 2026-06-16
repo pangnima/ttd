@@ -46,6 +46,7 @@ src/
 │   ├── profile/                  # 프로필 헤더·통계 조합 컴포넌트
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
 │   ├── auth/                     # 인증 폼
+│   ├── landing/                  # 랜딩페이지 섹션 컴포넌트
 │   └── theme/                    # 테마 관련
 ├── lib/
 │   ├── supabase/
@@ -57,8 +58,10 @@ src/
 │   │   ├── clubs.ts
 │   │   ├── club-members.ts
 │   │   ├── match-games.ts
+│   │   ├── match-game-courts.ts  # 복식 코트 사이드 저장
 │   │   ├── personal-matches.ts
 │   │   ├── profile.ts
+│   │   ├── ratings.ts            # 클럽 레이팅 재계산 트리거
 │   │   └── ai-coaching.ts
 │   ├── queries/                  # Supabase read-only 쿼리
 │   │   ├── _shared.ts            # buildUserMap 등 공용 헬퍼
@@ -68,15 +71,18 @@ src/
 │   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
 │   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
 │   │   ├── club-dashboard.ts     # 클럽 운영 쿼리
+│   │   ├── ratings.ts            # 클럽 레이팅 랭킹·이력·재계산 입력 쿼리
 │   │   ├── stats.ts              # RPC 호출 (get_user_match_stats, get_user_head_to_head)
 │   │   └── users.ts              # mapUserRow 공용 매퍼
 │   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음)
 │   ├── dashboard/                # UI 토큰·스타일·outcome/surface 헬퍼
 │   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, calcWinRate 등
-│   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL (승/패/무 통일)
+│   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
 │   │   ├── surface.ts            # SURFACE_LABELS (코트 표면 라벨 통일)
 │   │   └── match-type-style.ts   # MATCH_TYPE_LABELS, getMatchTypeStyle
-│   ├── match-games/              # 대진표 폼 매핑
+│   ├── match-games/              # 대진표 폼 매핑·자동 대진 생성
+│   ├── personal-matches/         # 개인 경기 매핑·세트 분해·승자 판정
+│   ├── rating/                   # 클럽 ELO 레이팅 순수 엔진 (docs/rating-system.md)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems + getProfileNavItem)
 │   └── utils.ts                  # cn() 헬퍼
