@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
-import { FORM_BADGE_STYLE, formatRecord } from '@/lib/dashboard/outcome'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { RankBadge } from '@/components/common/rank-badge'
+import { RecentFormBadges } from '@/components/common/recent-form-badges'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { TierIcon } from '@/components/common/tier-icon'
 import { getTier, TIER_LABELS, TIER_TEXT } from '@/lib/rating/tier'
@@ -112,16 +113,7 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
             </div>
 
             {/* 최근 5 */}
-            <div className="w-[120px] shrink-0 flex items-center justify-end gap-1">
-                {recent.map((outcome, i) => (
-                    <span
-                        key={i}
-                        className={`w-5 h-5 rounded-sm text-[10px] font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
-                    >
-                        {outcome}
-                    </span>
-                ))}
-            </div>
+            <RecentFormBadges outcomes={recent} size="md" className="w-[120px] shrink-0 justify-end" />
         </div>
     )
 }

@@ -2,11 +2,11 @@ import type { RivalEntry } from '@/lib/analytics/rival'
 import type { User } from '@/types'
 import { getTier, TIER_LABELS, TIER_STYLE } from '@/lib/rating/tier'
 import { effectiveNtrp } from '@/lib/rating/display'
-import { FORM_BADGE_STYLE } from '@/lib/dashboard/outcome'
 import { PILL_BASE, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { relativeDayLabel } from '@/lib/analytics/date-utils'
 import { ProfileLink } from '@/components/common/profile-link'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { RecentFormBadges } from '@/components/common/recent-form-badges'
 
 type Props = {
     rival: RivalEntry
@@ -53,13 +53,7 @@ export function RivalRow({ rival, userMap, today }: Props) {
 
             <div className="flex items-center justify-between gap-2">
                 {/* 최근 5경기 */}
-                <div className="flex gap-1">
-                    {rival.last5.map((o, i) => (
-                        <span key={i} className={`w-4 h-4 rounded-[3px] text-[9px] font-bold flex items-center justify-center ${FORM_BADGE_STYLE[o]}`}>
-                            {o}
-                        </span>
-                    ))}
-                </div>
+                <RecentFormBadges outcomes={rival.last5} size="sm" />
                 {/* 최근 맞대결 */}
                 {rival.lastOutcome && rival.lastDate && (
                     <span className={`text-[11px] ${TEXT_MUTED} shrink-0`}>
