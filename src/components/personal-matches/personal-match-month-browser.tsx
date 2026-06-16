@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import {
     Select,
     SelectContent,
@@ -18,8 +19,7 @@ type Props = {
 
 // 월별 승패 요약 라벨: '2026년 6월 (1승 0패)' / 무가 있으면 '... 1무' 추가
 function monthOptionLabel(g: MonthGroup): string {
-    const draws = g.draws > 0 ? ` ${g.draws}무` : ''
-    return `${g.label} (${g.wins}승 ${g.losses}패${draws})`
+    return `${g.label} (${formatRecord(g.wins, g.losses, g.draws)})`
 }
 
 // 개인 경기 미리보기 — 월 선택 selectbox + 선택 월 경기 목록(최대 600px 스크롤).

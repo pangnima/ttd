@@ -1,4 +1,5 @@
 import type { OpponentHandStats } from '@/lib/analytics/opponent-hand'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
 
 type Props = {
@@ -33,7 +34,7 @@ export function OpponentHandStatsCard({ handStats }: Props) {
                     <div className="flex items-center justify-between text-sm">
                         <span className="font-medium text-foreground">{HAND_LABELS[hand]}</span>
                         <span className="text-muted-foreground tabular-nums">
-                            {wl.wins}승 {wl.losses}패{wl.draws > 0 ? ` ${wl.draws}무` : ''} · {wl.winRate}%
+                            {formatRecord(wl.wins, wl.losses, wl.draws)} · {wl.winRate}%
                         </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">

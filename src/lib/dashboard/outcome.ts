@@ -50,3 +50,8 @@ export const PERSONAL_OUTCOME_LABEL: Record<'me' | 'opponent' | 'draw', string> 
     opponent: '패',
     draw: '무',
 }
+
+/** 전적 문자열: "3승 1패" / 무가 있으면 "3승 1패 1무". draws 기본값 0. */
+export function formatRecord(wins: number, losses: number, draws = 0): string {
+    return `${wins}승 ${losses}패${draws > 0 ? ` ${draws}무` : ''}`
+}

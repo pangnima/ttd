@@ -1,5 +1,6 @@
 import type { DoublesCourtStats } from '@/lib/queries/stats'
 import { calcWinRate } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
 
 type Props = { court: DoublesCourtStats }
@@ -19,7 +20,7 @@ function CourtBar({ label, stat, side }: { label: string; stat: DoublesCourtStat
             <div className="flex items-center justify-between text-sm">
                 <span className="text-base text-foreground/85 font-medium">{label}</span>
                 <span className="text-foreground/80">
-                    {stat.wins}승 {stat.losses}패 {stat.draws > 0 ? `${stat.draws}무` : ''}
+                    {formatRecord(stat.wins, stat.losses, stat.draws)}
                     {rate !== null && (
                         <span className="ml-1.5 text-foreground/90 font-semibold">{rate}%</span>
                     )}

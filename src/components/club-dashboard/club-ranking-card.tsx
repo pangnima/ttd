@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
-import { FORM_BADGE_STYLE } from '@/lib/dashboard/outcome'
+import { FORM_BADGE_STYLE, formatRecord } from '@/lib/dashboard/outcome'
 import { RankBadge } from '@/components/common/rank-badge'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { TierIcon } from '@/components/common/tier-icon'
@@ -100,7 +100,7 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
                         {isGuest && <GuestBadge />}
                     </div>
                     <p className={`text-[11px] ${TEXT_MUTED} tabular-nums`}>
-                        {wins}승 {losses}패
+                        {formatRecord(wins, losses)}
                     </p>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { PersonalMatchCard } from '@/components/personal-matches/personal-match-card'
 
 type Props = {
@@ -16,7 +17,7 @@ export function PersonalMatchMonthGroup({ group, renderActions }: Props) {
                 <div className="flex items-center gap-2">
                     <h3 className="text-base font-bold text-foreground">{group.label}</h3>
                     <span className="text-xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
-                        {group.wins}승 {group.losses}패{group.draws > 0 ? ` ${group.draws}무` : ''}
+                        {formatRecord(group.wins, group.losses, group.draws)}
                     </span>
                 </div>
                 <span className="text-xs text-muted-foreground">승률 {group.winRate}%</span>

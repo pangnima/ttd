@@ -3,6 +3,7 @@ import type { PersonalMatch } from '@/types'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { resolveSetWinner } from '@/lib/personal-matches/winner'
 
 type Props = {
@@ -39,7 +40,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
     const isMultiSet = m.setScores.length > 1
     // 멀티 세트는 전적 라벨, 단일/무세트는 기존 WIN/LOSS/무 배지 라벨. 색은 우세(m.winner) 기준 유지.
     const resultLabel = isMultiSet
-        ? `${tally.wins}승 ${tally.losses}패${tally.draws > 0 ? ` ${tally.draws}무` : ''}`
+        ? formatRecord(tally.wins, tally.losses, tally.draws)
         : result.label
 
     return (

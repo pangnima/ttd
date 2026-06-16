@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { RankBadge } from '@/components/common/rank-badge'
 import type { WinRateRankingEntry } from '@/lib/queries/club-dashboard'
 
@@ -38,7 +39,7 @@ function RankingColumn({ title, entries }: { title: string; entries: WinRateRank
                                             {entry.user?.name ?? '알 수 없음'}
                                         </p>
                                     )}
-                                    <p className={`text-[11px] ${TEXT_MUTED}`}>{entry.winCount}승 {entry.lossCount}패</p>
+                                    <p className={`text-[11px] ${TEXT_MUTED}`}>{formatRecord(entry.winCount, entry.lossCount)}</p>
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="text-xl font-bold text-foreground leading-tight">{entry.winRate}<span className={`text-xs font-normal ml-0.5 ${TEXT_MUTED}`}>%</span></p>

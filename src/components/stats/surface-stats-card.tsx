@@ -1,5 +1,6 @@
 import type { SurfaceStats } from '@/lib/analytics/surface'
 import { SURFACE_LABELS, SURFACE_BAR_CLASS } from '@/lib/dashboard/surface'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
 
 type Props = {
@@ -23,7 +24,7 @@ export function SurfaceStatsCard({ surfaceStats }: Props) {
                     <div className="flex items-center justify-between text-sm">
                         <span className="font-medium text-foreground">{SURFACE_LABELS[surface] ?? surface}</span>
                         <span className="text-muted-foreground tabular-nums">
-                            {wl.wins}승 {wl.losses}패{wl.draws > 0 ? ` ${wl.draws}무` : ''} · {wl.winRate}%
+                            {formatRecord(wl.wins, wl.losses, wl.draws)} · {wl.winRate}%
                         </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">

@@ -1,5 +1,6 @@
 import type { User } from '@/types'
 import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { ProfileLink } from '@/components/common/profile-link'
 
@@ -24,7 +25,7 @@ function StatRow({ entry, userMap }: { entry: StatRankingEntry; userMap: Map<str
     const user = userMap.get(entry.key)
     // 외부(개인 경기 직접 입력) 상대/파트너는 userMap에 없음 → 프로필 링크 없이 이름만 표시
     const isExternal = !user
-    const record = `${entry.wins}승 ${entry.losses}패${entry.draws > 0 ? ` ${entry.draws}무` : ''}`
+    const record = formatRecord(entry.wins, entry.losses, entry.draws)
     const stat = (
         <span className="text-sm text-foreground/80 shrink-0 ml-2">
             {record}

@@ -2,6 +2,7 @@ import type { HeadToHead } from '@/lib/stats'
 import type { PartnerStat } from '@/lib/queries/stats'
 import type { User } from '@/types'
 import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { ProfileLink } from '@/components/common/profile-link'
 
@@ -41,7 +42,7 @@ function UserRow({
                 {isGuest && <GuestBadge />}
             </div>
             <span className="text-sm text-foreground/80 shrink-0">
-                {wins}승 {losses}패{draws > 0 ? ` ${draws}무` : ''}
+                {formatRecord(wins, losses, draws)}
                 <span className="ml-1.5 text-foreground/85">{calcWinRate(wins, losses) ?? 0}%</span>
             </span>
         </div>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { TierEmblem } from '@/components/common/tier-emblem'
 import { calcWinRate } from '@/lib/dashboard/tokens'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { effectiveNtrp } from '@/lib/rating/display'
 import type { ClubMember, ClubRating, User } from '@/types'
 
@@ -63,7 +64,7 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
                         <>
                             <span className="text-xs text-muted-foreground">·</span>
                             <span className="text-xs text-muted-foreground">
-                                {wins}승 {losses}패 ({winRate}%)
+                                {formatRecord(wins ?? 0, losses ?? 0)} ({winRate}%)
                             </span>
                         </>
                     )}

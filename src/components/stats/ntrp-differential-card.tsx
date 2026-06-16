@@ -1,4 +1,5 @@
 import type { NtrpDiffStats } from '@/lib/analytics/ntrp'
+import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
 
 type Props = {
@@ -33,8 +34,7 @@ export function NtrpDifferentialCard({ ntrpStats }: Props) {
                                 <>
                                     <p className="text-2xl font-bold text-foreground tabular-nums">{wl.winRate}%</p>
                                     <p className="text-xs text-muted-foreground tabular-nums">
-                                        {wl.wins}승 {wl.losses}패
-                                        {wl.draws > 0 ? ` ${wl.draws}무` : ''}
+                                        {formatRecord(wl.wins, wl.losses, wl.draws)}
                                     </p>
                                 </>
                             ) : (
