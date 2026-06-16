@@ -29,6 +29,7 @@ import {
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
+import { ProfileLink } from '@/components/common/profile-link'
 import { formatYearMonth } from '@/lib/format'
 import { MapPin, Settings, ChevronRight, Crown, Clock } from 'lucide-react'
 
@@ -152,12 +153,26 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         <Crown className={`w-4 h-4 shrink-0 mt-0.5 ${TEXT_MUTED}`} />
                         <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0 mt-0.5`}>운영진</span>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-foreground/90">
-                            <span className="font-medium">{ownerMember.user.name}</span>
+                            <ProfileLink
+                                userId={ownerMember.userId}
+                                isGuest={ownerMember.user.isGuest}
+                                clubId={clubId}
+                                className="font-medium hover:text-foreground"
+                            >
+                                {ownerMember.user.name}
+                            </ProfileLink>
                             {officerMembers.map((m) => (
                                 <span key={m.userId} className="flex items-center gap-1">
                                     <span className={`text-xs ${TEXT_MUTED}`}>·</span>
                                     <span className="text-[13px] text-info">임원</span>
-                                    <span className="font-medium">{m.user.name}</span>
+                                    <ProfileLink
+                                        userId={m.userId}
+                                        isGuest={m.user.isGuest}
+                                        clubId={clubId}
+                                        className="font-medium hover:text-foreground"
+                                    >
+                                        {m.user.name}
+                                    </ProfileLink>
                                 </span>
                             ))}
                         </div>
@@ -187,6 +202,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {/* 우리 클럽 에이스 (승인 멤버에게 공개, 타입별 승률 TOP 3) — 회원 위 */}
             {isApprovedMember && winRateRanking !== null && hasAnyAce && (
                 <ClubAceCard
+                    clubId={clubId}
                     singles={winRateRanking.singles}
                     menDoubles={winRateRanking.menDoubles}
                     womenDoubles={winRateRanking.womenDoubles}
@@ -228,7 +244,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <div className="space-y-8">
                         <p className={`${SECTION_LABEL} text-lg`}>클럽 운영</p>
                         <PendingMembersPanel clubId={clubId} pendingMembers={pendingMembers} />
-                        <ActivityRankingCard ranking={activityRanking} />
+                        <ActivityRankingCard clubId={clubId} ranking={activityRanking} />
                     </div>
                 </>
             )}

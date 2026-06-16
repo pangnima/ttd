@@ -8,6 +8,7 @@ import type { MatchType } from '@/types'
 import type { WinRateRankingEntry } from '@/lib/queries/club-dashboard'
 
 type ClubAceCardProps = {
+    clubId: string
     singles: WinRateRankingEntry[]
     menDoubles: WinRateRankingEntry[]
     womenDoubles: WinRateRankingEntry[]
@@ -18,15 +19,15 @@ function entryName(entry: WinRateRankingEntry) {
     return entry.user?.name ?? '알 수 없음'
 }
 
-function profileHrefOf(entry: WinRateRankingEntry) {
-    return entry.user && !entry.user.isGuest ? `/profile/${entry.userId}` : undefined
+function profileHrefOf(entry: WinRateRankingEntry, clubId: string) {
+    return entry.user && !entry.user.isGuest ? `/profile/${entry.userId}?clubId=${clubId}` : undefined
 }
 
-function AceColumn({ type, entries }: { type: MatchType; entries: WinRateRankingEntry[] }) {
+function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRateRankingEntry[]; clubId: string }) {
     const top3 = entries.slice(0, 3)
     const ace = top3[0]
     const runnersUp = top3.slice(1)
-    const aceHref = ace ? profileHrefOf(ace) : undefined
+    const aceHref = ace ? profileHrefOf(ace, clubId) : undefined
 
     return (
         <div className={`${CARD_BASE} p-4 flex flex-col gap-3`}>
@@ -59,7 +60,7 @@ function AceColumn({ type, entries }: { type: MatchType; entries: WinRateRanking
                     {runnersUp.length > 0 && (
                         <div className="space-y-1.5 pt-2 border-t border-border">
                             {runnersUp.map((entry, idx) => {
-                                const href = profileHrefOf(entry)
+                                const href = profileHrefOf(entry, clubId)
                                 return (
                                     <div key={entry.userId} className="flex items-center gap-2">
                                         <div className="w-4 shrink-0 flex justify-center">
@@ -91,15 +92,15 @@ function AceColumn({ type, entries }: { type: MatchType; entries: WinRateRanking
     )
 }
 
-export function ClubAceCard({ singles, menDoubles, womenDoubles, mixedDoubles }: ClubAceCardProps) {
+export function ClubAceCard({ clubId, singles, menDoubles, womenDoubles, mixedDoubles }: ClubAceCardProps) {
     return (
         <section className="space-y-3">
             <p className={SECTION_LABEL}>우리 클럽 에이스</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <AceColumn type="singles" entries={singles} />
-                <AceColumn type="men_doubles" entries={menDoubles} />
-                <AceColumn type="women_doubles" entries={womenDoubles} />
-                <AceColumn type="mixed_doubles" entries={mixedDoubles} />
+                <AceColumn type="singles" entries={singles} clubId={clubId} />
+                <AceColumn type="men_doubles" entries={menDoubles} clubId={clubId} />
+                <AceColumn type="women_doubles" entries={womenDoubles} clubId={clubId} />
+                <AceColumn type="mixed_doubles" entries={mixedDoubles} clubId={clubId} />
             </div>
         </section>
     )

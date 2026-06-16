@@ -5,10 +5,11 @@ import { RankBadge } from '@/components/common/rank-badge'
 import type { ActivityRankingEntry } from '@/lib/queries/club-dashboard'
 
 type ActivityRankingCardProps = {
+    clubId: string
     ranking: ActivityRankingEntry[]
 }
 
-export function ActivityRankingCard({ ranking }: ActivityRankingCardProps) {
+export function ActivityRankingCard({ clubId, ranking }: ActivityRankingCardProps) {
     return (
         <SectionCard
             title="이번 달 활동 랭킹"
@@ -29,6 +30,7 @@ export function ActivityRankingCard({ ranking }: ActivityRankingCardProps) {
                                 <ProfileLink
                                     userId={entry.userId}
                                     isGuest={!entry.user || entry.user.isGuest}
+                                    clubId={clubId}
                                     className="text-sm font-medium text-foreground hover:text-foreground truncate block"
                                 >
                                     {entry.user?.name ?? '알 수 없음'}
