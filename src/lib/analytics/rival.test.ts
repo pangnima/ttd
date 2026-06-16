@@ -30,11 +30,11 @@ describe('selectRivals (승률 45~55% 박빙)', () => {
         ...vsRecord('few', 1, 1),    // 2경기 — minGames 미만 제외
     ]
     const gameMetaById = Object.fromEntries(matches.map((m) => [m.id, { date: '2026-06-01' }]))
-    const bundle = { matches, gameMetaById, personalMatches: [] as PersonalMatch[] }
+    const bundle = { matches, gameMetaById, personalMatches: [] as PersonalMatch[], courtSurfaceByMatchId: {} }
 
     it('45~55%만 포함하고 50%에 가까운 순으로 정렬', () => {
         const h2h = buildHeadToHeadList(bundle, ME)
-        const rivals = selectRivals(bundle, ME, h2h, 3)
+        const rivals = selectRivals(bundle, ME, h2h, new Map(), 3)
         expect(rivals.map((r) => r.key)).toContain('even')
         expect(rivals.map((r) => r.key)).not.toContain('strong')
         expect(rivals.map((r) => r.key)).not.toContain('few')
@@ -47,9 +47,10 @@ describe('selectRivals (승률 45~55% 박빙)', () => {
             matches: vsRecord('strong', 8, 2),
             gameMetaById: {} as Record<string, { date: string }>,
             personalMatches: [] as PersonalMatch[],
+            courtSurfaceByMatchId: {},
         }
         for (const m of onlyStrong.matches) onlyStrong.gameMetaById[m.id] = { date: '2026-06-01' }
         const h2h = buildHeadToHeadList(onlyStrong, ME)
-        expect(selectRivals(onlyStrong, ME, h2h, 3)).toEqual([])
+        expect(selectRivals(onlyStrong, ME, h2h, new Map(), 3)).toEqual([])
     })
 })

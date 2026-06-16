@@ -111,7 +111,12 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const hourBundle = { ...timeBundle, matchTimeById: bundle.matchTimeById }
     const weeklyHeatmap = aggregateHourHeatmap(hourBundle, today, 28)   // 최근 4주
     const monthlyHeatmap = aggregateHourHeatmap(hourBundle, today, 182) // 최근 약 6개월
-    const rivals = selectRivals(timeBundle, me.id, bundle.h2hList)
+    const rivals = selectRivals(
+        { ...timeBundle, courtSurfaceByMatchId: bundle.courtSurfaceByMatchId },
+        me.id,
+        bundle.h2hList,
+        bundle.userMap,
+    )
     const chemistry = aggregatePartnerChemistry(timeBundle, me.id, me.gender)
 
     // 개인 경기 승패 기반 개인 레이팅 (온더플라이). 개인 scope 전용 지표 —
@@ -131,6 +136,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     matches: bundle.matches,
                     gameMetaById: bundle.gameMetaById,
                     personalMatches: bundle.personalGames,
+                    courtSurfaceByMatchId: bundle.courtSurfaceByMatchId,
                 }}
                 userId={me.id}
                 userMap={bundle.userMap}

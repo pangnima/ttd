@@ -3,12 +3,16 @@
 import { useState, useMemo } from 'react'
 import {
     aggregateHeadToHeadUnified,
+    summarizeHeadToHead,
+    type HeadToHeadMatchEntry,
     type UnifiedHeadToHeadDetail,
 } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
-import type { Match, PersonalMatch, User } from '@/types'
-import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
-import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL } from '@/lib/dashboard/outcome'
+import type { CourtSurface, Match, PersonalMatch, User } from '@/types'
+import { CARD_BASE, SECTION_LABEL, PILL_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
+import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL, formatRecord } from '@/lib/dashboard/outcome'
+import { MATCH_TYPE_LABELS, getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
+import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 import {
     Select,
     SelectContent,
@@ -25,18 +29,141 @@ type Props = {
         matches: Match[]
         gameMetaById: Record<string, { date: string }>
         personalMatches: PersonalMatch[]
+        courtSurfaceByMatchId: Record<string, CourtSurface | null>
     }
     userId: string
     userMap: Map<string, User>
 }
 
 const SOURCE_LABEL: Record<string, string> = { club: '클럽', personal: '개인' }
+const HAND_LABEL: Record<'right' | 'left', string> = { right: '오른손', left: '왼손' }
 
 function StatBlock({ label, value }: { label: string; value: string | number }) {
     return (
         <div className="text-center">
             <p className="text-xl font-bold text-foreground">{value}</p>
             <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
+        </div>
+    )
+}
+
+// 상단 상대 식별 헤더 — 이름 크게 + 주력손/NTRP pill
+function H2HOpponentHeader({
+    name,
+    hand,
+    ntrp,
+}: {
+    name: string
+    hand: 'right' | 'left' | null
+    ntrp: number | null
+}) {
+    return (
+        <div className="flex items-center flex-wrap gap-2 border-b border-border pb-3">
+            <span className="text-base font-semibold text-foreground truncate">{name}</span>
+            {hand && <span className={`${PILL_BASE} border-border text-muted-foreground`}>{HAND_LABEL[hand]}</span>}
+            {ntrp != null && <span className={`${PILL_BASE} border-border text-muted-foreground`}>NTRP {ntrp.toFixed(1)}</span>}
+        </div>
+    )
+}
+
+// 규칙기반 분석 코멘트 박스
+function H2HAnalysisComment({ lines }: { lines: string[] }) {
+    if (lines.length === 0) return null
+    return (
+        <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1">
+            <p className={TYPO.meta}>분석</p>
+            <p className="text-sm text-foreground">{lines[0]}</p>
+            {lines.slice(1).map((l, i) => (
+                <p key={i} className="text-sm text-muted-foreground">· {l}</p>
+            ))}
+        </div>
+    )
+}
+
+// 분해 그룹 — 제목 아래 라벨·전적 좌우 정렬 (텍스트, 뱃지 없음)
+function BreakdownGroup({
+    title,
+    rows,
+}: {
+    title: string
+    rows: { key: string; label: string; wins: number; losses: number; draws: number }[]
+}) {
+    if (rows.length === 0) return null
+    return (
+        <div className="space-y-1">
+            <p className={TYPO.meta}>{title}</p>
+            <div className="space-y-0.5">
+                {rows.map((r) => (
+                    <div key={r.key} className="grid grid-cols-[5rem_1fr] text-sm">
+                        <span className="text-muted-foreground">{r.label}</span>
+                        <span className="text-foreground">{formatRecord(r.wins, r.losses, r.draws)}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+// 매치타입별 · 코트별 전적 요약 (정렬된 텍스트 목록)
+function H2HBreakdownList({ detail }: { detail: UnifiedHeadToHeadDetail }) {
+    if (detail.byMatchType.length === 0) return null
+    return (
+        <div className="border-t border-border pt-3 space-y-3">
+            <BreakdownGroup
+                title="매치타입별"
+                rows={detail.byMatchType.map((b) => ({
+                    key: b.matchType, label: MATCH_TYPE_LABELS[b.matchType],
+                    wins: b.wins, losses: b.losses, draws: b.draws,
+                }))}
+            />
+            <BreakdownGroup
+                title="코트별"
+                rows={detail.bySurface.map((b) => ({
+                    key: b.surface, label: SURFACE_LABELS[b.surface],
+                    wins: b.wins, losses: b.losses, draws: b.draws,
+                }))}
+            />
+        </div>
+    )
+}
+
+// 경기 1행 — 타입(텍스트)·표면·스코어·결과 + (복식) 파트너 · (개인) 시간/메모 서브라인
+function H2HMatchRow({
+    m,
+    myName,
+    opponentDisplayName,
+}: {
+    m: HeadToHeadMatchEntry
+    myName: string
+    opponentDisplayName: string
+}) {
+    const isDoubles = m.matchType !== 'singles'
+    const sub: string[] = []
+    if (m.playedTime) sub.push(m.playedTime)
+    if (m.notes) sub.push(m.notes)
+
+    return (
+        <div className="py-1.5 border-b border-border last:border-0 space-y-1">
+            <div className="flex items-center gap-2 text-xs">
+                <span className="w-20 shrink-0 text-left text-muted-foreground">{m.date}</span>
+                <span className={`shrink-0 font-medium ${getMatchTypeStyle(m.matchType).textClass}`}>
+                    {MATCH_TYPE_LABELS[m.matchType]}
+                </span>
+                {m.surface && <span className="shrink-0 text-muted-foreground">{SURFACE_LABELS[m.surface]}</span>}
+                <span className="flex-1 min-w-0 text-left text-foreground truncate">{m.score || '—'}</span>
+                <span className="w-7 shrink-0 text-left text-muted-foreground">{SOURCE_LABEL[m.source]}</span>
+                <span className={`inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
+                    {H2H_OUTCOME_LABEL[m.outcome]}
+                </span>
+            </div>
+            {isDoubles && (m.myPartnerName || m.opponentPartnerName) && (
+                <p className="text-[11px] text-muted-foreground pl-1 truncate">
+                    {myName}{m.myPartnerName ? `·${m.myPartnerName}` : ''} vs {opponentDisplayName}{m.opponentPartnerName ? `·${m.opponentPartnerName}` : ''}
+                </p>
+            )}
+            {sub.length > 0 && (
+                <p className="text-[11px] text-muted-foreground pl-1 truncate">{sub.join(' · ')}</p>
+            )}
         </div>
     )
 }
@@ -50,8 +177,16 @@ function H2HDetail({
     myName: string
     opponentDisplayName: string
 }) {
+    const commentLines = summarizeHeadToHead(detail, opponentDisplayName)
+
     return (
         <div className="space-y-4">
+            <H2HOpponentHeader
+                name={opponentDisplayName}
+                hand={detail.opponentDominantHand}
+                ntrp={detail.opponentNtrp}
+            />
+
             <div className="grid grid-cols-3 gap-2 text-center border-b border-border pb-4">
                 <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2 truncate">{myName}</p>
@@ -84,6 +219,10 @@ function H2HDetail({
                 } />
             </div>
 
+            <H2HAnalysisComment lines={commentLines} />
+
+            <H2HBreakdownList detail={detail} />
+
             {detail.last5.length > 0 && (
                 <div className="border-t border-border pt-3 space-y-2">
                     <p className="text-xs text-muted-foreground">최근 {detail.last5.length}경기</p>
@@ -103,16 +242,14 @@ function H2HDetail({
             {detail.matches.length > 0 && (
                 <div className="border-t border-border pt-3 space-y-1.5">
                     <p className="text-xs text-muted-foreground">전체 경기 내역</p>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                    <div className="space-y-1 max-h-56 overflow-y-auto">
                         {detail.matches.map((m) => (
-                            <div key={m.id} className="flex items-center gap-3 text-sm py-1 border-b border-border last:border-0">
-                                <span className="w-20 shrink-0 text-left text-muted-foreground text-xs">{m.date}</span>
-                                <span className="w-8 shrink-0 text-left text-muted-foreground text-xs">{SOURCE_LABEL[m.source]}</span>
-                                <span className="flex-1 min-w-0 text-left text-foreground text-xs truncate">{m.score || '—'}</span>
-                                <span className={`inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
-                                    {H2H_OUTCOME_LABEL[m.outcome]}
-                                </span>
-                            </div>
+                            <H2HMatchRow
+                                key={m.id}
+                                m={m}
+                                myName={myName}
+                                opponentDisplayName={opponentDisplayName}
+                            />
                         ))}
                     </div>
                 </div>
@@ -135,8 +272,9 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
             bundle,
             userId,
             { userId: selectedEntry.opponentUserId, name: selectedEntry.opponentName },
+            userMap,
         )
-    }, [bundle, userId, selectedEntry])
+    }, [bundle, userId, selectedEntry, userMap])
 
     const myName = userMap.get(userId)?.name ?? '나'
 
