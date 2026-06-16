@@ -1,10 +1,12 @@
 'use client'
 
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
-import { TeamPlayersCell, ScoreCell } from '@/components/match-games/match-game-cell-components'
-import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
+import { TeamPlayersCell, ScoreCell, teamOutcome } from '@/components/match-games/match-game-cell-components'
+import { PlayerName } from '@/components/match-games/player-name'
+import { SpecialMatchBadge } from '@/components/match-games/special-match-badge'
 import { MatchCardItem } from '@/components/match-games/match-card-item'
 import { matchPlayerIds } from '@/lib/match-games/attendance-stats'
+import { isCloseMatch } from '@/lib/match-games/special-match'
 import {
     buildSlotGroups, getWinnerSide,
     SLOT_TIME_CLASS, SELF_ROW_CLASS,
@@ -15,7 +17,7 @@ import { cn } from '@/lib/utils'
 // 행 위주(리스트) 뷰 — 데스크탑 테이블(md 이상) + 모바일 카드(md 미만).
 export function MatchListView({
     matchGame, matchStates, courtSides, isPending, canEdit, currentUserId,
-    ratingDeltaByMatch, getName, getCourtLabel, restNames,
+    ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, getCourtLabel, restNames,
     updateScore, confirmScore, editScore, toggleAdSide,
 }: MatchViewProps) {
     const slotGroups = buildSlotGroups(matchGame)
@@ -54,6 +56,8 @@ export function MatchListView({
                                 const sides = courtSides[match.id]
                                 const isLastInGroup = idx === group.matches.length - 1
                                 const isSelfRow = !!currentUserId && matchPlayerIds(match).includes(currentUserId)
+                                const isClose = state.confirmed && isCloseMatch(state.sets, winner)
+                                const isRival = rivalMatchIds?.has(match.id)
                                 return (
                                     <tr
                                         key={match.id}
@@ -67,16 +71,22 @@ export function MatchListView({
                                             {getCourtLabel(match.courtId)}
                                         </td>
                                         <td className="px-3 py-3">
-                                            <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
-                                                {MATCH_TYPE_LABELS[match.matchType]}
-                                            </span>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                                <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
+                                                    {MATCH_TYPE_LABELS[match.matchType]}
+                                                </span>
+                                                <SpecialMatchBadge close={isClose} rival={isRival} />
+                                            </div>
                                         </td>
                                         <td className="px-3 py-3">
                                             {match.matchType === 'singles' ? (
-                                                <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team1' ? 'font-bold text-foreground' : 'text-foreground'}`}>
-                                                    {getName(match.player1Id ?? '')}
-                                                    {matchGame.isFixed && <TierDeltaBadge before={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']?.before} after={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']?.after} />}
-                                                </span>
+                                                <PlayerName
+                                                    name={getName(match.player1Id ?? '')}
+                                                    rating={ratingByUser?.[match.player1Id ?? '']?.rating}
+                                                    outcome={teamOutcome(winner, 'team1')}
+                                                    delta={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']}
+                                                    showDelta={matchGame.isFixed}
+                                                />
                                             ) : (
                                                 <TeamPlayersCell
                                                     playerIds={match.team1 ?? []}
@@ -87,15 +97,19 @@ export function MatchListView({
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
+                                                    ratingByUser={ratingByUser}
                                                 />
                                             )}
                                         </td>
                                         <td className="px-3 py-3">
                                             {match.matchType === 'singles' ? (
-                                                <span className={`text-sm transition-colors inline-flex items-center gap-1 ${winner === 'team2' ? 'font-bold text-foreground' : 'text-foreground'}`}>
-                                                    {getName(match.player2Id ?? '')}
-                                                    {matchGame.isFixed && <TierDeltaBadge before={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']?.before} after={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']?.after} />}
-                                                </span>
+                                                <PlayerName
+                                                    name={getName(match.player2Id ?? '')}
+                                                    rating={ratingByUser?.[match.player2Id ?? '']?.rating}
+                                                    outcome={teamOutcome(winner, 'team2')}
+                                                    delta={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']}
+                                                    showDelta={matchGame.isFixed}
+                                                />
                                             ) : (
                                                 <TeamPlayersCell
                                                     playerIds={match.team2 ?? []}
@@ -106,6 +120,7 @@ export function MatchListView({
                                                     getName={getName}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
+                                                    ratingByUser={ratingByUser}
                                                 />
                                             )}
                                         </td>
@@ -164,6 +179,8 @@ export function MatchListView({
                                         confirmScore={confirmScore}
                                         editScore={editScore}
                                         deltas={ratingDeltaByMatch?.[match.id]}
+                                        ratingByUser={ratingByUser}
+                                        isRival={rivalMatchIds?.has(match.id)}
                                         isSelfRow={isSelfRow}
                                     />
                                 )

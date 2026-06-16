@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
 import { RatingChangeSummary } from '@/components/match-games/rating-change-summary'
 import { PageContainer } from '@/components/common/page-container'
-import type { RatingChange } from '@/lib/queries/ratings'
+import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 import type { MatchGame, User } from '@/types'
 
 type MatchGameDetailContentProps = {
@@ -16,11 +16,13 @@ type MatchGameDetailContentProps = {
     isOwner: boolean
     ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
     ratingChangeTotals?: Array<{ userId: string } & RatingChange>
+    ratingByUser?: Record<string, ClubRating>
+    rivalMatchIds?: Set<string>
     currentUserId?: string
 }
 
 export function MatchGameDetailContent({
-    matchGame, members, isOwner, ratingDeltaByMatch, ratingChangeTotals, currentUserId,
+    matchGame, members, isOwner, ratingDeltaByMatch, ratingChangeTotals, ratingByUser, rivalMatchIds, currentUserId,
 }: MatchGameDetailContentProps) {
     const canEditMatchGame = !matchGame.isFixed || isOwner
 
@@ -50,6 +52,8 @@ export function MatchGameDetailContent({
                 clubId={matchGame.clubId}
                 isOwner={isOwner}
                 ratingDeltaByMatch={ratingDeltaByMatch}
+                ratingByUser={ratingByUser}
+                rivalMatchIds={rivalMatchIds}
                 currentUserId={currentUserId}
             />
         </PageContainer>

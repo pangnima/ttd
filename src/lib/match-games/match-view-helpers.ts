@@ -1,6 +1,6 @@
 import type { MatchGame, Match } from '@/types'
 import type { SetScore } from '@/components/match-games/match-game-cell-components'
-import type { RatingChange } from '@/lib/queries/ratings'
+import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 
 // ── 공유 타입 ────────────────────────────────
 
@@ -26,6 +26,10 @@ export type MatchViewProps = {
     currentUserId?: string
     // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → {before, after}).
     ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
+    // 선수별 현재 클럽 레이팅(티어 아이콘용). 행 없는 선수는 기본 골드로 표시.
+    ratingByUser?: Record<string, ClubRating>
+    // 라이벌 매치로 판정된 matchId 집합(단식+복식, cross-pair 박빙).
+    rivalMatchIds?: Set<string>
     getName: (id: string) => string
     getCourtLabel: (courtId: string) => string
     restNames: (slotId: string) => string[]

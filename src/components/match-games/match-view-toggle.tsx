@@ -5,9 +5,9 @@ import { LayoutList, LayoutGrid } from 'lucide-react'
 
 export type MatchViewMode = 'list' | 'grid'
 
-// URL 쿼리(?view=)에서 현재 뷰 모드를 읽는다. 기본값은 'list'.
+// URL 쿼리(?view=)에서 현재 뷰 모드를 읽는다. 기본값은 'grid'(매트릭스).
 export function readViewMode(value: string | null): MatchViewMode {
-    return value === 'grid' ? 'grid' : 'list'
+    return value === 'list' ? 'list' : 'grid'
 }
 
 type MatchViewToggleProps = {
@@ -23,7 +23,8 @@ export function MatchViewToggle({ mode }: MatchViewToggleProps) {
     const handleChange = (next: MatchViewMode) => {
         if (next === mode) return
         const params = new URLSearchParams(searchParams.toString())
-        if (next === 'list') params.delete('view')
+        // 기본값(grid)은 파라미터를 비우고, list만 ?view=list로 명시.
+        if (next === 'grid') params.delete('view')
         else params.set('view', next)
         const query = params.toString()
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })

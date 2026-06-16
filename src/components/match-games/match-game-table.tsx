@@ -14,7 +14,7 @@ import {
     buildSlotGroups, getWinnerSide,
     type MatchStates, type CourtSideState, type MatchViewProps,
 } from '@/lib/match-games/match-view-helpers'
-import type { RatingChange } from '@/lib/queries/ratings'
+import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 import type { MatchGame, User } from '@/types'
 
 type MatchGameTableProps = {
@@ -24,6 +24,10 @@ type MatchGameTableProps = {
     isOwner?: boolean
     // 확정 경기별·선수별 클럽 레이팅 변동. matchId → (userId → {before, after}).
     ratingDeltaByMatch?: Record<string, Record<string, RatingChange>>
+    // 선수별 현재 클럽 레이팅(티어 아이콘용).
+    ratingByUser?: Record<string, ClubRating>
+    // 라이벌 매치로 판정된 matchId 집합.
+    rivalMatchIds?: Set<string>
     // 현재 로그인 사용자 id — 본인이 참가한 경기를 강조하는 데 사용.
     currentUserId?: string
 }
@@ -31,7 +35,7 @@ type MatchGameTableProps = {
 // 대진표 렌더링의 상태 컨테이너. 점수/코트배치 state와 핸들러를 소유하고,
 // viewMode(URL ?view=)에 따라 리스트/매트릭스 프레젠테이션 컴포넌트로 분기한다.
 // 두 뷰가 동일한 핸들러를 공유하므로 토글해도 입력값이 보존된다.
-export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ratingDeltaByMatch, currentUserId }: MatchGameTableProps) {
+export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ratingDeltaByMatch, ratingByUser, rivalMatchIds, currentUserId }: MatchGameTableProps) {
     const searchParams = useSearchParams()
     const viewMode = readViewMode(searchParams.get('view'))
 
@@ -135,7 +139,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
     // 두 뷰에 동일하게 내려주는 공유 props.
     const sharedProps: MatchViewProps = {
         matchGame, matchStates, courtSides, isPending, canEdit, currentUserId,
-        ratingDeltaByMatch, getName, getCourtLabel, restNames,
+        ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, getCourtLabel, restNames,
         updateScore, confirmScore, editScore, toggleAdSide,
     }
 
