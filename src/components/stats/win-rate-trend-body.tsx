@@ -55,7 +55,7 @@ export function WinRateTrendBody({ result, minPointWidth }: Props) {
                                 const h = maxTotal > 0 ? (p.total / maxTotal) * CHART_H : 0
                                 const x = xOf(i) - barW / 2
                                 const y = TOP + (CHART_H - h)
-                                return <rect key={`b${p.key}`} x={x} y={y} width={barW} height={h} rx={1} className="fill-muted" />
+                                return <rect key={`b${p.key}`} x={x} y={y} width={barW} height={h} rx={1} className="fill-muted-foreground/30" />
                             })}
                             {n > 1 && (
                                 <polyline
@@ -91,8 +91,17 @@ export function WinRateTrendBody({ result, minPointWidth }: Props) {
                         ))}
                     </div>
 
-                    {/* x축 라벨 (HTML — 차트와 함께 스크롤) */}
+                    {/* 경기 수 (막대 값) — 막대 중앙 정렬, 0은 숨김 */}
                     <div className="mt-1 flex shrink-0">
+                        {points.map((p) => (
+                            <span key={`c${p.key}`} className="min-w-0 flex-1 text-center text-[10px] font-medium tabular-nums text-foreground/70">
+                                {p.total > 0 ? p.total : ''}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* x축 라벨 (HTML — 차트와 함께 스크롤) */}
+                    <div className="mt-0.5 flex shrink-0">
                         {points.map((p) => (
                             <span key={`x${p.key}`} className="min-w-0 flex-1 text-center text-[10px] text-muted-foreground">
                                 {p.label}

@@ -53,11 +53,11 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             {isEmpty ? (
                 <p className={`text-xs ${TEXT_MUTED}`}>이 기간에 시간 기록이 있는 경기가 없습니다.</p>
             ) : (
-                <div className="flex-1 overflow-x-auto">
+                <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
                 <div
-                    className="grid h-full min-w-[480px] gap-[3px] sm:min-w-0"
+                    className="grid h-full min-h-[150px] gap-[3px]"
                     style={{
-                        gridTemplateColumns: 'auto repeat(24, minmax(0, 1fr))',
+                        gridTemplateColumns: 'auto repeat(24, auto)',
                         gridTemplateRows: 'repeat(7, minmax(0, 1fr)) auto',
                     }}
                 >
@@ -67,26 +67,41 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
                             {HOURS.map((h) => (
                                 <div
                                     key={h}
-                                    className={`min-h-[18px] rounded-[3px] ${cellClass(data.grid[w][h], data.maxCount)}`}
+                                    className={`aspect-square h-full rounded-[3px] ${cellClass(data.grid[w][h], data.maxCount)}`}
                                     title={`${label}요일 ${h}시 · ${data.grid[w][h]}경기`}
                                 />
                             ))}
                         </Fragment>
                     ))}
-                    {/* 시간축: 거터 빈칸 + 시간 라벨 24개 (셀 컬럼과 수직 정렬) */}
+                    {/* 시간축: 거터 빈칸 + 짝수 시간은 셀 중앙 정렬, 24는 마지막 셀 우측 끝에 표기 */}
                     <span aria-hidden />
                     {HOURS.map((h) => (
-                        <span key={h} className={`text-center text-[12px] tabular-nums ${TEXT_MUTED}`}>
+                        <span key={h} className={`relative text-center text-[12px] tabular-nums ${TEXT_MUTED}`}>
                             {h % 2 === 0 ? h : ''}
+                            {h === 23 && (
+                                <span className="absolute right-0 top-0 translate-x-1/2">24</span>
+                            )}
                         </span>
                     ))}
                 </div>
                 </div>
             )}
-            <p className={`text-xs ${TEXT_MUTED}`}>
-                {activeLabel && <>가장 활발한 시간대 <span className="text-foreground font-medium">{activeLabel}</span></>}
-                {data.untimed > 0 && <span className="ml-1.5">· 시간 미입력 {data.untimed}건 제외</span>}
-            </p>
+            {/* 하단 행 — 좌: 가장 활발한 시간대, 우: 범례(진할수록 활발 · 기간 내 최다 대비) */}
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                <p className={`text-xs ${TEXT_MUTED}`}>
+                    {activeLabel && <>가장 활발한 시간대 <span className="text-foreground font-medium">{activeLabel}</span></>}
+                    {data.untimed > 0 && <span className="ml-1.5">· 시간 미입력 {data.untimed}건 제외</span>}
+                </p>
+                {!isEmpty && (
+                    <div className={`ml-auto flex items-center gap-1.5 text-[10px] ${TEXT_MUTED}`}>
+                        <span>적음</span>
+                        {['bg-win/20', 'bg-win/40', 'bg-win/60', 'bg-win/80'].map((c) => (
+                            <span key={c} className={`h-2.5 w-2.5 rounded-[2px] ${c}`} />
+                        ))}
+                        <span>많음</span>
+                    </div>
+                )}
+            </div>
         </SectionCard>
     )
 }
