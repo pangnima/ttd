@@ -1,7 +1,7 @@
 import type { DoublesCourtStats } from '@/lib/queries/stats'
 import { calcWinRate } from '@/lib/dashboard/tokens'
-import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
+import { StatBarRow } from '@/components/stats/stat-bar-row'
 
 type Props = { court: DoublesCourtStats }
 
@@ -9,32 +9,6 @@ type Props = { court: DoublesCourtStats }
 const COURT_BAR_CLASS: Record<'ad' | 'deuce', string> = {
     ad: 'bg-violet-500 dark:bg-violet-400',
     deuce: 'bg-sky-500 dark:bg-sky-400',
-}
-
-function CourtBar({ label, stat, side }: { label: string; stat: DoublesCourtStats['ad']; side: 'ad' | 'deuce' }) {
-    const rate = calcWinRate(stat.wins, stat.losses)
-    const barWidth = rate ?? 0
-
-    return (
-        <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-sm">
-                <span className="text-base text-foreground/85 font-medium">{label}</span>
-                <span className="text-foreground/80">
-                    {formatRecord(stat.wins, stat.losses, stat.draws)}
-                    {rate !== null && (
-                        <span className="ml-1.5 text-foreground/90 font-semibold">{rate}%</span>
-                    )}
-                </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-all ${COURT_BAR_CLASS[side]}`}
-                    style={{ width: `${barWidth}%` }}
-                />
-            </div>
-            <p className="text-xs text-foreground/70">총 {stat.matches}경기</p>
-        </div>
-    )
 }
 
 export function DoublesCourtStatsCard({ court }: Props) {
@@ -45,10 +19,26 @@ export function DoublesCourtStatsCard({ court }: Props) {
             title="복식 코트 성향"
             isEmpty={!hasData}
             emptyMessage="복식 경기 데이터가 없습니다"
-            contentClass="p-4 space-y-4"
+            contentClass="p-4 space-y-3"
         >
-            <CourtBar label="애드코트 (백핸드)" stat={court.ad} side="ad" />
-            <CourtBar label="듀스코트 (포핸드)" stat={court.deuce} side="deuce" />
+            <StatBarRow
+                label="애드코트 (백핸드)"
+                total={court.ad.matches}
+                wins={court.ad.wins}
+                losses={court.ad.losses}
+                draws={court.ad.draws}
+                winRate={calcWinRate(court.ad.wins, court.ad.losses)}
+                barClass={COURT_BAR_CLASS.ad}
+            />
+            <StatBarRow
+                label="듀스코트 (포핸드)"
+                total={court.deuce.matches}
+                wins={court.deuce.wins}
+                losses={court.deuce.losses}
+                draws={court.deuce.draws}
+                winRate={calcWinRate(court.deuce.wins, court.deuce.losses)}
+                barClass={COURT_BAR_CLASS.deuce}
+            />
             <p className="text-xs text-foreground/70 border-t border-foreground/5 pt-2">
                 * 복식 경기 기준. 코트 미지정 경기는 듀스에 포함.
             </p>

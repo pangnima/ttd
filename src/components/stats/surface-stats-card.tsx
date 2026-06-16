@@ -1,7 +1,7 @@
 import type { SurfaceStats } from '@/lib/analytics/surface'
 import { SURFACE_LABELS, SURFACE_BAR_CLASS } from '@/lib/dashboard/surface'
-import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
+import { StatBarRow } from '@/components/stats/stat-bar-row'
 
 type Props = {
     surfaceStats: SurfaceStats
@@ -20,20 +20,16 @@ export function SurfaceStatsCard({ surfaceStats }: Props) {
             contentClass="p-4 space-y-3"
         >
             {entries.map(([surface, wl]) => (
-                <div key={surface} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-foreground">{SURFACE_LABELS[surface] ?? surface}</span>
-                        <span className="text-muted-foreground tabular-nums">
-                            {formatRecord(wl.wins, wl.losses, wl.draws)} · {wl.winRate}%
-                        </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all ${SURFACE_BAR_CLASS[surface] ?? 'bg-info'}`}
-                            style={{ width: `${wl.winRate}%` }}
-                        />
-                    </div>
-                </div>
+                <StatBarRow
+                    key={surface}
+                    label={SURFACE_LABELS[surface] ?? surface}
+                    total={wl.total}
+                    wins={wl.wins}
+                    losses={wl.losses}
+                    draws={wl.draws}
+                    winRate={wl.winRate}
+                    barClass={SURFACE_BAR_CLASS[surface] ?? 'bg-info'}
+                />
             ))}
         </SectionCard>
     )

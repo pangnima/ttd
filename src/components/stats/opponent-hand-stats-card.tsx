@@ -1,6 +1,6 @@
 import type { OpponentHandStats } from '@/lib/analytics/opponent-hand'
-import { formatRecord } from '@/lib/dashboard/outcome'
 import { SectionCard } from '@/components/common/section-card'
+import { StatBarRow } from '@/components/stats/stat-bar-row'
 
 type Props = {
     handStats: OpponentHandStats
@@ -30,20 +30,16 @@ export function OpponentHandStatsCard({ handStats }: Props) {
             contentClass="p-4 space-y-3"
         >
             {entries.map(([hand, wl]) => (
-                <div key={hand} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-foreground">{HAND_LABELS[hand]}</span>
-                        <span className="text-muted-foreground tabular-nums">
-                            {formatRecord(wl.wins, wl.losses, wl.draws)} · {wl.winRate}%
-                        </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all ${HAND_BAR_CLASS[hand]}`}
-                            style={{ width: `${wl.winRate}%` }}
-                        />
-                    </div>
-                </div>
+                <StatBarRow
+                    key={hand}
+                    label={HAND_LABELS[hand]}
+                    total={wl.total}
+                    wins={wl.wins}
+                    losses={wl.losses}
+                    draws={wl.draws}
+                    winRate={wl.winRate}
+                    barClass={HAND_BAR_CLASS[hand]}
+                />
             ))}
         </SectionCard>
     )
