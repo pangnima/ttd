@@ -41,6 +41,14 @@ export const FORM_INPUT_BASE = [
 /** 폼 라벨 공통 스타일 (auth/profile 폼에서 공유) */
 export const FORM_LABEL_BASE = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
+/**
+ * 경기 입력 폼(개인 경기기록 등) 공통 인풋/라벨 스타일.
+ * auth용 FORM_*_BASE와 시각 위계가 달라(라벨 일반 케이스, 인풋 py-2) 별도 토큰으로 둔다.
+ */
+export const MATCH_FORM_INPUT =
+    'w-full rounded-[4px] border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
+export const MATCH_FORM_LABEL = 'text-sm font-medium text-foreground block mb-1'
+
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
     strength: 'text-win', // 강점 → 코트그린

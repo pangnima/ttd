@@ -23,7 +23,7 @@ import { AttendanceSummary } from '@/components/match-games/attendance-summary'
 import { restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
 import type { GenerateResult } from '@/lib/match-games/auto-generate'
 import { cn } from '@/lib/utils'
-import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
+import { MATCH_TYPE_LABELS, MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import {
     genId,
@@ -58,14 +58,6 @@ const SLOT_SELECT_ITEMS = [
     { value: '40', label: '40분' },
     { value: '60', label: '60분' },
 ]
-// 코트별 고정 종류 선택 항목 (자동 배치용)
-const MATCH_TYPE_ITEMS: { value: MatchType; label: string }[] = [
-    { value: 'singles', label: '단식' },
-    { value: 'men_doubles', label: '남복' },
-    { value: 'women_doubles', label: '여복' },
-    { value: 'mixed_doubles', label: '혼복' },
-]
-
 type MatchGameCreateFormProps = {
     clubId: string
     members: User[]
@@ -366,13 +358,13 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 <Select
                                     value={court.matchType ?? 'singles'}
                                     onValueChange={(v) => updateCourt(court.id, { matchType: v as MatchType })}
-                                    items={MATCH_TYPE_ITEMS}
+                                    items={MATCH_TYPE_OPTIONS}
                                 >
                                     <SelectTrigger className="h-8 text-xs w-24">
                                         <SelectValue placeholder="종류" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {MATCH_TYPE_ITEMS.map((t) => (
+                                        {MATCH_TYPE_OPTIONS.map((t) => (
                                             <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                                         ))}
                                     </SelectContent>

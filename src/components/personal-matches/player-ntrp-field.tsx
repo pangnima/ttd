@@ -3,6 +3,7 @@
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import { PlayerPicker, type PlayerPickerValue } from '@/components/personal-matches/player-picker'
+import { MATCH_FORM_INPUT as inputClass } from '@/lib/dashboard/tokens'
 
 type Props = {
     label: string
@@ -15,8 +16,6 @@ type Props = {
     ntrpRequired?: boolean
     placeholder?: string
 }
-
-const inputClass = 'w-full rounded-[4px] border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
 
 /**
  * 선수 선택(PlayerPicker) + 그 선수의 추정 NTRP 입력을 묶은 필드.

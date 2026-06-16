@@ -47,6 +47,14 @@ export const MATCH_TYPE_LABELS: Record<MatchType, string> = {
     mixed_doubles: STYLES.mixed_doubles.label,
 }
 
+// 경기 타입 Select 입력용 옵션 — 개인/클럽 폼 양쪽이 공유 (표시 순서 고정)
+export const MATCH_TYPE_OPTIONS: { value: MatchType; label: string }[] = [
+    { value: 'singles', label: STYLES.singles.label },
+    { value: 'men_doubles', label: STYLES.men_doubles.label },
+    { value: 'women_doubles', label: STYLES.women_doubles.label },
+    { value: 'mixed_doubles', label: STYLES.mixed_doubles.label },
+]
+
 export function getMatchTypeBadgeClass(type: MatchType): string {
     const s = STYLES[type]
     return `${s.borderClass} ${s.textClass} ${s.bgClass}`

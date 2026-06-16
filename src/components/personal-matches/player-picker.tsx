@@ -16,6 +16,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import { MATCH_FORM_INPUT as inputClass } from '@/lib/dashboard/tokens'
 
 type Hand = 'right' | 'left' | ''
 
@@ -23,8 +24,6 @@ const HAND_OPTIONS: { value: 'right' | 'left'; label: string }[] = [
     { value: 'right', label: '오른손' },
     { value: 'left', label: '왼손' },
 ]
-
-const inputClass = 'w-full rounded-[4px] border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
 
 export type PlayerPickerValue = {
     userId?: string
