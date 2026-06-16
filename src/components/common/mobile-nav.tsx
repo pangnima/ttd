@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Menu, BarChart3 } from 'lucide-react'
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Menu, BarChart3, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mainNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
+import { BrandLogo } from '@/components/common/brand-logo'
 
 type MobileNavProps = {
     clubs?: { id: string; name: string }[]
@@ -58,11 +59,18 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
             >
                 <Menu className="w-5 h-5" />
             </SheetTrigger>
-            <SheetContent side="left" className="w-56 p-0 gap-0">
-                <SheetHeader className="h-14 justify-center px-4 py-0 border-b">
-                    <SheetTitle className="text-base font-semibold text-left">
-                        🎾 테니스 클럽
+            <SheetContent side="left" className="w-56 p-0 gap-0" showCloseButton={false}>
+                {/* 로고(좌, 메뉴 아이콘과 px-6 정렬) ↔ 닫기(우), 양쪽 수직 중앙 정렬 */}
+                <SheetHeader className="h-14 flex-row items-center justify-between px-6 py-0 border-b">
+                    <SheetTitle className="text-left leading-none">
+                        <BrandLogo size="sm" />
                     </SheetTitle>
+                    <SheetClose
+                        aria-label="메뉴 닫기"
+                        className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                        <X className="size-4" />
+                    </SheetClose>
                 </SheetHeader>
 
                 {/* 메인 네비게이션 */}

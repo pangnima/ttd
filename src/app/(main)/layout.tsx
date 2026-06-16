@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchMyClubs } from '@/lib/queries/clubs'
 import { Header } from '@/components/common/header'
 import { Sidebar } from '@/components/common/sidebar'
+import { SidebarProvider } from '@/components/common/sidebar-context'
 
 export default async function MainLayout({
     children,
@@ -15,14 +16,16 @@ export default async function MainLayout({
     const clubs = myClubs.map((c) => ({ id: c.id, name: c.name }))
 
     return (
-        <div className="flex h-dvh bg-background">
-            <Sidebar clubs={clubs} userId={user?.id ?? null} />
-            <div className="flex flex-col flex-1 min-w-0">
-                <Header clubs={clubs} />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6">
-                    {children}
-                </main>
+        <SidebarProvider>
+            <div className="flex h-dvh bg-background">
+                <Sidebar clubs={clubs} userId={user?.id ?? null} />
+                <div className="flex flex-col flex-1 min-w-0">
+                    <Header clubs={clubs} />
+                    <main className="flex-1 overflow-y-auto p-4 md:p-6">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
+        </SidebarProvider>
     )
 }

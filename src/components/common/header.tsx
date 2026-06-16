@@ -7,9 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { MobileNav } from '@/components/common/mobile-nav'
+import { BrandLogo } from '@/components/common/brand-logo'
+import { useSidebar } from '@/components/common/sidebar-context'
 import { logoutAction } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
-import { Shield, LogOut } from 'lucide-react'
+import { Shield, LogOut, PanelLeft } from 'lucide-react'
 
 type UserDisplay = {
     id: string
@@ -25,6 +27,7 @@ type HeaderProps = {
 
 export function Header({ clubs = [] }: HeaderProps) {
     const [userDisplay, setUserDisplay] = useState<UserDisplay | null>(null)
+    const { collapsed, toggle } = useSidebar()
 
     useEffect(() => {
         let isMounted = true
@@ -54,10 +57,24 @@ export function Header({ clubs = [] }: HeaderProps) {
     }, [])
 
     return (
-        <header className="min-h-14 border-b border-foreground/5 dark:border-foreground/10 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
+        <header className="relative min-h-14 border-b border-foreground/5 dark:border-foreground/10 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
             <MobileNav clubs={clubs} />
-            <Link href="/clubs" className="font-semibold text-sm md:hidden">
-                🎾 테니스 클럽
+            <button
+                type="button"
+                onClick={toggle}
+                aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+                aria-pressed={collapsed}
+                className="hidden md:inline-flex p-2 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+                <PanelLeft className="w-5 h-5" />
+            </button>
+            {/* 모바일 전용 — 헤더 정중앙에 배치 (safe-area pt를 제외한 콘텐츠 영역 기준 수직 중앙) */}
+            <Link
+                href="/clubs"
+                aria-label="BASELINE 홈"
+                className="md:hidden absolute left-1/2 -translate-x-1/2 top-[env(safe-area-inset-top)] bottom-0 flex items-center"
+            >
+                <BrandLogo size="sm" />
             </Link>
             <div className="flex-1" />
             <nav className="flex items-center gap-2">

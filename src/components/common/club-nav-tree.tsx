@@ -12,6 +12,8 @@ type ClubNavTreeProps = {
     variant: 'desktop' | 'mobile'
     /** 모바일 시트에서 링크 클릭 시 시트를 닫기 위한 콜백 */
     onNavigate?: () => void
+    /** desktop rail(접힘) 상태 — 아이콘만 노출하고 하위는 호버 플라이아웃으로 */
+    collapsed?: boolean
 }
 
 const VARIANT = {
@@ -35,7 +37,7 @@ const VARIANT = {
     },
 } as const
 
-export function ClubNavTree({ clubs, userId, variant, onNavigate }: ClubNavTreeProps) {
+export function ClubNavTree({ clubs, userId, variant, onNavigate, collapsed = false }: ClubNavTreeProps) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const s = VARIANT[variant]
@@ -79,8 +81,55 @@ export function ClubNavTree({ clubs, userId, variant, onNavigate }: ClubNavTreeP
     }
 
     const linkClass = (active: boolean) => cn(s.linkBase, active ? s.linkActive : s.linkIdle, 'pl-12 text-[13px]')
+    // 플라이아웃 내부 하위 링크 — 좁은 패널에 맞춰 들여쓰기를 줄이고 muted 토큰으로 라이트/다크 대비 확보
+    const flyLinkClass = (active: boolean) =>
+        cn(
+            'flex items-center pl-7 pr-3 py-2 rounded-md text-[13px] font-medium transition-colors',
+            active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        )
 
     if (clubs.length === 0) return null
+
+    // rail(접힘) 상태: 아이콘 하나만 노출하고 전체 클럽 트리는 호버 플라이아웃으로 펼쳐 보여준다.
+    // 바깥 래퍼의 투명 브릿지 패딩(pl-1.5)으로 아이콘↔패널 hover 영역을 이어 끊김 없이 도달.
+    if (collapsed) {
+        return (
+            <div className="group/rail relative mt-2 pt-2 border-t border-border/40">
+                <div
+                    className={cn(
+                        'flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-colors',
+                        clubs.some((c) => isClubActive(c.id)) ? 'bg-muted text-foreground' : 'text-muted-foreground'
+                    )}
+                >
+                    <UsersRound className="w-4 h-4 shrink-0" />
+                </div>
+                <div className="invisible absolute left-full -top-1.5 z-50 pl-1.5 opacity-0 transition-opacity group-hover/rail:visible group-hover/rail:opacity-100">
+                    <div className="max-h-[70vh] min-w-52 overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-sm dark:shadow-md">
+                        {clubs.map((club) => (
+                            <div key={club.id} className="mb-1 last:mb-0">
+                                <div className={cn('px-3 py-1.5 text-[13px] font-medium truncate', isClubActive(club.id) ? 'text-foreground' : 'text-muted-foreground')}>
+                                    {club.name}
+                                </div>
+                                <div className="space-y-0.5">
+                                    <Link href={`/clubs/${club.id}`} className={flyLinkClass(pathname === `/clubs/${club.id}`)}>
+                                        홈
+                                    </Link>
+                                    <Link href={`/clubs/${club.id}/match-games`} className={flyLinkClass(pathname.startsWith(`/clubs/${club.id}/match-games`))}>
+                                        대진표
+                                    </Link>
+                                    {userId && (
+                                        <Link href={`/profile/${userId}?scope=${club.id}`} className={flyLinkClass(scopeActive(club.id))}>
+                                            내 전적
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className={s.section}>
