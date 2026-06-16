@@ -30,9 +30,8 @@ export function LoginForm() {
                 <div>
                     <div className="flex items-center justify-between">
                         <label htmlFor="password" className={labelCls}>비밀번호</label>
-                        {/* UI만: 비밀번호 재설정 플로우는 추후 구현. tabIndex=-1로 이메일→비밀번호 탭 동선 보존 */}
                         <Link
-                            href="#"
+                            href="/forgot-password"
                             tabIndex={-1}
                             className="mb-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
@@ -79,15 +78,7 @@ export function LoginForm() {
                 </Button>
             </form>
 
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="h-px flex-1 bg-border" />
-                OR
-                <span className="h-px flex-1 bg-border" />
-            </div>
-
-            <SocialLoginButtons />
-
-            {/* 회원가입 유도 — 시인성을 위해 별도 버튼으로 분리 */}
+            {/* 회원가입 유도 — 시인성을 위해 소셜 로그인 위로 배치 */}
             <div className="space-y-2 pt-1">
                 <p className="text-center text-[11px] text-muted-foreground">계정이 없으신가요?</p>
                 <Link
@@ -97,6 +88,14 @@ export function LoginForm() {
                     회원가입
                 </Link>
             </div>
+
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                OR
+                <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <SocialLoginButtons />
         </div>
     )
 }
