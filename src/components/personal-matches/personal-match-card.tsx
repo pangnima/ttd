@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
-import { SURFACE_LABELS } from '@/lib/dashboard/surface'
+import { SURFACE_LABELS, SURFACE_TEXT_CLASS } from '@/lib/dashboard/surface'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import { resolveSetWinner } from '@/lib/personal-matches/winner'
@@ -24,6 +24,7 @@ const RESULT = {
 export function PersonalMatchCard({ match: m, actions }: Props) {
     const [, mm, dd] = m.playedAt.split('-')
     const result = RESULT[m.winner]
+    const isDoubles = m.matchType !== 'singles'
     const opponentLabel = m.opponent2Name ? `${m.opponentName} · ${m.opponent2Name}` : m.opponentName
 
     // 세트(게임) 전적 집계
@@ -46,49 +47,52 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
             <span className={`w-1 self-stretch rounded-full ${result.bar}`} aria-hidden />
-            <div className="w-9 text-center shrink-0 self-center">
+            {/* 날짜 영역: 경기타입 배지 + 일/월 + 표면(색 텍스트) */}
+            <div className="w-12 shrink-0 self-center flex flex-col items-center gap-0.5">
+                <span className={`${PILL_BASE} mb-1 ${getMatchTypeBadgeClass(m.matchType)}`}>
+                    {MATCH_TYPE_LABELS[m.matchType]}
+                </span>
                 <div className="text-lg font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
-                <div className="text-[10px] mt-0.5 text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
+                <div className="text-[10px] text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
+                {m.surface && (
+                    <div className={`text-[10px] font-medium ${SURFACE_TEXT_CLASS[m.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
+                        {SURFACE_LABELS[m.surface] ?? m.surface}
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 min-w-0">
-                {/* 1행: 상대 이름 ↔ 결과 배지(+액션). 세트는 이름 폭을 침범하지 않도록 아래 줄로 분리. */}
+                {/* 선수: 복식은 내 팀(나·파트너) / vs 상대팀 두 줄, 단식은 vs 상대 한 줄. 결과 배지는 우측. */}
                 <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground truncate min-w-0">
-                        <span className="text-muted-foreground">vs </span>{opponentLabel}
-                    </p>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`px-2 py-1 rounded-[4px] text-xs font-bold ${result.badge}`}>{resultLabel}</span>
-                        {actions}
+                    <div className="min-w-0">
+                        {isDoubles && (
+                            <p className="text-sm font-medium text-foreground truncate">
+                                나{m.partnerName && <> · <span className="text-primary">{m.partnerName}</span></>}
+                            </p>
+                        )}
+                        <p className="text-sm font-medium text-foreground truncate">
+                            <span className="text-muted-foreground">vs </span>{opponentLabel}
+                        </p>
                     </div>
+                    <span className={`px-2 py-1 rounded-[4px] text-xs font-bold shrink-0 ${result.badge}`}>{resultLabel}</span>
                 </div>
 
-                {/* 2행: 종류·표면·파트너 */}
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                    <span className={`${PILL_BASE} ${getMatchTypeBadgeClass(m.matchType)}`}>
-                        {MATCH_TYPE_LABELS[m.matchType]}
-                    </span>
-                    {m.surface && (
-                        <span className="text-[11px] text-muted-foreground">{SURFACE_LABELS[m.surface] ?? m.surface}</span>
-                    )}
-                    {m.partnerName && (
-                        <span className="text-[11px] text-muted-foreground truncate">· 파트너 {m.partnerName}</span>
-                    )}
-                </div>
-
-                {/* 3행: 세트 스코어 (전체 폭 사용, 많으면 wrap) */}
-                {m.setScores.length > 0 && (
-                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                        {m.setScores.map((s, i) => (
-                            <span
-                                key={i}
-                                className={`px-1.5 py-1 rounded-[4px] text-xs font-semibold tabular-nums ${
-                                    s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
-                                }`}
-                            >
-                                {s.me}-{s.opp}
-                            </span>
-                        ))}
+                {/* 세트 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}
+                {(m.setScores.length > 0 || actions) && (
+                    <div className="flex items-end justify-between gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                            {m.setScores.map((s, i) => (
+                                <span
+                                    key={i}
+                                    className={`px-1.5 py-1 rounded-[4px] text-xs font-semibold tabular-nums ${
+                                        s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
+                                    }`}
+                                >
+                                    {s.me}-{s.opp}
+                                </span>
+                            ))}
+                        </div>
+                        {actions && <div className="shrink-0 self-center">{actions}</div>}
                     </div>
                 )}
             </div>

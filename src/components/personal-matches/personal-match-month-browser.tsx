@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
@@ -50,6 +51,12 @@ export function PersonalMatchMonthBrowser({ groups }: Props) {
                 <span className="ml-auto text-xs text-muted-foreground shrink-0">
                     승률 {selected.winRate}%
                 </span>
+                <Link
+                    href="/me/personal-matches"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                    전체 보기 →
+                </Link>
             </div>
 
             <div className="max-h-[600px] overflow-y-auto pr-1">

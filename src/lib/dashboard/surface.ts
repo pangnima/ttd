@@ -24,6 +24,15 @@ export const SURFACE_BAR_CLASS: Record<string, string> = {
     unknown: 'bg-muted-foreground/40',
 }
 
+/** 코트 표면별 텍스트 색상 (SURFACE_BAR_CLASS와 색 계열 일치, 가독성 위해 한 톤 진하게). */
+export const SURFACE_TEXT_CLASS: Record<string, string> = {
+    hard: 'text-sky-600 dark:text-sky-400',
+    clay: 'text-orange-600 dark:text-orange-400',
+    grass: 'text-emerald-600 dark:text-emerald-400',
+    other: 'text-slate-500 dark:text-slate-400',
+    unknown: 'text-muted-foreground',
+}
+
 /** 폼 Select에서 사용하는 입력용 옵션 배열 (SURFACE_LABELS과 라벨 일치). */
 export const SURFACE_OPTIONS: { value: CourtSurface; label: string }[] = [
     { value: 'hard', label: '하드' },

@@ -13,22 +13,14 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
 
     return (
         <section className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
                 <p className={SECTION_LABEL}>개인 경기 기록</p>
-                <div className="flex items-center gap-2">
-                    <Link
-                        href="/me/personal-matches/new"
-                        className="inline-flex items-center gap-1 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                        + 경기 추가
-                    </Link>
-                    <Link
-                        href="/me/personal-matches"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        전체 보기 →
-                    </Link>
-                </div>
+                <Link
+                    href="/me/personal-matches/new"
+                    className="inline-flex items-center gap-1 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                >
+                    + 경기 추가
+                </Link>
             </div>
             {groups.length === 0 ? (
                 <div className={EMPTY_BLOCK}>

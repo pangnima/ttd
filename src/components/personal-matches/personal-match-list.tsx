@@ -26,7 +26,7 @@ function MatchActions({ id }: { id: string }) {
         startTransition(async () => { await deletePersonalMatchAction(id) })
     }
     return (
-        <span className="flex items-center gap-1.5 ml-1">
+        <span className="flex items-center gap-2">
             <Link href={`/me/personal-matches/${id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                 수정
             </Link>
