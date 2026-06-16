@@ -7,10 +7,14 @@ import type { WinnerSide } from '@/lib/match-games/match-view-helpers'
 
 // ── 명승부(접전) ────────────────────────────────
 
-// 접전 판정 임계값: 게임차 ≤ CLOSE_MARGIN 이고 패측 게임수 ≥ CLOSE_MIN_LOSER.
-// 예) 6-4·7-5·7-6 = 접전, 6-1·6-0 = 일방적.
-const CLOSE_MARGIN = 2
-const CLOSE_MIN_LOSER = 5
+// 접전(명승부) 판정 임계값.
+//  - 한 게임차(margin 1): 이긴 측이 MIN_WINNER 이상이면 접전. (6-5·5-4·7-6·4-3 …, 2-1·1-0 제외)
+//  - 두 게임차(margin 2): 패측이 MIN_LOSER 이상이면 접전. (7-5 류)
+// 예) 명승부: 6-5·5-4·7-6·7-5, 일방적: 6-4·6-1·6-0.
+const TIGHT_MARGIN = 1
+const TIGHT_MIN_WINNER = 4
+const WIDE_MARGIN = 2
+const WIDE_MIN_LOSER = 5
 
 // 확정된 경기 스코어가 접전(명승부)인지. winner가 null(미입력)·'draw'면 false.
 export function isCloseMatch(sets: SetScore[], winner: WinnerSide): boolean {
@@ -27,8 +31,11 @@ export function isCloseMatch(sets: SetScore[], winner: WinnerSide): boolean {
     }
     if (!hasInput) return false
     const margin = Math.abs(t1 - t2)
-    const loser = Math.min(t1, t2)
-    return margin <= CLOSE_MARGIN && loser >= CLOSE_MIN_LOSER
+    const winnerGames = Math.max(t1, t2)
+    const loserGames = Math.min(t1, t2)
+    if (margin === TIGHT_MARGIN && winnerGames >= TIGHT_MIN_WINNER) return true
+    if (margin === WIDE_MARGIN && loserGames >= WIDE_MIN_LOSER) return true
+    return false
 }
 
 // ── 라이벌 (cross-pair 누적 전적) ────────────────────────────────

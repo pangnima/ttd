@@ -22,12 +22,19 @@ function doubles(id: string, t1: string[], t2: string[], winner: 'team1' | 'team
 const sc = (a: string, b: string) => [{ team1: a, team2: b }]
 
 describe('isCloseMatch', () => {
-    it('게임차 ≤2이고 패측 ≥5면 접전 (7-5, 7-6)', () => {
-        expect(isCloseMatch(sc('7', '5'), 'team1')).toBe(true)
-        expect(isCloseMatch(sc('6', '7'), 'team2')).toBe(true)
+    it('한 게임차(이긴측 ≥4)면 접전 (6-5·5-4·7-6·4-3)', () => {
+        expect(isCloseMatch(sc('6', '5'), 'team1')).toBe(true)
+        expect(isCloseMatch(sc('4', '5'), 'team2')).toBe(true)
+        expect(isCloseMatch(sc('7', '6'), 'team1')).toBe(true)
+        expect(isCloseMatch(sc('4', '3'), 'team1')).toBe(true)
     })
-    it('패측 게임이 5 미만이면 접전 아님 (6-4도 제외)', () => {
+    it('두 게임차는 패측 ≥5일 때만 접전 (7-5 ○, 6-4 ×)', () => {
+        expect(isCloseMatch(sc('7', '5'), 'team1')).toBe(true)
         expect(isCloseMatch(sc('6', '4'), 'team1')).toBe(false)
+    })
+    it('극소 점수(2-1·1-0)나 일방적 점수는 접전 아님', () => {
+        expect(isCloseMatch(sc('2', '1'), 'team1')).toBe(false)
+        expect(isCloseMatch(sc('1', '0'), 'team1')).toBe(false)
         expect(isCloseMatch(sc('6', '1'), 'team1')).toBe(false)
         expect(isCloseMatch(sc('6', '0'), 'team1')).toBe(false)
     })
