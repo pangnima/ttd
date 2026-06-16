@@ -10,18 +10,21 @@ import {
     updatePersonalMatchAction,
     type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
-import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
+import { CARD_BASE, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
+import { isNtrpValid, isPlayerFilled, isSetValid } from '@/lib/personal-matches/validators'
+import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
-import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
-import { AdDeuceToggle } from '@/components/personal-matches/ad-deuce-toggle'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { EnumSelect } from '@/components/match/enum-select'
+import { PlayersSection } from '@/components/personal-matches/form-sections/players-section'
+import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
+import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
+import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
+import { FormFooter } from '@/components/personal-matches/form-sections/form-footer'
+import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
+import { DoublesModeToggle, type DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
+import { PlayerPoolSection } from '@/components/personal-matches/rotation/player-pool-section'
+import { GameBuilderSection } from '@/components/personal-matches/rotation/game-builder-section'
 
 type Props = {
     initialData?: PersonalMatch
@@ -29,21 +32,7 @@ type Props = {
     pastOpponents?: PastOpponent[]
 }
 
-const MATCH_TYPES: { value: MatchType; label: string }[] = [
-    { value: 'singles', label: '단식' },
-    { value: 'men_doubles', label: '남복' },
-    { value: 'women_doubles', label: '여복' },
-    { value: 'mixed_doubles', label: '혼복' },
-]
-
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
-
-// 상대(팀) NTRP 입력 유효성 — 비어있지 않고 1.0~7.0 범위의 수여야 한다.
-function isNtrpValid(v: string): boolean {
-    if (v.trim() === '') return false
-    const n = Number(v)
-    return Number.isFinite(n) && n >= 1 && n <= 7
-}
 
 export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [] }: Props) {
     const router = useRouter()
@@ -84,8 +73,12 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         initialData?.setScores?.length ? initialData.setScores : [{ me: 0, opp: 0 }]
     )
     const [notes, setNotes] = useState(initialData?.notes ?? '')
+    // 복식 입력 방식 — 페어 고정(기본) vs 로테이션. 로테이션은 신규 등록에서만 지원.
+    const [doublesMode, setDoublesMode] = useState<DoublesMode>('fixed')
+    const rotation = useRotationGames()
 
     const isDoubles = DOUBLES_TYPES.includes(matchType)
+    const isRotation = isDoubles && doublesMode === 'rotation' && !initialData
 
     function addSet() {
         setSets((prev) => [...prev, { me: 0, opp: 0 }])
@@ -111,22 +104,15 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, oppAd: v } : s))
     }
 
-    // 선수 입력 완료 여부 — 회원 선택은 userId, 비회원은 이름 + 손잡이(필수)까지 입력돼야 한다.
-    function isPlayerFilled(p: PlayerPickerValue): boolean {
-        if (p.userId) return true
-        return !!p.name.trim() && !!p.hand
-    }
-    // 세트 유효성 — 양쪽 점수가 0~99 정수이고 0-0(미입력) 세트가 아니어야 한다.
-    function isSetValid(s: PersonalMatchSetScore): boolean {
-        if (Number.isNaN(s.me) || Number.isNaN(s.opp)) return false
-        if (s.me === 0 && s.opp === 0) return false
-        return true
-    }
-
     // 파트너 NTRP는 선택 — 비어있으면 통과, 입력 시 유효해야 함.
     const partnerNtrpOk = partnerNtrp.trim() === '' || isNtrpValid(partnerNtrp)
 
-    const isValid =
+    // 세션 공통 메타 (로테이션 모든 게임에 동일 적용)
+    function buildSessionMeta(): RotationSessionMeta {
+        return { playedAt, playedTime, matchType, surface, notes }
+    }
+
+    const fixedValid =
         isPlayerFilled(opponent) &&
         isNtrpValid(opponentNtrp) &&
         (!isDoubles || (
@@ -140,6 +126,8 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         !!surface &&
         sets.length > 0 &&
         sets.every(isSetValid)
+
+    const isValid = isRotation ? rotation.isValid(buildSessionMeta()) : fixedValid
 
     // setScores를 제외한 공통 입력 필드
     function buildBaseInput(): Omit<PersonalMatchInput, 'setScores'> {
@@ -175,6 +163,17 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             return
         }
 
+        // 로테이션: 각 게임을 별도 레코드로 일괄 저장
+        if (isRotation) {
+            const inputs = rotation.buildInputs(buildSessionMeta())
+            startTransition(async () => {
+                const res = await createPersonalMatchesAction(inputs)
+                if (res.error) setError(res.error)
+                else router.push('/me/personal-matches')
+            })
+            return
+        }
+
         const base = buildBaseInput()
         const cleanSets = sets.map((s) => ({
             me: Number.isNaN(s.me) ? 0 : s.me,
@@ -198,8 +197,6 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         })
     }
 
-    const inputClass = 'w-full rounded-[4px] border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
-    const labelClass = 'text-sm font-medium text-foreground block mb-1'
     // 세트 스코어 우측 라벨 (상대/상대팀 표시 이름)
     const opponentLabel = opponent.name.trim() || '상대'
 
@@ -208,228 +205,87 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             <div className={`${CARD_BASE} p-5 space-y-4`}>
                 {/* 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
                 <div>
-                    <label className={labelClass}>경기 타입 *</label>
-                    <Select
+                    <label className={MATCH_FORM_LABEL}>경기 타입 *</label>
+                    <EnumSelect
                         value={matchType}
-                        onValueChange={(v) => v && setMatchType(v as MatchType)}
-                        items={MATCH_TYPES}
-                    >
-                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {MATCH_TYPES.map((t) => (
-                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        onValueChange={setMatchType}
+                        options={MATCH_TYPE_OPTIONS}
+                        ariaLabel="경기 타입"
+                    />
                 </div>
 
-                {isDoubles ? (
-                    <>
-                        {/* 내 팀 (나 + 파트너) */}
-                        <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
-                                <span className="text-xs text-muted-foreground">나 + 파트너</span>
-                            </div>
-                            <PlayerNtrpField
-                                label="내 파트너 *"
-                                candidates={opponentCandidates}
-                                pastOpponents={pastOpponents}
-                                player={partner}
-                                onPlayerChange={setPartner}
-                                ntrp={partnerNtrp}
-                                onNtrpChange={setPartnerNtrp}
-                                placeholder="파트너 이름 또는 닉네임"
-                            />
-                        </div>
+                {/* 복식 신규 등록 시에만 방식 토글 노출 (수정 모드는 단일 레코드라 미지원) */}
+                {isDoubles && !initialData && (
+                    <DoublesModeToggle value={doublesMode} onChange={setDoublesMode} />
+                )}
 
-                        {/* 상대팀 (상대1 + 상대2) */}
-                        <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
-                                <span className="text-xs text-muted-foreground">상대1 + 상대2</span>
-                            </div>
-                            <PlayerNtrpField
-                                label="상대팀 선수 1 *"
-                                candidates={opponentCandidates}
-                                pastOpponents={pastOpponents}
-                                player={opponent}
-                                onPlayerChange={setOpponent}
-                                ntrp={opponentNtrp}
-                                onNtrpChange={setOpponentNtrp}
-                                ntrpRequired
-                                placeholder="상대방 이름 또는 닉네임"
-                            />
-                            <PlayerNtrpField
-                                label="상대팀 선수 2 *"
-                                candidates={opponentCandidates}
-                                pastOpponents={pastOpponents}
-                                player={opponent2}
-                                onPlayerChange={setOpponent2}
-                                ntrp={opponent2Ntrp}
-                                onNtrpChange={setOpponent2Ntrp}
-                                ntrpRequired
-                                placeholder="상대방 이름 또는 닉네임"
-                            />
-                        </div>
-                    </>
-                ) : (
-                    /* 단식: 상대 1명 + NTRP */
-                    <PlayerNtrpField
-                        label="상대 *"
+                {isRotation ? (
+                    <PlayerPoolSection
+                        pool={rotation.pool}
                         candidates={opponentCandidates}
                         pastOpponents={pastOpponents}
-                        player={opponent}
-                        onPlayerChange={setOpponent}
-                        ntrp={opponentNtrp}
-                        onNtrpChange={setOpponentNtrp}
-                        ntrpRequired
-                        placeholder="상대방 이름 또는 닉네임"
+                        onAdd={rotation.addPoolPlayer}
+                        onUpdate={rotation.updatePoolPlayer}
+                        onRemove={rotation.removePoolPlayer}
+                    />
+                ) : (
+                    <PlayersSection
+                        isDoubles={isDoubles}
+                        candidates={opponentCandidates}
+                        pastOpponents={pastOpponents}
+                        opponent={{ player: opponent, onPlayerChange: setOpponent, ntrp: opponentNtrp, onNtrpChange: setOpponentNtrp }}
+                        partner={{ player: partner, onPlayerChange: setPartner, ntrp: partnerNtrp, onNtrpChange: setPartnerNtrp }}
+                        opponent2={{ player: opponent2, onPlayerChange: setOpponent2, ntrp: opponent2Ntrp, onNtrpChange: setOpponent2Ntrp }}
                     />
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClass}>경기 날짜 *</label>
-                        <input
-                            type="date"
-                            value={playedAt}
-                            onChange={(e) => setPlayedAt(e.target.value)}
-                            className={inputClass}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className={labelClass}>경기 시각 *</label>
-                        <input
-                            type="time"
-                            value={playedTime}
-                            onChange={(e) => setPlayedTime(e.target.value)}
-                            className={inputClass}
-                            required
-                        />
-                    </div>
-                </div>
-                <div>
-                    <label className={labelClass}>코트 표면 *</label>
-                    <Select
-                        value={surface}
-                        onValueChange={(v) => setSurface(v as CourtSurface | '')}
-                        items={SURFACE_OPTIONS}
-                    >
-                        <SelectTrigger className="w-full bg-background border-input focus:border-ring">
-                            <SelectValue placeholder="선택" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {SURFACE_OPTIONS.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <p className="mt-1 text-xs text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
-                </div>
+                <MatchMetaSection
+                    playedAt={playedAt}
+                    onPlayedAtChange={setPlayedAt}
+                    playedTime={playedTime}
+                    onPlayedTimeChange={setPlayedTime}
+                    surface={surface}
+                    onSurfaceChange={setSurface}
+                />
 
-                <div>
-                    <div className="flex items-center justify-between mb-1">
-                        <label className={`${labelClass} mb-0`}>세트 스코어</label>
-                        <button type="button" onClick={addSet} className="text-xs text-muted-foreground hover:text-foreground">
-                            + 세트 추가
-                        </button>
-                    </div>
-                    {/* 왼쪽=나(등록유저), 오른쪽=상대 라벨 */}
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="w-10" />
-                        <span className="w-16 text-center text-xs text-muted-foreground truncate">나</span>
-                        <span className="w-3" />
-                        <span className="w-16 text-center text-xs text-muted-foreground truncate">{opponentLabel}</span>
-                    </div>
-                    <div className="space-y-2">
-                        {sets.map((s, i) => (
-                            <div key={i} className={isDoubles ? 'rounded-md border border-border/60 p-2 space-y-2' : ''}>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground w-10">{i + 1}세트</span>
-                                    <input
-                                        type="number"
-                                        min={0} max={99}
-                                        value={Number.isNaN(s.me) ? '' : s.me}
-                                        onChange={(e) => updateSet(i, 'me', e.target.value)}
-                                        className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
-                                    />
-                                    <span className="w-3 text-center text-muted-foreground">-</span>
-                                    <input
-                                        type="number"
-                                        min={0} max={99}
-                                        value={Number.isNaN(s.opp) ? '' : s.opp}
-                                        onChange={(e) => updateSet(i, 'opp', e.target.value)}
-                                        className="w-16 rounded-[4px] border border-input bg-transparent px-2 py-1.5 text-sm text-center"
-                                    />
-                                    {sets.length > 1 && (
-                                        <button type="button" onClick={() => removeSet(i)} className="text-xs text-destructive/80 hover:text-destructive">
-                                            삭제
-                                        </button>
-                                    )}
-                                </div>
-                                {/* 복식: 세트별 애드/듀스 코트 */}
-                                {isDoubles && (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <AdDeuceToggle
-                                            label="내 팀 애드"
-                                            options={[
-                                                { value: 'me', label: '나' },
-                                                { value: 'partner', label: partner.name.trim() || '파트너' },
-                                            ]}
-                                            value={s.myAd}
-                                            onChange={(v) => setMyAd(i, v)}
-                                        />
-                                        <AdDeuceToggle
-                                            label="상대팀 애드"
-                                            options={[
-                                                { value: 'opponent', label: opponent.name.trim() || '상대1' },
-                                                { value: 'opponent2', label: opponent2.name.trim() || '상대2' },
-                                            ]}
-                                            value={s.oppAd}
-                                            onChange={(v) => setOppAd(i, v)}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="mt-1.5 text-xs text-muted-foreground">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
-                </div>
-
-                <div>
-                    <label className={labelClass}>메모 (선택)</label>
-                    <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="경기 관련 메모"
-                        rows={2}
-                        className={`${inputClass} resize-none`}
+                {isRotation ? (
+                    <GameBuilderSection
+                        games={rotation.games}
+                        pool={rotation.pool}
+                        onAddGame={rotation.addGame}
+                        onUpdateGame={rotation.updateGame}
+                        onRemoveGame={rotation.removeGame}
+                        onAddSet={rotation.addSet}
+                        onUpdateSet={rotation.updateSet}
+                        onRemoveSet={rotation.removeSet}
+                        onMyAd={rotation.setMyAd}
+                        onOppAd={rotation.setOppAd}
                     />
-                </div>
+                ) : (
+                    <SetsSection
+                        sets={sets}
+                        isDoubles={isDoubles}
+                        opponentLabel={opponentLabel}
+                        myAdLabels={{ me: '나', partner: partner.name.trim() || '파트너' }}
+                        oppAdLabels={{ opponent: opponent.name.trim() || '상대1', opponent2: opponent2.name.trim() || '상대2' }}
+                        onAddSet={addSet}
+                        onUpdateSet={updateSet}
+                        onRemoveSet={removeSet}
+                        onMyAd={setMyAd}
+                        onOppAd={setOppAd}
+                    />
+                )}
+
+                <NotesSection notes={notes} onNotesChange={setNotes} />
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
-
-            <div className="flex gap-3">
-                <button
-                    type="submit"
-                    disabled={isPending || !isValid}
-                    className="flex-1 py-2.5 text-sm font-medium bg-foreground text-background rounded-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    {isPending ? '저장 중...' : initialData ? '수정 완료' : '경기 저장'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="px-4 py-2.5 text-sm text-muted-foreground border border-border rounded-[4px] hover:border-input transition-colors"
-                >
-                    취소
-                </button>
-            </div>
+            <FormFooter
+                error={error}
+                isPending={isPending}
+                isValid={isValid}
+                submitLabel={initialData ? '수정 완료' : '경기 저장'}
+                onCancel={() => router.back()}
+            />
         </form>
     )
 }
