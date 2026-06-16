@@ -27,11 +27,19 @@ export type ClubMatchGameSummary = {
     isFixed: boolean
 }
 
+export type MatchTypeCounts = {
+    singles: number
+    menDoubles: number
+    womenDoubles: number
+    mixedDoubles: number
+}
+
 export type ClubMatchGameActivity = {
     recentGames: ClubMatchGameSummary[]
     fixedCount: number
     pendingCount: number
     nextGame: ClubMatchGameSummary | null
+    matchTypeCounts: MatchTypeCounts
 }
 
 export type ActivityRankingEntry = {
@@ -116,15 +124,36 @@ export async function fetchClubMatchGameActivity(clubId: string): Promise<ClubMa
     const supabase = await createClient()
     const today = new Date().toISOString().split('T')[0]
 
-    const { data, error } = await supabase
-        .from('match_games')
-        .select('id, name, date, is_fixed')
-        .eq('club_id', clubId)
-        .order('date', { ascending: false })
-        .limit(20)
+    const [gamesRes, typeRes] = await Promise.all([
+        supabase
+            .from('match_games')
+            .select('id, name, date, is_fixed')
+            .eq('club_id', clubId)
+            .order('date', { ascending: false })
+            .limit(20),
+        // 타입별 경기 수 — 확정·완료 경기 전체 누적
+        supabase
+            .from('match_game_matches')
+            .select('match_type, match_games!inner(club_id, is_fixed)')
+            .eq('match_games.club_id', clubId)
+            .eq('match_games.is_fixed', true)
+            .eq('status', 'finished'),
+    ])
 
+    // 타입별 경기 수 집계
+    const matchTypeCounts: MatchTypeCounts = { singles: 0, menDoubles: 0, womenDoubles: 0, mixedDoubles: 0 }
+    for (const row of typeRes.data ?? []) {
+        switch (row.match_type) {
+            case 'singles': matchTypeCounts.singles++; break
+            case 'men_doubles': matchTypeCounts.menDoubles++; break
+            case 'women_doubles': matchTypeCounts.womenDoubles++; break
+            case 'mixed_doubles': matchTypeCounts.mixedDoubles++; break
+        }
+    }
+
+    const { data, error } = gamesRes
     if (error || !data) {
-        return { recentGames: [], fixedCount: 0, pendingCount: 0, nextGame: null }
+        return { recentGames: [], fixedCount: 0, pendingCount: 0, nextGame: null, matchTypeCounts }
     }
 
     const fixedCount = data.filter((g) => g.is_fixed).length
@@ -148,6 +177,7 @@ export async function fetchClubMatchGameActivity(clubId: string): Promise<ClubMa
         fixedCount,
         pendingCount,
         nextGame: nextGame ? { id: nextGame.id, name: nextGame.name, date: nextGame.date, isFixed: nextGame.is_fixed } : null,
+        matchTypeCounts,
     }
 }
 

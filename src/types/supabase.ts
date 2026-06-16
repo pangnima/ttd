@@ -181,6 +181,7 @@ export type Database = {
       }
       clubs: {
         Row: {
+          court_schedule: string | null
           created_at: string
           delete_password_hash: string | null
           description: string | null
@@ -193,6 +194,7 @@ export type Database = {
           region: string | null
         }
         Insert: {
+          court_schedule?: string | null
           created_at?: string
           delete_password_hash?: string | null
           description?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           region?: string | null
         }
         Update: {
+          court_schedule?: string | null
           created_at?: string
           delete_password_hash?: string | null
           description?: string | null

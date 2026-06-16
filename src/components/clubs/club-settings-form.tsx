@@ -116,6 +116,17 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                             />
                         </div>
 
+                        {/* 고정코트 시간 */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="club-court-schedule">고정코트 시간</Label>
+                            <Input
+                                id="club-court-schedule"
+                                name="court_schedule"
+                                defaultValue={club.courtSchedule ?? ''}
+                                placeholder="예: 매주 토·일 09:00~12:00, 강남테니스장"
+                            />
+                        </div>
+
                         {/* 클럽 소개 */}
                         <div className="space-y-1.5">
                             <Label htmlFor="club-description">클럽 소개</Label>

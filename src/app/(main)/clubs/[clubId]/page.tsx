@@ -5,7 +5,6 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
-import { fetchMatchGameCountByClubId } from '@/lib/queries/match-games'
 import { fetchClubRatingRanking, fetchClubPlayerRatings, fetchConfirmedMatchesForRating } from '@/lib/queries/ratings'
 import { aggregateClubMemberForms } from '@/lib/analytics/club-form'
 import {
@@ -15,23 +14,23 @@ import {
     fetchClubWinRateRanking,
 } from '@/lib/queries/club-dashboard'
 import { ClubDetailActions } from '@/components/clubs/club-detail-actions'
+import { LeaveClubButton } from '@/components/clubs/leave-club-button'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
 import { ClubAvatar } from '@/components/clubs/club-avatar'
 import { PendingMembersPanel } from '@/components/club-dashboard/pending-members-panel'
 import { MatchGameActivityCard } from '@/components/club-dashboard/match-game-activity-card'
-import { WinRateRankingCard } from '@/components/club-dashboard/win-rate-ranking-card'
+import { ClubAceCard } from '@/components/club-dashboard/club-ace-card'
 import { ActivityRankingCard } from '@/components/club-dashboard/activity-ranking-card'
 import { ClubRankingCard } from '@/components/club-dashboard/club-ranking-card'
 import {
     CARD_BASE,
     SECTION_LABEL,
     PILL_BASE,
-    TEXT_META,
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 import { formatYearMonth } from '@/lib/format'
-import { MapPin, Users, Trophy, Settings, ChevronRight, Calendar, Crown } from 'lucide-react'
+import { MapPin, Settings, ChevronRight, Crown, Clock } from 'lucide-react'
 
 type ClubPageProps = {
     params: Promise<{ clubId: string }>
@@ -43,11 +42,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [club, approvedMembers, myMembership, matchGameCount, ratingRanking, clubRatings] = await Promise.all([
+    const [club, approvedMembers, myMembership, ratingRanking, clubRatings] = await Promise.all([
         fetchClubById(clubId),
         fetchClubMembers(clubId, 'approved'),
         fetchMyMembership(user.id, clubId),
-        fetchMatchGameCountByClubId(clubId),
         fetchClubRatingRanking(clubId),
         fetchClubPlayerRatings(clubId),
     ])
@@ -63,19 +61,33 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const regularMembers = approvedMembers.filter((m) => !m.user.isGuest)
     const guestMembers = approvedMembers.filter((m) => m.user.isGuest)
 
+    const isApprovedMember = myMembership?.status === 'approved'
     const isOwner = myMembership?.role === 'owner'
     const isOfficerOrOwner = myMembership?.role === 'owner' || myMembership?.role === 'officer'
     const ownerMember = approvedMembers.find((m) => m.role === 'owner')
+    const officerMembers = approvedMembers.filter((m) => m.role === 'officer')
 
-    // 운영자/임원인 경우에만 추가 데이터 페치
-    const [pendingMembers, matchGameActivity, activityRanking, winRateRanking] = isOfficerOrOwner
+    // 대진표 현황 · 타입별 승률 랭킹 — 승인 멤버 모두에게 공개
+    const [matchGameActivity, winRateRanking] = isApprovedMember
         ? await Promise.all([
-            fetchPendingMembersByClubId(clubId),
             fetchClubMatchGameActivity(clubId),
-            fetchClubActivityRanking(clubId),
             fetchClubWinRateRanking(clubId),
         ])
-        : [null, null, null, null]
+        : [null, null]
+    const hasAnyAce = winRateRanking !== null && (
+        winRateRanking.singles.length > 0 ||
+        winRateRanking.menDoubles.length > 0 ||
+        winRateRanking.womenDoubles.length > 0 ||
+        winRateRanking.mixedDoubles.length > 0
+    )
+
+    // 운영자/임원인 경우에만 추가 데이터 페치
+    const [pendingMembers, activityRanking] = isOfficerOrOwner
+        ? await Promise.all([
+            fetchPendingMembersByClubId(clubId),
+            fetchClubActivityRanking(clubId),
+        ])
+        : [null, null]
 
     return (
         <PageContainer>
@@ -99,6 +111,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         {club.description && (
                             <p className="text-sm text-foreground/60 mt-1">{club.description}</p>
                         )}
+                        <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs ${TEXT_MUTED} pt-0.5`}>
+                            <span>정회원 <span className="font-medium text-foreground/80">{regularMembers.length}</span>명</span>
+                            {guestMembers.length > 0 && (
+                                <>
+                                    <span>·</span>
+                                    <span>게스트 <span className="font-medium text-foreground/80">{guestMembers.length}</span>명</span>
+                                </>
+                            )}
+                            <span>·</span>
+                            <span>설립 <span className="font-medium text-foreground/80">{formatYearMonth(club.createdAt)}</span></span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -107,6 +130,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             clubId={clubId}
                             membershipStatus={myMembership?.status ?? null}
                         />
+                    )}
+                    {isApprovedMember && !isOwner && (
+                        <LeaveClubButton clubId={clubId} clubName={club.name} />
                     )}
                     {isOwner && (
                         <Link
@@ -119,47 +145,22 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 </div>
             </div>
 
-            {/* 통계 카드 3분할 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className={`${CARD_BASE} flex flex-col gap-1.5 p-4`}>
-                    <div className="flex items-center gap-1.5">
-                        <Users className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
-                        <span className={`text-[11px] ${TEXT_MUTED}`}>회원 수</span>
-                    </div>
-                    <div className="flex items-end gap-4">
-                        <div className="flex flex-col">
-                            <span className={`text-[11px] ${TEXT_META}`}>정회원</span>
-                            <p className="text-xl font-semibold text-foreground">{regularMembers.length}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>명</span></p>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className={`text-[11px] ${TEXT_META}`}>게스트</span>
-                            <p className="text-xl font-semibold text-foreground/70">{guestMembers.length}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>명</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div className={`${CARD_BASE} flex flex-col gap-1.5 p-4`}>
-                    <div className="flex items-center gap-1.5">
-                        <Trophy className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
-                        <span className={`text-[11px] ${TEXT_MUTED}`}>대진표</span>
-                    </div>
-                    <p className="text-xl font-semibold text-foreground">{matchGameCount}<span className={`text-sm font-normal ml-0.5 ${TEXT_META}`}>개</span></p>
-                </div>
-                <div className={`${CARD_BASE} flex flex-col gap-1.5 p-4`}>
-                    <div className="flex items-center gap-1.5">
-                        <Calendar className={`w-3.5 h-3.5 ${TEXT_MUTED}`} />
-                        <span className={`text-[11px] ${TEXT_MUTED}`}>설립</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground/90 mt-0.5">{formatYearMonth(club.createdAt)}</p>
-                </div>
-            </div>
-
-            {/* 클럽 정보 카드 */}
+            {/* 클럽 정보 카드 (운영진/지역/정기시간) — 타이틀 바로 아래 */}
             <div className={`${CARD_BASE} divide-y divide-foreground/8`}>
                 {ownerMember && (
-                    <div className="flex items-center gap-3 px-4 py-3">
-                        <Crown className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>운영자</span>
-                        <span className="text-[15px] font-medium text-foreground/90">{ownerMember.user.name}</span>
+                    <div className="flex items-start gap-3 px-4 py-3">
+                        <Crown className={`w-4 h-4 shrink-0 mt-0.5 ${TEXT_MUTED}`} />
+                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0 mt-0.5`}>운영진</span>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-foreground/90">
+                            <span className="font-medium">{ownerMember.user.name}</span>
+                            {officerMembers.map((m) => (
+                                <span key={m.userId} className="flex items-center gap-1">
+                                    <span className={`text-xs ${TEXT_MUTED}`}>·</span>
+                                    <span className="text-[13px] text-info">임원</span>
+                                    <span className="font-medium">{m.user.name}</span>
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 )}
                 {club.region && (
@@ -169,7 +170,29 @@ export default async function ClubPage({ params }: ClubPageProps) {
                         <span className="text-[15px] font-medium text-foreground/90">{club.region}</span>
                     </div>
                 )}
+                {club.courtSchedule && (
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <Clock className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
+                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>정기시간</span>
+                        <span className="text-[15px] font-medium text-foreground/90">{club.courtSchedule}</span>
+                    </div>
+                )}
             </div>
+
+            {/* 대진표 현황 (승인 멤버에게 공개) */}
+            {isApprovedMember && matchGameActivity && (
+                <MatchGameActivityCard clubId={clubId} activity={matchGameActivity} />
+            )}
+
+            {/* 우리 클럽 에이스 (승인 멤버에게 공개, 타입별 승률 TOP 3) — 회원 위 */}
+            {isApprovedMember && winRateRanking !== null && hasAnyAce && (
+                <ClubAceCard
+                    singles={winRateRanking.singles}
+                    menDoubles={winRateRanking.menDoubles}
+                    womenDoubles={winRateRanking.womenDoubles}
+                    mixedDoubles={winRateRanking.mixedDoubles}
+                />
+            )}
 
             {/* 회원 미리보기 */}
             <section className="space-y-3">
@@ -194,24 +217,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
             )}
 
             {/* 클럽 랭킹 (승인 멤버에게 공개) */}
-            {myMembership?.status === 'approved' && ratingRanking.length > 0 && (
+            {isApprovedMember && ratingRanking.length > 0 && (
                 <ClubRankingCard clubId={clubId} entries={ratingRanking} forms={formsByUser ?? new Map()} />
             )}
 
             {/* ── 운영자/임원 전용 운영 섹션 ────────────────────────────── */}
-            {isOfficerOrOwner && pendingMembers !== null && matchGameActivity !== null && activityRanking !== null && winRateRanking !== null && (
+            {isOfficerOrOwner && pendingMembers !== null && activityRanking !== null && (
                 <>
                     <hr className="border-foreground/8" />
                     <div className="space-y-8">
                         <p className={`${SECTION_LABEL} text-lg`}>클럽 운영</p>
                         <PendingMembersPanel clubId={clubId} pendingMembers={pendingMembers} />
-                        <MatchGameActivityCard clubId={clubId} activity={matchGameActivity} />
-                        <WinRateRankingCard
-                            singles={winRateRanking.singles}
-                            menDoubles={winRateRanking.menDoubles}
-                            womenDoubles={winRateRanking.womenDoubles}
-                            mixedDoubles={winRateRanking.mixedDoubles}
-                        />
                         <ActivityRankingCard ranking={activityRanking} />
                     </div>
                 </>

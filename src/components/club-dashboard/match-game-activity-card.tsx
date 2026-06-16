@@ -1,8 +1,17 @@
 import Link from 'next/link'
-import { CARD_BASE, SECTION_LABEL, TEXT_META, TEXT_MUTED, PILL_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, SECTION_LABEL, TEXT_MUTED, PILL_BASE } from '@/lib/dashboard/tokens'
 import { formatShortDate } from '@/lib/format'
 import { Trophy, Calendar, ChevronRight } from 'lucide-react'
-import type { ClubMatchGameActivity } from '@/lib/queries/club-dashboard'
+import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
+import type { MatchType } from '@/types'
+import type { ClubMatchGameActivity, MatchTypeCounts } from '@/lib/queries/club-dashboard'
+
+const MATCH_TYPE_ORDER: ReadonlyArray<{ type: MatchType; key: keyof MatchTypeCounts }> = [
+    { type: 'singles', key: 'singles' },
+    { type: 'men_doubles', key: 'menDoubles' },
+    { type: 'women_doubles', key: 'womenDoubles' },
+    { type: 'mixed_doubles', key: 'mixedDoubles' },
+]
 
 type MatchGameActivityCardProps = {
     clubId: string
@@ -10,25 +19,31 @@ type MatchGameActivityCardProps = {
 }
 
 export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCardProps) {
+    const totalMatches = MATCH_TYPE_ORDER.reduce((sum, { key }) => sum + activity.matchTypeCounts[key], 0)
+
     return (
         <section className="space-y-3">
             <p className={SECTION_LABEL}>대진표 현황</p>
             <div className={`${CARD_BASE} p-4 space-y-4`}>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                        <p className="text-2xl font-bold text-foreground">
-                            {activity.fixedCount}
-                            <span className={`text-sm font-normal ml-1 ${TEXT_META}`}>개</span>
-                        </p>
-                        <p className={`text-sm ${TEXT_MUTED}`}>확정 완료</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-2xl font-bold text-foreground">
-                            {activity.pendingCount}
-                            <span className={`text-sm font-normal ml-1 ${TEXT_META}`}>개</span>
-                        </p>
-                        <p className={`text-sm ${TEXT_MUTED}`}>진행 예정</p>
-                    </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                    <span className={TEXT_MUTED}>확정 완료 <span className="text-base font-bold text-foreground">{activity.fixedCount}</span></span>
+                    <span className="text-border">·</span>
+                    <span className={TEXT_MUTED}>진행 예정 <span className="text-base font-bold text-foreground">{activity.pendingCount}</span></span>
+                    {totalMatches > 0 && (
+                        <>
+                            <span className="text-border">·</span>
+                            <span className={TEXT_MUTED}>총 <span className="text-base font-bold text-foreground">{totalMatches}</span>경기</span>
+                            <span className="mx-0.5 h-4 w-px bg-border hidden sm:block" />
+                            {MATCH_TYPE_ORDER.map(({ type, key }) => (
+                                <span key={type} className="flex items-center gap-1">
+                                    <span className={`${getMatchTypeBadgeClass(type)} border rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium shrink-0`}>
+                                        {MATCH_TYPE_LABELS[type]}
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">{activity.matchTypeCounts[key]}</span>
+                                </span>
+                            ))}
+                        </>
+                    )}
                 </div>
 
                 {activity.nextGame && (

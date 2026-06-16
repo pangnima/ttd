@@ -26,6 +26,7 @@ export type Club = {
     ownerId: string
     createdAt: string
     logoUrl?: string
+    courtSchedule?: string   // 정기 활동(고정코트) 시간, 자유 텍스트
 }
 
 export type ClubMember = {

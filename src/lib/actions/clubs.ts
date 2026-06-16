@@ -85,6 +85,7 @@ export async function updateClubAction(
     const name = (formData.get('name') as string).trim()
     const region = (formData.get('region') as string | null)?.trim() ?? ''
     const description = (formData.get('description') as string | null)?.trim() ?? ''
+    const courtSchedule = (formData.get('court_schedule') as string | null)?.trim() ?? ''
     const isPublic = formData.get('is_public') !== 'false'
 
     if (!name) return { error: '클럽 이름을 입력해주세요.' }
@@ -99,6 +100,7 @@ export async function updateClubAction(
         name,
         region: region || null,
         description: description || null,
+        court_schedule: courtSchedule || null,
         is_public: isPublic,
         ...(logoUrl ? { logo_url: logoUrl } : {}),
     }).eq('id', clubId)

@@ -28,6 +28,7 @@ function mapClubRow(row: ClubRow): Club {
         ownerId: row.owner_id,
         createdAt: row.created_at,
         logoUrl: row.logo_url ?? undefined,
+        courtSchedule: row.court_schedule ?? undefined,
     }
 }
 
