@@ -1,10 +1,17 @@
 'use client'
 
 import { Check, Pencil } from 'lucide-react'
-import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
-import type { RatingChange } from '@/lib/queries/ratings'
+import { PlayerName, type PlayerOutcome } from '@/components/match-games/player-name'
+import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 
 export type SetScore = { team1: string; team2: string }
+
+// 팀 사이드의 승패 결과를 PlayerName용 outcome으로 환산.
+export function teamOutcome(winner: 'team1' | 'team2' | 'draw' | null, teamKey: 'team1' | 'team2'): PlayerOutcome {
+    if (winner === null) return null
+    if (winner === 'draw') return 'draw'
+    return winner === teamKey ? 'win' : 'loss'
+}
 
 type TeamPlayersCellProps = {
     playerIds: string[]
@@ -16,24 +23,31 @@ type TeamPlayersCellProps = {
     onToggle: (teamKey: 'team1' | 'team2', playerId: string) => void
     justify?: boolean
     deltas?: Record<string, RatingChange>
+    // 선수별 클럽 레이팅(티어 아이콘용). 없으면 PlayerName이 기본 골드로 표시.
+    ratingByUser?: Record<string, ClubRating>
     // 단식 등 코트 사이드 개념이 없는 경우 듀스/애드 토글을 숨긴다.
     hideSideToggle?: boolean
 }
 
 export function TeamPlayersCell({
-    playerIds, teamKey, winner, isFixed, adPlayerId, getName, onToggle, justify, deltas, hideSideToggle,
+    playerIds, teamKey, winner, isFixed, adPlayerId, getName, onToggle, justify, deltas, ratingByUser, hideSideToggle,
 }: TeamPlayersCellProps) {
     if (!playerIds.length) return <span className="text-foreground/55 text-xs">-</span>
+    const outcome = teamOutcome(winner, teamKey)
     return (
         <div className="space-y-1">
             {playerIds.map((pid) => {
                 const isAd = adPlayerId === pid
                 return (
                     <div key={pid} className={`flex items-center gap-1.5 ${justify ? 'justify-between' : ''}`}>
-                        <span className={`text-sm ${justify ? 'flex-1 min-w-0' : ''} ${winner === teamKey ? 'font-bold text-foreground' : 'text-foreground/85'} inline-flex items-center gap-1`}>
-                            {getName(pid)}
-                            {isFixed && <TierDeltaBadge before={deltas?.[pid]?.before} after={deltas?.[pid]?.after} />}
-                        </span>
+                        <PlayerName
+                            name={getName(pid)}
+                            rating={ratingByUser?.[pid]?.rating}
+                            outcome={outcome}
+                            delta={deltas?.[pid]}
+                            showDelta={isFixed}
+                            className={justify ? 'flex-1 min-w-0' : undefined}
+                        />
                         {hideSideToggle ? null : !isFixed ? (
                             <button
                                 onClick={() => onToggle(teamKey, pid)}
@@ -68,11 +82,11 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
         return (
             <div className="flex items-center gap-2">
                 <div className={`flex items-center ${compact ? 'gap-1.5' : 'gap-2'} font-mono text-sm`}>
-                    <span className={winner === 'team1' ? 'font-black text-foreground' : 'text-foreground/70'}>
+                    <span className={winner === 'team1' ? 'font-black text-win' : winner === 'team2' ? 'text-loss' : 'text-foreground/70'}>
                         {sets[0].team1}
                     </span>
                     <span className="text-foreground/55">:</span>
-                    <span className={winner === 'team2' ? 'font-black text-foreground' : 'text-foreground/70'}>
+                    <span className={winner === 'team2' ? 'font-black text-win' : winner === 'team1' ? 'text-loss' : 'text-foreground/70'}>
                         {sets[0].team2}
                     </span>
                 </div>

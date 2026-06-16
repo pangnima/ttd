@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 // 코트가 많으면 가로 스크롤하고 시간대 머리 열은 sticky 고정.
 export function MatchGridView({
     matchGame, matchStates, courtSides, isPending, canEdit, currentUserId,
-    ratingDeltaByMatch, getName, restNames,
+    ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, restNames,
     updateScore, confirmScore, editScore, toggleAdSide,
 }: MatchViewProps) {
     const courts = [...matchGame.courts].sort((a, b) => a.order - b.order)
@@ -65,6 +65,8 @@ export function MatchGridView({
                                                     currentUserId={currentUserId}
                                                     getName={getName}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
+                                                    ratingByUser={ratingByUser}
+                                                    isRival={rivalMatchIds?.has(match.id)}
                                                     toggleAdSide={toggleAdSide}
                                                     updateScore={updateScore}
                                                     confirmScore={confirmScore}
