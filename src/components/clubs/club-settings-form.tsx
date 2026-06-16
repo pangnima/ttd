@@ -1,6 +1,14 @@
 'use client'
 
 import { useActionState, useTransition, useState } from 'react'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,10 +30,17 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
     const [isDeleting, startDelete] = useTransition()
     const [isPublic, setIsPublic] = useState(club.isPublic)
     const [logoPreview, setLogoPreview] = useState<string | null>(null)
+    const [deleteOpen, setDeleteOpen] = useState(false)
+    const [deletePassword, setDeletePassword] = useState('')
+    const [deleteError, setDeleteError] = useState<string | null>(null)
 
     const handleDelete = () => {
-        if (!confirm(`"${club.name}" 클럽을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return
-        startDelete(async () => { await deleteClubAction(club.id) })
+        setDeleteError(null)
+        startDelete(async () => {
+            // 성공 시 액션이 redirect하므로 반환값은 실패(에러)일 때만 도달
+            const result = await deleteClubAction(club.id, deletePassword)
+            if (result?.error) setDeleteError(result.error)
+        })
     }
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,13 +181,54 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                         type="button"
                         variant="destructive"
                         className="w-full"
-                        onClick={handleDelete}
-                        disabled={isDeleting}
+                        onClick={() => {
+                            setDeletePassword('')
+                            setDeleteError(null)
+                            setDeleteOpen(true)
+                        }}
                     >
-                        {isDeleting ? '삭제 중...' : '클럽 삭제'}
+                        클럽 삭제
                     </Button>
                 </CardContent>
             </Card>
+
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-destructive">클럽 삭제</DialogTitle>
+                        <DialogDescription>
+                            &quot;{club.name}&quot; 클럽과 모든 데이터가 영구적으로 제거됩니다. 이 작업은 되돌릴 수 없습니다.
+                            계속하려면 삭제 비밀번호를 입력하세요.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="delete-password">삭제 비밀번호</Label>
+                        <Input
+                            id="delete-password"
+                            type="password"
+                            placeholder="비밀번호를 입력하세요"
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                            autoComplete="off"
+                        />
+                        {deleteError && (
+                            <p className="text-xs text-destructive">{deleteError}</p>
+                        )}
+                    </div>
+
+                    <DialogFooter showCloseButton>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting || deletePassword.length === 0}
+                        >
+                            {isDeleting ? '삭제 중...' : '영구 삭제'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

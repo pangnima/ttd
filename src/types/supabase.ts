@@ -182,6 +182,7 @@ export type Database = {
       clubs: {
         Row: {
           created_at: string
+          delete_password_hash: string | null
           description: string | null
           id: string
           is_public: boolean
@@ -193,6 +194,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          delete_password_hash?: string | null
           description?: string | null
           id?: string
           is_public?: boolean
@@ -204,6 +206,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          delete_password_hash?: string | null
           description?: string | null
           id?: string
           is_public?: boolean

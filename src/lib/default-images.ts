@@ -28,6 +28,9 @@ export function randomAvatarPath(): string {
     return pick(DEFAULT_AVATAR_PATHS)
 }
 
+// 기본 클럽 로고 전체 경로 목록 (클럽 생성 폼에서 노출·셔플에 사용)
+export const DEFAULT_CLUB_LOGO_PATHS: string[] = CLUB_LOGO_FILES.map((file) => `/clublogos/${file}`)
+
 export function randomClubLogoPath(): string {
     return `/clublogos/${pick(CLUB_LOGO_FILES)}`
 }

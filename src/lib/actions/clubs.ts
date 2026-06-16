@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { randomClubLogoPath } from '@/lib/default-images'
+import { hashClubPassword, verifyClubPassword } from '@/lib/club-password'
 
 async function uploadClubLogo(
     supabase: Awaited<ReturnType<typeof createClient>>,
@@ -35,9 +36,13 @@ export async function createClubAction(
     const region = (formData.get('region') as string).trim()
     const description = (formData.get('description') as string | null)?.trim() ?? ''
     const isPublic = formData.get('is_public') !== 'false'
+    const deletePassword = (formData.get('delete_password') as string | null) ?? ''
+    const deletePasswordConfirm = (formData.get('delete_password_confirm') as string | null) ?? ''
 
     if (!name) return { error: '클럽 이름을 입력해주세요.' }
     if (!region) return { error: '활동 지역을 입력해주세요.' }
+    if (deletePassword.length < 4) return { error: '삭제 비밀번호는 4자 이상이어야 합니다.' }
+    if (deletePassword !== deletePasswordConfirm) return { error: '삭제 비밀번호가 일치하지 않습니다.' }
 
     const { data, error } = await supabase
         .from('clubs')
@@ -47,19 +52,21 @@ export async function createClubAction(
             description: description || null,
             is_public: isPublic,
             owner_id: user.id,
+            delete_password_hash: hashClubPassword(deletePassword),
         })
         .select('id')
         .single()
 
     if (error) return { error: error.message }
 
-    // 로고 (선택) — 업로드가 없거나 실패하면 기본 로고를 랜덤 배정
+    // 로고 — 업로드가 있으면 업로드본, 없으면 선택된 기본 로고, 그것도 없으면 랜덤 배정
     const logo = formData.get('logo') as File | null
+    const defaultLogo = (formData.get('default_logo') as string | null)?.trim() || ''
     let logoUrl: string | null = null
     if (logo && logo.size > 0) {
         logoUrl = await uploadClubLogo(supabase, data.id, logo)
     }
-    if (!logoUrl) logoUrl = randomClubLogoPath()
+    if (!logoUrl) logoUrl = defaultLogo || randomClubLogoPath()
     await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', data.id)
 
     revalidatePath('/clubs', 'layout')
@@ -101,10 +108,22 @@ export async function updateClubAction(
     redirect(`/clubs/${clubId}`)
 }
 
-export async function deleteClubAction(clubId: string): Promise<{ error: string } | null> {
+export async function deleteClubAction(clubId: string, password?: string): Promise<{ error: string } | null> {
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { error: '로그인이 필요합니다.' }
+
+    // 삭제 비밀번호가 설정된 클럽이면 검증 (기존 클럽은 NULL → 검증 생략)
+    const { data: club } = await supabase
+        .from('clubs')
+        .select('delete_password_hash')
+        .eq('id', clubId)
+        .single()
+    if (club?.delete_password_hash) {
+        if (!password || !verifyClubPassword(password, club.delete_password_hash)) {
+            return { error: '비밀번호가 일치하지 않습니다.' }
+        }
+    }
 
     const { error } = await supabase
         .from('clubs')
