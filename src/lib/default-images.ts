@@ -21,8 +21,11 @@ function pick<T>(arr: readonly T[]): T {
     return arr[Math.floor(Math.random() * arr.length)]
 }
 
+// 기본 아바타 전체 경로 목록 (회원가입 폼에서 노출·셔플에 사용)
+export const DEFAULT_AVATAR_PATHS: string[] = AVATAR_FILES.map((file) => `/avatars/${file}`)
+
 export function randomAvatarPath(): string {
-    return `/avatars/${pick(AVATAR_FILES)}`
+    return pick(DEFAULT_AVATAR_PATHS)
 }
 
 export function randomClubLogoPath(): string {

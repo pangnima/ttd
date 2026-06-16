@@ -1,44 +1,64 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
 import { signupAction } from '@/lib/actions/auth'
+import { formatPhoneNumber } from '@/lib/format/phone'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const [gender, setGender] = useState('male')
     const [hand, setHand] = useState('right')
+    const [phone, setPhone] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordConfirm, setPasswordConfirm] = useState('')
 
-    function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
-        setAvatarPreview(URL.createObjectURL(file))
-    }
+    const pwMismatch = passwordConfirm.length > 0 && password !== passwordConfirm
 
     return (
         <form action={formAction} className="space-y-5">
-            {/* 프로필 사진 */}
-            <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-14 h-14 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0 group-hover:border-input transition-colors">
-                    {avatarPreview ? (
-                        <Image src={avatarPreview} alt="프로필" width={56} height={56} className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="text-xl text-muted-foreground">👤</span>
-                    )}
-                </div>
-                <div>
-                    <p className="text-sm text-foreground group-hover:text-foreground transition-colors">프로필 사진 업로드</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (선택)</p>
-                </div>
-                <input id="avatar" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleAvatarChange} />
-            </label>
+            {/* ── 프로필 사진 ── */}
+            <AvatarUploadField />
 
             <div className="h-px bg-border" />
 
-            {/* 이름 + 닉네임 */}
+            {/* ── 계정 (이메일 = 로그인 아이디) ── */}
+            <div>
+                <label htmlFor="email" className={labelCls}>이메일 *</label>
+                <input id="email" name="email" type="email" placeholder="example@email.com" required autoComplete="email" className={inputCls} />
+                <p className="mt-1 text-[11px] text-muted-foreground">로그인 시 사용할 아이디입니다.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label htmlFor="password" className={labelCls}>비밀번호 *</label>
+                    <input
+                        id="password" name="password" type="password"
+                        placeholder="6자 이상" required minLength={6} autoComplete="new-password"
+                        value={password} onChange={(e) => setPassword(e.target.value)}
+                        className={inputCls}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password_confirm" className={labelCls}>비밀번호 확인 *</label>
+                    <input
+                        id="password_confirm" name="password_confirm" type="password"
+                        placeholder="다시 입력" required autoComplete="new-password"
+                        value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
+                        aria-invalid={pwMismatch}
+                        className={inputCls}
+                    />
+                </div>
+            </div>
+            {pwMismatch && (
+                <p className="-mt-3 text-[11px] text-destructive">비밀번호가 일치하지 않습니다.</p>
+            )}
+
+            <div className="h-px bg-border" />
+
+            {/* ── 프로필 ── */}
             <div className="grid grid-cols-2 gap-3">
                 <div>
                     <label htmlFor="name" className={labelCls}>이름 *</label>
@@ -50,27 +70,19 @@ export function SignupForm() {
                 </div>
             </div>
 
-            {/* 이메일 */}
-            <div>
-                <label htmlFor="email" className={labelCls}>이메일 *</label>
-                <input id="email" name="email" type="email" placeholder="example@email.com" required autoComplete="email" className={inputCls} />
-            </div>
-
-            {/* 비밀번호 */}
-            <div>
-                <label htmlFor="password" className={labelCls}>비밀번호 *</label>
-                <input id="password" name="password" type="password" placeholder="6자 이상" required minLength={6} autoComplete="new-password" className={inputCls} />
-            </div>
-
-            {/* 연락처 */}
             <div>
                 <label htmlFor="phone" className={labelCls}>연락처</label>
-                <input id="phone" name="phone" placeholder="010-0000-0000" className={inputCls} />
+                <input
+                    id="phone" name="phone" type="tel" inputMode="numeric"
+                    placeholder="010-0000-0000"
+                    value={phone} onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                    className={inputCls}
+                />
             </div>
 
             <div className="h-px bg-border" />
 
-            {/* 성별 + 주력손 */}
+            {/* ── 테니스 정보 ── */}
             <input type="hidden" name="gender" value={gender} />
             <input type="hidden" name="dominant_hand" value={hand} />
             <div className="grid grid-cols-2 gap-3">
@@ -114,7 +126,6 @@ export function SignupForm() {
                 </div>
             </div>
 
-            {/* 테니스 시작일 + NTRP */}
             <div className="grid grid-cols-2 gap-3">
                 <div>
                     <label htmlFor="tennis_start_date" className={labelCls}>테니스 시작일</label>
@@ -139,8 +150,8 @@ export function SignupForm() {
 
             <Button
                 type="submit"
-                disabled={isPending}
-                className="w-full rounded-full font-semibold h-11 mt-2"
+                disabled={isPending || pwMismatch}
+                className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '가입 중...' : '회원가입'}
             </Button>

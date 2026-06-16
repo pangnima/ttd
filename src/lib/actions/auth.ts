@@ -26,6 +26,12 @@ export async function signupAction(
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const passwordConfirm = formData.get('password_confirm') as string | null
+
+    // 비밀번호 확인 일치 검증 (클라이언트 검증의 서버 측 방어선)
+    if (passwordConfirm !== null && password !== passwordConfirm) {
+        return { error: '비밀번호가 일치하지 않습니다.' }
+    }
 
     // options.data는 Supabase Auth metadata로 전달되며,
     // handle_new_user DB 트리거가 이 값을 읽어 public.users row를 자동 생성함.
@@ -46,10 +52,11 @@ export async function signupAction(
     })
     if (error) return { error: error.message }
 
-    // 프로필 사진 (선택) — 업로드가 없으면 기본 아바타를 랜덤 배정
+    // 프로필 사진 (선택) — 업로드가 없으면 폼에서 선택한 기본 아바타(없으면 랜덤)를 배정
     const avatar = formData.get('avatar') as File | null
+    const defaultAvatar = formData.get('default_avatar') as string | null
     if (data.user) {
-        let profileImage = randomAvatarPath()
+        let profileImage = defaultAvatar || randomAvatarPath()
         if (avatar && avatar.size > 0) {
             const ext = avatar.name.split('.').pop()
             const path = `${data.user.id}/avatar.${ext}`

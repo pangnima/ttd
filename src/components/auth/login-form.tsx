@@ -5,7 +5,7 @@ import { useActionState, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
 import { SocialLoginButtons } from '@/components/auth/social-login-buttons'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { loginAction } from '@/lib/actions/auth'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
@@ -30,9 +30,10 @@ export function LoginForm() {
                 <div>
                     <div className="flex items-center justify-between">
                         <label htmlFor="password" className={labelCls}>비밀번호</label>
-                        {/* UI만: 비밀번호 재설정 플로우는 추후 구현 */}
+                        {/* UI만: 비밀번호 재설정 플로우는 추후 구현. tabIndex=-1로 이메일→비밀번호 탭 동선 보존 */}
                         <Link
                             href="#"
+                            tabIndex={-1}
                             className="mb-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                             비밀번호 찾기
@@ -48,6 +49,7 @@ export function LoginForm() {
                         />
                         <button
                             type="button"
+                            tabIndex={-1}
                             onClick={() => setShowPassword((v) => !v)}
                             aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                             className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted-foreground hover:text-foreground"
@@ -84,6 +86,17 @@ export function LoginForm() {
             </div>
 
             <SocialLoginButtons />
+
+            {/* 회원가입 유도 — 시인성을 위해 별도 버튼으로 분리 */}
+            <div className="space-y-2 pt-1">
+                <p className="text-center text-[11px] text-muted-foreground">계정이 없으신가요?</p>
+                <Link
+                    href="/signup"
+                    className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full h-11 font-semibold')}
+                >
+                    회원가입
+                </Link>
+            </div>
         </div>
     )
 }

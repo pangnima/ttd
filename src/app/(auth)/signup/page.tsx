@@ -1,18 +1,14 @@
 import Link from 'next/link'
 import { SignupForm } from '@/components/auth/signup-form'
+import { BrandLogo } from '@/components/common/brand-logo'
 
 export default function SignupPage() {
     return (
         <div className="h-full overflow-y-auto">
             <div className="min-h-full flex items-center justify-center px-6 py-10">
                 <div className="w-full max-w-md">
-                    <Link href="/" className="flex items-center gap-2.5 mb-10">
-                        <div className="w-8 h-8 rounded-md border border-foreground/30 flex items-center justify-center text-foreground text-sm font-bold bg-foreground/10">
-                            TC
-                        </div>
-                        <span className="text-sm font-medium tracking-widest uppercase text-foreground/70">
-                            Tennis Club
-                        </span>
+                    <Link href="/" className="inline-flex mb-10 text-foreground">
+                        <BrandLogo size="md" />
                     </Link>
 
                     <div className="mb-8">
