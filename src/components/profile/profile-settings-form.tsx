@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useEffect, useActionState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, Shuffle } from 'lucide-react'
 import { updateProfileAction } from '@/lib/actions/profile'
+import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 
 const NTRP_OPTIONS = [
@@ -23,9 +25,13 @@ const inputCls = [
 
 const labelCls = 'block text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-1.5'
 
+// 변경 불가 필드 표시용 (입력 불가, 회색 톤)
+const readonlyFieldCls = [
+    'w-full rounded-md px-3 py-2.5 text-sm text-muted-foreground',
+    'bg-muted/50 border border-input',
+].join(' ')
+
 const toggleBase = 'py-2 text-xs rounded-md border transition-all'
-const toggleActive = 'border-primary bg-primary/10 text-primary font-semibold'
-const toggleInactive = 'border-border text-muted-foreground hover:border-input hover:text-foreground'
 const toggleReadonlyActive = 'border-primary/40 bg-primary/5 text-primary/60 font-semibold cursor-default pointer-events-none'
 const toggleReadonlyInactive = 'border-border text-muted-foreground/50 cursor-default pointer-events-none'
 
@@ -46,21 +52,38 @@ type Props = {
 }
 
 export function ProfileSettingsForm({ initialProfile }: Props) {
-    const [profile] = useState<ProfileData>(initialProfile)
+    const router = useRouter()
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    // "기본 이미지로 변경"으로 선택한 기본 아바타 경로 (null이면 미선택)
+    const [defaultAvatar, setDefaultAvatar] = useState<string | null>(null)
     const [ntrp, setNtrp] = useState(initialProfile.ntrp ? initialProfile.ntrp.toFixed(1) : '3.0')
-    const [dominantHand, setDominantHand] = useState(initialProfile.dominant_hand ?? 'right')
     const [statsHidden, setStatsHidden] = useState(initialProfile.stats_hidden ?? false)
     const [state, formAction, isPending] = useActionState(updateProfileAction, null)
+
+    // 저장 성공 시 서버 컴포넌트(레이아웃 헤더 포함) 재렌더 → 닉네임·아바타 즉시 반영
+    useEffect(() => {
+        if (state?.success) router.refresh()
+    }, [state, router])
 
     function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return
+        // 파일 업로드는 기본 이미지 선택보다 우선
+        setDefaultAvatar(null)
         setAvatarPreview(URL.createObjectURL(file))
     }
 
-    const avatarSrc = avatarPreview ?? profile.profile_image
-    const currentGender = profile.gender ?? 'male'
+    // 클릭마다 직전과 다른 기본 아바타로 셔플
+    function handleShuffleDefault() {
+        const candidates = DEFAULT_AVATAR_PATHS.filter((p) => p !== defaultAvatar)
+        const next = candidates[Math.floor(Math.random() * candidates.length)]
+        setDefaultAvatar(next)
+        setAvatarPreview(next)
+    }
+
+    const avatarSrc = avatarPreview ?? initialProfile.profile_image
+    const currentGender = initialProfile.gender ?? 'male'
+    const currentHand = initialProfile.dominant_hand ?? 'right'
 
     return (
         <form action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-5`}>
@@ -79,18 +102,30 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                             />
                         ) : (
                             <span className="text-xl text-muted-foreground font-medium">
-                                {profile.nickname?.[0] ?? '?'}
+                                {initialProfile.nickname?.[0] ?? '?'}
                             </span>
                         )}
                     </div>
                     <div className="space-y-1.5">
-                        <label
-                            htmlFor="avatar"
-                            className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
-                        >
-                            <ImagePlus className="w-3.5 h-3.5" />
-                            이미지 변경
-                        </label>
+                        {/* 업로드 없이 기본 이미지로 변경한 경우 그 경로를 서버로 전달 */}
+                        <input type="hidden" name="default_avatar" value={defaultAvatar ?? ''} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <label
+                                htmlFor="avatar"
+                                className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
+                            >
+                                <ImagePlus className="w-3.5 h-3.5" />
+                                이미지 변경
+                            </label>
+                            <button
+                                type="button"
+                                onClick={handleShuffleDefault}
+                                className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
+                            >
+                                <Shuffle className="w-3.5 h-3.5" />
+                                기본 이미지로 변경
+                            </button>
+                        </div>
                         <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
                         <input
                             id="avatar"
@@ -106,21 +141,19 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label htmlFor="name" className={labelCls}>이름</label>
-                    <input
-                        id="name"
-                        name="name"
-                        defaultValue={profile.name}
-                        required
-                        className={inputCls}
-                    />
+                    <p className={`${labelCls} flex items-center gap-1.5`}>
+                        이름
+                        <span className="normal-case tracking-normal font-normal text-muted-foreground">(변경 불가)</span>
+                    </p>
+                    {/* 이름은 변경 불가 — 표시만, 폼 전송 안 함 */}
+                    <div className={`${readonlyFieldCls}`}>{initialProfile.name}</div>
                 </div>
                 <div>
                     <label htmlFor="nickname" className={labelCls}>닉네임</label>
                     <input
                         id="nickname"
                         name="nickname"
-                        defaultValue={profile.nickname}
+                        defaultValue={initialProfile.nickname}
                         required
                         className={inputCls}
                     />
@@ -132,7 +165,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                 <input
                     id="phone"
                     name="phone"
-                    defaultValue={profile.phone ?? ''}
+                    defaultValue={initialProfile.phone ?? ''}
                     placeholder="010-0000-0000"
                     className={inputCls}
                 />
@@ -161,32 +194,33 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                     </div>
                 </div>
                 <div>
-                    <p className={labelCls}>주력손</p>
-                    <input type="hidden" name="dominant_hand" value={dominantHand} />
+                    <p className={`${labelCls} flex items-center gap-1.5`}>
+                        주력손
+                        <span className="normal-case tracking-normal font-normal text-muted-foreground">(변경 불가)</span>
+                    </p>
+                    {/* 주력손은 변경 불가 — 표시만 */}
                     <div className="grid grid-cols-2 gap-1.5">
                         {[{ value: 'right', label: '오른손' }, { value: 'left', label: '왼손' }].map(({ value, label }) => (
-                            <button
+                            <div
                                 key={value}
-                                type="button"
-                                onClick={() => setDominantHand(value)}
-                                className={`${toggleBase} ${dominantHand === value ? toggleActive : toggleInactive}`}
+                                className={`${toggleBase} text-center ${
+                                    currentHand === value ? toggleReadonlyActive : toggleReadonlyInactive
+                                }`}
                             >
                                 {label}
-                            </button>
+                            </div>
                         ))}
                     </div>
                 </div>
             </div>
 
             <div>
-                <label htmlFor="tennis_start_date" className={labelCls}>테니스 시작일</label>
-                <input
-                    id="tennis_start_date"
-                    name="tennis_start_date"
-                    type="date"
-                    defaultValue={profile.tennis_start_date ?? ''}
-                    className={inputCls}
-                />
+                <p className={`${labelCls} flex items-center gap-1.5`}>
+                    테니스 시작일
+                    <span className="normal-case tracking-normal font-normal text-muted-foreground">(변경 불가)</span>
+                </p>
+                {/* 테니스 시작일은 변경 불가 — 표시만 */}
+                <div className={readonlyFieldCls}>{initialProfile.tennis_start_date || '미입력'}</div>
             </div>
 
             <div className="space-y-1.5">

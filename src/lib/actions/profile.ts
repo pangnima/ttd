@@ -4,10 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 
+export type ProfileActionState = { error?: string; success?: boolean }
+
 export async function updateProfileAction(
-    _prevState: { error: string } | null,
+    _prevState: ProfileActionState | null,
     formData: FormData
-): Promise<{ error: string } | null> {
+): Promise<ProfileActionState | null> {
     const supabase = await createClient()
     const {
         data: { user },
@@ -17,21 +19,23 @@ export async function updateProfileAction(
     let profileImage: string | undefined
 
     const avatar = formData.get('avatar') as File | null
+    const defaultAvatar = (formData.get('default_avatar') as string) || null
     if (avatar && avatar.size > 0) {
+        // 파일 업로드가 있으면 Storage에 저장 (업로드 우선)
         const ext = avatar.name.split('.').pop()
         const path = `${user.id}/avatar.${ext}`
         await supabase.storage.from('avatars').upload(path, avatar, { upsert: true })
         const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
         profileImage = urlData.publicUrl
+    } else if (defaultAvatar) {
+        // 업로드 없이 "기본 이미지로 변경"을 선택한 경우, 미리보기로 보여준 기본 아바타 경로를 그대로 저장
+        profileImage = defaultAvatar
     }
 
+    // 이름·성별·주력손·테니스 시작일은 변경 불가 정책 — update 대상에서 제외해 서버에서 무시한다
     const updates = {
-        name: formData.get('name') as string,
         nickname: formData.get('nickname') as string,
         phone: (formData.get('phone') as string) || null,
-        gender: (formData.get('gender') as string) || null,
-        dominant_hand: (formData.get('dominant_hand') as string) || null,
-        tennis_start_date: (formData.get('tennis_start_date') as string) || null,
         ntrp: formData.get('ntrp') ? Number(formData.get('ntrp')) : null,
         stats_hidden: formData.get('stats_hidden') === 'true',
         ...(profileImage ? { profile_image: profileImage } : {}),
@@ -45,7 +49,9 @@ export async function updateProfileAction(
 
     revalidatePath('/profile/settings')
     revalidatePath('/me/analytics')
-    return null
+    // 헤더(이름·아바타)가 포함된 (main) 레이아웃 무효화 → 저장 후 즉시 반영
+    revalidatePath('/', 'layout')
+    return { success: true }
 }
 
 export async function toggleStatsHiddenAction(hidden: boolean): Promise<void> {

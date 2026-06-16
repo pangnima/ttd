@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -10,7 +9,6 @@ import { MobileNav } from '@/components/common/mobile-nav'
 import { BrandLogo } from '@/components/common/brand-logo'
 import { useSidebar } from '@/components/common/sidebar-context'
 import { logoutAction } from '@/lib/actions/auth'
-import { createClient } from '@/lib/supabase/client'
 import { Shield, LogOut, PanelLeft } from 'lucide-react'
 
 type UserDisplay = {
@@ -23,38 +21,11 @@ type UserDisplay = {
 
 type HeaderProps = {
     clubs?: { id: string; name: string }[]
+    userDisplay?: UserDisplay | null
 }
 
-export function Header({ clubs = [] }: HeaderProps) {
-    const [userDisplay, setUserDisplay] = useState<UserDisplay | null>(null)
+export function Header({ clubs = [], userDisplay = null }: HeaderProps) {
     const { collapsed, toggle } = useSidebar()
-
-    useEffect(() => {
-        let isMounted = true
-        const supabase = createClient()
-
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
-            if (!isMounted || !user) return
-            const { data } = await supabase
-                .from('users')
-                .select('name, nickname, role, profile_image')
-                .eq('id', user.id)
-                .single()
-            if (isMounted && data) {
-                setUserDisplay({
-                    id: user.id,
-                    name: data.name,
-                    nickname: data.nickname,
-                    role: data.role,
-                    profileImage: data.profile_image,
-                })
-            }
-        })
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
 
     return (
         <header className="relative min-h-14 border-b border-foreground/5 dark:border-foreground/10 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">

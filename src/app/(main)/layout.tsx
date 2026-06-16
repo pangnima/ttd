@@ -15,12 +15,37 @@ export default async function MainLayout({
     const myClubs = user ? await fetchMyClubs(user.id) : []
     const clubs = myClubs.map((c) => ({ id: c.id, name: c.name }))
 
+    // 헤더 표시용 사용자 정보 — 서버에서 조회해 props로 전달 (저장 후 revalidatePath로 즉시 갱신)
+    let userDisplay: {
+        id: string
+        name: string
+        nickname: string
+        role: string
+        profileImage: string | null
+    } | null = null
+    if (user) {
+        const { data: profile } = await supabase
+            .from('users')
+            .select('name, nickname, role, profile_image')
+            .eq('id', user.id)
+            .single()
+        if (profile) {
+            userDisplay = {
+                id: user.id,
+                name: profile.name,
+                nickname: profile.nickname,
+                role: profile.role,
+                profileImage: profile.profile_image,
+            }
+        }
+    }
+
     return (
         <SidebarProvider>
             <div className="flex h-dvh bg-background">
                 <Sidebar clubs={clubs} userId={user?.id ?? null} />
                 <div className="flex flex-col flex-1 min-w-0">
-                    <Header clubs={clubs} />
+                    <Header clubs={clubs} userDisplay={userDisplay} />
                     <main className="flex-1 overflow-y-auto p-4 md:p-6">
                         {children}
                     </main>
