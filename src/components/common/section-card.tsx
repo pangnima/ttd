@@ -6,6 +6,8 @@ type Props = {
     title: string
     /** 데이터가 없을 때 보여줄 빈 상태 문구 */
     emptyMessage?: string
+    /** 빈 상태에 문구 위로 표시할 일러스트 SVG 경로 (예: '/empty/rivals.svg') */
+    emptyImage?: string
     /** 비어있는지 여부 */
     isEmpty?: boolean
     /** 데이터가 있을 때 렌더할 콘텐츠 */
@@ -23,6 +25,7 @@ type Props = {
 export function SectionCard({
     title,
     emptyMessage = '데이터가 없습니다',
+    emptyImage,
     isEmpty = false,
     children,
     headerRight,
@@ -35,7 +38,14 @@ export function SectionCard({
                 {headerRight && <div className="ml-auto">{headerRight}</div>}
             </div>
             {isEmpty ? (
-                <div className={`${EMPTY_BLOCK} flex-1 flex items-center justify-center`}>{emptyMessage}</div>
+                <div className={`${EMPTY_BLOCK} flex-1 flex flex-col items-center justify-center gap-3`}>
+                    {emptyImage && (
+                        // 정적 SVG 장식. next/image는 SVG 최적화 이점 없어 <img> 사용 (tier-icon 관례)
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={emptyImage} alt="" aria-hidden width={96} height={64} draggable={false} />
+                    )}
+                    <span>{emptyMessage}</span>
+                </div>
             ) : (
                 <div className={`${CARD_BASE} ${contentClass} flex-1`}>{children}</div>
             )}

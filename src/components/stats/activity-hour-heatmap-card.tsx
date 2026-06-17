@@ -47,6 +47,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             title="경기 활동"
             isEmpty={isEmpty && data.untimed === 0}
             emptyMessage="기록된 경기가 없습니다"
+            emptyImage="/empty/activity.svg"
             contentClass="p-4 flex flex-col gap-3"
             headerRight={<SegmentedToggle options={OPTIONS} value={mode} onValueChange={setMode} />}
         >

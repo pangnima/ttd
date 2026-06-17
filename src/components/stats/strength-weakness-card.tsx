@@ -14,6 +14,7 @@ export function StrengthWeaknessCard({ diagnosis }: Props) {
             title="강점 · 약점 진단"
             isEmpty={isEmpty}
             emptyMessage="진단에 충분한 데이터가 없습니다 (각 조건 최소 3~5경기 필요)"
+            emptyImage="/empty/diagnosis.svg"
             contentClass="p-4 space-y-4"
         >
             {strengths.length > 0 && (

@@ -23,11 +23,16 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                 </Link>
             </div>
             {groups.length === 0 ? (
-                <div className={EMPTY_BLOCK}>
-                    기록된 개인 경기가 없습니다.{' '}
-                    <Link href="/me/personal-matches/new" className="text-primary hover:underline">
-                        첫 경기 입력하기
-                    </Link>
+                <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>
+                    {/* 정적 SVG 장식 (tier-icon 관례) */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
+                    <span>
+                        기록된 개인 경기가 없습니다.{' '}
+                        <Link href="/me/personal-matches/new" className="text-primary hover:underline">
+                            첫 경기 입력하기
+                        </Link>
+                    </span>
                 </div>
             ) : (
                 <PersonalMatchMonthBrowser groups={groups} />

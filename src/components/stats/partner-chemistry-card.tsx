@@ -18,6 +18,7 @@ export function PartnerChemistryCard({ partners, userMap }: Props) {
             title="파트너 케미"
             isEmpty={isEmpty}
             emptyMessage="3경기 이상 함께 뛴 파트너가 아직 없어요"
+            emptyImage="/empty/partner.svg"
             contentClass="p-4"
             headerRight={!isEmpty ? <span className={`text-xs ${TEXT_MUTED}`}>복식 호흡 · 케미 지수</span> : undefined}
         >

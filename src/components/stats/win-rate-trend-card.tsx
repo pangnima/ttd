@@ -48,6 +48,7 @@ export function WinRateTrendCard({ years }: Props) {
             title="내 승률 추이"
             isEmpty={years.length === 0}
             emptyMessage="기록된 경기가 없습니다"
+            emptyImage="/empty/win-trend.svg"
             contentClass="p-4 flex flex-col gap-3"
             headerRight={
                 <div className="flex items-center gap-2">

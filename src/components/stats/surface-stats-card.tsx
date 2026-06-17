@@ -17,6 +17,7 @@ export function SurfaceStatsCard({ surfaceStats }: Props) {
             title="코트 표면별 성적"
             isEmpty={entries.length === 0}
             emptyMessage="경기 데이터가 없습니다"
+            emptyImage="/empty/court-surface.svg"
             contentClass="p-4 space-y-3"
         >
             {entries.map(([surface, wl]) => (

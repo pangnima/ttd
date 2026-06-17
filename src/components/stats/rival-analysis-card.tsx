@@ -19,6 +19,7 @@ export function RivalAnalysisCard({ rivals, userMap, today }: Props) {
             title="라이벌 분석"
             isEmpty={isEmpty}
             emptyMessage="승률 45~55% 박빙 상대가 아직 없어요"
+            emptyImage="/empty/rivals.svg"
             contentClass="p-4"
             headerRight={!isEmpty ? <span className={`text-xs ${TEXT_MUTED}`}>승률 45~55% 박빙 상대</span> : undefined}
         >

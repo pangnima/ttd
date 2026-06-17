@@ -27,6 +27,7 @@ export function OpponentHandStatsCard({ handStats }: Props) {
             title="상대 손잡이별 성적"
             isEmpty={entries.length === 0}
             emptyMessage="손잡이가 기록된 경기가 없습니다"
+            emptyImage="/empty/handedness.svg"
             contentClass="p-4 space-y-3"
         >
             {entries.map(([hand, wl]) => (

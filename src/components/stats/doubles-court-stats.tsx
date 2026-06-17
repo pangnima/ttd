@@ -19,6 +19,7 @@ export function DoublesCourtStatsCard({ court }: Props) {
             title="복식 코트 성향"
             isEmpty={!hasData}
             emptyMessage="복식 경기 데이터가 없습니다"
+            emptyImage="/empty/doubles.svg"
             contentClass="p-4 space-y-3"
         >
             <StatBarRow

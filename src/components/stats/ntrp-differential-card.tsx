@@ -23,6 +23,7 @@ export function NtrpDifferentialCard({ ntrpStats }: Props) {
             title="NTRP 대비 성적"
             isEmpty={!hasData}
             emptyMessage="경기 데이터가 없거나 상대 NTRP 정보가 부족합니다"
+            emptyImage="/empty/ntrp.svg"
         >
             <div className="grid grid-cols-3 gap-3">
                 {BUCKETS.map(({ key, label, color }) => {
