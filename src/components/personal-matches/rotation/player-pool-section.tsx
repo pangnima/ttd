@@ -20,22 +20,25 @@ type PlayerPoolSectionProps = {
  */
 export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUpdate, onRemove }: PlayerPoolSectionProps) {
     return (
-        <div className="space-y-2">
+        <div className="space-y-4">
             {pool.length === 0 && (
                 <p className="text-xs text-muted-foreground">함께 친 선수를 추가하세요. (최소 3명)</p>
             )}
-            {pool.map((p, i) => (
-                <PoolPlayerRow
-                    key={p.tempId}
-                    index={i}
-                    value={p}
-                    candidates={candidates}
-                    pastOpponents={pastOpponents}
-                    onChange={(patch) => onUpdate(p.tempId, patch)}
-                    onRemove={() => onRemove(p.tempId)}
-                    canRemove
-                />
-            ))}
+            {/* 행은 자체 mt/구분선으로 간격을 가지므로 래퍼에는 space-y를 두지 않는다 */}
+            <div>
+                {pool.map((p, i) => (
+                    <PoolPlayerRow
+                        key={p.tempId}
+                        index={i}
+                        value={p}
+                        candidates={candidates}
+                        pastOpponents={pastOpponents}
+                        onChange={(patch) => onUpdate(p.tempId, patch)}
+                        onRemove={() => onRemove(p.tempId)}
+                        canRemove
+                    />
+                ))}
+            </div>
             <AddButton label="참가자 추가" onClick={onAdd} />
         </div>
     )

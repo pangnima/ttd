@@ -3,7 +3,7 @@
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import { PlayerPicker, type PlayerPickerValue } from '@/components/personal-matches/player-picker'
-import { MATCH_FORM_INPUT as inputClass } from '@/lib/dashboard/tokens'
+import { MATCH_FORM_INPUT as inputClass, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 
 type Props = {
     label: string
@@ -53,7 +53,7 @@ export function PlayerNtrpField({
                 placeholder={placeholder}
             />
             <div>
-                <label className="text-xs text-muted-foreground block mb-1">
+                <label className={MATCH_FORM_LABEL}>
                     NTRP{ntrpRequired ? ' *' : ' (선택)'}
                 </label>
                 <input

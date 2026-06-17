@@ -3,6 +3,7 @@
 import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
 import { PoolSelect } from '@/components/personal-matches/rotation/pool-select'
 import type { PoolPlayer, RotationGame } from '@/lib/personal-matches/rotation'
+import { cn } from '@/lib/utils'
 
 type GameRowProps = {
     index: number
@@ -32,7 +33,7 @@ export function GameRow({ index, game, pool, onChange, onRemove, onAddSet, onUpd
     const opp2Name = nameOf(pool, game.opp2Ref, '상대2')
     const oppLabel = `${opp1Name}·${opp2Name}`
     return (
-        <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
+        <div className={cn('space-y-3', index > 0 && 'mt-6 border-t border-border pt-6')}>
             <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-foreground">게임 {index + 1}</span>
                 <button type="button" onClick={onRemove} className="text-xs text-destructive/80 hover:text-destructive">

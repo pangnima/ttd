@@ -4,6 +4,7 @@ import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
+import { cn } from '@/lib/utils'
 
 type PoolPlayerRowProps = {
     index: number
@@ -21,7 +22,7 @@ type PoolPlayerRowProps = {
  */
 export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChange, onRemove, canRemove }: PoolPlayerRowProps) {
     return (
-        <div className="rounded-md border border-border/60 p-3 space-y-2">
+        <div className={cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6')}>
             <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-foreground">참가자 {index + 1}</span>
                 {canRemove && (

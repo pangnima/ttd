@@ -17,7 +17,7 @@ type Props<T extends string> = {
 export function AdDeuceToggle<T extends string>({ label, options, value, onChange }: Props<T>) {
     return (
         <div>
-            <p className="text-xs text-muted-foreground mb-1">{label} (선택)</p>
+            <p className="text-xs text-muted-foreground mb-1">{label} 유저 선택</p>
             <div className="grid grid-cols-2 gap-1.5">
                 {options.map((o) => {
                     const isAd = value === o.value

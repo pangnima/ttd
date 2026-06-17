@@ -2,6 +2,7 @@
 
 import type { PersonalMatchSetScore } from '@/types'
 import { AdDeuceToggle } from '@/components/personal-matches/ad-deuce-toggle'
+import { cn } from '@/lib/utils'
 
 type SetScoreRowProps = {
     index: number
@@ -20,7 +21,7 @@ type SetScoreRowProps = {
     oppAdLabels?: { opponent: string; opponent2: string }
 }
 
-const scoreInputClass = 'w-16 h-11 rounded-lg border border-input bg-background px-2 text-base font-semibold text-center'
+const scoreInputClass = 'w-14 h-10 rounded-lg border border-input bg-background px-2 text-base font-semibold text-center'
 
 /**
  * 개인 경기기록의 세트 한 줄(번호 + 내/상대 점수 + 삭제 + 복식 애드/듀스).
@@ -35,7 +36,7 @@ export function SetScoreRow({
     // 복식 + 애드/듀스 활성 + 라벨·핸들러가 모두 주어졌을 때만 토글 렌더
     const showAdDeuce = isDoubles && enableAdDeuce && !!myAdLabels && !!oppAdLabels && !!onMyAdChange && !!onOppAdChange
     return (
-        <div className={isDoubles ? 'rounded-md border border-border/60 p-2 space-y-2' : ''}>
+        <div className={isDoubles ? cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6') : ''}>
             <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground w-10">{index + 1}세트</span>
                 <input
@@ -63,7 +64,7 @@ export function SetScoreRow({
             {showAdDeuce && (
                 <div className="grid grid-cols-2 gap-2">
                     <AdDeuceToggle
-                        label="내 팀 애드"
+                        label="내 팀 백핸드"
                         options={[
                             { value: 'me', label: myAdLabels!.me },
                             { value: 'partner', label: myAdLabels!.partner },
@@ -72,7 +73,7 @@ export function SetScoreRow({
                         onChange={onMyAdChange!}
                     />
                     <AdDeuceToggle
-                        label="상대팀 애드"
+                        label="상대팀 백핸드"
                         options={[
                             { value: 'opponent', label: oppAdLabels!.opponent },
                             { value: 'opponent2', label: oppAdLabels!.opponent2 },

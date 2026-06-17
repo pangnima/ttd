@@ -43,11 +43,11 @@ export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent,
         )
     }
     return (
-        <>
+        <div>
             {/* 내 팀 (나 + 파트너) */}
-            <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
+            <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
                     <span className="text-xs text-muted-foreground">나 + 파트너</span>
                 </div>
                 <PlayerNtrpField
@@ -62,10 +62,10 @@ export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent,
                 />
             </div>
 
-            {/* 상대팀 (상대1 + 상대2) */}
-            <div className="rounded-md border border-border/70 bg-muted/20 p-3 space-y-3">
+            {/* 상대팀 선수 1 (상대1 + 상대2) */}
+            <div className="mt-6 border-t border-border pt-6 space-y-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
                     <span className="text-xs text-muted-foreground">상대1 + 상대2</span>
                 </div>
                 <PlayerNtrpField
@@ -79,6 +79,10 @@ export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent,
                     ntrpRequired
                     placeholder="상대방 이름 또는 닉네임"
                 />
+            </div>
+
+            {/* 상대팀 선수 2 */}
+            <div className="mt-6 border-t border-border pt-6">
                 <PlayerNtrpField
                     label="상대팀 선수 2 *"
                     candidates={candidates}
@@ -91,6 +95,6 @@ export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent,
                     placeholder="상대방 이름 또는 닉네임"
                 />
             </div>
-        </>
+        </div>
     )
 }

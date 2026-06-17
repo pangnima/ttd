@@ -36,7 +36,8 @@ export function SetsSection({
                 <span className="w-3" />
                 <span className="w-16 text-center text-xs text-muted-foreground truncate">{opponentLabel}</span>
             </div>
-            <div className="space-y-2">
+            {/* 복식 세트는 각 행이 mt-6/구분선으로 간격을 가지므로 래퍼 space-y 제거 */}
+            <div className={isDoubles ? '' : 'space-y-2'}>
                 {sets.map((s, i) => (
                     <SetScoreRow
                         key={i}
@@ -57,7 +58,7 @@ export function SetsSection({
             <div className="mt-2">
                 <AddButton label="세트 추가" onClick={onAddSet} />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
+            <p className="mt-2 text-xs text-destructive">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
         </div>
     )
 }
