@@ -22,6 +22,8 @@ import { MemberProfileHeader } from '@/components/profile/member-profile-header'
 import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
 import { PageContainer } from '@/components/common/page-container'
+import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
+import { buildOnboardingSteps, isOnboardingComplete } from '@/lib/onboarding'
 
 type Props = {
     params: Promise<{ userId: string }>
@@ -130,6 +132,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             ratingSummary = { selfNtrp: target.ntrp, personal: personalRating, clubs }
         }
 
+        // 온보딩 체크리스트 — 기본 탭(통합)에서만, 미완료 단계가 남았을 때 노출.
+        // 완료 판정은 이미 로드한 데이터(개인 경기 수·프로필 이미지·가입 클럽)만 사용.
+        const onboardingSteps = buildOnboardingSteps({
+            userId,
+            hasPersonalMatch: bundle.personalMatches.length > 0,
+            hasProfileImage: Boolean(target.profileImage),
+            hasClub: myClubs.length > 0,
+        })
+        const showOnboarding = scope.kind === 'total' && !isOnboardingComplete(onboardingSteps)
+
         return (
             <PageContainer>
                 <MemberProfileHeader
@@ -144,6 +156,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     personalRating={scope.kind === 'personal' ? personalRating : undefined}
                     ratingSummary={ratingSummary}
                 />
+                {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
         )

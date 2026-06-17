@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { BookOpen, Users } from 'lucide-react'
 
 export type NavItem = {
     href: string
@@ -8,4 +8,5 @@ export type NavItem = {
 
 export const mainNavItems: NavItem[] = [
     { href: '/clubs', label: '클럽 찾기', icon: Users },
+    { href: '/guide', label: '사용 가이드', icon: BookOpen },
 ]

@@ -43,6 +43,8 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
     const onProfile = activePath.startsWith('/profile/')
     const currentScope = searchParams.get('scope') ?? 'total'
     const scopeActive = (scope: string) => onProfile && currentScope === scope
+    // 개인 경기 등록(목록·생성·수정) 진입 active 판정
+    const onPersonalMatches = activePath.startsWith('/me/personal-matches')
 
     // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위(/clubs/[id]/...)는
     // "내가 가입한 클럽" 트리가 담당하므로 prefix 매칭을 쓰지 않는다.
@@ -109,7 +111,7 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                 {userId &&
                     (collapsed ? (
                         <div className="group/rail relative mt-2 pt-2 border-t border-border/40">
-                            <div className={rowClass(onProfile)}>
+                            <div className={rowClass(onProfile || onPersonalMatches)}>
                                 <BarChart3 className="w-4 h-4 shrink-0" />
                             </div>
                             <RailFlyout>
@@ -118,6 +120,9 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                                 </Link>
                                 <Link href={`/profile/${userId}?scope=personal`} className={flyLinkClass(scopeActive('personal'))}>
                                     개인
+                                </Link>
+                                <Link href="/me/personal-matches" className={flyLinkClass(onPersonalMatches)}>
+                                    개인 경기 등록
                                 </Link>
                             </RailFlyout>
                         </div>
@@ -133,6 +138,9 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                                 </Link>
                                 <Link href={`/profile/${userId}?scope=personal`} className={cn(rowClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                     개인
+                                </Link>
+                                <Link href="/me/personal-matches" className={cn(rowClass(onPersonalMatches), 'pl-9 text-[13px]')}>
+                                    개인 경기 등록
                                 </Link>
                             </div>
                         </div>

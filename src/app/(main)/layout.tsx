@@ -3,6 +3,7 @@ import { fetchMyClubs } from '@/lib/queries/clubs'
 import { Header } from '@/components/common/header'
 import { Sidebar } from '@/components/common/sidebar'
 import { SidebarProvider } from '@/components/common/sidebar-context'
+import { WelcomeDialog } from '@/components/onboarding/welcome-dialog'
 
 export default async function MainLayout({
     children,
@@ -51,6 +52,7 @@ export default async function MainLayout({
                     </main>
                 </div>
             </div>
+            {user && <WelcomeDialog />}
         </SidebarProvider>
     )
 }

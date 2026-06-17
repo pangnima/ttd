@@ -40,6 +40,8 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
     const onProfile = pathname.startsWith('/profile/')
     const currentScope = searchParams.get('scope') ?? 'total'
     const scopeActive = (scope: string) => onProfile && currentScope === scope
+    // 개인 경기 등록(목록·생성·수정) 진입 active 판정
+    const onPersonalMatches = pathname.startsWith('/me/personal-matches')
     // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위는 가입 클럽 트리가 담당.
     const mainActive = (href: string) => pathname === href || pathname === `${href}/new`
 
@@ -100,6 +102,9 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                                 </Link>
                                 <Link href={`/profile/${userId}?scope=personal`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                     개인
+                                </Link>
+                                <Link href="/me/personal-matches" onClick={() => setOpen(false)} className={cn(navLinkClass(onPersonalMatches), 'pl-9 text-[13px]')}>
+                                    개인 경기 등록
                                 </Link>
                             </div>
                         </div>
