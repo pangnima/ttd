@@ -53,7 +53,7 @@ export function WinRateTrendCard({ years }: Props) {
                 <div className="flex items-center gap-2">
                     {years.length > 1 && (
                         <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-                            <SelectTrigger className="h-8 w-[88px] text-sm">
+                            <SelectTrigger className="h-8 w-[88px] text-sm bg-card">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

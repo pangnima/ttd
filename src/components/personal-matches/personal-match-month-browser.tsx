@@ -37,7 +37,7 @@ export function PersonalMatchMonthBrowser({ groups }: Props) {
         <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <Select value={ym} onValueChange={(v) => v && setYm(v)} items={items}>
-                    <SelectTrigger className="w-full sm:w-[220px] h-8 text-sm">
+                    <SelectTrigger className="w-full sm:w-[220px] h-8 text-sm bg-card">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

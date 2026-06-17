@@ -24,8 +24,10 @@ export const TYPO = {
 export const SECTION_LABEL = TYPO.sectionLabel
 // 칩 radius 4px(rounded-sm)
 export const PILL_BASE = 'inline-flex items-center text-xs px-2 py-0.5 rounded-sm border'
+// 빈 상태도 데이터 카드(CARD_BASE)와 동일한 채워진 surface로 표시 — 라이트 모드 시인성.
+// break-keep: 한글이 글자 단위가 아닌 어절(띄어쓰기) 단위로 줄바꿈되도록.
 export const EMPTY_BLOCK =
-    'rounded-lg border border-dashed border-input bg-muted/30 text-muted-foreground text-sm text-center py-8'
+    'rounded-lg border border-border bg-card text-muted-foreground text-sm text-center py-8 px-4 break-keep'
 
 export const TEXT_META = 'text-muted-foreground'
 export const TEXT_MUTED = 'text-muted-foreground'

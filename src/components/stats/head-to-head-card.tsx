@@ -311,7 +311,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
             <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
                 <p className={`${SECTION_LABEL} shrink-0`}>1:1 맞대결 비교</p>
                 <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)} items={opponentItems}>
-                    <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm">
+                    <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm bg-card">
                         <SelectValue placeholder="상대 선택" />
                     </SelectTrigger>
                     <SelectContent>
