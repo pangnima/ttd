@@ -467,6 +467,38 @@
 
 ---
 
+### Week 16: 신규 사용자 온보딩 (개인 경기 중심) ✅ (2026-06-17)
+
+> 최초 회원가입 후 로그인하면 빈 화면(클럽 목록 + 클럽 만들기)만 보여 플랫폼을 인지하기 어려운 문제 해소.
+> **개인 경기 기록을 1순위**로 두고 진입점·체크리스트·환영 모달·가이드 4종을 도입(클럽은 후순위).
+> DB 변경 없음 — 기존 데이터(개인 경기 수·프로필 이미지·가입 클럽)만으로 판정.
+
+#### Phase 1 — 진입점 정비 (가장 큰 갭 해소)
+- [x] 사이드바·모바일 nav "내 전적" 블록에 **개인 경기 등록**(`/me/personal-matches`) 링크 추가 — 이전엔 이 페이지로 가는 메뉴가 전무했음(접힘 rail 플라이아웃·펼침·모바일 모두 반영)
+- [x] `nav-items.ts` `mainNavItems`에 **사용 가이드**(`/guide`, BookOpen) 추가
+
+#### Phase 2 — 온보딩 체크리스트 (내 전적 상단)
+- [x] `src/lib/onboarding.ts` 신설 — 단계 정의·완료 판정 순수 함수(`buildOnboardingSteps`/`countCompletedSteps`/`isOnboardingComplete`)
+- [x] `src/components/onboarding/onboarding-checklist.tsx` 신설 — 진행률 바 + 3단계(첫 경기 기록★ → 프로필 완성 → 클럽 둘러보기), 완료 자동 체크
+- [x] 본인 프로필 **통합 탭**(`profile/[userId]`)에 통합 — 미완료 단계가 있을 때만 노출, localStorage(`onboarding:checklist-dismissed`)로 닫기 영속
+- [x] 추가 쿼리 0건 — 이미 로드한 `bundle.personalMatches`·`target.profileImage`·`myClubs`로 판정
+
+#### Phase 3 — 첫 로그인 환영 모달
+- [x] `src/components/onboarding/welcome-dialog.tsx` 신설 — `ui/dialog`+`ui/progress` 3단계 위저드(개인 분석을 1번으로 배치), 마지막에 "첫 경기 기록하기" CTA + "사용 가이드 보기" 링크
+- [x] `(main)/layout.tsx`에 마운트, localStorage(`onboarding:welcome-seen`) 1회 노출 게이팅
+
+#### Phase 4 — 정적 가이드 페이지
+- [x] `app/(main)/guide/page.tsx` 신설 — 개인 경기 기록(1순위) → 전적 분석 → 클럽 참여 순 3섹션, 단계별 설명 + 딥링크 CTA
+
+> **결정 기록 (Week 16)**
+> - 로그인 진입점(`/clubs`) 변경은 middleware 영향이 커서 제외 — 환영 모달 + 사이드바 진입점으로 대체
+> - 체크리스트 노출 위치: 사용자 결정에 따라 **내 전적(통합 탭)만** (클럽 홈은 미적용)
+> - "프로필 완성" 판정은 `users.ntrp`(가입 필수 시드라 항상 존재) 대신 `profileImage` 존재 여부 사용
+> - localStorage hydration-safe 패턴은 `sidebar-context.tsx` 방식 재사용(mount 후 1회 보정, `set-state-in-effect` eslint-disable)
+> - 클럽 가입자 유도 등 클럽 온보딩은 개인 온보딩 안정화 후 별도 단계로 이관
+
+---
+
 ## 앞으로 개선해야할 점
 
 ### 중기: 기술 부채 / 품질 개선

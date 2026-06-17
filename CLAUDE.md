@@ -38,9 +38,10 @@ src/
 │   │   ├── me/
 │   │   │   ├── analytics/        # /profile/[userId]?mode=total 리다이렉트
 │   │   │   └── personal-matches/ # 개인 경기 기록 CRUD
-│   │   └── profile/
-│   │       ├── [userId]/         # 개인 프로필 (본인=분석 풀버전, 타인=공개 요약)
-│   │       └── settings/
+│   │   ├── profile/
+│   │   │   ├── [userId]/         # 개인 프로필 (본인=분석 풀버전, 타인=공개 요약)
+│   │   │   └── settings/
+│   │   └── guide/               # 신규 사용자 사용 가이드 (정적, 개인 경기 1순위)
 │   └── page.tsx                  # 랜딩페이지
 ├── components/
 │   ├── ui/                       # shadcn/ui 자동 생성 컴포넌트 (직접 수정 금지)
@@ -50,6 +51,7 @@ src/
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
 │   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, rotation/ 입력 등)
 │   ├── profile/                  # 프로필 헤더·통계 조합 (DeleteAccountButton 등)
+│   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
 │   ├── auth/                     # 인증 폼 (login/signup/forgot/reset, AvatarUploadField)
 │   ├── landing/                  # 랜딩페이지 섹션 컴포넌트 (LandingNav 등)
@@ -111,7 +113,8 @@ src/
 │   ├── avatar-color.ts           # 아바타 색상 생성
 │   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
-│   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems + getProfileNavItem)
+│   ├── onboarding.ts             # 신규 사용자 온보딩 단계 정의·완료 판정 (순수 함수)
+│   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems: 클럽 찾기·사용 가이드)
 │   └── utils.ts                  # cn() 헬퍼
 ├── middleware.ts                  # 루트 미들웨어 (세션 갱신 + 보호 라우트 가드)
 └── types/
@@ -145,6 +148,7 @@ src/
 /me/personal-matches → 개인 경기 기록 목록
 /me/personal-matches/new → 개인 경기 추가
 /me/personal-matches/[id]/edit → 개인 경기 수정
+/guide → 신규 사용자 사용 가이드 (정적, 개인 경기 기록 1순위)
 /tiers → 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
 ```
 
@@ -173,6 +177,10 @@ src/
   - [x] 대진표 상세 매트릭스 개편 (티어·승패색·특별매치)
   - [x] 사이드바 rail + BASELINE 로고, 라이트 모드 WCAG AA 시인성
   - [x] 비밀번호 재설정·탈퇴(soft delete)·클럽 초대 링크·OG 메타데이터
+- [x] Week 16: 신규 사용자 온보딩 (개인 경기 중심, DB 변경 없음)
+  - [x] 진입점 정비 — 사이드바·모바일 nav에 개인 경기 등록 링크, 사용 가이드 메뉴
+  - [x] 온보딩 체크리스트 (`lib/onboarding.ts`·`components/onboarding/`, 내 전적 통합 탭, localStorage 닫기)
+  - [x] 첫 로그인 환영 모달 + 정적 가이드 페이지 `/guide`
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
