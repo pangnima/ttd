@@ -71,7 +71,7 @@ export function PersonalMatchList({ matches }: Props) {
             </div>
 
             {groups.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground text-sm text-center py-12">
+                <div className="rounded-xl border border-dashed border-input bg-muted/30 text-muted-foreground text-sm text-center py-12">
                     해당하는 경기 기록이 없습니다.{' '}
                     <Link href="/me/personal-matches/new" className="underline underline-offset-2 hover:text-foreground">
                         경기를 기록해보세요

@@ -99,7 +99,7 @@ export function MatchGamesPageContent({
 
             {sorted.length === 0 ? (
                 /* 빈 상태 */
-                <div className="flex flex-col items-center justify-center py-20 gap-4 border border-border border-dashed rounded-xl">
+                <div className="flex flex-col items-center justify-center py-20 gap-4 border border-input border-dashed rounded-xl">
                     <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
                         <Trophy className="w-5 h-5 text-muted-foreground" />
                     </div>

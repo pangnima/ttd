@@ -71,7 +71,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                 )
             })}
             {members.length > maxDisplay && (
-                <div className="flex items-center justify-center p-2.5 rounded-xl border border-dashed border-foreground/10">
+                <div className="flex items-center justify-center p-2.5 rounded-xl border border-dashed border-input">
                     <span className="text-xs text-muted-foreground">+{members.length - maxDisplay}명</span>
                 </div>
             )}

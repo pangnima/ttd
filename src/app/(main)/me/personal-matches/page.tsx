@@ -31,7 +31,7 @@ export default async function PersonalMatchesPage() {
             </div>
 
             {matches.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground text-sm text-center py-12">
+                <div className="rounded-xl border border-dashed border-input bg-muted/30 text-muted-foreground text-sm text-center py-12">
                     아직 등록된 개인 경기가 없습니다.{' '}
                     <Link href="/me/personal-matches/new" className="underline underline-offset-2 hover:text-foreground">
                         첫 경기를 기록해보세요
