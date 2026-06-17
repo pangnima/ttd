@@ -20,6 +20,8 @@ type TeamPlayersCellProps = {
     isFixed: boolean
     adPlayerId: string | null
     getName: (id: string) => string
+    // 현재 클럽 멤버가 아닌(탈퇴) 선수 판정 — '탈퇴' 배지 표시용.
+    isFormerMember?: (id: string) => boolean
     onToggle: (teamKey: 'team1' | 'team2', playerId: string) => void
     justify?: boolean
     deltas?: Record<string, RatingChange>
@@ -30,7 +32,7 @@ type TeamPlayersCellProps = {
 }
 
 export function TeamPlayersCell({
-    playerIds, teamKey, winner, isFixed, adPlayerId, getName, onToggle, justify, deltas, ratingByUser, hideSideToggle,
+    playerIds, teamKey, winner, isFixed, adPlayerId, getName, isFormerMember, onToggle, justify, deltas, ratingByUser, hideSideToggle,
 }: TeamPlayersCellProps) {
     if (!playerIds.length) return <span className="text-foreground/55 text-xs">-</span>
     const outcome = teamOutcome(winner, teamKey)
@@ -46,6 +48,7 @@ export function TeamPlayersCell({
                             outcome={outcome}
                             delta={deltas?.[pid]}
                             showDelta={isFixed}
+                            isFormerMember={isFormerMember?.(pid)}
                             className={justify ? 'flex-1 min-w-0' : undefined}
                         />
                         {hideSideToggle ? null : !isFixed ? (

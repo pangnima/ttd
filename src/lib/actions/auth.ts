@@ -12,11 +12,25 @@ export async function loginAction(
     formData: FormData
 ): Promise<{ error: string } | null> {
     const supabase = await createClient()
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.get('email') as string,
         password: formData.get('password') as string,
     })
     if (error) return { error: mapAuthError(error.message) }
+
+    // 탈퇴(익명화)된 계정은 로그인 차단 — 세션을 즉시 종료한다.
+    if (data.user) {
+        const { data: profile } = await supabase
+            .from('users')
+            .select('deleted_at')
+            .eq('id', data.user.id)
+            .single()
+        if (profile?.deleted_at) {
+            await supabase.auth.signOut()
+            return { error: '탈퇴한 계정입니다.' }
+        }
+    }
+
     revalidatePath('/', 'layout')
     redirect('/clubs')
 }
@@ -85,6 +99,51 @@ export async function signupAction(
 
 export async function logoutAction() {
     const supabase = await createClient()
+    await supabase.auth.signOut()
+    revalidatePath('/', 'layout')
+    redirect('/login')
+}
+
+// 계정(서비스) 탈퇴 — soft delete(익명화).
+// 물리 삭제는 과거 경기(player FK SET NULL)·레이팅(CASCADE)을 손상시키므로,
+// users 행을 보존하고 개인정보만 익명화한 뒤 deleted_at에 탈퇴 시각을 기록한다.
+export async function deleteAccountAction(): Promise<{ error: string } | null> {
+    const supabase = await createClient()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다' }
+
+    // 소유한 클럽이 있으면 탈퇴 불가 (clubs.owner_id ON DELETE RESTRICT 및 클럽 탈퇴 정책과 일관)
+    const { count: ownedClubs } = await supabase
+        .from('clubs')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+    if (ownedClubs && ownedClubs > 0) {
+        return { error: '소유한 클럽을 먼저 삭제하거나 양도해야 탈퇴할 수 있습니다.' }
+    }
+
+    // 모든 클럽에서 탈퇴 (본인 멤버십 행 전부 삭제)
+    await supabase.from('club_members').delete().eq('user_id', user.id)
+
+    // 개인정보 익명화 + 탈퇴 마킹. 과거 경기/레이팅의 player id는 보존되어 '탈퇴한 회원'으로 표시된다.
+    const { error } = await supabase
+        .from('users')
+        .update({
+            name: '탈퇴한 회원',
+            nickname: '탈퇴한 회원',
+            email: `deleted+${user.id}@deleted.local`,
+            phone: null,
+            profile_image: null,
+            gender: null,
+            dominant_hand: null,
+            tennis_start_date: null,
+            stats_hidden: true,
+            deleted_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+    if (error) return { error: error.message }
+
     await supabase.auth.signOut()
     revalidatePath('/', 'layout')
     redirect('/login')

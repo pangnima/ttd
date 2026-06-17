@@ -31,6 +31,8 @@ export type MatchViewProps = {
     // 라이벌 매치로 판정된 matchId 집합(단식+복식, cross-pair 박빙).
     rivalMatchIds?: Set<string>
     getName: (id: string) => string
+    // 현재 클럽 멤버가 아닌(탈퇴) 선수 판정 — '탈퇴' 배지 표시용.
+    isFormerMember?: (id: string) => boolean
     getCourtLabel: (courtId: string) => string
     restNames: (slotId: string) => string[]
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void

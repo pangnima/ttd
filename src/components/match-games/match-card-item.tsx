@@ -19,6 +19,7 @@ type MatchCardItemProps = {
     isPending: boolean
     canEdit: boolean
     getName: (id: string) => string
+    isFormerMember?: (id: string) => boolean
     getCourtLabel: (courtId: string) => string
     toggleAdSide: (matchId: string, teamKey: 'team1' | 'team2', playerId: string) => void
     updateScore: (matchId: string, setIndex: number, field: 'team1' | 'team2', value: string) => void
@@ -33,7 +34,7 @@ type MatchCardItemProps = {
 // 모바일(md 미만) 카드 한 개 — 경기 1개를 코트/종류/선수/스코어 묶음으로 렌더.
 export function MatchCardItem({
     match, matchGame, state, winner, courtSides, isPending, canEdit,
-    getName, getCourtLabel, toggleAdSide, updateScore, confirmScore, editScore, deltas, ratingByUser, isRival, isSelfRow,
+    getName, isFormerMember, getCourtLabel, toggleAdSide, updateScore, confirmScore, editScore, deltas, ratingByUser, isRival, isSelfRow,
 }: MatchCardItemProps) {
     const sides = courtSides[match.id]
     const isClose = state.confirmed && isCloseMatch(state.sets, winner)
@@ -64,6 +65,7 @@ export function MatchCardItem({
                             outcome={teamOutcome(winner, 'team1')}
                             delta={deltas?.[match.player1Id ?? '']}
                             showDelta={matchGame.isFixed}
+                            isFormerMember={isFormerMember?.(match.player1Id ?? '')}
                             className="flex-1"
                         />
                         <span className="text-muted-foreground text-xs mx-1">vs</span>
@@ -73,6 +75,7 @@ export function MatchCardItem({
                             outcome={teamOutcome(winner, 'team2')}
                             delta={deltas?.[match.player2Id ?? '']}
                             showDelta={matchGame.isFixed}
+                            isFormerMember={isFormerMember?.(match.player2Id ?? '')}
                             className="flex-1 justify-end text-right"
                         />
                         <span className="text-xs text-muted-foreground shrink-0">P2</span>
@@ -88,6 +91,7 @@ export function MatchCardItem({
                                 isFixed={matchGame.isFixed}
                                 adPlayerId={sides?.team1 ?? null}
                                 getName={getName}
+                                isFormerMember={isFormerMember}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
                                 deltas={deltas}
@@ -103,6 +107,7 @@ export function MatchCardItem({
                                 isFixed={matchGame.isFixed}
                                 adPlayerId={sides?.team2 ?? null}
                                 getName={getName}
+                                isFormerMember={isFormerMember}
                                 onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                 justify
                                 deltas={deltas}

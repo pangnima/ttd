@@ -22,6 +22,7 @@ type MatchGridCellProps = {
     canEdit: boolean
     currentUserId?: string
     getName: (id: string) => string
+    isFormerMember?: (id: string) => boolean
     deltas?: Record<string, RatingChange>
     ratingByUser?: Record<string, ClubRating>
     isRival?: boolean
@@ -34,7 +35,7 @@ type MatchGridCellProps = {
 // 매트릭스 셀 1개 — 종류 배지 + 선수(복식 TeamPlayersCell/단식 직접) + 스코어를 세로로 압축.
 export function MatchGridCell({
     match, matchGame, state, courtSides, isPending, canEdit, currentUserId,
-    getName, deltas, ratingByUser, isRival, toggleAdSide, updateScore, confirmScore, editScore,
+    getName, isFormerMember, deltas, ratingByUser, isRival, toggleAdSide, updateScore, confirmScore, editScore,
 }: MatchGridCellProps) {
     const winner = state.confirmed ? getWinnerSide(state.sets) : null
     const sides = courtSides[match.id]
@@ -66,6 +67,7 @@ export function MatchGridCell({
                     isFixed={matchGame.isFixed}
                     adPlayerId={sides?.team1 ?? null}
                     getName={getName}
+                    isFormerMember={isFormerMember}
                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                     deltas={deltas}
                     ratingByUser={ratingByUser}
@@ -79,6 +81,7 @@ export function MatchGridCell({
                     isFixed={matchGame.isFixed}
                     adPlayerId={sides?.team2 ?? null}
                     getName={getName}
+                    isFormerMember={isFormerMember}
                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                     deltas={deltas}
                     ratingByUser={ratingByUser}

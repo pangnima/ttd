@@ -16,6 +16,8 @@ type PlayerNameProps = {
     // 확정 대진표에서만 표시되는 경기 전/후 레이팅 변동.
     delta?: RatingChange
     showDelta?: boolean
+    // 현재 클럽 멤버가 아닌(클럽/계정 탈퇴) 선수면 '탈퇴' 배지 표시.
+    isFormerMember?: boolean
     className?: string
 }
 
@@ -26,11 +28,16 @@ function outcomeClass(outcome: PlayerOutcome): string {
     return 'text-foreground/85'
 }
 
-export function PlayerName({ name, rating, outcome, delta, showDelta, className }: PlayerNameProps) {
+export function PlayerName({ name, rating, outcome, delta, showDelta, isFormerMember, className }: PlayerNameProps) {
     return (
         <span className={cn('text-sm inline-flex items-center gap-1', outcomeClass(outcome), className)}>
             <TierIcon rating={rating ?? DEFAULT_RATING} size={14} className="shrink-0" />
             {name}
+            {isFormerMember && (
+                <span className="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded border border-border text-muted-foreground">
+                    탈퇴
+                </span>
+            )}
             {showDelta && <TierDeltaBadge before={delta?.before} after={delta?.after} />}
         </span>
     )

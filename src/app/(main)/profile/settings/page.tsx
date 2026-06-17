@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileSettingsForm } from '@/components/profile/profile-settings-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
+import { DeleteAccountButton } from '@/components/profile/delete-account-button'
 import { PageContainer } from '@/components/common/page-container'
 
 export default async function ProfileSettingsPage() {
@@ -27,6 +28,7 @@ export default async function ProfileSettingsPage() {
             </div>
             <ProfileSettingsForm initialProfile={data} />
             <PasswordChangeForm />
+            <DeleteAccountButton />
         </PageContainer>
     )
 }

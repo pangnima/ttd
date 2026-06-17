@@ -575,6 +575,7 @@ export type Database = {
       users: {
         Row: {
           created_at: string
+          deleted_at: string | null
           dominant_hand: string | null
           email: string
           gender: string | null
@@ -592,6 +593,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           dominant_hand?: string | null
           email: string
           gender?: string | null
@@ -609,6 +611,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           dominant_hand?: string | null
           email?: string
           gender?: string | null

@@ -61,6 +61,15 @@ export type ClubRatingRankingEntry = {
 
 export async function fetchClubRatingRanking(clubId: string): Promise<ClubRatingRankingEntry[]> {
     const supabase = await createClient()
+
+    // 현재 클럽에 속한(approved) 멤버 id 집합 — 탈퇴(클럽/계정)자는 여기서 빠진다.
+    const { data: memberRows } = await supabase
+        .from('club_members')
+        .select('user_id')
+        .eq('club_id', clubId)
+        .eq('status', 'approved')
+    const approvedSet = new Set((memberRows ?? []).map((m) => m.user_id))
+
     const { data, error } = await supabase
         .from('club_player_ratings')
         .select('user_id, rating, matches_played, user:users(*)')
@@ -69,12 +78,15 @@ export async function fetchClubRatingRanking(clubId: string): Promise<ClubRating
         .order('matches_played', { ascending: false })
     if (error || !data) return []
 
-    return data.map((row) => ({
-        userId: row.user_id,
-        user: row.user ? mapUserRow(row.user as UserRow) : null,
-        rating: Number(row.rating),
-        matchesPlayed: row.matches_played,
-    }))
+    return data
+        .map((row) => ({
+            userId: row.user_id,
+            user: row.user ? mapUserRow(row.user as UserRow) : null,
+            rating: Number(row.rating),
+            matchesPlayed: row.matches_played,
+        }))
+        // 현재 멤버 또는 게스트만 노출. 탈퇴자는 레이팅 행이 남아도 랭킹에서 숨긴다(재가입 시 자동 복원).
+        .filter((entry) => approvedSet.has(entry.userId) || entry.user?.isGuest)
 }
 
 // 특정 (club, user)의 시간순 레이팅 추세. 마지막 ratingAfter = 현재 레이팅, 길이 = 경기 수.

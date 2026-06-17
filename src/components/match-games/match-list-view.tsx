@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
 // 행 위주(리스트) 뷰 — 데스크탑 테이블(md 이상) + 모바일 카드(md 미만).
 export function MatchListView({
     matchGame, matchStates, courtSides, isPending, canEdit, currentUserId,
-    ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, getCourtLabel, restNames,
+    ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, isFormerMember, getCourtLabel, restNames,
     updateScore, confirmScore, editScore, toggleAdSide,
 }: MatchViewProps) {
     const slotGroups = buildSlotGroups(matchGame)
@@ -86,6 +86,7 @@ export function MatchListView({
                                                     outcome={teamOutcome(winner, 'team1')}
                                                     delta={ratingDeltaByMatch?.[match.id]?.[match.player1Id ?? '']}
                                                     showDelta={matchGame.isFixed}
+                                                    isFormerMember={isFormerMember?.(match.player1Id ?? '')}
                                                 />
                                             ) : (
                                                 <TeamPlayersCell
@@ -95,6 +96,7 @@ export function MatchListView({
                                                     isFixed={matchGame.isFixed}
                                                     adPlayerId={sides?.team1 ?? null}
                                                     getName={getName}
+                                                    isFormerMember={isFormerMember}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
                                                     ratingByUser={ratingByUser}
@@ -109,6 +111,7 @@ export function MatchListView({
                                                     outcome={teamOutcome(winner, 'team2')}
                                                     delta={ratingDeltaByMatch?.[match.id]?.[match.player2Id ?? '']}
                                                     showDelta={matchGame.isFixed}
+                                                    isFormerMember={isFormerMember?.(match.player2Id ?? '')}
                                                 />
                                             ) : (
                                                 <TeamPlayersCell
@@ -118,6 +121,7 @@ export function MatchListView({
                                                     isFixed={matchGame.isFixed}
                                                     adPlayerId={sides?.team2 ?? null}
                                                     getName={getName}
+                                                    isFormerMember={isFormerMember}
                                                     onToggle={(teamKey, pid) => toggleAdSide(match.id, teamKey, pid)}
                                                     deltas={ratingDeltaByMatch?.[match.id]}
                                                     ratingByUser={ratingByUser}
@@ -173,6 +177,7 @@ export function MatchListView({
                                         isPending={isPending}
                                         canEdit={canEdit}
                                         getName={getName}
+                                        isFormerMember={isFormerMember}
                                         getCourtLabel={getCourtLabel}
                                         toggleAdSide={toggleAdSide}
                                         updateScore={updateScore}

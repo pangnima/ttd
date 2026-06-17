@@ -30,12 +30,14 @@ type MatchGameTableProps = {
     rivalMatchIds?: Set<string>
     // 현재 로그인 사용자 id — 본인이 참가한 경기를 강조하는 데 사용.
     currentUserId?: string
+    // 현재 클럽 멤버가 아닌(탈퇴) 선수 id 집합 — '탈퇴' 배지 표시용.
+    formerMemberIds?: Set<string>
 }
 
 // 대진표 렌더링의 상태 컨테이너. 점수/코트배치 state와 핸들러를 소유하고,
 // viewMode(URL ?view=)에 따라 리스트/매트릭스 프레젠테이션 컴포넌트로 분기한다.
 // 두 뷰가 동일한 핸들러를 공유하므로 토글해도 입력값이 보존된다.
-export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ratingDeltaByMatch, ratingByUser, rivalMatchIds, currentUserId }: MatchGameTableProps) {
+export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ratingDeltaByMatch, ratingByUser, rivalMatchIds, currentUserId, formerMemberIds }: MatchGameTableProps) {
     const searchParams = useSearchParams()
     const viewMode = readViewMode(searchParams.get('view'))
 
@@ -71,6 +73,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
 
     const userMap = new Map(members.map((m) => [m.id, m.nickname]))
     const getName = (id: string) => userMap.get(id) ?? id
+    const isFormerMember = (id: string) => formerMemberIds?.has(id) ?? false
     const getCourtLabel = (courtId: string) => matchGame.courts.find((c) => c.id === courtId)?.label ?? courtId
 
     // 시간대별 그룹 — 휴식 인원 계산용. (리스트/매트릭스 각 뷰는 내부에서 자체 재계산)
@@ -139,7 +142,7 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
     // 두 뷰에 동일하게 내려주는 공유 props.
     const sharedProps: MatchViewProps = {
         matchGame, matchStates, courtSides, isPending, canEdit, currentUserId,
-        ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, getCourtLabel, restNames,
+        ratingDeltaByMatch, ratingByUser, rivalMatchIds, getName, isFormerMember, getCourtLabel, restNames,
         updateScore, confirmScore, editScore, toggleAdSide,
     }
 
