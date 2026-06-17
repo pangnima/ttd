@@ -138,7 +138,7 @@ export function SignupForm() {
                         min={1.0} max={7.0} step={0.5} defaultValue={3.0}
                         required className={inputCls}
                     />
-                    <p className="mt-1 text-[10px] text-muted-foreground">1.0 ~ 7.0 (0.5 단위)</p>
+                    <p className="mt-1 text-xs text-muted-foreground">1.0 ~ 7.0 (0.5 단위)</p>
                 </div>
             </div>
 

@@ -74,7 +74,7 @@ export function MatchGridView({
                                                     editScore={editScore}
                                                 />
                                             ) : (
-                                                <div className="h-full min-h-[3rem] flex items-center justify-center text-foreground/30 text-xs">
+                                                <div className="h-full min-h-[3rem] flex items-center justify-center text-muted-foreground text-xs">
                                                     -
                                                 </div>
                                             )}

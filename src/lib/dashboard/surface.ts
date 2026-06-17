@@ -29,7 +29,7 @@ export const SURFACE_TEXT_CLASS: Record<string, string> = {
     hard: 'text-sky-600 dark:text-sky-400',
     clay: 'text-orange-600 dark:text-orange-400',
     grass: 'text-emerald-600 dark:text-emerald-400',
-    other: 'text-slate-500 dark:text-slate-400',
+    other: 'text-slate-600 dark:text-slate-400',
     unknown: 'text-muted-foreground',
 }
 

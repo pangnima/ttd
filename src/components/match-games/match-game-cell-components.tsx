@@ -34,7 +34,7 @@ type TeamPlayersCellProps = {
 export function TeamPlayersCell({
     playerIds, teamKey, winner, isFixed, adPlayerId, getName, isFormerMember, onToggle, justify, deltas, ratingByUser, hideSideToggle,
 }: TeamPlayersCellProps) {
-    if (!playerIds.length) return <span className="text-foreground/55 text-xs">-</span>
+    if (!playerIds.length) return <span className="text-muted-foreground text-xs">-</span>
     const outcome = teamOutcome(winner, teamKey)
     return (
         <div className="space-y-1">
@@ -59,7 +59,7 @@ export function TeamPlayersCell({
                                 {isAd ? '애드(백)' : '듀스(포)'}
                             </button>
                         ) : (
-                            <span className="text-[10px] text-foreground/60 shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
                         )}
                     </div>
                 )
@@ -88,14 +88,14 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                     <span className={winner === 'team1' ? 'font-black text-win' : winner === 'team2' ? 'text-loss' : 'text-foreground/70'}>
                         {sets[0].team1}
                     </span>
-                    <span className="text-foreground/55">:</span>
+                    <span className="text-muted-foreground">:</span>
                     <span className={winner === 'team2' ? 'font-black text-win' : winner === 'team1' ? 'text-loss' : 'text-foreground/70'}>
                         {sets[0].team2}
                     </span>
                 </div>
                 {canEdit && (
                     <button
-                        className={`${compact ? 'w-6 h-6' : 'w-7 h-7'} flex items-center justify-center rounded text-foreground/60 hover:text-foreground/85 hover:bg-foreground/8 transition-colors`}
+                        className={`${compact ? 'w-6 h-6' : 'w-7 h-7'} flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-foreground/8 transition-colors`}
                         onClick={onEdit}
                         disabled={isPending}
                     >
@@ -117,15 +117,15 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                 type="text"
                 value={sets[0].team1}
                 onChange={(e) => onUpdate(0, 'team1', e.target.value)}
-                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors`}
+                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
                 placeholder="P1"
             />
-            <span className="text-foreground/35 text-xs">:</span>
+            <span className="text-muted-foreground text-xs">:</span>
             <input
                 type="text"
                 value={sets[0].team2}
                 onChange={(e) => onUpdate(0, 'team2', e.target.value)}
-                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/35 transition-colors`}
+                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
                 placeholder="P2"
             />
             <button

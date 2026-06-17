@@ -1,8 +1,12 @@
 import { Medal } from 'lucide-react'
 import { TEXT_MUTED } from '@/lib/dashboard/tokens'
 
-/** 1~3위: 메달 색상, 4위 이상: 순번 숫자 */
-const RANK_COLORS = ['text-yellow-500', 'text-slate-400', 'text-amber-600']
+/** 1~3위: 메달 색상(라이트/다크 이원화), 4위 이상: 순번 숫자 */
+const RANK_COLORS = [
+    'text-yellow-600 dark:text-yellow-400',
+    'text-slate-500 dark:text-slate-300',
+    'text-amber-600 dark:text-amber-400',
+]
 
 type Props = {
     /** 0-based 인덱스 */

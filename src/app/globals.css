@@ -74,12 +74,12 @@
   --secondary: #ecebe3;  /* surface-2 — 인셋·헤더 */
   --secondary-foreground: #1a1a16;
   --muted: #ecebe3;
-  --muted-foreground: #74746a; /* 보조 텍스트 */
+  --muted-foreground: #6e6e64; /* 보조 텍스트 — 배경 대비 ≈4.6:1 (WCAG AA 본문) */
   --accent: #ecebe3;
   --accent-foreground: #1a1a16;
   --destructive: oklch(0.577 0.245 27.325); /* 위험 액션(삭제)만 빨강 유지 */
   --border: #e4e3d9;     /* 1px 에어라인 */
-  --input: #e4e3d9;
+  --input: #8a8a7e;      /* 입력 경계 — 흰 카드 대비 ≈3.4:1 (WCAG 1.4.11, bg-transparent 인풋) */
   --ring: #c8f24e;       /* lime 포커스 링 */
   /* 시그니처/시맨틱 */
   --accent-lime: #c8f24e;
@@ -94,7 +94,7 @@
   --chart-2: #2f60fb;
   --chart-3: #c8623a;
   --chart-4: #c8f24e;
-  --chart-5: #74746a;
+  --chart-5: #6e6e64;
   --radius: 0.5rem; /* 8px — 카드 기준 */
   --sidebar: #ecebe3;
   --sidebar-foreground: #1a1a16;
@@ -124,7 +124,7 @@
   --accent-foreground: #f4f4ee;
   --destructive: oklch(0.704 0.191 22.216);
   --border: #3f3f45;     /* 카드/배경 대비 ~1.7:1 — 시인성 확보(구 #28282c는 ~1.2:1) */
-  --input: #3f3f45;
+  --input: #66666c;      /* 입력 경계 — 카드 대비 ≈3.1:1 (WCAG 1.4.11) */
   --ring: #d2f24e;
   --accent-lime: #d2f24e;
   --accent-lime-foreground: #1a1a16;

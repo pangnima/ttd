@@ -24,7 +24,7 @@ export default async function ResetPasswordPage() {
 
                     <div className="mb-8">
                         <h1 className="text-2xl font-bold text-foreground">새 비밀번호 설정</h1>
-                        <p className="mt-1.5 text-sm text-foreground/55">
+                        <p className="mt-1.5 text-sm text-muted-foreground">
                             새로 사용할 비밀번호를 입력해 주세요.
                         </p>
                     </div>

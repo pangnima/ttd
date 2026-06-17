@@ -80,7 +80,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                                         <ImagePlus className="w-3.5 h-3.5" />
                                         이미지 변경
                                     </label>
-                                    <p className="text-xs text-foreground/50">JPG, PNG, WEBP · 최대 5MB</p>
+                                    <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
                                     <input
                                         id="settings-logo"
                                         name="logo"

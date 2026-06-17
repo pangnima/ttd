@@ -22,7 +22,7 @@ export function ProfileTierProgress({ rating, matchesPlayed, provisional }: Prop
             <div className="flex items-baseline justify-between gap-2">
                 <span className="flex items-center gap-1.5">
                     <span className={cn('text-base font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
-                    {isProv && <span className="text-[10px] text-amber-500">잠정</span>}
+                    {isProv && <span className="text-[10px] text-amber-600 dark:text-amber-400">잠정</span>}
                 </span>
                 <span className="text-sm font-mono tabular-nums text-muted-foreground">
                     <span className={cn('font-semibold', TIER_TEXT[tier])}>{points}</span> / 100 P

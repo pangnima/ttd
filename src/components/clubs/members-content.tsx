@@ -155,7 +155,7 @@ export function MembersContent({
                     <section>
                         <div className="flex items-center gap-2 mb-2">
                             <h2 className="font-semibold text-sm">가입 대기</h2>
-                            <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                            <Badge variant="outline" className="text-xs text-orange-600 dark:text-orange-400 border-orange-400/50">
                                 {pendingMembers.length}명
                             </Badge>
                         </div>

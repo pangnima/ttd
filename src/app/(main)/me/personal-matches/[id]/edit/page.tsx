@@ -27,7 +27,7 @@ export default async function EditPersonalMatchPage({ params }: Props) {
         <PageContainer>
             <div className="mx-auto w-full max-w-2xl">
                 <h1 className={`${SECTION_LABEL} text-2xl`}>경기 기록 수정</h1>
-                <p className="text-sm text-foreground/60 mt-1">vs {match.opponentName}</p>
+                <p className="text-sm text-muted-foreground mt-1">vs {match.opponentName}</p>
             </div>
             <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} />
         </PageContainer>

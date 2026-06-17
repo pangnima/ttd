@@ -158,12 +158,12 @@ export function MatchGamesPageContent({
                                         <Link href={`/clubs/${clubId}/match-games/${mg.id}`} className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card hover:border-foreground/18 hover:bg-foreground/[0.04] transition-all cursor-pointer">
                                                 <div className="w-9 h-9 rounded-md bg-muted/50 border border-foreground/10 flex items-center justify-center shrink-0">
-                                                    <Trophy className="w-4 h-4 text-foreground/40" />
+                                                    <Trophy className="w-4 h-4 text-muted-foreground" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-sm text-foreground/90 truncate">{mg.name}</p>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                                        <Calendar className="w-3 h-3 text-foreground/50" />
+                                                        <Calendar className="w-3 h-3 text-muted-foreground" />
                                                         <span className="text-xs text-muted-foreground">{mg.date}</span>
                                                     </div>
                                                 </div>
@@ -175,12 +175,12 @@ export function MatchGamesPageContent({
                                                     }`}>
                                                         {mg.isFixed ? '완료' : '진행중'}
                                                     </span>
-                                                    <ChevronRight className="w-4 h-4 text-foreground/45" />
+                                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                                 </div>
                                             </div>
                                         </Link>
                                         <button
-                                            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-foreground/45 hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
+                                            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
                                             onClick={() => setDeleteTarget(mg)}
                                             disabled={isPending}
                                         >
@@ -196,8 +196,8 @@ export function MatchGamesPageContent({
                         <AlertDialogContent className="bg-card border border-border text-foreground">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-foreground">대진표 삭제</AlertDialogTitle>
-                                <AlertDialogDescription className="text-foreground/50">
-                                    <strong className="text-foreground/70">{deleteTarget?.name}</strong> 대진표를 삭제하시겠습니까?
+                                <AlertDialogDescription className="text-muted-foreground">
+                                    <strong className="text-foreground">{deleteTarget?.name}</strong> 대진표를 삭제하시겠습니까?
                                     삭제된 대진표는 복구할 수 없습니다.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>

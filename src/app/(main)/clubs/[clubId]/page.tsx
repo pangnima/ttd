@@ -103,14 +103,14 @@ export default async function ClubPage({ params }: ClubPageProps) {
                                 className={`${PILL_BASE} ${
                                     club.isPublic
                                         ? 'border-win/40 text-win bg-win/10'
-                                        : 'border-foreground/20 text-foreground/60'
+                                        : 'border-foreground/20 text-muted-foreground'
                                 }`}
                             >
                                 {club.isPublic ? '공개' : '비공개'}
                             </span>
                         </div>
                         {club.description && (
-                            <p className="text-sm text-foreground/60 mt-1">{club.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{club.description}</p>
                         )}
                         <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs ${TEXT_MUTED} pt-0.5`}>
                             <span>정회원 <span className="font-medium text-foreground/80">{regularMembers.length}</span>명</span>

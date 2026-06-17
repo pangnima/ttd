@@ -25,7 +25,7 @@ export function StatsPrivacyToggle({ hidden }: Props) {
             <label
                 htmlFor={id}
                 className={`inline-flex items-center gap-1 text-xs transition-colors ${
-                    hidden ? 'text-orange-400' : 'text-foreground/65'
+                    hidden ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'
                 }`}
             >
                 {hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}

@@ -33,7 +33,7 @@ const readonlyFieldCls = [
 
 const toggleBase = 'py-2 text-xs rounded-md border transition-all'
 const toggleReadonlyActive = 'border-primary/40 bg-primary/5 text-primary/60 font-semibold cursor-default pointer-events-none'
-const toggleReadonlyInactive = 'border-border text-muted-foreground/50 cursor-default pointer-events-none'
+const toggleReadonlyInactive = 'border-border text-muted-foreground cursor-default pointer-events-none'
 
 type ProfileData = {
     name: string

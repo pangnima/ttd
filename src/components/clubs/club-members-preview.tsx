@@ -30,7 +30,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                                 {m.role === 'owner' ? '👑 ' : ''}{m.user.name}
                             </p>
                             <div className="flex items-center gap-1">
-                                <span className="text-xs text-foreground/55 font-mono">
+                                <span className="text-xs text-muted-foreground font-mono">
                                     {effectiveNtrp(m.user).toFixed(1)}
                                 </span>
                                 {m.user.isGuest && <GuestBadge />}
@@ -72,7 +72,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
             })}
             {members.length > maxDisplay && (
                 <div className="flex items-center justify-center p-2.5 rounded-xl border border-dashed border-foreground/10">
-                    <span className="text-xs text-foreground/55">+{members.length - maxDisplay}명</span>
+                    <span className="text-xs text-muted-foreground">+{members.length - maxDisplay}명</span>
                 </div>
             )}
         </div>

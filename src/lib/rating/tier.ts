@@ -31,27 +31,28 @@ export const TIER_LABELS: Record<RatingTier, string> = {
 }
 
 // 티어별 배지 스타일(텍스트/배경/테두리). 단색 text-info 대체.
+// 텍스트는 라이트(진한 600~700)/다크(밝은 300~400) 이원화 — bg-X/10 위에서 WCAG AA 4.5:1 확보.
 export const TIER_STYLE: Record<RatingTier, string> = {
-    iron: 'text-zinc-400 bg-zinc-400/10 border-zinc-400/30',
-    bronze: 'text-amber-700 bg-amber-700/10 border-amber-700/30',
-    silver: 'text-slate-300 bg-slate-300/10 border-slate-300/40',
-    gold: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/30',
-    platinum: 'text-teal-300 bg-teal-300/10 border-teal-300/40',
-    diamond: 'text-sky-400 bg-sky-400/10 border-sky-400/40',
-    master: 'text-purple-400 bg-purple-400/10 border-purple-400/40',
-    challenger: 'text-red-400 bg-red-400/10 border-red-400/40',
+    iron: 'text-zinc-500 dark:text-zinc-400 bg-zinc-400/10 border-zinc-400/30',
+    bronze: 'text-amber-700 dark:text-amber-500 bg-amber-700/10 border-amber-700/30',
+    silver: 'text-slate-500 dark:text-slate-300 bg-slate-300/10 border-slate-300/40',
+    gold: 'text-yellow-700 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
+    platinum: 'text-teal-600 dark:text-teal-300 bg-teal-300/10 border-teal-300/40',
+    diamond: 'text-sky-600 dark:text-sky-400 bg-sky-400/10 border-sky-400/40',
+    master: 'text-purple-600 dark:text-purple-400 bg-purple-400/10 border-purple-400/40',
+    challenger: 'text-red-600 dark:text-red-400 bg-red-400/10 border-red-400/40',
 }
 
-// 포인트 글자색(텍스트 전용). 라이트/다크 양쪽 가독 위해 500레벨 채택.
+// 포인트 글자색(텍스트 전용). 라이트(진한)/다크(밝은) 이원화로 양쪽 AA 가독 확보.
 export const TIER_TEXT: Record<RatingTier, string> = {
-    iron: 'text-zinc-500',
-    bronze: 'text-amber-600',
-    silver: 'text-slate-400',
-    gold: 'text-yellow-500',
-    platinum: 'text-teal-500',
-    diamond: 'text-sky-500',
-    master: 'text-purple-500',
-    challenger: 'text-red-500',
+    iron: 'text-zinc-500 dark:text-zinc-400',
+    bronze: 'text-amber-700 dark:text-amber-500',
+    silver: 'text-slate-500 dark:text-slate-300',
+    gold: 'text-yellow-700 dark:text-yellow-400',
+    platinum: 'text-teal-600 dark:text-teal-400',
+    diamond: 'text-sky-600 dark:text-sky-400',
+    master: 'text-purple-600 dark:text-purple-400',
+    challenger: 'text-red-600 dark:text-red-400',
 }
 
 /**

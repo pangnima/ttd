@@ -39,7 +39,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 멤버
             </span>
         ) : membershipStatus === 'pending' ? (
-            <span className={`${PILL_BASE} border-amber-400/40 text-amber-400/85 bg-amber-400/8`}>
+            <span className={`${PILL_BASE} border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10`}>
                 대기중
             </span>
         ) : null
@@ -78,7 +78,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                     <p className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors truncate">
                         {club.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-foreground/60 overflow-hidden">
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground overflow-hidden">
                         {club.region && (
                             <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
                                 <MapPin className="w-3 h-3 shrink-0" />
@@ -90,13 +90,13 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                             정회원 {regularCount}
                         </span>
                         {guestCount > 0 && (
-                            <span className="text-foreground/45 shrink-0 whitespace-nowrap">
+                            <span className="text-muted-foreground shrink-0 whitespace-nowrap">
                                 · 게스트 {guestCount}
                             </span>
                         )}
                     </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-foreground/45 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </Link>
 
             {/* 오른쪽: 상태 pill + 액션 버튼 (고정폭 + 세로 스택으로 카드 간 너비 통일) */}

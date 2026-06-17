@@ -16,13 +16,13 @@ export function SpecialMatchBadge({ close, rival }: SpecialMatchBadgeProps) {
     return (
         <span className="inline-flex items-center gap-1">
             {rival && (
-                <span className={`${CHIP_BASE} border-rose-500/40 text-rose-500 bg-rose-500/10`}>
+                <span className={`${CHIP_BASE} border-rose-500/40 text-rose-600 dark:text-rose-400 bg-rose-500/10`}>
                     <Swords className="w-2.5 h-2.5" />
                     라이벌
                 </span>
             )}
             {close && (
-                <span className={`${CHIP_BASE} border-amber-500/40 text-amber-500 bg-amber-500/10`}>
+                <span className={`${CHIP_BASE} border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10`}>
                     <Flame className="w-2.5 h-2.5" />
                     명승부
                 </span>
