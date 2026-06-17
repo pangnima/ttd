@@ -43,9 +43,10 @@ export async function updateSession(request: NextRequest) {
 
     const path = request.nextUrl.pathname
 
-    // 보호 라우트: 비로그인 시 /login 리다이렉트
+    // 보호 라우트: 비로그인 시 /login 리다이렉트.
+    // /clubs/join(초대 미리보기)은 공유 링크라 비로그인·크롤러에 공개한다(OG 미리보기).
     const isMainRoute =
-        path.startsWith('/clubs') ||
+        (path.startsWith('/clubs') && !path.startsWith('/clubs/join')) ||
         path.startsWith('/profile') ||
         path.startsWith('/me')
     if (isMainRoute && !user) {

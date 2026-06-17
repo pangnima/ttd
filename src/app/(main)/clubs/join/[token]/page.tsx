@@ -1,30 +1,51 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { MapPin } from 'lucide-react'
+import type { Metadata } from 'next'
+import { MapPin, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PageContainer } from '@/components/common/page-container'
 import { ClubAvatar } from '@/components/clubs/club-avatar'
 import { InviteJoinButton } from '@/components/clubs/invite-join-button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 
 type JoinPageProps = {
     params: Promise<{ token: string }>
 }
 
+// 비멤버는 RLS로 클럽을 못 읽으므로 SECURITY DEFINER RPC로 미리보기 정보만 가져온다(anon 허용, 0032).
+async function fetchPreview(token: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_invite_preview', { p_token: token })
+    return !error && data && data.length > 0 ? data[0] : null
+}
+
+export async function generateMetadata({ params }: JoinPageProps): Promise<Metadata> {
+    const { token } = await params
+    const preview = await fetchPreview(token)
+    if (!preview) {
+        return { title: '클럽 초대', description: '유효하지 않거나 만료된 초대 링크입니다.' }
+    }
+    const title = `${preview.name} 클럽 초대`
+    const description = `${preview.name}${preview.region ? ` · ${preview.region}` : ''} 클럽에 초대받았습니다. 가입하고 함께 경기를 기록해요.`
+    return {
+        title,
+        description,
+        openGraph: { title, description, type: 'website' },
+        twitter: { card: 'summary_large_image', title, description },
+    }
+}
+
 export default async function ClubJoinPage({ params }: JoinPageProps) {
     const { token } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect(`/login?next=/clubs/join/${token}`)
-
-    // 비멤버는 RLS로 클럽을 못 읽으므로 SECURITY DEFINER RPC로 미리보기 정보만 가져온다.
-    const { data, error } = await supabase.rpc('get_invite_preview', { p_token: token })
-    const preview = !error && data && data.length > 0 ? data[0] : null
+    const preview = await fetchPreview(token)
 
     if (!preview) {
         return (
             <PageContainer>
-                <div className={`${CARD_BASE} p-8 text-center space-y-3`}>
+                <div className={`${CARD_BASE} p-8 text-center space-y-3 max-w-md mx-auto w-full`}>
                     <p className="text-sm font-medium text-foreground">유효하지 않거나 만료된 초대 링크입니다.</p>
                     <p className="text-xs text-muted-foreground">링크가 비활성화되었거나 잘못되었을 수 있어요.</p>
                     <Link href="/clubs" className="inline-block text-xs text-info hover:underline">
@@ -51,7 +72,17 @@ export default async function ClubJoinPage({ params }: JoinPageProps) {
                         )}
                     </div>
                 </div>
-                <InviteJoinButton token={token} />
+                {user ? (
+                    <InviteJoinButton token={token} />
+                ) : (
+                    <Link
+                        href={`/login?next=/clubs/join/${token}`}
+                        className={cn(buttonVariants(), 'w-full gap-1.5')}
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        로그인하고 가입하기
+                    </Link>
+                )}
             </div>
         </PageContainer>
     )

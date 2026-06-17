@@ -27,15 +27,24 @@ export const metadata: Metadata = {
     // (|| 사용: .env.local에 빈 문자열로 존재해도 안전하게 폴백)
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://ttd-kohl.vercel.app'),
     title: {
-        default: '테니스 클럽 플랫폼',
-        template: '%s | 테니스 클럽',
+        default: 'BASELINE — 테니스 클럽 운영·경기 통계',
+        template: '%s · BASELINE',
     },
     description: '테니스 클럽 운영자와 회원을 위한 클럽 관리 + 경기 통계 플랫폼',
     openGraph: {
-        title: '테니스 클럽 플랫폼',
+        // images는 src/app/opengraph-image.tsx(파일 컨벤션)가 자동 주입한다.
+        siteName: 'BASELINE',
+        title: 'BASELINE — 테니스 클럽 운영·경기 통계',
         description: '테니스 클럽 운영자와 회원을 위한 클럽 관리 + 경기 통계 플랫폼',
+        url: '/',
         locale: 'ko_KR',
         type: 'website',
+    },
+    twitter: {
+        // twitter:image는 og:image로 폴백된다. 카카오/슬랙/페북은 og:image 사용.
+        card: 'summary_large_image',
+        title: 'BASELINE — 테니스 클럽 운영·경기 통계',
+        description: '테니스 클럽 운영자와 회원을 위한 클럽 관리 + 경기 통계 플랫폼',
     },
 }
 
