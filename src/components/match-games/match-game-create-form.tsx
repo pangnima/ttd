@@ -25,6 +25,7 @@ import type { GenerateResult } from '@/lib/match-games/auto-generate'
 import { cn } from '@/lib/utils'
 import { MATCH_TYPE_LABELS, MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
+import { CARD_BASE } from '@/lib/dashboard/tokens'
 import {
     genId,
     addMinutes,
@@ -318,7 +319,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             </div>
 
             {/* 코트 목록 */}
-            <div className="rounded-lg border">
+            <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">코트 목록</span>
                     <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCourt}>
@@ -386,7 +387,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             </div>
 
             {/* 참석자 명단 */}
-            <div className="rounded-lg border">
+            <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">참석자</span>
                 </div>
@@ -403,7 +404,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             </div>
 
             {/* 자동 배치 */}
-            <div className="rounded-lg border">
+            <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">자동 배치</span>
                 </div>
@@ -426,7 +427,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             </div>
 
             {/* 게임 목록 */}
-            <div className="rounded-lg border">
+            <div className={CARD_BASE}>
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b">
                     <span className="text-sm font-medium">게임 목록</span>
                     <div className="flex flex-wrap items-center gap-2">
