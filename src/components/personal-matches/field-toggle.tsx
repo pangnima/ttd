@@ -51,7 +51,7 @@ export function FieldToggle<T extends string>({
                             aria-pressed={active}
                             className={`px-2.5 py-2 text-xs rounded-md border transition-colors ${
                                 active
-                                    ? 'border-accent-lime bg-accent-lime/10 text-foreground font-semibold'
+                                    ? 'border-accent-lime bg-accent-lime text-accent-lime-foreground font-semibold'
                                     : 'border-input text-foreground hover:bg-muted/40'
                             }`}
                         >

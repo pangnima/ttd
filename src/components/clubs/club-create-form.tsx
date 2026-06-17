@@ -85,14 +85,14 @@ export function ClubCreateForm() {
                             onClick={() => setIsPublic(true)}
                             aria-pressed={isPublic}
                             className={cn(
-                                'rounded-lg border bg-background p-4 text-left transition-colors',
+                                'rounded-lg border p-4 text-left transition-colors',
                                 isPublic
-                                    ? 'border-accent-lime bg-accent-lime/5'
-                                    : 'border-border hover:border-input'
+                                    ? 'border-accent-lime bg-accent-lime'
+                                    : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className="text-sm font-semibold text-foreground">공개</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className={cn('text-sm font-semibold', isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>공개</p>
+                            <p className={cn('mt-1 text-xs', isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
                                 누구나 검색하고 둘러볼 수 있어요
                             </p>
                         </button>
@@ -101,14 +101,14 @@ export function ClubCreateForm() {
                             onClick={() => setIsPublic(false)}
                             aria-pressed={!isPublic}
                             className={cn(
-                                'rounded-lg border bg-background p-4 text-left transition-colors',
+                                'rounded-lg border p-4 text-left transition-colors',
                                 !isPublic
-                                    ? 'border-accent-lime bg-accent-lime/5'
-                                    : 'border-border hover:border-input'
+                                    ? 'border-accent-lime bg-accent-lime'
+                                    : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className="text-sm font-semibold text-foreground">비공개</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className={cn('text-sm font-semibold', !isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>비공개</p>
+                            <p className={cn('mt-1 text-xs', !isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
                                 초대 링크로만 가입할 수 있어요
                             </p>
                         </button>

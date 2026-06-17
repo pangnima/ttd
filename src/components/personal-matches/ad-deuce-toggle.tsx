@@ -29,7 +29,7 @@ export function AdDeuceToggle<T extends string>({ label, options, value, onChang
                             onClick={() => onChange(isAd ? undefined : o.value)}
                             className={`flex items-center justify-between gap-1 px-2.5 py-2 text-xs rounded-md border transition-colors ${
                                 isAd
-                                    ? 'border-accent-lime text-foreground bg-accent-lime/10 font-semibold'
+                                    ? 'border-accent-lime bg-accent-lime text-accent-lime-foreground font-semibold'
                                     : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
                             }`}
                         >
