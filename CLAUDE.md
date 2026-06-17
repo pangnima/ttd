@@ -114,7 +114,7 @@ src/
 │   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── onboarding.ts             # 신규 사용자 온보딩 단계 정의·완료 판정 (순수 함수)
-│   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems: 클럽 찾기·사용 가이드)
+│   ├── nav-items.ts              # 사이드바 네비게이션 (topNavItems: 사용 가이드 / clubNavItems: 클럽 찾기)
 │   └── utils.ts                  # cn() 헬퍼
 ├── middleware.ts                  # 루트 미들웨어 (세션 갱신 + 보호 라우트 가드)
 └── types/
