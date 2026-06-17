@@ -3,6 +3,7 @@
 import type { PersonalMatchSetScore } from '@/types'
 import { SetScoreRow } from '@/components/personal-matches/set-score-row'
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { AddButton } from '@/components/personal-matches/add-button'
 
 type SetsSectionProps = {
     sets: PersonalMatchSetScore[]
@@ -29,12 +30,7 @@ export function SetsSection({
 }: SetsSectionProps) {
     return (
         <div>
-            <div className="flex items-center justify-between mb-1">
-                <label className={`${MATCH_FORM_LABEL} mb-0`}>세트 스코어</label>
-                <button type="button" onClick={onAddSet} className="text-xs text-muted-foreground hover:text-foreground">
-                    + 세트 추가
-                </button>
-            </div>
+            <label className={MATCH_FORM_LABEL}>세트 스코어</label>
             {/* 왼쪽=나(등록유저), 오른쪽=상대 라벨 */}
             <div className="flex items-center gap-2 mb-1">
                 <span className="w-10" />
@@ -60,7 +56,10 @@ export function SetsSection({
                     />
                 ))}
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
+            <div className="mt-2">
+                <AddButton label="세트 추가" onClick={onAddSet} />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">한 경기로 저장되며, 세트 승수가 많은 쪽이 승리로 기록됩니다.</p>
         </div>
     )
 }

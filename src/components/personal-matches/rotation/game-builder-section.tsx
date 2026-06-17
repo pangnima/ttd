@@ -3,6 +3,7 @@
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import type { PoolPlayer, RotationGame } from '@/lib/personal-matches/rotation'
 import { GameRow } from '@/components/personal-matches/rotation/game-row'
+import { AddButton } from '@/components/personal-matches/add-button'
 
 type GameBuilderSectionProps = {
     games: RotationGame[]
@@ -27,17 +28,7 @@ export function GameBuilderSection({
     const canAddGame = pool.length >= 3
     return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <label className={`${MATCH_FORM_LABEL} mb-0`}>게임 *</label>
-                <button
-                    type="button"
-                    onClick={onAddGame}
-                    disabled={!canAddGame}
-                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    + 게임 추가
-                </button>
-            </div>
+            <label className={MATCH_FORM_LABEL}>게임 *</label>
             {!canAddGame && (
                 <p className="text-xs text-muted-foreground">참가자를 3명 이상 추가하면 게임을 만들 수 있어요.</p>
             )}
@@ -56,6 +47,7 @@ export function GameBuilderSection({
                     onOppAd={(si, v) => onOppAd(g.tempId, si, v)}
                 />
             ))}
+            <AddButton label="게임 추가" onClick={onAddGame} disabled={!canAddGame} />
         </div>
     )
 }

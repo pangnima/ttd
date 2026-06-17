@@ -49,7 +49,7 @@ export const FORM_LABEL_BASE = 'block text-[11px] font-medium tracking-widest up
  */
 export const MATCH_FORM_INPUT =
     'w-full rounded-[4px] border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
-export const MATCH_FORM_LABEL = 'text-sm font-medium text-foreground block mb-1'
+export const MATCH_FORM_LABEL = 'text-sm font-medium text-foreground block mb-2'
 
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {

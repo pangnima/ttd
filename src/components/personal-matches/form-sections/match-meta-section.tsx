@@ -4,6 +4,7 @@ import type { CourtSurface } from '@/types'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import { EnumSelect } from '@/components/match/enum-select'
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { roundToHalfHour } from '@/lib/format'
 
 type MatchMetaSectionProps = {
     playedAt: string
@@ -38,8 +39,11 @@ export function MatchMetaSection({
                     <label className={MATCH_FORM_LABEL}>경기 시각 *</label>
                     <input
                         type="time"
+                        step={1800}
                         value={playedTime}
                         onChange={(e) => onPlayedTimeChange(e.target.value)}
+                        // 직접 타이핑 등으로 30분에서 벗어난 값은 포커스 해제 시 30분 단위로 정리
+                        onBlur={(e) => onPlayedTimeChange(roundToHalfHour(e.target.value))}
                         className={MATCH_FORM_INPUT}
                         required
                     />

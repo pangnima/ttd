@@ -202,7 +202,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5 mx-auto w-full max-w-2xl">
-            <div className={`${CARD_BASE} p-5 space-y-4`}>
+            <div className={`${CARD_BASE} p-5 sm:p-6 space-y-6`}>
                 {/* 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
                 <div>
                     <label className={MATCH_FORM_LABEL}>경기 타입 *</label>

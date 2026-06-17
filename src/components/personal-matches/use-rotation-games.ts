@@ -18,17 +18,22 @@ function uid(): string {
 
 const EMPTY_PLAYER: PlayerPickerValue = { name: '', hand: '' }
 
+function emptyPoolPlayer(): PoolPlayer {
+    return { tempId: uid(), player: { ...EMPTY_PLAYER }, ntrp: '' }
+}
+
 /**
  * 로테이션 복식 입력 상태(선수 풀 + 게임 배열)와 핸들러를 관리하는 훅.
  * 순수 매핑/검증은 lib/personal-matches/rotation.ts에 위임한다.
  */
 export function useRotationGames() {
-    const [pool, setPool] = useState<PoolPlayer[]>([])
+    // 로테이션은 최소 3명이 필요하므로 기본 3칸을 비워둔 채 시작한다.
+    const [pool, setPool] = useState<PoolPlayer[]>(() => [emptyPoolPlayer(), emptyPoolPlayer(), emptyPoolPlayer()])
     const [games, setGames] = useState<RotationGame[]>([])
 
     // ── 풀 핸들러 ──
     function addPoolPlayer() {
-        setPool((prev) => [...prev, { tempId: uid(), player: { ...EMPTY_PLAYER }, ntrp: '' }])
+        setPool((prev) => [...prev, emptyPoolPlayer()])
     }
     function updatePoolPlayer(tempId: string, patch: Partial<Omit<PoolPlayer, 'tempId'>>) {
         setPool((prev) => prev.map((p) => (p.tempId === tempId ? { ...p, ...patch } : p)))

@@ -16,7 +16,8 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { MATCH_FORM_INPUT as inputClass } from '@/lib/dashboard/tokens'
+import { MATCH_FORM_INPUT as inputClass, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { FieldToggle } from '@/components/personal-matches/field-toggle'
 
 type Hand = 'right' | 'left' | ''
 
@@ -62,18 +63,21 @@ export function PlayerPicker({ label, candidates, pastOpponents = [], value, onC
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium text-foreground">{label}</label>
-                {hasPickable && (
-                    <button
-                        type="button"
-                        onClick={() => switchMode(mode === 'member' ? 'external' : 'member')}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                        {mode === 'member' ? '직접 입력' : '목록에서 선택'}
-                    </button>
-                )}
-            </div>
+            <label className={MATCH_FORM_LABEL}>{label}</label>
+
+            {/* 입력 방식 — 현재 모드가 강조 표시되어 상태가 분명하다 */}
+            {hasPickable && (
+                <div className="mb-2">
+                    <FieldToggle
+                        options={[
+                            { value: 'member', label: '목록에서 선택' },
+                            { value: 'external', label: '직접 입력' },
+                        ]}
+                        value={mode}
+                        onChange={(m) => { if (m !== mode) switchMode(m) }}
+                    />
+                </div>
+            )}
 
             {mode === 'member' ? (
                 <Popover open={comboOpen} onOpenChange={setComboOpen}>
@@ -160,27 +164,14 @@ export function PlayerPicker({ label, candidates, pastOpponents = [], value, onC
 
             {/* 손잡이 (직접 입력 모드만, 필수) */}
             {showHand && mode === 'external' && (
-                <div className="mt-2">
-                    <p className="text-xs text-muted-foreground mb-1">손잡이 *</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {HAND_OPTIONS.map(({ value: hv, label: hl }) => {
-                            const active = value.hand === hv
-                            return (
-                                <button
-                                    key={hv}
-                                    type="button"
-                                    onClick={() => onChange({ ...value, hand: active ? '' : hv })}
-                                    className={`py-2 text-xs rounded-md border transition-all ${
-                                        active
-                                            ? 'border-ring bg-input/40 text-foreground font-semibold'
-                                            : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
-                                    }`}
-                                >
-                                    {hl}
-                                </button>
-                            )
-                        })}
-                    </div>
+                <div className="mt-3">
+                    <FieldToggle
+                        label="손잡이"
+                        required
+                        options={HAND_OPTIONS}
+                        value={value.hand || undefined}
+                        onChange={(hand) => onChange({ ...value, hand })}
+                    />
                 </div>
             )}
         </div>

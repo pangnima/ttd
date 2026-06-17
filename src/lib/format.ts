@@ -23,3 +23,20 @@ export function formatShortDate(dateStr: string): string {
 export function formatYearMonth(dateStr: string): string {
     return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' }).format(new Date(dateStr))
 }
+
+/**
+ * "HH:MM" 시각을 30분 단위로 반올림한다. (예: "06:17" → "06:30", "06:44" → "06:30", "06:45" → "07:00")
+ * 빈 문자열·형식 불일치는 그대로 반환. 24:00을 넘으면 23:30으로 고정(같은 날 유지).
+ */
+export function roundToHalfHour(value: string): string {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(value)
+    if (!m) return value
+    const h = Number(m[1])
+    const min = Number(m[2])
+    if (h > 23 || min > 59) return value
+    const total = Math.round((h * 60 + min) / 30) * 30
+    const clamped = Math.min(total, 23 * 60 + 30)
+    const hh = String(Math.floor(clamped / 60)).padStart(2, '0')
+    const mm = String(clamped % 60).padStart(2, '0')
+    return `${hh}:${mm}`
+}
