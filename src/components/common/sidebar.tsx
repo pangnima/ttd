@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems } from '@/lib/nav-items'
+import { topNavItems, clubNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
@@ -95,7 +95,8 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
 
             {/* 메인 네비게이션 — rail에서는 플라이아웃이 사이드바 밖으로 나가야 하므로 overflow를 자르지 않는다 */}
             <nav className={cn('flex-1 min-h-0 p-3 space-y-0.5', collapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden')}>
-                {mainNavItems.map(({ href, label, icon: Icon }) => (
+                {/* 사용 가이드 등 상단 단독 메뉴 */}
+                {topNavItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
@@ -146,8 +147,23 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                         </div>
                     ))}
 
-                {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
-                <ClubNavTree clubs={clubs} userId={userId} variant="desktop" collapsed={collapsed} />
+                {/* 클럽 찾기 — 내 전적 아래, 가입 클럽 트리 위 */}
+                <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
+                    {clubNavItems.map(({ href, label, icon: Icon }) => (
+                        <Link
+                            key={href}
+                            href={href}
+                            className={rowClass(mainActive(href))}
+                            aria-label={collapsed ? label : undefined}
+                        >
+                            <Icon className="w-4 h-4 shrink-0" />
+                            <span className={labelClass}>{label}</span>
+                        </Link>
+                    ))}
+
+                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
+                    <ClubNavTree clubs={clubs} userId={userId} variant="desktop" collapsed={collapsed} />
+                </div>
             </nav>
 
             {/* 테마 토글 — 하단 고정 */}

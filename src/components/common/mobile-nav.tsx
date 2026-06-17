@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, BarChart3, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mainNavItems } from '@/lib/nav-items'
+import { topNavItems, clubNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
@@ -77,7 +77,8 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
 
                 {/* 메인 네비게이션 */}
                 <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
-                    {mainNavItems.map(({ href, label, icon: Icon }) => (
+                    {/* 사용 가이드 등 상단 단독 메뉴 */}
+                    {topNavItems.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}
                             href={href}
@@ -110,8 +111,23 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                         </div>
                     )}
 
-                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
-                    <ClubNavTree clubs={clubs} userId={userId} variant="mobile" onNavigate={() => setOpen(false)} />
+                    {/* 클럽 찾기 — 내 전적 아래, 가입 클럽 트리 위 */}
+                    <div className="mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10 space-y-1">
+                        {clubNavItems.map(({ href, label, icon: Icon }) => (
+                            <Link
+                                key={href}
+                                href={href}
+                                onClick={() => setOpen(false)}
+                                className={navLinkClass(mainActive(href))}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {label}
+                            </Link>
+                        ))}
+
+                        {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
+                        <ClubNavTree clubs={clubs} userId={userId} variant="mobile" onNavigate={() => setOpen(false)} />
+                    </div>
                 </nav>
 
                 {/* 테마 토글 — 하단 고정 (노치/홈 인디케이터 기기 대비 safe-area 패딩) */}
