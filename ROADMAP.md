@@ -258,6 +258,10 @@
 - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`)
 - [ ] Supabase Dashboard → Auth → Security → `auth_leaked_password_protection` 활성화
 - [ ] Supabase URL 화이트리스트 (Site URL, Redirect URLs)
+  - [ ] Redirect URLs에 `/auth/confirm` 경로 허용 추가 (`http://localhost:3000/**` + 배포 도메인)
+- [ ] **비밀번호 재설정 메일 템플릿 설정** — Reset Password 템플릿 본문을 `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">`로 교체 (코드는 구현 완료, 대시보드/Management API 설정만 남음)
+  - 적용 방법: 대시보드 Authentication → Emails → Reset Password, 또는 Management API `PATCH /v1/projects/{ref}/config/auth`의 `mailer_templates_recovery_content` 필드
+  - 미설정 시 `/forgot-password` → 메일 링크 → `/reset-password` 플로우가 동작하지 않음
 - [ ] `metadataBase` 환경변수화 (`src/app/layout.tsx` 하드코딩된 URL)
 - [ ] 도메인 설정 (선택)
 
@@ -388,13 +392,88 @@
 
 ---
 
+### Week 15: 개인 레이팅·티어 + 대진표 개편 + 배포 준비 기능군 ✅ (2026-06-15 ~ 06-17)
+
+> 3일에 걸친 대규모 기능·UX 작업 묶음. 개인 경기 기반 동적 개인 NTRP·계급(티어) 도입,
+> 대진표 상세 매트릭스 개편, 라이트 모드 접근성, 비밀번호 재설정·탈퇴·초대·OG 등 배포 직전 기능군.
+
+#### 개인 경기 레이팅 + 계급(티어) 시스템 (커밋 4b5d576, adc3903, 2edef89)
+- [x] 개인 경기(`personal_matches`) 승패 기반 **동적 개인 NTRP** — 온더플라이 계산(영속화 없음, 클럽 ELO primitive 재사용)
+  - `src/lib/rating/personal-rating.ts` 신설 (+ `personal-rating.test.ts`) — '나' 시계열만 순차 재생, 상대 레이팅은 저장 추정치 → 등록상대 ntrp → 본인 ntrp → 기본 2.5 순으로 결정
+  - 마이그레이션 `0026_users_personal_ntrp` — `users.personal_ntrp` 캐시(개인경기 추가/수정/삭제 시 서버 재계산, 폼 프리필용)
+- [x] **계급(티어) 시스템** — 연속 rating(1.0~7.0)을 8계급(아이언~챌린저)으로 밴딩 + 계급당 0~100 포인트 환산
+  - `src/lib/rating/tier.ts` (+테스트) — `getTier`/`getTierProgress`/`getTierDelta`, 경계는 `TIER_BANDS` 1곳에서 관리
+  - `src/lib/rating/display.ts` (+테스트), `components/common/tier-icon.tsx`·`tier-emblem.tsx` 신설
+  - `/tiers` 계급 아이콘 미리보기 페이지(noindex, 개발용) — `public/tiers/*.svg` 교체 확인
+- [x] 개인 경기 고도화 마이그레이션 `0020~0025` — 상대 주력손(`0020`), 복식 선수(`0021`), 플레이 시간(`0022`), 상대 NTRP(`0023`), 복식 디테일(`0024`), match-level 애드 컬럼 제거(`0025`)
+- [x] 클럽 멤버 카운트 RPC `0019_club_member_counts`
+
+#### 대진표 상세 UI/UX 개편 — 매트릭스·티어·승패색·특별매치 (커밋 7af5364, 29b4c67, ea78d8e)
+- [x] 기본 뷰를 **매트릭스(그리드)** 로 전환, 선수명 앞 **티어 아이콘**, 스코어·선수명에 **승/패 색** 적용
+- [x] **특별매치 배지** — 명승부(접전)·라이벌(cross-pair 박빙) 판정. 명승부 기준에 한 게임차(6-5·5-4·7-6) 포함
+  - `src/lib/match-games/special-match.ts` (+테스트), `match-view-helpers.ts` 신설
+  - `components/match-games/player-name.tsx`(선수명 단일화), `special-match-badge.tsx`, 매트릭스 셀/리스트 뷰 컴포넌트 분리
+
+#### 사이드바 rail + BASELINE 로고 (커밋 b49bb54)
+- [x] 사이드바 **접기/펼침(rail) 토글** — `components/common/sidebar-context.tsx` 신설(context + 헤더 PanelLeft 버튼 + 플라이아웃), collapsed 상태 테마 토글·클럽 네비 트리 대응
+- [x] **BASELINE 브랜드 로고**(라임 코트 아이콘 + Geist Mono 워드마크)로 사이드바·헤더·모바일 메뉴 통일 — `brand-logo.tsx`, `public/logo.svg`
+
+#### 클럽 홈 개선 (커밋 0e185b8, b430f61)
+- [x] 클럽 **탈퇴 버튼/다이얼로그**(`clubs/leave-club-button.tsx`), 운영진 **임원(officer)** 표기, **정기시간**(고정코트) 설정·표시, **우리 클럽 에이스**(타입별 승률 TOP3, `club-dashboard/club-ace-card.tsx`), 대진표 현황 타입별 고도화
+- [x] 에이스·활동 랭킹 카드 링크에 누락된 `clubId` 전달, 운영진 이름 ProfileLink화
+- [x] 마이그레이션 `0028_club_court_schedule` — `clubs.court_schedule`(자유 텍스트 1줄, NULL=미표시)
+
+#### 클럽 생성 기본 로고 + 삭제 비밀번호 보호 (커밋 d7e1126)
+- [x] 클럽 생성 시 기본 로고 셔플 선택(`clubs/club-logo-field.tsx`), 클럽 해체 시 비밀번호 scrypt 해시 저장·검증(`src/lib/club-password.ts`)
+- [x] 마이그레이션 `0027_club_delete_password`
+
+#### 로그인/회원가입 UX + 비밀번호 재설정 (커밋 d23d873, fdf8e13)
+- [x] Supabase 영문 에러 **한글 매핑** — `src/lib/auth/auth-error-messages.ts`(`mapAuthError`), 랜딩 nav 인증 분기
+- [x] **비밀번호 재설정 플로우** — `(auth)/forgot-password`·`(auth)/reset-password` 페이지 + `app/auth/confirm/route.ts` 핸들러 신설 (메일 템플릿 설정은 배포 체크리스트 참조)
+- [x] 회원가입 `AvatarUploadField`(기본 아바타 셔플), 비밀번호 확인, 연락처 자동 하이픈(`src/lib/format/phone.ts`)
+
+#### 내 정보 수정 정책 정비 (커밋 94eaf3f)
+- [x] 이름·성별·주력손·테니스 시작일 **읽기 전용**화(서버 액션 update 대상에서도 제거)
+- [x] 헤더를 layout props 기반으로 전환(클라이언트 fetch 제거), 저장 후 닉네임·아바타 **즉시 반영**(revalidatePath + router.refresh)
+
+#### 탈퇴 회원 처리 (커밋 f0d5843, e098bdd)
+- [x] **계정 탈퇴 soft delete**(익명화) — `users.deleted_at` 마킹 + 재로그인 차단, 과거 경기/레이팅 보존
+- [x] 대진표에서 탈퇴 선수 **이름 복원 + '탈퇴' 배지**(`src/lib/match-games/former-members.ts`의 `augmentWithFormerMembers`), 이름 line-through, 클럽 레이팅 랭킹에서 탈퇴자 제외(ELO 값 보존)
+- [x] 목록 페이지 탈퇴 회원 UUID 노출 수정
+- [x] 마이그레이션 `0029_users_soft_delete`
+
+#### 클럽 초대 링크 — 비공개 클럽 가입 (커밋 89df42a)
+- [x] 운영자 초대 링크 발급(`components/clubs/club-invite-card.tsx`) → 링크 사용자가 즉시 approved 멤버로 가입
+- [x] `club_invites` 테이블 + `get_invite_preview`/`join_club_via_invite` RPC(SECURITY DEFINER, RLS 우회)
+- [x] **신규 라우트** `clubs/join/[token]` — 비로그인 진입 시 로그인 후 원래 링크 복귀(open-redirect 방지, `lib/supabase/middleware.ts`)
+- [x] 마이그레이션 `0030_clubs_select_owner`(비공개 클럽 생성 RLS), `0031_club_invites`
+
+#### OG 메타데이터 — 링크 공유 미리보기 (커밋 4b083e5)
+- [x] 루트 메타 보강(siteName·twitter 카드) + **next/og 전역 동적 OG 이미지**(`app/opengraph-image.tsx`, `src/lib/og/brand.ts`)
+- [x] 초대 링크 공개화 + 클럽별 `generateMetadata`·동적 OG 이미지(`clubs/join/[token]/opengraph-image.tsx`), 비로그인 초대 미리보기
+- [x] 마이그레이션 `0032_invite_preview_anon`(`get_invite_preview` anon 허용)
+
+#### 라이트 모드/WCAG 접근성 + 로테이션 복식 + 통계 카드 (커밋 66b99fa, dcb6347, 4e430aa, 1a62bec, d497397, 9d9a258, daa0ace, 0f6051b, aa47b30, acc8275)
+- [x] **WCAG AA 시인성** — `muted-foreground` 명도 보정(대비 4.5:1↑), 배지 raw 팔레트 `text-X-600 dark:text-X-400` 이원화, input border 대비 강화
+- [x] **라이트 모드** 빈 상태/카드/input·select·button을 채워진 surface(`bg-card`)로 — `lib/dashboard/tokens.ts` 토큰 중심
+- [x] **로테이션(아메리칸) 복식 입력** — 4명 이상 파트너 교대를 게임별 레코드로 저장(`src/lib/personal-matches/rotation.ts`·`validators.ts`, DB/액션 변경 없이 배열 입력 활용)
+- [x] 경기 입력 폼 공통화·섹션 분해(`MATCH_TYPE_OPTIONS`·`EnumSelect`·form-sections), 개인 경기 카드 모바일 UI, 승률추이·활동 히트맵 가독성, 1:1 맞대결 비교 카드 고도화(`lib/analytics/head-to-head.ts`의 `summarizeHeadToHead`), 3카드 행 디자인 통일(`StatBarRow`)
+
+> **결정 기록 (Week 15)**
+> - **3중 NTRP 체계 정리**: ① 통합/자가선언 NTRP(`users.ntrp`, 정적·수동) ② 클럽 NTRP(`club_player_ratings`, 클럽별 ELO·동적, Week 14) ③ 개인 NTRP(`users.personal_ntrp`, 개인경기 기반 온더플라이·동적). 셋은 저장소·산정 방식이 모두 다름
+> - **티어는 클럽 레이팅 표시 레이어**: 내부는 연속 rating 유지, 표시만 8계급 + 0~100p 밴딩(rating 하락 시 자동 강등). 경계는 `TIER_BANDS` 단일 출처
+> - **탈퇴 정책**: 물리 삭제는 과거 경기/레이팅 손상 → soft delete(익명화) + `deleted_at` 마킹 + 재로그인 차단. 대진표 이름은 복원, 레이팅 값은 보존하되 랭킹에서만 제외
+> - **초대 링크**: 비공개 클럽은 RLS로 비멤버 접근 차단 → 미리보기·가입을 SECURITY DEFINER RPC로만 처리(RLS 우회). 비로그인은 로그인 후 원래 토큰 링크로 복귀
+
+---
+
 ## 앞으로 개선해야할 점
 
 ### 중기: 기술 부채 / 품질 개선
 <!-- 완료: d9c38e9 에러 바운더리·로딩 일관화, Week 13 레이아웃 통일·린트 정리 -->
 - [ ] **통계 단일 소스화** — `lib/analytics/*`(순수함수) vs `lib/queries/stats.ts`(RPC) 이중 경로 통합. 현재 두 경로가 동일 수치를 내나 유지 비용과 불일치 리스크 잠재 (가장 큰 기술 부채)
-- [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 시작됨)
-- [ ] **통계 단위 테스트** — `lib/analytics/*` 순수함수에 고정 픽스처 Vitest 테스트 작성 (회귀 방지). _Vitest는 Week 14 레이팅 엔진(`lib/rating/elo.test.ts`)으로 도입 완료 — analytics 모듈은 미적용_
+- [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 로컬 `.sql`로 버전관리, 현재 0032까지 편입)
+- [x] **통계 단위 테스트** — `lib/analytics/*`(form·rival·head-to-head·partner-chemistry·hour-heatmap·doubles-court·trend-stats·date-utils) + `lib/personal-matches/*`(rotation·explode·grouping) + `lib/match-games/special-match` + `lib/rating/*`(elo·tier·display·personal-rating)에 Vitest 테스트 적용 완료 (Week 14~15). _잔여: 미적용 순수함수 일부만_
 - [ ] **최근 폼 정렬 개선** — 클럽 경기는 일 단위 날짜만 있어 같은 날 경기 순서가 UUID에 의존. `match_game_matches.created_at` 컬럼 추가 시 더 정확한 정렬 가능
 - [ ] **데드 RPC 정리** — `get_user_match_stats` v1 DROP 마이그레이션
 - [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)

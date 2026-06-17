@@ -18,11 +18,17 @@ src/
 ├── app/                          # Next.js App Router 페이지
 │   ├── (auth)/                   # 비로그인 라우트 그룹
 │   │   ├── login/
-│   │   └── signup/
+│   │   ├── signup/
+│   │   ├── forgot-password/      # 비밀번호 재설정 메일 요청
+│   │   └── reset-password/       # 새 비밀번호 입력
+│   ├── auth/confirm/route.ts     # 인증 메일/재설정 토큰 핸들러 (Route Handler)
+│   ├── opengraph-image.tsx       # 전역 동적 OG 이미지 (next/og)
+│   ├── tiers/                    # 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
 │   ├── (main)/                   # 로그인 후 라우트 그룹 (middleware 인증 가드)
 │   │   ├── clubs/
 │   │   │   ├── page.tsx          # 클럽 리스트
 │   │   │   ├── new/
+│   │   │   ├── join/[token]/     # 초대 링크 가입 (비공개 클럽, 동적 OG 포함)
 │   │   │   └── [clubId]/
 │   │   │       ├── page.tsx      # 클럽 홈 (운영자이면 운영 섹션 포함)
 │   │   │       ├── dashboard/    # /clubs/[clubId]로 리다이렉트
@@ -38,25 +44,25 @@ src/
 │   └── page.tsx                  # 랜딩페이지
 ├── components/
 │   ├── ui/                       # shadcn/ui 자동 생성 컴포넌트 (직접 수정 금지)
-│   ├── common/                   # 공통 컴포넌트 (Header, Sidebar, ProfileLink 등)
-│   ├── clubs/                    # 클럽 관련 컴포넌트
-│   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking 등)
-│   ├── match-games/              # 대진표 관련 컴포넌트
-│   ├── personal-matches/         # 개인 경기 입력·목록 컴포넌트
-│   ├── profile/                  # 프로필 헤더·통계 조합 컴포넌트
+│   ├── common/                   # 공통 (Header, Sidebar, sidebar-context, BrandLogo, ProfileLink, TierIcon/TierEmblem 등)
+│   ├── clubs/                    # 클럽 (ClubLogoField, LeaveClubButton, ClubInviteCard, InviteJoinButton 등)
+│   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
+│   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
+│   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, rotation/ 입력 등)
+│   ├── profile/                  # 프로필 헤더·통계 조합 (DeleteAccountButton 등)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
-│   ├── auth/                     # 인증 폼
-│   ├── landing/                  # 랜딩페이지 섹션 컴포넌트
+│   ├── auth/                     # 인증 폼 (login/signup/forgot/reset, AvatarUploadField)
+│   ├── landing/                  # 랜딩페이지 섹션 컴포넌트 (LandingNav 등)
 │   └── theme/                    # 테마 관련
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts             # 브라우저용 (Client Component 전용)
 │   │   ├── server.ts             # Server Component / Server Action 전용
-│   │   └── middleware.ts         # 세션 갱신 + 인증 가드 헬퍼
+│   │   └── middleware.ts         # 세션 갱신 + 인증 가드 + 초대 링크 복귀 헬퍼
 │   ├── actions/                  # Server Actions (entity별 파일)
-│   │   ├── auth.ts
+│   │   ├── auth.ts               # 로그인/가입/로그아웃/비밀번호 재설정/계정 탈퇴
 │   │   ├── clubs.ts
-│   │   ├── club-members.ts
+│   │   ├── club-members.ts       # 가입 승인·거절·탈퇴·초대 링크 발급/가입
 │   │   ├── match-games.ts
 │   │   ├── match-game-courts.ts  # 복식 코트 사이드 저장
 │   │   ├── personal-matches.ts
@@ -65,24 +71,45 @@ src/
 │   │   └── ai-coaching.ts
 │   ├── queries/                  # Supabase read-only 쿼리
 │   │   ├── _shared.ts            # buildUserMap 등 공용 헬퍼
-│   │   ├── clubs.ts
+│   │   ├── clubs.ts              # 클럽 조회 + 초대 미리보기(get_invite_preview)
 │   │   ├── match-games.ts
 │   │   ├── personal-matches.ts
 │   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
 │   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
-│   │   ├── club-dashboard.ts     # 클럽 운영 쿼리
+│   │   ├── club-dashboard.ts     # 클럽 운영 쿼리 (에이스·활동/승률 랭킹 등)
 │   │   ├── ratings.ts            # 클럽 레이팅 랭킹·이력·재계산 입력 쿼리
 │   │   ├── stats.ts              # RPC 호출 (get_user_match_stats, get_user_head_to_head)
-│   │   └── users.ts              # mapUserRow 공용 매퍼
-│   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음)
-│   ├── dashboard/                # UI 토큰·스타일·outcome/surface 헬퍼
-│   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, calcWinRate 등
+│   │   └── users.ts              # mapUserRow 공용 매퍼 (is_guest·personal_ntrp·deleted_at 포함)
+│   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수)
+│   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼
+│   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, EMPTY_BLOCK, calcWinRate 등
 │   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
 │   │   ├── surface.ts            # SURFACE_LABELS (코트 표면 라벨 통일)
-│   │   └── match-type-style.ts   # MATCH_TYPE_LABELS, getMatchTypeStyle
-│   ├── match-games/              # 대진표 폼 매핑·자동 대진 생성
-│   ├── personal-matches/         # 개인 경기 매핑·세트 분해·승자 판정
-│   ├── rating/                   # 클럽 ELO 레이팅 순수 엔진 (docs/rating-system.md)
+│   │   ├── match-type-style.ts   # MATCH_TYPE_LABELS, getMatchTypeStyle
+│   │   └── match-display.ts      # 매치 표시 헬퍼
+│   ├── match-games/              # 대진표 폼 매핑·자동 대진 생성·특별매치·탈퇴 회원 복원
+│   │   ├── form-mapping.ts       # 폼 ↔ DB 매핑
+│   │   ├── auto-generate.ts      # 자동 대진 생성 휴리스틱
+│   │   ├── special-match.ts      # 명승부·라이벌 판정
+│   │   ├── former-members.ts     # augmentWithFormerMembers (탈퇴 선수 이름 복원)
+│   │   ├── match-view-helpers.ts # 매트릭스/리스트 뷰 헬퍼
+│   │   └── attendance-stats.ts
+│   ├── personal-matches/         # 개인 경기 매핑·세트 분해·승자 판정·로테이션 복식
+│   │   ├── map.ts / explode.ts / grouping.ts / winner.ts
+│   │   ├── rotation.ts           # 아메리칸(로테이션) 복식 게임 분해
+│   │   └── validators.ts
+│   ├── rating/                   # 레이팅 순수 엔진 (docs/rating-system.md)
+│   │   ├── elo.ts / constants.ts # 클럽 ELO 엔진 (replayClubRatings)
+│   │   ├── personal-rating.ts    # 개인 경기 기반 동적 개인 NTRP (온더플라이)
+│   │   ├── tier.ts               # 8계급 밴딩 + 0~100 포인트 환산
+│   │   └── display.ts            # formatClubRating·isProvisional 등 표시 헬퍼
+│   ├── auth/                     # auth-error-messages.ts (Supabase 에러 한글 매핑)
+│   ├── format/                   # phone.ts (연락처 하이픈 등)
+│   ├── og/                       # brand.ts (OG 이미지 브랜딩 + 폰트)
+│   ├── club-password.ts          # 클럽 삭제 비밀번호 scrypt 해시·검증
+│   ├── default-images.ts         # 기본 아바타·클럽 로고 셔플
+│   ├── avatar-color.ts           # 아바타 색상 생성
+│   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── nav-items.ts              # 사이드바 네비게이션 (mainNavItems + getProfileNavItem)
 │   └── utils.ts                  # cn() 헬퍼
@@ -97,8 +124,12 @@ src/
 / → 랜딩페이지
 /login → 로그인
 /signup → 회원가입
+/forgot-password → 비밀번호 재설정 메일 요청
+/reset-password → 새 비밀번호 입력 (메일 링크 진입)
+/auth/confirm → 인증/재설정 토큰 핸들러 (Route Handler, UI 없음)
 /clubs → 클럽 리스트 (로그인 후 기본 진입점)
 /clubs/new → 클럽 생성
+/clubs/join/[token] → 초대 링크 가입 (비공개 클럽, 비로그인 미리보기 + 로그인 후 복귀)
 /clubs/[clubId] → 클럽 홈 (owner/officer이면 하단에 운영 섹션 인라인)
 /clubs/[clubId]/dashboard → /clubs/[clubId] 리다이렉트
 /clubs/[clubId]/members → 회원 목록
@@ -114,6 +145,7 @@ src/
 /me/personal-matches → 개인 경기 기록 목록
 /me/personal-matches/new → 개인 경기 추가
 /me/personal-matches/[id]/edit → 개인 경기 수정
+/tiers → 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
 ```
 
 ## 현재 개발 단계
@@ -136,10 +168,16 @@ src/
   - [x] 순수 엔진 `lib/rating/` + vitest (명세: docs/rating-system.md)
   - [x] club_player_ratings/club_rating_history + 전체 재계산 파이프라인
   - [x] 레이팅 노출 (랭킹·멤버 병기·경기 변동폭·프로필 추세, 비공개 차단)
+- [x] Week 15: 개인 레이팅·티어 + 대진표 개편 + 배포 준비 기능군 (0019~0032 마이그레이션)
+  - [x] 개인 경기 기반 동적 개인 NTRP + 8계급 티어 (`lib/rating/personal-rating.ts`·`tier.ts`)
+  - [x] 대진표 상세 매트릭스 개편 (티어·승패색·특별매치)
+  - [x] 사이드바 rail + BASELINE 로고, 라이트 모드 WCAG AA 시인성
+  - [x] 비밀번호 재설정·탈퇴(soft delete)·클럽 초대 링크·OG 메타데이터
 - [ ] 배포
-  - [ ] Vercel 배포 + 환경변수 등록
-  - [ ] leaked password protection 활성화
-  - [ ] metadataBase 환경변수화
+  - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
+  - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
+  - [ ] 비밀번호 재설정 메일 템플릿 설정 (코드 완료, 대시보드/Management API 설정만 잔여)
+  - [ ] metadataBase 환경변수화 (`src/app/layout.tsx`)
 
 ## 데이터 흐름
 ```
@@ -161,16 +199,23 @@ Client Component (read-only)
 ## DB 스키마 현황
 | 테이블 | 주요 RLS 정책 |
 |---|---|
-| `users` | 본인만 UPDATE |
-| `clubs` | is_public이면 전체 SELECT, owner만 UPDATE/DELETE |
-| `club_members` | approved 멤버만 SELECT, owner만 승인/거절 |
+| `users` | 본인만 UPDATE (`is_guest`·`personal_ntrp`·`deleted_at` 컬럼 포함) |
+| `clubs` | is_public이면 전체 SELECT, owner만 UPDATE/DELETE (`court_schedule`·삭제 비밀번호 해시 포함) |
+| `club_members` | approved 멤버만 SELECT, owner/officer만 승인/거절 |
 | `match_games` | approved 멤버만 SELECT/INSERT, owner만 DELETE |
-| `match_game_courts/rounds/time_slots/matches` | 상위 match_game의 RLS를 따름 |
+| `match_game_courts/rounds/time_slots/matches` | 상위 match_game의 RLS를 따름 (courts.surface 포함) |
+| `personal_matches` | 본인(user_id)만 CRUD |
+| `ai_coaching_cache` | 본인 통계 묶음 해시 기반 캐시 (24h) |
+| `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만 |
+| `club_invites` | owner만 관리, 미리보기·가입은 SECURITY DEFINER RPC로만 |
 
 헬퍼 함수: `is_club_owner(club_id)`, `is_club_approved_member(club_id)` (SECURITY DEFINER)
 RPC: `create_match_game`, `update_match_game`, `add_guest_player` (트랜잭션 단위 INSERT)
 RPC: `get_user_match_stats`, `get_user_head_to_head` (통계 집계)
+RPC: `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts` (클럽 대시보드 집계)
+RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`join_club_via_invite` (초대 링크)
 View: `user_match_participations` (security_invoker=on)
+마이그레이션: 0001~0032 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -184,6 +229,14 @@ View: `user_match_participations` (security_invoker=on)
 | **애드코트(백)** | 백핸드 사이드 (레프트). `team1AdPlayerId = playerId` |
 | **temp_id** | 대진표 생성 시 클라이언트가 부여하는 임시 UUID. RPC 내부에서 실제 DB ID로 교체됨 |
 | **is_guest** | `public.users.is_guest = true` — Auth 계정 없는 임시 선수 (프로필 링크 비활성) |
+| **통합/자가선언 NTRP** | `users.ntrp` — 가입 시 직접 선언하는 정적 값 (수동) |
+| **클럽 NTRP** | `club_player_ratings` — 클럽별 독립 ELO, 확정 경기로 동적 변동 (2.5 시작) |
+| **개인 NTRP** | `users.personal_ntrp` — 개인 경기(`personal_matches`) 승패 기반 온더플라이 동적 레이팅 캐시 |
+| **티어(Tier)** | 클럽 레이팅(연속 rating)을 8계급(아이언~챌린저)으로 밴딩 + 계급당 0~100p. 표시 전용, `TIER_BANDS` 단일 출처 |
+| **명승부 / 라이벌** | 대진표 특별매치 판정 — 접전(한 게임차 포함) / cross-pair 박빙 (`lib/match-games/special-match.ts`) |
+| **탈퇴 회원** | `users.deleted_at` soft delete(익명화). 대진표 이름은 복원·'탈퇴' 배지, 레이팅 값 보존하되 랭킹 제외 |
+| **초대 토큰** | `club_invites.token` — 비공개 클럽 가입용. SECURITY DEFINER RPC로만 미리보기·가입 |
+| **로테이션 복식** | 4명 이상 파트너 교대(아메리칸) 복식을 게임별 개인 경기 레코드로 분해 저장 |
 
 ## 코딩 규칙
 
