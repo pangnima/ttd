@@ -185,3 +185,19 @@ export async function fetchFirstJoinedClubId(userId: string): Promise<string | n
     if (error || !data) return null
     return data.club_id
 }
+
+// 설정 페이지용: 현재 활성·미만료 초대 토큰 (없으면 null). club_invites SELECT RLS는 owner만 허용.
+export async function fetchActiveInvite(clubId: string): Promise<string | null> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('club_invites')
+        .select('token, expires_at')
+        .eq('club_id', clubId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    if (error || !data) return null
+    if (data.expires_at && new Date(data.expires_at) <= new Date()) return null
+    return data.token
+}

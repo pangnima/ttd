@@ -10,13 +10,14 @@ import { loginAction } from '@/lib/actions/auth'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
     const [state, formAction, isPending] = useActionState(loginAction, null)
     const [showPassword, setShowPassword] = useState(false)
 
     return (
         <div className="space-y-5">
             <form action={formAction} className="space-y-4">
+                {next && <input type="hidden" name="next" value={next} />}
                 <div>
                     <label htmlFor="email" className={labelCls}>이메일</label>
                     <input

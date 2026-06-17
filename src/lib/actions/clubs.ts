@@ -44,9 +44,13 @@ export async function createClubAction(
     if (deletePassword.length < 4) return { error: '삭제 비밀번호는 4자 이상이어야 합니다.' }
     if (deletePassword !== deletePasswordConfirm) return { error: '삭제 비밀번호가 일치하지 않습니다.' }
 
-    const { data, error } = await supabase
+    // id를 미리 생성해 INSERT에 포함한다. .select() 없이 INSERT하면 RETURNING이 발생하지 않아
+    // SELECT 정책 검사를 타지 않으므로 비공개 클럽 생성 시 RLS 거부를 원천 차단한다.
+    const id = crypto.randomUUID()
+    const { error } = await supabase
         .from('clubs')
         .insert({
+            id,
             name,
             region,
             description: description || null,
@@ -54,8 +58,6 @@ export async function createClubAction(
             owner_id: user.id,
             delete_password_hash: hashClubPassword(deletePassword),
         })
-        .select('id')
-        .single()
 
     if (error) return { error: error.message }
 
@@ -64,13 +66,13 @@ export async function createClubAction(
     const defaultLogo = (formData.get('default_logo') as string | null)?.trim() || ''
     let logoUrl: string | null = null
     if (logo && logo.size > 0) {
-        logoUrl = await uploadClubLogo(supabase, data.id, logo)
+        logoUrl = await uploadClubLogo(supabase, id, logo)
     }
     if (!logoUrl) logoUrl = defaultLogo || randomClubLogoPath()
-    await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', data.id)
+    await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', id)
 
     revalidatePath('/clubs', 'layout')
-    redirect(`/clubs/${data.id}`)
+    redirect(`/clubs/${id}`)
 }
 
 export async function updateClubAction(

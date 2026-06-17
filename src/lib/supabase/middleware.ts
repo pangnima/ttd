@@ -5,6 +5,11 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/supabase'
 
+// 오픈 리다이렉트 방지: 같은 사이트 내부 경로(/ 로 시작, // 프로토콜상대 제외)만 허용.
+export function isSafeNext(next: string | null | undefined): next is string {
+    return !!next && next.startsWith('/') && !next.startsWith('//')
+}
+
 export async function updateSession(request: NextRequest) {
     // supabaseResponse를 초기화한 뒤 setAll 내부에서 재생성하는 이유:
     // @supabase/ssr이 갱신된 쿠키를 응답에 실을 수 있도록 NextResponse 인스턴스를 교체해야 함.
@@ -44,17 +49,21 @@ export async function updateSession(request: NextRequest) {
         path.startsWith('/profile') ||
         path.startsWith('/me')
     if (isMainRoute && !user) {
+        // 원래 가려던 경로(+쿼리)를 next로 넘겨 로그인 후 복귀시킨다 (예: 초대 링크).
+        const intended = path + request.nextUrl.search
         const url = request.nextUrl.clone()
         url.pathname = '/login'
+        url.search = ''
+        url.searchParams.set('next', intended)
         return NextResponse.redirect(url)
     }
 
-    // 인증 라우트: 이미 로그인된 사용자는 /clubs로 리다이렉트
+    // 인증 라우트: 이미 로그인된 사용자는 next(있으면) 또는 /clubs로 리다이렉트
     const isAuthRoute = path === '/login' || path === '/signup'
     if (isAuthRoute && user) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/clubs'
-        return NextResponse.redirect(url)
+        const next = request.nextUrl.searchParams.get('next')
+        const dest = isSafeNext(next) ? next : '/clubs'
+        return NextResponse.redirect(new URL(dest, request.url))
     }
 
     return supabaseResponse

@@ -31,8 +31,12 @@ export async function loginAction(
         }
     }
 
+    // 로그인 전 가려던 내부 경로가 있으면 그곳으로 복귀 (초대 링크 등). 오픈 리다이렉트 방지.
+    const next = formData.get('next') as string | null
+    const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : '/clubs'
+
     revalidatePath('/', 'layout')
-    redirect('/clubs')
+    redirect(dest)
 }
 
 export async function signupAction(

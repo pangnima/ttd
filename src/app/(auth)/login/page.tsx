@@ -4,7 +4,14 @@ import { LoginForm } from '@/components/auth/login-form'
 import { LoginHero } from '@/components/auth/login-hero'
 import { TYPO } from '@/lib/dashboard/tokens'
 
-export default function LoginPage() {
+export default async function LoginPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ next?: string }>
+}) {
+    const { next } = await searchParams
+    // 오픈 리다이렉트 방지: 내부 경로만 폼으로 전달
+    const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : undefined
     return (
         <div className="grid h-screen w-full lg:grid-cols-2">
             <LoginHero />
@@ -24,7 +31,7 @@ export default function LoginPage() {
                     </p>
 
                     <div className="mt-8">
-                        <LoginForm />
+                        <LoginForm next={safeNext} />
                     </div>
                 </div>
             </div>

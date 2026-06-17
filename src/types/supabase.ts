@@ -46,6 +46,48 @@ export type Database = {
           },
         ]
       }
+      club_invites: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          is_active: boolean
+          token: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          is_active?: boolean
+          token?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          is_active?: boolean
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_invites_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_members: {
         Row: {
           club_id: string
@@ -474,14 +516,14 @@ export type Database = {
           id: string
           match_type: string
           notes: string | null
-          opponent2_dominant_hand: string | null
-          opponent2_name: string | null
-          opponent2_ntrp: number | null
-          opponent2_user_id: string | null
           opponent_dominant_hand: string | null
           opponent_name: string
           opponent_ntrp: number | null
           opponent_user_id: string | null
+          opponent2_dominant_hand: string | null
+          opponent2_name: string | null
+          opponent2_ntrp: number | null
+          opponent2_user_id: string | null
           partner_dominant_hand: string | null
           partner_name: string | null
           partner_ntrp: number | null
@@ -498,14 +540,14 @@ export type Database = {
           id?: string
           match_type: string
           notes?: string | null
-          opponent2_dominant_hand?: string | null
-          opponent2_name?: string | null
-          opponent2_ntrp?: number | null
-          opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name: string
           opponent_ntrp?: number | null
           opponent_user_id?: string | null
+          opponent2_dominant_hand?: string | null
+          opponent2_name?: string | null
+          opponent2_ntrp?: number | null
+          opponent2_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null
           partner_ntrp?: number | null
@@ -522,14 +564,14 @@ export type Database = {
           id?: string
           match_type?: string
           notes?: string | null
-          opponent2_dominant_hand?: string | null
-          opponent2_name?: string | null
-          opponent2_ntrp?: number | null
-          opponent2_user_id?: string | null
           opponent_dominant_hand?: string | null
           opponent_name?: string
           opponent_ntrp?: number | null
           opponent_user_id?: string | null
+          opponent2_dominant_hand?: string | null
+          opponent2_name?: string | null
+          opponent2_ntrp?: number | null
+          opponent2_user_id?: string | null
           partner_dominant_hand?: string | null
           partner_name?: string | null
           partner_ntrp?: number | null
@@ -543,15 +585,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "personal_matches_opponent2_user_id_fkey"
-            columns: ["opponent2_user_id"]
+            foreignKeyName: "personal_matches_opponent_user_id_fkey"
+            columns: ["opponent_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "personal_matches_opponent_user_id_fkey"
-            columns: ["opponent_user_id"]
+            foreignKeyName: "personal_matches_opponent2_user_id_fkey"
+            columns: ["opponent2_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -691,6 +733,16 @@ export type Database = {
           win_rate: number
         }[]
       }
+      get_invite_preview: {
+        Args: { p_token: string }
+        Returns: {
+          club_id: string
+          is_public: boolean
+          logo_url: string
+          name: string
+          region: string
+        }[]
+      }
       get_user_doubles_court_stats:
         | { Args: { p_user_id: string }; Returns: Json }
         | { Args: { p_club_id?: string; p_user_id: string }; Returns: Json }
@@ -769,6 +821,7 @@ export type Database = {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }
+      join_club_via_invite: { Args: { p_token: string }; Returns: string }
       update_match_game: {
         Args: {
           p_courts: Json
