@@ -32,9 +32,13 @@ export const EMPTY_BLOCK =
 export const TEXT_META = 'text-muted-foreground'
 export const TEXT_MUTED = 'text-muted-foreground'
 
-/** 폼 입력 필드 공통 스타일 (auth/profile 폼에서 공유) — 인풋 radius 4px */
+/**
+ * 폼 입력 필드 공통 스타일 (auth/profile 폼에서 공유).
+ * 공용 <Input>(h-11)과 동일 사이즈로 통일 — 고정 높이 대신 py-3로 ~44px를 맞춰
+ * 동일 토큰을 textarea에 써도 자연 확장되도록 한다.
+ */
 export const FORM_INPUT_BASE = [
-    'w-full rounded-sm px-3 py-2.5 text-sm text-foreground',
+    'w-full rounded-lg px-3 py-3 text-sm text-foreground',
     'bg-background border border-input',
     'placeholder:text-muted-foreground',
     'outline-none focus:border-ring transition-colors',
@@ -48,7 +52,7 @@ export const FORM_LABEL_BASE = 'block text-[11px] font-medium tracking-widest up
  * auth용 FORM_*_BASE와 시각 위계가 달라(라벨 일반 케이스, 인풋 py-2) 별도 토큰으로 둔다.
  */
 export const MATCH_FORM_INPUT =
-    'w-full rounded-[4px] border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
+    'w-full rounded-lg border border-input bg-background px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
 export const MATCH_FORM_LABEL = 'text-sm font-medium text-foreground block mb-2'
 
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
