@@ -1,6 +1,6 @@
 'use client'
 
-import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { MATCH_FORM_INPUT } from '@/lib/dashboard/tokens'
 
 type NotesSectionProps = {
     notes: string
@@ -14,7 +14,6 @@ type NotesSectionProps = {
 export function NotesSection({ notes, onNotesChange }: NotesSectionProps) {
     return (
         <div>
-            <label className={MATCH_FORM_LABEL}>메모 (선택)</label>
             <textarea
                 value={notes}
                 onChange={(e) => onNotesChange(e.target.value)}

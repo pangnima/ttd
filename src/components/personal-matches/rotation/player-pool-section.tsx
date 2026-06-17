@@ -2,7 +2,6 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
-import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
 import { PoolPlayerRow } from '@/components/personal-matches/rotation/pool-player-row'
 import { AddButton } from '@/components/personal-matches/add-button'
@@ -22,7 +21,6 @@ type PlayerPoolSectionProps = {
 export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUpdate, onRemove }: PlayerPoolSectionProps) {
     return (
         <div className="space-y-2">
-            <label className={MATCH_FORM_LABEL}>참가자 (나 제외) *</label>
             {pool.length === 0 && (
                 <p className="text-xs text-muted-foreground">함께 친 선수를 추가하세요. (최소 3명)</p>
             )}

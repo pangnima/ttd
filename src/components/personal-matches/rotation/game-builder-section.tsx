@@ -1,6 +1,5 @@
 'use client'
 
-import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import type { PoolPlayer, RotationGame } from '@/lib/personal-matches/rotation'
 import { GameRow } from '@/components/personal-matches/rotation/game-row'
 import { AddButton } from '@/components/personal-matches/add-button'
@@ -28,7 +27,6 @@ export function GameBuilderSection({
     const canAddGame = pool.length >= 3
     return (
         <div className="space-y-2">
-            <label className={MATCH_FORM_LABEL}>게임 *</label>
             {!canAddGame && (
                 <p className="text-xs text-muted-foreground">참가자를 3명 이상 추가하면 게임을 만들 수 있어요.</p>
             )}

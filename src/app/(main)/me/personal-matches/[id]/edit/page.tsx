@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchById, fetchPastOpponents } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
 type Props = { params: Promise<{ id: string }> }
@@ -25,8 +24,8 @@ export default async function EditPersonalMatchPage({ params }: Props) {
 
     return (
         <PageContainer>
-            <div className="mx-auto w-full max-w-2xl">
-                <h1 className={`${SECTION_LABEL} text-2xl`}>경기 기록 수정</h1>
+            <div className="mx-auto w-full max-w-2xl lg:max-w-5xl">
+                <h1 className="text-2xl font-bold">경기 기록 수정</h1>
                 <p className="text-sm text-muted-foreground mt-1">vs {match.opponentName}</p>
             </div>
             <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} />

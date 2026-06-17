@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+
 type FormFooterProps = {
     error: string | null
     isPending: boolean
@@ -17,21 +19,23 @@ export function FormFooter({ error, isPending, isValid, submitLabel, onCancel }:
         <>
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <div className="flex gap-3">
-                <button
+            <div className="flex gap-3 lg:justify-end">
+                <Button
                     type="submit"
+                    variant="accent"
                     disabled={isPending || !isValid}
-                    className="flex-1 py-2.5 text-sm font-medium bg-foreground text-background rounded-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="h-11 flex-1 lg:flex-none lg:min-w-44"
                 >
                     {isPending ? '저장 중...' : submitLabel}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={onCancel}
-                    className="px-4 py-2.5 text-sm text-muted-foreground border border-border rounded-[4px] hover:border-input transition-colors"
+                    className="h-11 lg:min-w-24"
                 >
                     취소
-                </button>
+                </Button>
             </div>
         </>
     )

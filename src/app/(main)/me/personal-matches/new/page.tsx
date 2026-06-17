@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchPastOpponents } from '@/lib/queries/personal-matches'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
 export const metadata = { title: '경기 기록 추가' }
@@ -20,8 +19,8 @@ export default async function NewPersonalMatchPage() {
 
     return (
         <PageContainer>
-            <div className="mx-auto w-full max-w-2xl">
-                <h1 className={`${SECTION_LABEL} text-2xl`}>경기 기록 추가</h1>
+            <div className="mx-auto w-full max-w-2xl lg:max-w-5xl">
+                <h1 className="text-2xl font-bold">경기 기록 추가</h1>
                 <p className="text-sm text-muted-foreground mt-1">클럽 외부 경기를 직접 입력합니다</p>
             </div>
             <PersonalMatchForm opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} />

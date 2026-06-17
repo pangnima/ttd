@@ -20,7 +20,7 @@ type SetScoreRowProps = {
     oppAdLabels?: { opponent: string; opponent2: string }
 }
 
-const scoreInputClass = 'w-16 rounded-[4px] border border-input bg-background px-2 py-1.5 text-sm text-center'
+const scoreInputClass = 'w-16 h-11 rounded-lg border border-input bg-background px-2 text-base font-semibold text-center'
 
 /**
  * 개인 경기기록의 세트 한 줄(번호 + 내/상대 점수 + 삭제 + 복식 애드/듀스).

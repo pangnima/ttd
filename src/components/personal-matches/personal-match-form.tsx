@@ -10,7 +10,8 @@ import {
     updatePersonalMatchAction,
     type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
-import { CARD_BASE, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { FormSectionCard } from '@/components/common/form-section-card'
 import { MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
 import { isNtrpValid, isPlayerFilled, isSetValid } from '@/lib/personal-matches/validators'
 import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
@@ -200,10 +201,18 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     // 세트 스코어 우측 라벨 (상대/상대팀 표시 이름)
     const opponentLabel = opponent.name.trim() || '상대'
 
+    // 섹션 카드 제목 — 경기 타입/방식에 따라 동적
+    const participantsTitle = isRotation ? '참가자 (나 제외)' : isDoubles ? '참가자' : '상대'
+    const scoreTitle = isRotation ? '게임' : '세트 스코어'
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-5 mx-auto w-full max-w-2xl">
-            <div className={`${CARD_BASE} p-5 sm:p-6 space-y-6`}>
-                {/* 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
+        <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl space-y-5 lg:max-w-5xl">
+            {/* 넓은 화면에서는 2열로 분할해 폼 길이를 줄인다 (좌: 누구와 / 우: 언제·결과) */}
+            <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+                {/* ── 왼쪽 열: 경기 타입 + 참가자 ── */}
+                <div className="space-y-5">
+            {/* 01 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
+            <FormSectionCard title="경기 타입" step="01" contentClassName="space-y-4">
                 <div>
                     <label className={MATCH_FORM_LABEL}>경기 타입 *</label>
                     <EnumSelect
@@ -218,7 +227,10 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                 {isDoubles && !initialData && (
                     <DoublesModeToggle value={doublesMode} onChange={setDoublesMode} />
                 )}
+            </FormSectionCard>
 
+            {/* 02 참가자/상대 */}
+            <FormSectionCard title={participantsTitle} step="02" contentClassName="space-y-4">
                 {isRotation ? (
                     <PlayerPoolSection
                         pool={rotation.pool}
@@ -238,7 +250,13 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         opponent2={{ player: opponent2, onPlayerChange: setOpponent2, ntrp: opponent2Ntrp, onNtrpChange: setOpponent2Ntrp }}
                     />
                 )}
+            </FormSectionCard>
+                </div>
 
+                {/* ── 오른쪽 열: 경기 정보 + 점수 + 메모 ── */}
+                <div className="space-y-5">
+            {/* 03 경기 정보 */}
+            <FormSectionCard title="경기 정보" step="03" contentClassName="space-y-4">
                 <MatchMetaSection
                     playedAt={playedAt}
                     onPlayedAtChange={setPlayedAt}
@@ -247,7 +265,10 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                     surface={surface}
                     onSurfaceChange={setSurface}
                 />
+            </FormSectionCard>
 
+            {/* 04 세트 스코어 / 게임 */}
+            <FormSectionCard title={scoreTitle} step="04">
                 {isRotation ? (
                     <GameBuilderSection
                         games={rotation.games}
@@ -275,8 +296,13 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         onOppAd={setOppAd}
                     />
                 )}
+            </FormSectionCard>
 
+            {/* 메모 */}
+            <FormSectionCard title="메모" step="선택">
                 <NotesSection notes={notes} onNotesChange={setNotes} />
+            </FormSectionCard>
+                </div>
             </div>
 
             <FormFooter

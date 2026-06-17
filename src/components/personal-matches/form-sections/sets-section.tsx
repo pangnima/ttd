@@ -2,7 +2,6 @@
 
 import type { PersonalMatchSetScore } from '@/types'
 import { SetScoreRow } from '@/components/personal-matches/set-score-row'
-import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { AddButton } from '@/components/personal-matches/add-button'
 
 type SetsSectionProps = {
@@ -30,7 +29,6 @@ export function SetsSection({
 }: SetsSectionProps) {
     return (
         <div>
-            <label className={MATCH_FORM_LABEL}>세트 스코어</label>
             {/* 왼쪽=나(등록유저), 오른쪽=상대 라벨 */}
             <div className="flex items-center gap-2 mb-1">
                 <span className="w-10" />
