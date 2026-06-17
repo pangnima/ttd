@@ -2,7 +2,6 @@
 
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,15 +9,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClubAction } from '@/lib/actions/clubs'
 import { ClubLogoField } from '@/components/clubs/club-logo-field'
-
-/** 카드 헤더 우측 단계 라벨 (01 / 03 형태) */
-function StepBadge({ step }: { step: number }) {
-    return (
-        <span className="text-xs font-medium tracking-widest text-muted-foreground tabular-nums">
-            {String(step).padStart(2, '0')} / 03
-        </span>
-    )
-}
+import { FormSectionCard } from '@/components/common/form-section-card'
 
 export function ClubCreateForm() {
     const [state, formAction, isPending] = useActionState(createClubAction, null)
@@ -36,12 +27,7 @@ export function ClubCreateForm() {
             <input type="hidden" name="is_public" value={isPublic ? 'true' : 'false'} />
 
             {/* ── 기본 정보 ── */}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-                    <CardTitle className="text-base">기본 정보</CardTitle>
-                    <StepBadge step={1} />
-                </CardHeader>
-                <CardContent className="space-y-5">
+            <FormSectionCard title="기본 정보" step="01 / 03" contentClassName="space-y-5">
                     <ClubLogoField />
 
                     {/* 클럽 이름 */}
@@ -89,16 +75,10 @@ export function ClubCreateForm() {
                             {descLen} / 200
                         </p>
                     </div>
-                </CardContent>
-            </Card>
+            </FormSectionCard>
 
             {/* ── 공개 설정 ── */}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-                    <CardTitle className="text-base">공개 설정</CardTitle>
-                    <StepBadge step={2} />
-                </CardHeader>
-                <CardContent>
+            <FormSectionCard title="공개 설정" step="02 / 03">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <button
                             type="button"
@@ -133,18 +113,15 @@ export function ClubCreateForm() {
                             </p>
                         </button>
                     </div>
-                </CardContent>
-            </Card>
+            </FormSectionCard>
 
             {/* ── 삭제 비밀번호 ── */}
-            <Card className="border-destructive/40">
-                <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-                    <CardTitle className="text-base">
-                        삭제 비밀번호 <span className="text-destructive">*</span>
-                    </CardTitle>
-                    <StepBadge step={3} />
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <FormSectionCard
+                title={<>삭제 비밀번호 <span className="text-destructive">*</span></>}
+                step="03 / 03"
+                tone="destructive"
+                contentClassName="space-y-4"
+            >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-2.5">
                             <Label htmlFor="delete_password">
@@ -185,8 +162,7 @@ export function ClubCreateForm() {
                     <p className="text-xs text-muted-foreground">
                         클럽을 해체할 때 사용되며, 안전하게 보관됩니다.
                     </p>
-                </CardContent>
-            </Card>
+            </FormSectionCard>
 
             {state?.error && (
                 <p className="text-sm text-destructive">{state.error}</p>
