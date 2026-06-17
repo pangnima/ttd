@@ -28,7 +28,7 @@ export function EnumSelect<T extends string>({
     onValueChange,
     options,
     placeholder,
-    triggerClassName = 'w-full bg-background border-input focus:border-ring',
+    triggerClassName = 'w-full data-[size=default]:h-11 bg-background dark:bg-input/30 border-input focus:border-ring',
     ariaLabel,
 }: EnumSelectProps<T>) {
     return (
