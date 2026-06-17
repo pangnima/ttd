@@ -24,6 +24,8 @@ type MatchGamesPageContentProps = {
     club: Club | null
     matchGames: MatchGame[]
     members: User[]
+    // 현재 클럽 멤버가 아닌(탈퇴) 선수 id 집합 — '탈퇴' 배지·line-through 표시용.
+    formerMemberIds?: Set<string>
     isMember: boolean
     isOwner: boolean
     currentUserId: string
@@ -34,6 +36,7 @@ export function MatchGamesPageContent({
     club,
     matchGames,
     members,
+    formerMemberIds,
     isMember,
     isOwner,
     currentUserId,
@@ -135,6 +138,7 @@ export function MatchGamesPageContent({
                             clubId={clubId}
                             isOwner={isOwner}
                             currentUserId={currentUserId}
+                            formerMemberIds={formerMemberIds}
                         />
                     </div>
 

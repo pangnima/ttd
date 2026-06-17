@@ -2,9 +2,8 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyMembership } from '@/lib/queries/clubs'
 import { fetchMatchGameById, fetchClubMembersWithGuests } from '@/lib/queries/match-games'
-import { fetchUsersByIds } from '@/lib/queries/users'
 import { fetchRatingDeltasByMatchGameId, fetchClubPlayerRatings, fetchConfirmedMatchesForRating } from '@/lib/queries/ratings'
-import { matchPlayerIds } from '@/lib/match-games/attendance-stats'
+import { augmentWithFormerMembers } from '@/lib/match-games/former-members'
 import { buildCrossPairH2H, isRivalMatch } from '@/lib/match-games/special-match'
 import { MatchGameDetailContent } from '@/components/match-games/match-game-detail-content'
 
@@ -33,15 +32,11 @@ export default async function MatchGameDetailPage({ params }: MatchGameDetailPag
 
     const isOwner = membership?.role === 'owner'
 
-    // 탈퇴(클럽/계정) 선수 보강: 경기에 등장한 player id 중 현재 멤버 목록에 없는 id를
-    // users에서 직접 조회해 이름을 복원한다(통계 경로의 fetchUsersByIds 패턴과 동일).
-    // 보강된 id 집합은 '탈퇴' 배지 표시에 사용한다.
-    const memberIdSet = new Set(members.map((m) => m.id))
-    const playerIds = new Set(matchGame.matches.flatMap(matchPlayerIds))
-    const missingIds = [...playerIds].filter((id) => !memberIdSet.has(id))
-    const formerUsers = missingIds.length > 0 ? await fetchUsersByIds(missingIds) : []
-    const membersWithFormer = [...members, ...formerUsers]
-    const formerMemberIds = new Set(formerUsers.map((u) => u.id))
+    // 탈퇴(클럽/계정) 선수 이름 복원 + '탈퇴' 배지용 id 집합 (목록 페이지와 공통 헬퍼 사용).
+    const { members: membersWithFormer, formerMemberIds } = await augmentWithFormerMembers(
+        members,
+        matchGame.matches,
+    )
 
     // 확정 대진표만 레이팅 변동(▲/▼·요약) 표시.
     const { byMatch, byUserTotal } = matchGame.isFixed

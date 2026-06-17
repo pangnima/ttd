@@ -32,7 +32,7 @@ export function PlayerName({ name, rating, outcome, delta, showDelta, isFormerMe
     return (
         <span className={cn('text-sm inline-flex items-center gap-1', outcomeClass(outcome), className)}>
             <TierIcon rating={rating ?? DEFAULT_RATING} size={14} className="shrink-0" />
-            {name}
+            <span className={cn(isFormerMember && 'line-through')}>{name}</span>
             {isFormerMember && (
                 <span className="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded border border-border text-muted-foreground">
                     탈퇴
