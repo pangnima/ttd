@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
 export const metadata = { title: '개인 경기 기록' }
@@ -31,11 +31,16 @@ export default async function PersonalMatchesPage() {
             </div>
 
             {matches.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-input bg-muted/30 text-muted-foreground text-sm text-center py-12">
-                    아직 등록된 개인 경기가 없습니다.{' '}
-                    <Link href="/me/personal-matches/new" className="underline underline-offset-2 hover:text-foreground">
-                        첫 경기를 기록해보세요
-                    </Link>
+                <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>
+                    {/* 정적 SVG 장식 (내 전적 > 개인 빈 상태와 통일) */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
+                    <span>
+                        아직 등록된 개인 경기가 없습니다.{' '}
+                        <Link href="/me/personal-matches/new" className="text-primary hover:underline">
+                            첫 경기를 기록해보세요
+                        </Link>
+                    </span>
                 </div>
             ) : (
                 <PersonalMatchList matches={matches} />

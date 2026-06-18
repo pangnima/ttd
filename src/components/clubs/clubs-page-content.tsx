@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { ClubListRow } from '@/components/clubs/club-list-row'
 import { SECTION_LABEL, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
-import { Plus, Search, Users } from 'lucide-react'
+import { Plus, Search, RefreshCw } from 'lucide-react'
 import type { ClubMemberCount } from '@/lib/queries/clubs'
 import type { Club, ClubMember } from '@/types'
 
@@ -18,6 +19,7 @@ type ClubsPageContentProps = {
 
 export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: ClubsPageContentProps) {
     const [search, setSearch] = useState('')
+    const router = useRouter()
 
     const filtered = search.trim()
         ? allClubs.filter(
@@ -90,13 +92,30 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                     search.trim() ? (
                         <div className={EMPTY_BLOCK}>검색 결과가 없습니다.</div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4 border border-input border-dashed rounded-xl">
-                            <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
-                                <Users className="w-5 h-5 text-muted-foreground" />
+                        <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-4 py-12`}>
+                            {/* 정적 SVG 장식 (빈 상태 일러스트 관례) */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/empty/clubs-empty.svg" alt="" aria-hidden width={132} height={96} draggable={false} />
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-foreground">아직 가입 가능한 클럽이 없습니다.</p>
+                                <p className="text-xs text-muted-foreground">첫 번째 클럽을 만들어 멤버를 모아보세요.</p>
                             </div>
-                            <div className="text-center space-y-1">
-                                <p className="text-sm text-foreground">아직 가입 가능한 클럽이 없습니다.</p>
-                                <p className="text-xs text-muted-foreground">직접 클럽을 만들어보세요.</p>
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href="/clubs/new"
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    클럽 만들기
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => router.refresh()}
+                                    className="inline-flex items-center gap-1.5 text-sm rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    새로고침
+                                </button>
                             </div>
                         </div>
                     )
