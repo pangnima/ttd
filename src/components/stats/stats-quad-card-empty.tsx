@@ -12,6 +12,7 @@ type Props = {
 /**
  * 특정 매치타입만 0경기일 때의 카드 빈 상태 (레벨2).
  * 상단 pill은 일반 카드(StatsQuadCard)와 동일 위치로 유지해 그리드 정렬을 맞춘다.
+ * 기록하기 CTA는 헤더 우측(일반 카드의 승률 위치)에 두어 빈 카드가 세로로 늘어나지 않게 한다.
  */
 export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
     const style = getMatchTypeStyle(matchType)
@@ -24,6 +25,15 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                 <span className={`${PILL_BASE} ${style.textClass} ${style.borderClass} ${style.bgClass}`}>
                     {style.label}
                 </span>
+                {recordHref && (
+                    <Link
+                        href={recordHref}
+                        className="inline-flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                        기록하기
+                    </Link>
+                )}
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-center">
@@ -31,15 +41,6 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image} alt="" aria-hidden width={96} height={64} draggable={false} />
                 <p className="text-xs text-muted-foreground">아직 {MATCH_TYPE_LABELS[matchType]} 기록이 없어요</p>
-                {recordHref && (
-                    <Link
-                        href={recordHref}
-                        className="inline-flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-1"
-                    >
-                        <Plus className="w-3 h-3" />
-                        기록하기
-                    </Link>
-                )}
             </div>
         </div>
     )
