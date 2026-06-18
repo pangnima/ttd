@@ -5,6 +5,7 @@ import { TierIcon } from '@/components/common/tier-icon'
 import { ProfileTierProgress } from '@/components/profile/profile-tier-progress'
 import { ProfileStatRow } from '@/components/profile/profile-stat-row'
 import { ProfileSummaryRow, type ProfileSummary } from '@/components/profile/profile-summary-row'
+import { ProfileEmptyGuide } from '@/components/profile/profile-empty-guide'
 import { RatingSummaryRow, type RatingSummary } from '@/components/profile/rating-summary-row'
 import { WinRateRing } from '@/components/stats/win-rate-ring'
 import { RecentFormStrip } from '@/components/stats/recent-form-strip'
@@ -45,6 +46,8 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
     const personalTier = personalRating ? getTier(personalRating.rating) : null
     // 티어(클럽/개인)가 모두 없을 때만 승률 링을 좌측 히어로 슬롯에 채운다.
     const showSummary = !hasTier && !!summary
+    // 본인 비클럽 scope(summary 보유)에서 0경기면 '0 경기' 대신 빈 상태 안내 + CTA를 노출.
+    const isEmptyGuide = showSummary && !!summary && summary.wins + summary.losses + summary.draws === 0
     // NTRP 배지: 본인은 온더플라이 개인 레이팅(소수 3자리), 타인은 진화 NTRP 캐시(있으면)→가입 시드.
     const ntrpDisplay = personalRating ? personalRating.rating.toFixed(3) : effectiveNtrp(user).toFixed(1)
 
@@ -128,12 +131,18 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                         </div>
                     )}
 
-                    {showSummary && summary
-                        ? <ProfileSummaryRow {...summary} />
-                        : stats && <ProfileStatRow {...stats} />}
+                    {isEmptyGuide ? (
+                        <ProfileEmptyGuide />
+                    ) : (
+                        <>
+                            {showSummary && summary
+                                ? <ProfileSummaryRow {...summary} />
+                                : stats && <ProfileStatRow {...stats} />}
 
-                    {recentForm && (
-                        <RecentFormStrip last10={recentForm.last10} currentStreak={recentForm.currentStreak} />
+                            {recentForm && (
+                                <RecentFormStrip last10={recentForm.last10} currentStreak={recentForm.currentStreak} />
+                            )}
+                        </>
                     )}
 
                     {clubName && <p className="text-xs text-muted-foreground">{clubName} 기준 통계</p>}

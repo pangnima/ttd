@@ -156,7 +156,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                     personalRating={scope.kind === 'personal' ? personalRating : undefined}
                     ratingSummary={ratingSummary}
                 />
-                {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
+                {/* 0경기(비클럽 scope)는 헤더 카드가 빈 상태 안내를 담당 → 체크리스트 숨김(중복 방지) */}
+                {!(headerStats.games === 0 && scope.kind !== 'club') && showOnboarding && (
+                    <OnboardingChecklist steps={onboardingSteps} />
+                )}
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
         )
