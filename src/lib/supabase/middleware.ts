@@ -59,11 +59,11 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // 인증 라우트: 이미 로그인된 사용자는 next(있으면) 또는 /clubs로 리다이렉트
+    // 인증 라우트: 이미 로그인된 사용자는 next(있으면) 또는 내 전적 > 개인으로 리다이렉트
     const isAuthRoute = path === '/login' || path === '/signup'
     if (isAuthRoute && user) {
         const next = request.nextUrl.searchParams.get('next')
-        const dest = isSafeNext(next) ? next : '/clubs'
+        const dest = isSafeNext(next) ? next : `/profile/${user.id}?scope=personal`
         return NextResponse.redirect(new URL(dest, request.url))
     }
 

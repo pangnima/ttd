@@ -32,8 +32,10 @@ export async function loginAction(
     }
 
     // 로그인 전 가려던 내부 경로가 있으면 그곳으로 복귀 (초대 링크 등). 오픈 리다이렉트 방지.
+    // 그 외에는 내 전적 > 개인 탭을 기본 진입점으로 한다.
     const next = formData.get('next') as string | null
-    const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : '/clubs'
+    const fallback = data.user ? `/profile/${data.user.id}?scope=personal` : '/clubs'
+    const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : fallback
 
     revalidatePath('/', 'layout')
     redirect(dest)
