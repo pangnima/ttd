@@ -116,7 +116,11 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             ? replayPersonalRatings(bundle.personalGames, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
             : null
         const personalRating = personalRatingSnapshot && personalRatingSnapshot.matchesPlayed > 0
-            ? { rating: personalRatingSnapshot.rating, provisional: personalRatingSnapshot.provisional }
+            ? {
+                  rating: personalRatingSnapshot.rating,
+                  provisional: personalRatingSnapshot.provisional,
+                  matchesPlayed: personalRatingSnapshot.matchesPlayed,
+              }
             : undefined
 
         // 통합 탭: 자가선언·개인·가입 클럽별 레이팅을 헤더에 요약(클럽별 본인 레이팅 일괄 조회).
@@ -126,9 +130,19 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             const clubs = myClubs
                 .map((c) => {
                     const r = clubRatingMap[c.id]
-                    return r ? { clubName: c.name, rating: r.rating, provisional: isProvisional(r.matchesPlayed) } : null
+                    return r
+                        ? {
+                              clubName: c.name,
+                              rating: r.rating,
+                              provisional: isProvisional(r.matchesPlayed),
+                              matchesPlayed: r.matchesPlayed,
+                          }
+                        : null
                 })
-                .filter((c): c is { clubName: string; rating: number; provisional: boolean } => c !== null)
+                .filter(
+                    (c): c is { clubName: string; rating: number; provisional: boolean; matchesPlayed: number } =>
+                        c !== null,
+                )
             ratingSummary = { selfNtrp: target.ntrp, personal: personalRating, clubs }
         }
 
