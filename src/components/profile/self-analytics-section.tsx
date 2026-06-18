@@ -50,6 +50,17 @@ function getScopeLabel(scope: AnalyticsScope): string {
     return '클럽 + 개인 경기 통합 통계'
 }
 
+type EmptyCta = { recordHref?: string; browseHref?: string; browseLabel?: string }
+
+// 0경기 빈 상태 CTA — scope별 행동 유도. 클럽 통계는 개인 경기 기록으로 채울 수 없어
+// 기록 버튼 대신 해당 클럽 대진표 링크만 노출한다.
+function getEmptyCta(scope: AnalyticsScope): EmptyCta {
+    if (scope.kind === 'club') {
+        return { browseHref: `/clubs/${scope.clubId}/match-games`, browseLabel: '대진표 보기' }
+    }
+    return { recordHref: '/me/personal-matches/new', browseHref: '/clubs' }
+}
+
 /**
  * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
  */
@@ -127,6 +138,8 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
 
     const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
+    const emptyCta = getEmptyCta(scope)
+
     // 1:1 맞대결 카드 — 개인 경기 기록과 50/50 배치 또는 단독(클럽 scope) 렌더에 재사용
     const headToHead = (
         <Suspense>
@@ -167,6 +180,9 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     mixedDoubles={bundle.stats.mixedDoubles}
                     privacy={me.statsHidden ? 'self' : 'public'}
                     showSets={false}
+                    emptyRecordHref={emptyCta.recordHref}
+                    emptyBrowseHref={emptyCta.browseHref}
+                    emptyBrowseLabel={emptyCta.browseLabel}
                 />
             </section>
 

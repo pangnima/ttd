@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import type { User } from '@/types'
+import type { User, MatchType } from '@/types'
 import type { PlayerStats } from '@/lib/stats'
 import { combinePlayerStats } from '@/lib/stats'
 import { StatsQuadCard } from '@/components/stats/stats-quad-card'
+import { StatsQuadCardEmpty } from '@/components/stats/stats-quad-card-empty'
+import { StatsEmpty } from '@/components/stats/stats-empty'
 import { StatsPrivacyToggle } from '@/components/stats/stats-privacy-toggle'
 import { toggleStatsHiddenAction } from '@/lib/actions/profile'
 import { SECTION_LABEL } from '@/lib/dashboard/tokens'
@@ -22,6 +24,11 @@ type Props = {
     showSets?: boolean
     // 있으면 섹션 헤더(라벨) 렌더, 없으면 생략 (호출부에서 라벨을 직접 관리할 때)
     label?: string
+    // 0경기 빈 상태 CTA (본인 화면에서만 주입 — 타인은 미전달 → 일러스트+메시지만)
+    emptyRecordHref?: string
+    emptyBrowseHref?: string
+    emptyRecordLabel?: string
+    emptyBrowseLabel?: string
 }
 
 export function StatsQuadGrid({
@@ -35,6 +42,10 @@ export function StatsQuadGrid({
     statsHidden = false,
     showSets = true,
     label,
+    emptyRecordHref,
+    emptyBrowseHref,
+    emptyRecordLabel,
+    emptyBrowseLabel,
 }: Props) {
     const [revealed, setRevealed] = useState(false)
     const [, startTransition] = useTransition()
@@ -62,23 +73,47 @@ export function StatsQuadGrid({
     const isSelf = privacy === 'self'
     // 본인 비공개(self) 또는 타인의 비공개 프로필(locked) 모두 블러 처리
     const isBlurred = (isSelf && !revealed) || isLocked
+    // 레벨1: 전체 0경기 빈 상태 (locked는 블러 우선 — 0/데이터 노출 자체를 막음)
+    const isEmpty = !isLocked && totalStats.totalMatches === 0
+
+    const header = (label || editable) && (
+        <div className="flex items-center justify-between">
+            {label ? <p className={SECTION_LABEL}>{label}</p> : <span />}
+            {editable && <StatsPrivacyToggle hidden={statsHidden} />}
+        </div>
+    )
+
+    if (isEmpty) {
+        return (
+            <section className="space-y-3">
+                {header}
+                <StatsEmpty
+                    recordHref={emptyRecordHref}
+                    browseHref={emptyBrowseHref}
+                    recordLabel={emptyRecordLabel}
+                    browseLabel={emptyBrowseLabel}
+                />
+            </section>
+        )
+    }
+
+    // 레벨2: 매치타입별 카드 — 0경기면 빈 카드로 대체 (전체 카드는 합산이라 항상 일반 렌더)
+    const renderCard = (matchType: MatchType, stats: PlayerStats) =>
+        stats.totalMatches === 0 ? (
+            <StatsQuadCardEmpty matchType={matchType} recordHref={emptyRecordHref} />
+        ) : (
+            <StatsQuadCard matchType={matchType} stats={stats} masked={isLocked} showSets={showSets} />
+        )
 
     return (
         <section className="space-y-3">
-            {(label || editable) && (
-                <div className="flex items-center justify-between">
-                    {label ? <p className={SECTION_LABEL}>{label}</p> : <span />}
-                    {editable && (
-                        <StatsPrivacyToggle hidden={statsHidden} />
-                    )}
-                </div>
-            )}
+            {header}
             <div className="relative">
                 <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 ${isBlurred ? 'blur-sm select-none pointer-events-none' : ''}`}>
                     <StatsQuadCard variant="neutral" stats={totalStats} masked={isLocked} showSets={showSets} />
-                    <StatsQuadCard matchType="singles" stats={singles} masked={isLocked} showSets={showSets} />
-                    <StatsQuadCard matchType={genderDoublesType} stats={genderDoubles} masked={isLocked} showSets={showSets} />
-                    <StatsQuadCard matchType="mixed_doubles" stats={mixedDoubles} masked={isLocked} showSets={showSets} />
+                    {renderCard('singles', singles)}
+                    {renderCard(genderDoublesType, genderDoubles)}
+                    {renderCard('mixed_doubles', mixedDoubles)}
                 </div>
 
                 {isBlurred && (
