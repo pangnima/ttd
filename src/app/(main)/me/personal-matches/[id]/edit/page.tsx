@@ -21,6 +21,8 @@ export default async function EditPersonalMatchPage({ params }: Props) {
         fetchPastOpponents(user.id),
     ])
     if (!match || match.userId !== user.id) notFound()
+    // 상호 확인으로 확정된 경기는 수정 불가 (액션·RLS와 삼중 방어)
+    if (match.sourceRequestId) redirect('/me/personal-matches')
 
     return (
         <PageContainer>

@@ -10,6 +10,9 @@ import {
     updatePersonalMatchAction,
     type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
+import { createMatchRequestAction } from '@/lib/actions/match-requests'
+import { useUserSearch } from '@/components/personal-matches/use-user-search'
+import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
@@ -31,11 +34,13 @@ type Props = {
     initialData?: PersonalMatch
     opponentCandidates?: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
+    // 로그인 유저 id — 전달 시 단식 상대에 플랫폼 전체 회원 검색 + 상호 확인 요청 플로우 활성화
+    selfUserId?: string
 }
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
-export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [] }: Props) {
+export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [], selfUserId }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
@@ -81,6 +86,16 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     const isDoubles = DOUBLES_TYPES.includes(matchType)
     const isRotation = isDoubles && doublesMode === 'rotation' && !initialData
 
+    // 플랫폼 전체 회원 검색 (단식 상대 전용, 로그인 유저 id가 있을 때만)
+    const userSearch = useUserSearch(selfUserId)
+    // 상대가 클럽 후보에 있으면 게스트 여부를 그 정보로 판단.
+    // 후보에 없는 userId는 전체 검색(비게스트만 노출)에서 선택된 회원이다.
+    const opponentIsGuest = opponentCandidates.find((c) => c.id === opponent.userId)?.isGuest ?? false
+    // 상호 확인 요청 플로우 — 신규 등록 + 단식 + 플랫폼 회원(비게스트) 상대일 때.
+    // 게스트·직접 입력·복식·수정 모드는 기존 자유 기록으로 저장한다.
+    const isConfirmFlow =
+        !initialData && matchType === 'singles' && !!selfUserId && !!opponent.userId && !opponentIsGuest
+
     function addSet() {
         setSets((prev) => [...prev, { me: 0, opp: 0 }])
     }
@@ -115,7 +130,8 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
 
     const fixedValid =
         isPlayerFilled(opponent) &&
-        isNtrpValid(opponentNtrp) &&
+        // 확인 요청 플로우는 상대 NTRP를 수락 시 서버가 파생하므로 입력 검증 제외
+        (isConfirmFlow || isNtrpValid(opponentNtrp)) &&
         (!isDoubles || (
             isPlayerFilled(partner) &&
             isPlayerFilled(opponent2) &&
@@ -184,6 +200,25 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             ...(isDoubles && s.oppAd ? { oppAd: s.oppAd } : {}),
         }))
 
+        // 상호 확인 요청: 직접 저장하지 않고 요청을 생성 — 상대가 수락하면 양쪽 전적에 기록된다
+        if (isConfirmFlow && opponent.userId && surface && playedTime) {
+            const opponentUserId = opponent.userId
+            startTransition(async () => {
+                const res = await createMatchRequestAction({
+                    opponentUserId,
+                    opponentName: opponent.name.trim(),
+                    playedAt,
+                    playedTime,
+                    surface,
+                    setScores: cleanSets,
+                    notes: notes || undefined,
+                })
+                if (res.error) setError(res.error)
+                else router.push('/me/match-requests?tab=sent')
+            })
+            return
+        }
+
         startTransition(async () => {
             const res = initialData
                 // 수정: 기존 한 레코드를 그대로 유지 (모든 세트 포함, winner 자동 판정)
@@ -248,8 +283,12 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         opponent={{ player: opponent, onPlayerChange: setOpponent, ntrp: opponentNtrp, onNtrpChange: setOpponentNtrp }}
                         partner={{ player: partner, onPlayerChange: setPartner, ntrp: partnerNtrp, onNtrpChange: setPartnerNtrp }}
                         opponent2={{ player: opponent2, onPlayerChange: setOpponent2, ntrp: opponent2Ntrp, onNtrpChange: setOpponent2Ntrp }}
+                        opponentSearchResults={!isDoubles && selfUserId ? userSearch.results : undefined}
+                        onOpponentSearchTermChange={!isDoubles && selfUserId && !initialData ? userSearch.setTerm : undefined}
+                        hideOpponentNtrp={isConfirmFlow}
                     />
                 )}
+                {isConfirmFlow && <ConfirmFlowNotice opponentName={opponent.name.trim() || '상대'} />}
             </FormSectionCard>
                 </div>
 
@@ -309,7 +348,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                 error={error}
                 isPending={isPending}
                 isValid={isValid}
-                submitLabel={initialData ? '수정 완료' : '경기 저장'}
+                submitLabel={isConfirmFlow ? '확인 요청 보내기' : initialData ? '수정 완료' : '경기 저장'}
                 onCancel={() => router.back()}
             />
         </form>

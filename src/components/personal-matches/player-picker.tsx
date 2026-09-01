@@ -41,20 +41,30 @@ type Props = {
     placeholder?: string
     // 손잡이 입력 노출 여부 (직접 입력 모드에서만 실제 표시)
     showHand?: boolean
+    // 플랫폼 전체 회원 검색 (선택) — 전달 시 검색어를 위로 올리고 결과를 "전체 회원" 그룹으로 표시
+    searchResults?: OpponentCandidate[]
+    onSearchTermChange?: (term: string) => void
 }
 
 /**
  * 개인 경기 선수(상대/파트너) 선택 입력.
  * 콤보박스(클럽 회원 + 만나본 사람) ↔ 직접 입력 모드를 토글하며, 직접 입력 시 손잡이를 필수로 받는다.
  */
-export function PlayerPicker({ label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true }: Props) {
+export function PlayerPicker({
+    label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true,
+    searchResults, onSearchTermChange,
+}: Props) {
     // userId가 있으면 회원 모드, 없으면 직접 입력 모드
     const [mode, setMode] = useState<'member' | 'external'>(value.userId ? 'member' : 'external')
     const [comboOpen, setComboOpen] = useState(false)
 
     const selected = candidates.find((c) => c.id === value.userId)
-    // 콤보박스로 고를 대상(클럽 회원 또는 만나본 사람)이 하나라도 있으면 모드 토글 노출
-    const hasPickable = candidates.length > 0 || pastOpponents.length > 0
+    // 콤보박스로 고를 대상(클럽 회원, 만나본 사람, 전체 검색)이 하나라도 있으면 모드 토글 노출
+    const searchable = !!onSearchTermChange
+    const hasPickable = candidates.length > 0 || pastOpponents.length > 0 || searchable
+    // 전체 검색 결과에서 클럽 후보와 중복되는 회원은 제외 (클럽 그룹 우선)
+    const candidateIds = new Set(candidates.map((c) => c.id))
+    const filteredSearchResults = (searchResults ?? []).filter((c) => !candidateIds.has(c.id))
 
     function switchMode(next: 'member' | 'external') {
         setMode(next)
@@ -99,7 +109,10 @@ export function PlayerPicker({ label, candidates, pastOpponents = [], value, onC
                     </PopoverTrigger>
                     <PopoverContent className="w-72 p-0" align="start">
                         <Command>
-                            <CommandInput placeholder="이름으로 검색..." />
+                            <CommandInput
+                                placeholder={searchable ? '이름·닉네임으로 검색...' : '이름으로 검색...'}
+                                onValueChange={onSearchTermChange}
+                            />
                             <CommandList>
                                 <CommandEmpty>검색 결과가 없습니다</CommandEmpty>
                                 {candidates.length > 0 && (
@@ -120,6 +133,26 @@ export function PlayerPicker({ label, candidates, pastOpponents = [], value, onC
                                                     <span className="ml-auto text-muted-foreground text-xs">
                                                         {c.clubNames[0]}
                                                     </span>
+                                                )}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                )}
+                                {filteredSearchResults.length > 0 && (
+                                    <CommandGroup heading="전체 회원">
+                                        {filteredSearchResults.map((c) => (
+                                            <CommandItem
+                                                key={c.id}
+                                                value={`search-${c.name} ${c.nickname ?? ''} ${c.id.slice(0, 4)}`}
+                                                onSelect={() => {
+                                                    onChange({ userId: c.id, name: c.name, hand: '' })
+                                                    setComboOpen(false)
+                                                }}
+                                            >
+                                                <span>{c.name}</span>
+                                                {c.ntrp && <span className="ml-1 text-muted-foreground">({c.ntrp})</span>}
+                                                {c.nickname && (
+                                                    <span className="ml-auto text-muted-foreground text-xs">{c.nickname}</span>
                                                 )}
                                             </CommandItem>
                                         ))}

@@ -37,7 +37,8 @@ src/
 │   │   │       └── settings/
 │   │   ├── me/
 │   │   │   ├── analytics/        # /profile/[userId]?mode=total 리다이렉트
-│   │   │   └── personal-matches/ # 개인 경기 기록 CRUD
+│   │   │   ├── personal-matches/ # 개인 경기 기록 CRUD
+│   │   │   └── match-requests/   # 경기 확인 요청 허브 (받은/보낸 탭)
 │   │   ├── profile/
 │   │   │   ├── [userId]/         # 개인 프로필 (본인=분석 풀버전, 타인=공개 요약)
 │   │   │   └── settings/
@@ -49,7 +50,8 @@ src/
 │   ├── clubs/                    # 클럽 (ClubLogoField, LeaveClubButton, ClubInviteCard, InviteJoinButton 등)
 │   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
-│   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, rotation/ 입력 등)
+│   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, rotation/ 입력, use-user-search 등)
+│   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, 상태 뱃지)
 │   ├── profile/                  # 프로필 헤더·통계 조합 (DeleteAccountButton 등)
 │   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
@@ -68,6 +70,7 @@ src/
 │   │   ├── match-games.ts
 │   │   ├── match-game-courts.ts  # 복식 코트 사이드 저장
 │   │   ├── personal-matches.ts
+│   │   ├── match-requests.ts     # 확인 요청 생성/취소/거절/수락(RPC)
 │   │   ├── profile.ts
 │   │   ├── ratings.ts            # 클럽 레이팅 재계산 트리거
 │   │   └── ai-coaching.ts
@@ -76,6 +79,7 @@ src/
 │   │   ├── clubs.ts              # 클럽 조회 + 초대 미리보기(get_invite_preview)
 │   │   ├── match-games.ts
 │   │   ├── personal-matches.ts
+│   │   ├── match-requests.ts     # 받은/보낸 요청·pending 뱃지 카운트
 │   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
 │   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
 │   │   ├── club-dashboard.ts     # 클럽 운영 쿼리 (에이스·활동/승률 랭킹 등)
@@ -146,8 +150,9 @@ src/
 /profile/settings → 내 정보 수정
 /me/analytics → /profile/[내id]?mode=total 리다이렉트
 /me/personal-matches → 개인 경기 기록 목록
-/me/personal-matches/new → 개인 경기 추가
-/me/personal-matches/[id]/edit → 개인 경기 수정
+/me/personal-matches/new → 개인 경기 추가 (회원 상대 단식은 확인 요청 플로우로 전환)
+/me/personal-matches/[id]/edit → 개인 경기 수정 (상호 확인 경기는 진입 차단)
+/me/match-requests → 경기 확인 요청 허브 (받은/보낸 탭, 수락·거절·취소)
 /guide → 신규 사용자 사용 가이드 (정적, 개인 경기 기록 1순위)
 /tiers → 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
 ```
@@ -212,7 +217,8 @@ Client Component (read-only)
 | `club_members` | approved 멤버만 SELECT, owner/officer만 승인/거절 |
 | `match_games` | approved 멤버만 SELECT/INSERT, owner만 DELETE |
 | `match_game_courts/rounds/time_slots/matches` | 상위 match_game의 RLS를 따름 (courts.surface 포함) |
-| `personal_matches` | 본인(user_id)만 CRUD |
+| `personal_matches` | 본인(user_id)만 CRUD. 상호 확인 경기(`source_request_id` 보유)는 RESTRICTIVE 정책으로 수정/삭제 잠금 |
+| `match_requests` | 당사자 둘만 SELECT, requester만 INSERT/취소, opponent만 거절. 수락은 RPC로만 |
 | `ai_coaching_cache` | 본인 통계 묶음 해시 기반 캐시 (24h) |
 | `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만 |
 | `club_invites` | owner만 관리, 미리보기·가입은 SECURITY DEFINER RPC로만 |
@@ -222,8 +228,9 @@ RPC: `create_match_game`, `update_match_game`, `add_guest_player` (트랜잭션 
 RPC: `get_user_match_stats`, `get_user_head_to_head` (통계 집계)
 RPC: `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts` (클럽 대시보드 집계)
 RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`join_club_via_invite` (초대 링크)
+RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 생성 + 상태 전이)
 View: `user_match_participations` (security_invoker=on)
-마이그레이션: 0001~0032 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
+마이그레이션: 0001~0033 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -245,6 +252,7 @@ View: `user_match_participations` (security_invoker=on)
 | **탈퇴 회원** | `users.deleted_at` soft delete(익명화). 대진표 이름은 복원·'탈퇴' 배지, 레이팅 값 보존하되 랭킹 제외 |
 | **초대 토큰** | `club_invites.token` — 비공개 클럽 가입용. SECURITY DEFINER RPC로만 미리보기·가입 |
 | **로테이션 복식** | 4명 이상 파트너 교대(아메리칸) 복식을 게임별 개인 경기 레코드로 분해 저장 |
+| **확인 요청 / 상호 확인 경기** | 회원 간 단식 대진 요청(`match_requests`, pending→accepted/rejected/canceled). 수락 시 양측 관점 `personal_matches` 2행 생성(`source_request_id` 표식, 수정/삭제 잠금) |
 
 ## 코딩 규칙
 

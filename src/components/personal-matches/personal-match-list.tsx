@@ -19,15 +19,26 @@ type Props = {
     matches: PersonalMatch[]
 }
 
-function MatchActions({ id }: { id: string }) {
+function MatchActions({ match }: { match: PersonalMatch }) {
     const [isPending, startTransition] = useTransition()
     function handleDelete() {
         if (!confirm('이 경기 기록을 삭제할까요?')) return
-        startTransition(async () => { await deletePersonalMatchAction(id) })
+        startTransition(async () => { await deletePersonalMatchAction(match.id) })
+    }
+    // 상호 확인으로 확정된 경기는 양쪽 전적에 함께 기록되어 수정/삭제 불가
+    if (match.sourceRequestId) {
+        return (
+            <span
+                className="text-xs px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary"
+                title="상대 수락으로 확정된 경기는 수정·삭제할 수 없습니다"
+            >
+                상호 확인
+            </span>
+        )
     }
     return (
         <span className="flex items-center gap-2">
-            <Link href={`/me/personal-matches/${id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={`/me/personal-matches/${match.id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                 수정
             </Link>
             <button onClick={handleDelete} disabled={isPending} className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
@@ -79,7 +90,7 @@ export function PersonalMatchList({ matches }: Props) {
                 </div>
             ) : (
                 groups.map((group) => (
-                    <PersonalMatchMonthGroup key={group.ym} group={group} renderActions={(id) => <MatchActions id={id} />} />
+                    <PersonalMatchMonthGroup key={group.ym} group={group} renderActions={(m) => <MatchActions match={m} />} />
                 ))
             )}
         </div>

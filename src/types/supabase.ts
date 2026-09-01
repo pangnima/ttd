@@ -510,6 +510,66 @@ export type Database = {
           },
         ]
       }
+      match_requests: {
+        Row: {
+          created_at: string
+          id: string
+          match_type: string
+          notes: string | null
+          opponent_user_id: string
+          played_at: string
+          played_time: string
+          requester_id: string
+          responded_at: string | null
+          set_scores: Json
+          status: string
+          surface: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_type?: string
+          notes?: string | null
+          opponent_user_id: string
+          played_at: string
+          played_time: string
+          requester_id: string
+          responded_at?: string | null
+          set_scores: Json
+          status?: string
+          surface: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_type?: string
+          notes?: string | null
+          opponent_user_id?: string
+          played_at?: string
+          played_time?: string
+          requester_id?: string
+          responded_at?: string | null
+          set_scores?: Json
+          status?: string
+          surface?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_requests_opponent_user_id_fkey"
+            columns: ["opponent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_matches: {
         Row: {
           created_at: string
@@ -531,6 +591,7 @@ export type Database = {
           played_at: string
           played_time: string | null
           set_scores: Json
+          source_request_id: string | null
           surface: string | null
           user_id: string
           winner: string
@@ -555,6 +616,7 @@ export type Database = {
           played_at: string
           played_time?: string | null
           set_scores?: Json
+          source_request_id?: string | null
           surface?: string | null
           user_id: string
           winner: string
@@ -579,6 +641,7 @@ export type Database = {
           played_at?: string
           played_time?: string | null
           set_scores?: Json
+          source_request_id?: string | null
           surface?: string | null
           user_id?: string
           winner?: string
@@ -603,6 +666,13 @@ export type Database = {
             columns: ["partner_user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_matches_source_request_id_fkey"
+            columns: ["source_request_id"]
+            isOneToOne: false
+            referencedRelation: "match_requests"
             referencedColumns: ["id"]
           },
           {
@@ -685,6 +755,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_match_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       add_guest_player:
         | { Args: { p_club_id: string; p_nickname: string }; Returns: string }
         | {

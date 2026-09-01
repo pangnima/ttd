@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, BarChart3, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { topNavItems, clubNavItems } from '@/lib/nav-items'
+import { topNavItems, myMatchNavItems, clubNavItems } from '@/lib/nav-items'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
@@ -21,14 +21,22 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const [userId, setUserId] = useState<string | null>(null)
+    const [pendingRequestCount, setPendingRequestCount] = useState(0)
 
     useEffect(() => {
         let isMounted = true
         const supabase = createClient()
 
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(async ({ data: { user } }) => {
             if (!isMounted || !user) return
             setUserId(user.id)
+            // 받은 확인 요청 pending 건수 (RLS로 당사자만 조회됨)
+            const { count } = await supabase
+                .from('match_requests')
+                .select('id', { count: 'exact', head: true })
+                .eq('opponent_user_id', user.id)
+                .eq('status', 'pending')
+            if (isMounted) setPendingRequestCount(count ?? 0)
         })
 
         return () => {
@@ -40,8 +48,9 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
     const onProfile = pathname.startsWith('/profile/')
     const currentScope = searchParams.get('scope') ?? 'total'
     const scopeActive = (scope: string) => onProfile && currentScope === scope
-    // 개인 경기 등록(목록·생성·수정) 진입 active 판정
+    // 개인 경기 등록(목록·생성·수정)·경기 확인 요청 active 판정
     const onPersonalMatches = pathname.startsWith('/me/personal-matches')
+    const onMatchRequests = pathname.startsWith('/me/match-requests')
     // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위는 가입 클럽 트리가 담당.
     const mainActive = (href: string) => pathname === href || pathname === `${href}/new`
 
@@ -104,10 +113,33 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                                 <Link href={`/profile/${userId}?scope=personal`} onClick={() => setOpen(false)} className={cn(navLinkClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                     개인
                                 </Link>
-                                <Link href="/me/personal-matches" onClick={() => setOpen(false)} className={cn(navLinkClass(onPersonalMatches), 'pl-9 text-[13px]')}>
-                                    개인 경기 등록
-                                </Link>
                             </div>
+                        </div>
+                    )}
+
+                    {/* 개인 경기: 등록·확인 요청 독립 메뉴 (로그인 시) */}
+                    {userId && (
+                        <div className="mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10 space-y-1">
+                            {myMatchNavItems.map(({ href, label, icon: Icon }) => {
+                                const active = href === '/me/personal-matches' ? onPersonalMatches : onMatchRequests
+                                const showBadge = href === '/me/match-requests' && pendingRequestCount > 0
+                                return (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        onClick={() => setOpen(false)}
+                                        className={navLinkClass(active)}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {label}
+                                        {showBadge && (
+                                            <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 tabular-nums">
+                                                {pendingRequestCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                )
+                            })}
                         </div>
                     )}
 

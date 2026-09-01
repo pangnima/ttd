@@ -23,7 +23,7 @@ export default async function NewPersonalMatchPage() {
                 <h1 className="text-2xl font-bold">경기 기록 추가</h1>
                 <p className="text-sm text-muted-foreground mt-1">클럽 외부 경기를 직접 입력합니다</p>
             </div>
-            <PersonalMatchForm opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} />
+            <PersonalMatchForm opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} selfUserId={user.id} />
         </PageContainer>
     )
 }

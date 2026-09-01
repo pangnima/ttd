@@ -152,5 +152,25 @@ export type PersonalMatch = {
     winner: PersonalMatchWinner
     opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
+    sourceRequestId?: string  // 상호 확인 대진(match_requests)에서 확정된 경기 — 있으면 수정/삭제 잠금
     createdAt: string
+}
+
+// ── 상호 확인 대진 요청 (회원 간 단식) ────────────────────────────────
+
+export type MatchRequestStatus = 'pending' | 'accepted' | 'rejected' | 'canceled'
+
+export type MatchRequest = {
+    id: string
+    requesterId: string
+    opponentUserId: string
+    playedAt: string        // "2025-04-12"
+    playedTime: string      // "18:30"
+    matchType: MatchType    // v1은 'singles'만 (DB check)
+    surface: CourtSurface
+    setScores: PersonalMatchSetScore[]  // 요청자 관점
+    notes?: string
+    status: MatchRequestStatus
+    createdAt: string
+    respondedAt?: string
 }

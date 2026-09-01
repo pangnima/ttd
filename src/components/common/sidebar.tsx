@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { topNavItems, clubNavItems } from '@/lib/nav-items'
+import { topNavItems, myMatchNavItems, clubNavItems } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
@@ -16,6 +16,8 @@ type SidebarProps = {
     clubs?: { id: string; name: string }[]
     /** 로그인 사용자 id (개인 분석 하위 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
+    /** 받은 경기 확인 요청 중 pending 건수 (경기 확인 요청 메뉴 뱃지) */
+    pendingRequestCount?: number
 }
 
 /**
@@ -34,7 +36,7 @@ function RailFlyout({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
+export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount = 0 }: SidebarProps) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const { collapsed } = useSidebar()
@@ -43,8 +45,9 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
     const onProfile = activePath.startsWith('/profile/')
     const currentScope = searchParams.get('scope') ?? 'total'
     const scopeActive = (scope: string) => onProfile && currentScope === scope
-    // 개인 경기 등록(목록·생성·수정) 진입 active 판정
+    // 개인 경기 등록(목록·생성·수정)·경기 확인 요청 active 판정
     const onPersonalMatches = activePath.startsWith('/me/personal-matches')
+    const onMatchRequests = activePath.startsWith('/me/match-requests')
 
     // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위(/clubs/[id]/...)는
     // "내가 가입한 클럽" 트리가 담당하므로 prefix 매칭을 쓰지 않는다.
@@ -112,7 +115,7 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                 {userId &&
                     (collapsed ? (
                         <div className="group/rail relative mt-2 pt-2 border-t border-border/40">
-                            <div className={rowClass(onProfile || onPersonalMatches)}>
+                            <div className={rowClass(onProfile)}>
                                 <BarChart3 className="w-4 h-4 shrink-0" />
                             </div>
                             <RailFlyout>
@@ -121,9 +124,6 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                                 </Link>
                                 <Link href={`/profile/${userId}?scope=personal`} className={flyLinkClass(scopeActive('personal'))}>
                                     개인
-                                </Link>
-                                <Link href="/me/personal-matches" className={flyLinkClass(onPersonalMatches)}>
-                                    개인 경기 등록
                                 </Link>
                             </RailFlyout>
                         </div>
@@ -140,12 +140,38 @@ export function Sidebar({ currentPath, clubs = [], userId }: SidebarProps) {
                                 <Link href={`/profile/${userId}?scope=personal`} className={cn(rowClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
                                     개인
                                 </Link>
-                                <Link href="/me/personal-matches" className={cn(rowClass(onPersonalMatches), 'pl-9 text-[13px]')}>
-                                    개인 경기 등록
-                                </Link>
                             </div>
                         </div>
                     ))}
+
+                {/* 개인 경기: 등록·확인 요청 독립 메뉴 (로그인 시) */}
+                {userId && (
+                    <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
+                        {myMatchNavItems.map(({ href, label, icon: Icon }) => {
+                            const active = href === '/me/personal-matches' ? onPersonalMatches : onMatchRequests
+                            const showBadge = href === '/me/match-requests' && pendingRequestCount > 0
+                            return (
+                                <Link
+                                    key={href}
+                                    href={href}
+                                    className={cn(rowClass(active), 'relative')}
+                                    aria-label={collapsed ? label : undefined}
+                                >
+                                    <Icon className="w-4 h-4 shrink-0" />
+                                    <span className={labelClass}>{label}</span>
+                                    {showBadge && !collapsed && (
+                                        <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 tabular-nums">
+                                            {pendingRequestCount}
+                                        </span>
+                                    )}
+                                    {showBadge && collapsed && (
+                                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500" aria-hidden />
+                                    )}
+                                </Link>
+                            )
+                        })}
+                    </div>
+                )}
 
                 {/* 클럽 찾기 — 내 전적 아래, 가입 클럽 트리 위 */}
                 <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">

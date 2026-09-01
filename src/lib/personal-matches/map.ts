@@ -31,6 +31,7 @@ export function mapPersonalMatchRow(row: PersonalMatchRow): PersonalMatch {
         winner: row.winner as PersonalMatchWinner,
         opponentNtrp: row.opponent_ntrp != null ? Number(row.opponent_ntrp) : undefined,
         notes: row.notes ?? undefined,
+        sourceRequestId: row.source_request_id ?? undefined,
         createdAt: row.created_at,
     }
 }

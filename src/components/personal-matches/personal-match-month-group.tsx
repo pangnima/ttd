@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { PersonalMatch } from '@/types'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
@@ -6,7 +7,7 @@ import { PersonalMatchCard } from '@/components/personal-matches/personal-match-
 
 type Props = {
     group: MonthGroup
-    renderActions?: (matchId: string) => ReactNode
+    renderActions?: (match: PersonalMatch) => ReactNode
 }
 
 // 월별 그룹: 헤더(년월 + 승패 + 승률) + 경기 카드 목록.
@@ -24,7 +25,7 @@ export function PersonalMatchMonthGroup({ group, renderActions }: Props) {
             </div>
             <div className={`${CARD_BASE} divide-y divide-border/60`}>
                 {group.matches.map((m) => (
-                    <PersonalMatchCard key={m.id} match={m} actions={renderActions?.(m.id)} />
+                    <PersonalMatchCard key={m.id} match={m} actions={renderActions?.(m)} />
                 ))}
             </div>
         </section>

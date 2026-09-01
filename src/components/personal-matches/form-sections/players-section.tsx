@@ -20,13 +20,21 @@ type PlayersSectionProps = {
     opponent: PlayerFieldState
     partner: PlayerFieldState
     opponent2: PlayerFieldState
+    // 단식 상대 전용: 전체 회원 검색 (상호 확인 요청 대상 지정)
+    opponentSearchResults?: OpponentCandidate[]
+    onOpponentSearchTermChange?: (term: string) => void
+    // 상호 확인 플로우 — 상대 NTRP는 수락 시 서버 파생이므로 입력란 숨김
+    hideOpponentNtrp?: boolean
 }
 
 /**
  * 경기 타입(단식/복식)에 따라 선수 입력란을 분기 렌더링.
  * 단식은 상대 1명, 복식은 내 팀(파트너) + 상대팀(상대1·상대2) 박스로 구성한다.
  */
-export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent, partner, opponent2 }: PlayersSectionProps) {
+export function PlayersSection({
+    isDoubles, candidates, pastOpponents, opponent, partner, opponent2,
+    opponentSearchResults, onOpponentSearchTermChange, hideOpponentNtrp,
+}: PlayersSectionProps) {
     if (!isDoubles) {
         return (
             <PlayerNtrpField
@@ -39,6 +47,9 @@ export function PlayersSection({ isDoubles, candidates, pastOpponents, opponent,
                 onNtrpChange={opponent.onNtrpChange}
                 ntrpRequired
                 placeholder="상대방 이름 또는 닉네임"
+                searchResults={opponentSearchResults}
+                onSearchTermChange={onOpponentSearchTermChange}
+                hideNtrp={hideOpponentNtrp}
             />
         )
     }
