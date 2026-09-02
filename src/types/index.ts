@@ -11,7 +11,8 @@ export type User = {
     ntrp: number            // 가입 시 자가선언 NTRP (불변 시드, 빈 값 방지용)
     personalNtrp?: number   // 개인경기 기반 동적 NTRP 캐시(진화값). 미보유 시 undefined
     tennisStartDate: string   // 'YYYY-MM-01' (년/월만 입력, 일은 1로 고정)
-    racketBrand?: string      // 주력 라켓 (프리셋 한글 라벨 또는 기타 직접 입력). 가입 시 1회 입력
+    racketBrand?: string      // 주력 라켓 브랜드 (프리셋 한글 라벨 또는 기타 직접 입력). 설정에서 수정 가능
+    racketModel?: string      // 주력 라켓 모델명 (선택)
     createdAt: string
     isGuest: boolean   // true면 게스트 선수 (public.users에 존재하지만 Auth 계정 없음)
     statsHidden: boolean  // true면 승률·승무패를 타인에게 비공개

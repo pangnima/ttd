@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 import { randomAvatarPath } from '@/lib/default-images'
 import { mapAuthError } from '@/lib/auth/auth-error-messages'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
-import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand } from '@/lib/profile/signup-fields'
+import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -95,6 +95,7 @@ export async function signupAction(
                 tennis_start_date: tennisStartDate,
                 ntrp,
                 racket_brand: racketBrand ?? '',
+                racket_model: normalizeRacketModel(formData.get('racket_model') as string | null) ?? '',
             },
         },
     })
@@ -171,6 +172,7 @@ export async function deleteAccountAction(): Promise<{ error: string } | null> {
             dominant_hand: null,
             tennis_start_date: null,
             racket_brand: null,
+            racket_model: null,
             stats_hidden: true,
             deleted_at: new Date().toISOString(),
         })

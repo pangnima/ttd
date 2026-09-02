@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { ImagePlus, Shuffle } from 'lucide-react'
 import { ProfileReadonlyFields } from '@/components/profile/profile-readonly-fields'
+import { RacketField } from '@/components/common/racket-field'
 import { updateProfileAction } from '@/lib/actions/profile'
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
 import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
@@ -28,6 +29,7 @@ type ProfileData = {
     tennis_start_date: string | null
     ntrp: number | null
     racket_brand: string | null
+    racket_model: string | null
     profile_image: string | null
     stats_hidden: boolean
 }
@@ -132,8 +134,10 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                 dominantHand={initialProfile.dominant_hand}
                 tennisStartDate={initialProfile.tennis_start_date}
                 ntrp={initialProfile.ntrp}
-                racketBrand={initialProfile.racket_brand}
             />
+
+            {/* 주력 라켓 — 수정 가능 */}
+            <RacketField initialBrand={initialProfile.racket_brand} initialModel={initialProfile.racket_model} />
 
             {/* 전적 통계 공개 여부 */}
             <div>

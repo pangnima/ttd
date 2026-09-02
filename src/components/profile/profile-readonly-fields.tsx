@@ -17,7 +17,6 @@ type Props = {
     dominantHand: string | null
     tennisStartDate: string | null
     ntrp: number | null
-    racketBrand: string | null
 }
 
 function ReadonlyLabel({ children }: { children: React.ReactNode }) {
@@ -42,11 +41,11 @@ function ReadonlyToggle({ options, current }: { options: ReadonlyArray<{ value: 
 }
 
 /**
- * 프로필 설정의 변경 불가 필드 묶음 — 성별·주력손·테니스 시작일·NTRP·주력 라켓.
+ * 프로필 설정의 변경 불가 필드 묶음 — 성별·주력손·테니스 시작일·NTRP.
  * 가입 시 1회 입력한 값을 표시만 하며 폼으로 전송하지 않는다.
  * NTRP는 가입 선택지(1.0~4.0) 밖의 기존 값(예: 5.0)도 있으므로 원값을 그대로 보여준다.
  */
-export function ProfileReadonlyFields({ gender, dominantHand, tennisStartDate, ntrp, racketBrand }: Props) {
+export function ProfileReadonlyFields({ gender, dominantHand, tennisStartDate, ntrp }: Props) {
     return (
         <>
             <div className="grid grid-cols-2 gap-3">
@@ -69,11 +68,6 @@ export function ProfileReadonlyFields({ gender, dominantHand, tennisStartDate, n
                     <ReadonlyLabel>NTRP</ReadonlyLabel>
                     <div className={readonlyFieldCls}>{ntrp != null ? ntrp.toFixed(1) : '미입력'}</div>
                 </div>
-            </div>
-
-            <div>
-                <ReadonlyLabel>주력 라켓</ReadonlyLabel>
-                <div className={readonlyFieldCls}>{racketBrand ?? '미입력'}</div>
             </div>
         </>
     )

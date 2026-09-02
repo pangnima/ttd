@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { FieldToggle } from '@/components/common/field-toggle'
-import { RacketBrandField } from '@/components/auth/racket-brand-field'
+import { RacketField } from '@/components/common/racket-field'
 import { parseYearMonth } from '@/lib/format/year-month'
 import {
     GENDER_OPTIONS,
@@ -70,7 +70,7 @@ export function SignupTennisSection() {
                 <p className="mt-1 text-[11px] text-muted-foreground">1.0 ~ 4.0 (0.5 단위) · 가입 후 변경할 수 없습니다</p>
             </div>
 
-            <RacketBrandField />
+            <RacketField />
         </div>
     )
 }

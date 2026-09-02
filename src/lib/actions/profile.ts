@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 
 export type ProfileActionState = { error?: string; success?: boolean }
 
@@ -31,11 +32,16 @@ export async function updateProfileAction(
         profileImage = defaultAvatar
     }
 
-    // 이름·성별·주력손·테니스 시작일·NTRP·주력 라켓은 가입 시 1회 입력, 변경 불가 정책 —
+    // 이름·성별·주력손·테니스 시작일·NTRP는 가입 시 1회 입력, 변경 불가 정책 —
     // update 대상에서 제외해 서버에서 무시한다. (ntrp를 여기 남기면 폼에 필드가 없어 매 저장마다 NULL로 덮이므로 주의)
     const updates = {
         nickname: formData.get('nickname') as string,
         phone: (formData.get('phone') as string) || null,
+        racket_brand: resolveRacketBrand(
+            formData.get('racket_choice') as string | null,
+            formData.get('racket_other') as string | null
+        ),
+        racket_model: normalizeRacketModel(formData.get('racket_model') as string | null),
         stats_hidden: formData.get('stats_hidden') === 'true',
         ...(profileImage ? { profile_image: profileImage } : {}),
     }

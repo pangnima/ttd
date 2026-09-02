@@ -45,6 +45,8 @@ export type RacketBrandChoice = (typeof RACKET_BRAND_OPTIONS)[number]['value']
 
 /** users.racket_brand CHECK(char_length <= 30)와 동일 */
 export const RACKET_BRAND_MAX_LEN = 30
+/** users.racket_model CHECK(char_length <= 40)와 동일 */
+export const RACKET_MODEL_MAX_LEN = 40
 
 /**
  * 라디오 선택 + 기타 입력 → users.racket_brand 저장값.
@@ -62,4 +64,26 @@ export function resolveRacketBrand(
     }
     const preset = RACKET_BRAND_OPTIONS.find((o) => o.value === choice && o.value !== 'other')
     return preset ? preset.label : null
+}
+
+/** 저장된 racket_brand → 편집 폼 초기값(라디오 선택 + 기타 텍스트). 프리셋 라벨이 아니면 '기타' + 원문 */
+export function splitRacketBrand(stored: string | null | undefined): {
+    choice: RacketBrandChoice | undefined
+    otherText: string
+} {
+    if (!stored) return { choice: undefined, otherText: '' }
+    const preset = RACKET_BRAND_OPTIONS.find((o) => o.value !== 'other' && o.label === stored)
+    return preset ? { choice: preset.value, otherText: '' } : { choice: 'other', otherText: stored }
+}
+
+/** 라켓명(모델) 입력 정규화 — trim·길이 제한, 빈 값은 null */
+export function normalizeRacketModel(text: string | null | undefined): string | null {
+    const trimmed = (text ?? '').trim().slice(0, RACKET_MODEL_MAX_LEN)
+    return trimmed.length > 0 ? trimmed : null
+}
+
+/** 표시용: '윌슨 · 프로스태프 97' / '윌슨' / '미입력' */
+export function formatRacket(brand: string | null | undefined, model: string | null | undefined): string {
+    if (!brand && !model) return '미입력'
+    return [brand, model].filter(Boolean).join(' · ')
 }

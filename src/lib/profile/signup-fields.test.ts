@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
     resolveRacketBrand,
+    splitRacketBrand,
+    normalizeRacketModel,
+    formatRacket,
+    RACKET_MODEL_MAX_LEN,
     isSignupNtrp,
     isGenderValue,
     isHandValue,
@@ -59,5 +63,34 @@ describe('gender / hand 가드', () => {
         expect(isGenderValue('other')).toBe(false)
         expect(isHandValue('left')).toBe(true)
         expect(isHandValue('both')).toBe(false)
+    })
+})
+
+describe('splitRacketBrand / normalizeRacketModel / formatRacket', () => {
+    it('저장값 → 편집 초기값 역매핑 (프리셋 라벨·기타·null)', () => {
+        expect(splitRacketBrand('요넥스')).toEqual({ choice: 'yonex', otherText: '' })
+        expect(splitRacketBrand('프린스')).toEqual({ choice: 'other', otherText: '프린스' })
+        expect(splitRacketBrand(null)).toEqual({ choice: undefined, otherText: '' })
+    })
+
+    it('resolve → split 왕복', () => {
+        for (const choice of ['wilson', 'head', 'yonex', 'babolat'] as const) {
+            expect(splitRacketBrand(resolveRacketBrand(choice, null)).choice).toBe(choice)
+        }
+        expect(splitRacketBrand(resolveRacketBrand('other', ' 던롭 '))).toEqual({ choice: 'other', otherText: '던롭' })
+    })
+
+    it('라켓명은 trim·길이 제한, 빈 값 null', () => {
+        expect(normalizeRacketModel('  프로스태프 97 ')).toBe('프로스태프 97')
+        expect(normalizeRacketModel('   ')).toBeNull()
+        expect(normalizeRacketModel(undefined)).toBeNull()
+        expect(normalizeRacketModel('x'.repeat(RACKET_MODEL_MAX_LEN + 5))).toHaveLength(RACKET_MODEL_MAX_LEN)
+    })
+
+    it('표시 문자열', () => {
+        expect(formatRacket('윌슨', '프로스태프 97')).toBe('윌슨 · 프로스태프 97')
+        expect(formatRacket('윌슨', null)).toBe('윌슨')
+        expect(formatRacket(null, '퓨어 에어로')).toBe('퓨어 에어로')
+        expect(formatRacket(null, null)).toBe('미입력')
     })
 })

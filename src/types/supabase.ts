@@ -700,6 +700,7 @@ export type Database = {
           phone: string | null
           profile_image: string | null
           racket_brand: string | null
+          racket_model: string | null
           role: string
           stats_hidden: boolean
           tennis_start_date: string | null
@@ -719,6 +720,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           racket_brand?: string | null
+          racket_model?: string | null
           role?: string
           stats_hidden?: boolean
           tennis_start_date?: string | null
@@ -738,6 +740,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           racket_brand?: string | null
+          racket_model?: string | null
           role?: string
           stats_hidden?: boolean
           tennis_start_date?: string | null
