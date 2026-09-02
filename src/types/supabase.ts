@@ -699,6 +699,7 @@ export type Database = {
           personal_ntrp: number | null
           phone: string | null
           profile_image: string | null
+          racket_brand: string | null
           role: string
           stats_hidden: boolean
           tennis_start_date: string | null
@@ -717,6 +718,7 @@ export type Database = {
           personal_ntrp?: number | null
           phone?: string | null
           profile_image?: string | null
+          racket_brand?: string | null
           role?: string
           stats_hidden?: boolean
           tennis_start_date?: string | null
@@ -735,6 +737,7 @@ export type Database = {
           personal_ntrp?: number | null
           phone?: string | null
           profile_image?: string | null
+          racket_brand?: string | null
           role?: string
           stats_hidden?: boolean
           tennis_start_date?: string | null

@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { randomAvatarPath } from '@/lib/default-images'
 import { mapAuthError } from '@/lib/auth/auth-error-messages'
+import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
+import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand } from '@/lib/profile/signup-fields'
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -55,6 +57,29 @@ export async function signupAction(
         return { error: '비밀번호가 일치하지 않습니다.' }
     }
 
+    // 테니스 정보 검증 — handle_new_user 트리거는 auth.users INSERT와 같은 트랜잭션이라
+    // 캐스팅/CHECK 실패 시 가입 전체가 불투명한 에러로 롤백된다. 반드시 signUp 호출 전에 걸러낸다.
+    const gender = formData.get('gender')
+    const dominantHand = formData.get('dominant_hand')
+    const ntrp = formData.get('ntrp')
+    if (!isGenderValue(gender) || !isHandValue(dominantHand)) {
+        return { error: '성별과 주력손을 선택해 주세요.' }
+    }
+    if (!isSignupNtrp(ntrp)) {
+        return { error: 'NTRP를 1.0~4.0 사이에서 선택해 주세요.' }
+    }
+    const startRaw = ((formData.get('tennis_start_date') as string | null) ?? '').trim()
+    let tennisStartDate = ''
+    if (startRaw) {
+        const parsed = parseYearMonth(startRaw)
+        if (!parsed) return { error: '테니스 시작일은 2022/07 형식(년/월)으로 입력해 주세요.' }
+        tennisStartDate = toStartDateString(parsed)
+    }
+    const racketBrand = resolveRacketBrand(
+        formData.get('racket_choice') as string | null,
+        formData.get('racket_other') as string | null
+    )
+
     // options.data는 Supabase Auth metadata로 전달되며,
     // handle_new_user DB 트리거가 이 값을 읽어 public.users row를 자동 생성함.
     const { data, error } = await supabase.auth.signUp({
@@ -65,10 +90,11 @@ export async function signupAction(
                 name: formData.get('name'),
                 nickname: formData.get('nickname'),
                 phone: formData.get('phone'),
-                gender: formData.get('gender'),
-                dominant_hand: formData.get('dominant_hand'),
-                tennis_start_date: formData.get('tennis_start_date'),
-                ntrp: formData.get('ntrp'),
+                gender,
+                dominant_hand: dominantHand,
+                tennis_start_date: tennisStartDate,
+                ntrp,
+                racket_brand: racketBrand ?? '',
             },
         },
     })
@@ -144,6 +170,7 @@ export async function deleteAccountAction(): Promise<{ error: string } | null> {
             gender: null,
             dominant_hand: null,
             tennis_start_date: null,
+            racket_brand: null,
             stats_hidden: true,
             deleted_at: new Date().toISOString(),
         })

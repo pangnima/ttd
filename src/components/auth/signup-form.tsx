@@ -3,14 +3,13 @@
 import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
+import { SignupTennisSection } from '@/components/auth/signup-tennis-section'
 import { signupAction } from '@/lib/actions/auth'
 import { formatPhoneNumber } from '@/lib/format/phone'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
-    const [gender, setGender] = useState('male')
-    const [hand, setHand] = useState('right')
     const [phone, setPhone] = useState('')
     const [password, setPassword] = useState('')
     const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -82,65 +81,8 @@ export function SignupForm() {
 
             <div className="h-px bg-border" />
 
-            {/* ── 테니스 정보 ── */}
-            <input type="hidden" name="gender" value={gender} />
-            <input type="hidden" name="dominant_hand" value={hand} />
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <p className={labelCls}>성별</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {[{ value: 'male', label: '남성' }, { value: 'female', label: '여성' }].map(({ value, label }) => (
-                            <button
-                                key={value}
-                                type="button"
-                                onClick={() => setGender(value)}
-                                className={`py-2 text-xs rounded-md border transition-all ${
-                                    gender === value
-                                        ? 'border-primary bg-primary/10 text-primary font-semibold'
-                                        : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
-                                }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div>
-                    <p className={labelCls}>주력손</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {[{ value: 'right', label: '오른손' }, { value: 'left', label: '왼손' }].map(({ value, label }) => (
-                            <button
-                                key={value}
-                                type="button"
-                                onClick={() => setHand(value)}
-                                className={`py-2 text-xs rounded-md border transition-all ${
-                                    hand === value
-                                        ? 'border-primary bg-primary/10 text-primary font-semibold'
-                                        : 'border-border text-muted-foreground hover:border-input hover:text-foreground'
-                                }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <label htmlFor="tennis_start_date" className={labelCls}>테니스 시작일</label>
-                    <input id="tennis_start_date" name="tennis_start_date" type="date" max="9999-12-31" className={inputCls} />
-                </div>
-                <div>
-                    <label htmlFor="ntrp" className={labelCls}>NTRP *</label>
-                    <input
-                        id="ntrp" name="ntrp" type="number"
-                        min={1.0} max={7.0} step={0.5} defaultValue={3.0}
-                        required className={inputCls}
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">1.0 ~ 7.0 (0.5 단위)</p>
-                </div>
-            </div>
+            {/* ── 테니스 정보 (성별·주력손·시작일·NTRP·라켓 — 가입 후 변경 불가) ── */}
+            <SignupTennisSection />
 
             {state?.error && (
                 <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
@@ -148,11 +90,7 @@ export function SignupForm() {
                 </p>
             )}
 
-            <Button
-                type="submit"
-                disabled={isPending || pwMismatch}
-                className="w-full h-11 font-semibold mt-2"
-            >
+            <Button type="submit" disabled={isPending || pwMismatch} className="w-full h-11 font-semibold mt-2">
                 {isPending ? '가입 중...' : '회원가입'}
             </Button>
         </form>

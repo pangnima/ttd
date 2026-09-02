@@ -12,7 +12,7 @@ export default async function ProfileSettingsPage() {
 
     const { data } = await supabase
         .from('users')
-        .select('name, nickname, phone, gender, dominant_hand, tennis_start_date, ntrp, profile_image, stats_hidden')
+        .select('name, nickname, phone, gender, dominant_hand, tennis_start_date, ntrp, racket_brand, profile_image, stats_hidden')
         .eq('id', user.id)
         .single()
 
@@ -23,7 +23,7 @@ export default async function ProfileSettingsPage() {
             <div>
                 <h1 className="text-2xl font-bold text-foreground">내 정보 수정</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                    닉네임, NTRP 등 프로필 정보를 수정합니다.
+                    닉네임, 연락처, 프로필 사진, 통계 공개 여부를 수정합니다.
                 </p>
             </div>
             <ProfileSettingsForm initialProfile={data} />

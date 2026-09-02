@@ -25,6 +25,7 @@ export function mapUserRow(row: UserRow): User {
         ntrp: row.ntrp ?? 0,
         personalNtrp: row.personal_ntrp != null ? Number(row.personal_ntrp) : undefined,
         tennisStartDate: row.tennis_start_date ?? '',
+        racketBrand: row.racket_brand ?? undefined,
         createdAt: row.created_at,
         isGuest: row.is_guest ?? false,
         statsHidden: row.stats_hidden ?? false,

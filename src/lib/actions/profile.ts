@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 
 export type ProfileActionState = { error?: string; success?: boolean }
 
@@ -32,20 +31,17 @@ export async function updateProfileAction(
         profileImage = defaultAvatar
     }
 
-    // 이름·성별·주력손·테니스 시작일은 변경 불가 정책 — update 대상에서 제외해 서버에서 무시한다
+    // 이름·성별·주력손·테니스 시작일·NTRP·주력 라켓은 가입 시 1회 입력, 변경 불가 정책 —
+    // update 대상에서 제외해 서버에서 무시한다. (ntrp를 여기 남기면 폼에 필드가 없어 매 저장마다 NULL로 덮이므로 주의)
     const updates = {
         nickname: formData.get('nickname') as string,
         phone: (formData.get('phone') as string) || null,
-        ntrp: formData.get('ntrp') ? Number(formData.get('ntrp')) : null,
         stats_hidden: formData.get('stats_hidden') === 'true',
         ...(profileImage ? { profile_image: profileImage } : {}),
     }
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id)
     if (error) return { error: error.message }
-
-    // 가입 NTRP(시드)가 바뀌면 개인 NTRP 캐시도 새 시드 기준으로 재계산(best-effort).
-    await recomputePersonalNtrp(user.id)
 
     revalidatePath('/profile/settings')
     revalidatePath('/me/analytics')

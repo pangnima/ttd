@@ -46,16 +46,16 @@ src/
 │   └── page.tsx                  # 랜딩페이지
 ├── components/
 │   ├── ui/                       # shadcn/ui 자동 생성 컴포넌트 (직접 수정 금지)
-│   ├── common/                   # 공통 (Header, Sidebar, sidebar-context, BrandLogo, ProfileLink, TierIcon/TierEmblem 등)
+│   ├── common/                   # 공통 (Header, Sidebar, sidebar-context, BrandLogo, ProfileLink, TierIcon/TierEmblem, FieldToggle 라디오형 토글 등)
 │   ├── clubs/                    # 클럽 (ClubLogoField, LeaveClubButton, ClubInviteCard, InviteJoinButton 등)
 │   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
 │   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, PlayerPicker+PlayerAutocomplete 상대 자동완성, rotation/ 입력, use-user-search 등)
 │   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, 상태 뱃지)
-│   ├── profile/                  # 프로필 헤더·통계 조합 (DeleteAccountButton 등)
+│   ├── profile/                  # 프로필 헤더·통계 조합 (ProfileSettingsForm + ProfileReadonlyFields 변경 불가 필드, DeleteAccountButton 등)
 │   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
-│   ├── auth/                     # 인증 폼 (login/signup/forgot/reset, AvatarUploadField)
+│   ├── auth/                     # 인증 폼 (login/signup/forgot/reset, AvatarUploadField, SignupTennisSection·RacketBrandField 가입 테니스 정보)
 │   ├── landing/                  # 랜딩페이지 섹션 컴포넌트 (LandingNav 등)
 │   └── theme/                    # 테마 관련
 ├── lib/
@@ -110,7 +110,8 @@ src/
 │   │   ├── tier.ts               # 8계급 밴딩 + 0~100 포인트 환산
 │   │   └── display.ts            # formatClubRating·isProvisional 등 표시 헬퍼
 │   ├── auth/                     # auth-error-messages.ts (Supabase 에러 한글 매핑)
-│   ├── format/                   # phone.ts (연락처 하이픈 등)
+│   ├── format/                   # phone.ts (연락처 하이픈), year-month.ts (년/월 파서·'YYYY-MM-01' 정규화·TZ 무관 라벨)
+│   ├── profile/                  # signup-fields.ts (가입 선택지 상수: 성별·주력손·NTRP 1.0~4.0·라켓 브랜드 + resolveRacketBrand)
 │   ├── og/                       # brand.ts (OG 이미지 브랜딩 + 폰트)
 │   ├── club-password.ts          # 클럽 삭제 비밀번호 scrypt 해시·검증
 │   ├── default-images.ts         # 기본 아바타·클럽 로고 셔플
@@ -191,6 +192,11 @@ src/
   - [x] 상대 단일 자동완성 입력 (base-ui Autocomplete) + 회원/만나본 사람 선택 시 손잡이·NTRP 자동 채움
   - [x] 확인 요청도 세트 없이 요청 (수락 시 양측 미확정 기록), 통계·레이팅은 미확정 제외
   - [ ] 미확정 경기의 세트·결과 등록 플로우 (상호 확인 경기는 RESTRICTIVE RLS라 RPC 필요)
+- [x] Week 18: 회원가입 폼 개편 (0035 마이그레이션)
+  - [x] 테니스 시작일 년/월 텍스트 입력 (`2025/07`·`2022/2` 등 파서) → `tennis_start_date`에 `YYYY-MM-01` 저장
+  - [x] NTRP 1.0~4.0 0.5 단위 라디오 (FieldToggle), 프로필 설정에서 NTRP 수정 제거 (읽기 전용)
+  - [x] 주력 라켓 라디오 (윌슨/헤드/요넥스/바볼랏/기타+직접 입력) → `users.racket_brand`, `handle_new_user` 트리거 레포 편입
+  - [x] `signupAction`이 `signUp` 호출 전 검증 (트리거 실패 = 가입 롤백 방지)
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
@@ -217,7 +223,7 @@ Client Component (read-only)
 ## DB 스키마 현황
 | 테이블 | 주요 RLS 정책 |
 |---|---|
-| `users` | 본인만 UPDATE (`is_guest`·`personal_ntrp`·`deleted_at` 컬럼 포함) |
+| `users` | 본인만 UPDATE (`is_guest`·`personal_ntrp`·`deleted_at`·`racket_brand` 컬럼 포함). 행 생성은 `handle_new_user` 트리거(0035에 정의 편입) |
 | `clubs` | is_public이면 전체 SELECT, owner만 UPDATE/DELETE (`court_schedule`·삭제 비밀번호 해시 포함) |
 | `club_members` | approved 멤버만 SELECT, owner/officer만 승인/거절 |
 | `match_games` | approved 멤버만 SELECT/INSERT, owner만 DELETE |
@@ -236,7 +242,7 @@ RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`
 RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 생성 + 상태 전이, 세트 없으면 양측 winner NULL)
 RPC: `get_user_match_stats_unified`, `get_user_head_to_head_unified` (클럽+개인 통합 집계, 미확정 제외 — 현재 src 미호출)
 View: `user_match_participations` (security_invoker=on)
-마이그레이션: 0001~0034 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
+마이그레이션: 0001~0035 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -250,7 +256,8 @@ View: `user_match_participations` (security_invoker=on)
 | **애드코트(백)** | 백핸드 사이드 (레프트). `team1AdPlayerId = playerId` |
 | **temp_id** | 대진표 생성 시 클라이언트가 부여하는 임시 UUID. RPC 내부에서 실제 DB ID로 교체됨 |
 | **is_guest** | `public.users.is_guest = true` — Auth 계정 없는 임시 선수 (프로필 링크 비활성) |
-| **통합/자가선언 NTRP** | `users.ntrp` — 가입 시 직접 선언하는 정적 값 (수동) |
+| **통합/자가선언 NTRP** | `users.ntrp` — 가입 시 1.0~4.0(0.5 단위) 중 1회 선언하는 정적 값. 가입 후 변경 불가 (기존 4.5+ 값은 보존) |
+| **테니스 시작일 / 주력 라켓** | `users.tennis_start_date`(년/월만 입력, `YYYY-MM-01` 저장) · `users.racket_brand`(프리셋 한글 라벨 또는 기타 직접 입력 ≤30자). 가입 시 1회 입력, 설정에서 읽기 전용 |
 | **클럽 NTRP** | `club_player_ratings` — 클럽별 독립 ELO, 확정 경기로 동적 변동 (2.5 시작) |
 | **개인 NTRP** | `users.personal_ntrp` — 개인 경기(`personal_matches`) 승패 기반 온더플라이 동적 레이팅 캐시 |
 | **티어(Tier)** | 클럽 레이팅(연속 rating)을 8계급(아이언~챌린저)으로 밴딩 + 계급당 0~100p. 표시 전용, `TIER_BANDS` 단일 출처 |
