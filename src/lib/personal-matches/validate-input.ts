@@ -78,9 +78,27 @@ export function validatePersonalMatchInput(
             }
         }
     }
-    // 세트 검증: 빈 배열은 결과 미확정으로 허용. 세트가 있으면 각 세트 점수가 0~99 정수,
-    // 0-0(미입력) 세트 금지, 세트별 애드/듀스 enum(선택). 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.
-    for (const s of input.setScores) {
+    // 세트 검증: 빈 배열은 결과 미확정으로 허용. 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.
+    return validateSetScores(input.setScores, { min: 0 })
+}
+
+type SetScoresOptions = {
+    // 허용 세트 개수 범위. 기본 1~5 (결과 등록용). 등록 폼은 min 0(미확정 허용).
+    min?: number
+    max?: number
+}
+
+/**
+ * 세트 스코어 배열 검증 — 각 세트 점수가 0~99 정수, 0-0(미입력) 세트 금지, 세트별 애드/듀스 enum(선택).
+ * 결과 등록 액션(updatePersonalMatchSetsAction·proposeMatchResultAction)과 등록 폼 검증이 공유하며,
+ * DB helper validate_set_scores와 동일 규칙이다.
+ */
+export function validateSetScores(sets: PersonalMatchSetScore[], options: SetScoresOptions = {}): string | null {
+    const { min = 1, max = 5 } = options
+    if (!Array.isArray(sets)) return '세트 스코어를 올바르게 입력해주세요.'
+    if (sets.length < min) return '세트를 1개 이상 입력해주세요.'
+    if (sets.length > max) return `세트는 최대 ${max}개까지 등록할 수 있습니다.`
+    for (const s of sets) {
         if (!isValidScore(s.me) || !isValidScore(s.opp)) return '세트 스코어를 올바르게 입력해주세요.'
         if (s.me === 0 && s.opp === 0) return '0-0 세트는 저장할 수 없습니다.'
         if (s.myAd != null && !['me', 'partner'].includes(s.myAd)) return '세트 애드 코트 값이 올바르지 않습니다.'

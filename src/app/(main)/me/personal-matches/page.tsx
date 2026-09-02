@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
@@ -13,7 +13,7 @@ export default async function PersonalMatchesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const matches = await fetchPersonalMatchesByUser(user.id)
+    const matches = await fetchPersonalMatchesWithConfirmation(user.id)
 
     return (
         <PageContainer>

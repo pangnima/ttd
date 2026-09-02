@@ -9,8 +9,10 @@ import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import {
     isDoublesMatchType,
     validatePersonalMatchInput,
+    validateSetScores,
     type PersonalMatchInput,
 } from '@/lib/personal-matches/validate-input'
+import type { PersonalMatchSetScore } from '@/types'
 
 /**
  * insert/update 공통: 단식이면 복식 컬럼을 모두 NULL로, 복식이면 입력값을 매핑한 행 데이터 생성.
@@ -155,6 +157,40 @@ export async function deletePersonalMatchAction(
 
     if (error) return { error: '경기 삭제에 실패했습니다.' }
     if (!deleted?.length) return { error: '상호 확인된 경기는 수정·삭제할 수 없습니다.' }
+
+    await recomputePersonalNtrp(user.id)
+    revalidatePath('/me/analytics')
+    revalidatePath('/me/personal-matches')
+    return { error: null }
+}
+
+/**
+ * 결과 미확정(winner NULL)인 자유 기록에 세트 스코어만 등록해 즉시 확정하는 경량 액션.
+ * 상호 확인 경기(source_request_id 보유)는 여기서 다루지 않는다 — actions/match-results.ts의 제안/확인 플로우 전용.
+ */
+export async function updatePersonalMatchSetsAction(
+    id: string,
+    sets: PersonalMatchSetScore[],
+): Promise<{ error: string | null }> {
+    const validationError = validateSetScores(sets)
+    if (validationError) return { error: validationError }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    // 결과 등록 Dialog는 애드/듀스를 받지 않으므로 me/opp만 저장한다
+    const cleanSets = sets.map((s) => ({ me: s.me, opp: s.opp }))
+    const { data: updated, error } = await supabase
+        .from('personal_matches')
+        .update({ set_scores: cleanSets, winner: resolveMatchWinner(cleanSets) })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .is('source_request_id', null)
+        .select('id')
+
+    if (error) return { error: '결과 저장에 실패했습니다.' }
+    if (!updated?.length) return { error: '상호 확인된 경기는 상대 확인을 거쳐 결과를 등록해야 합니다.' }
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')

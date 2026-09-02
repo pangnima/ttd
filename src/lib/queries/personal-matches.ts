@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { PersonalMatch } from '@/types'
 import { mapPersonalMatchRow } from '@/lib/personal-matches/map'
+import { buildConfirmation } from '@/lib/personal-matches/confirmation'
 
 export { mapPersonalMatchRow }
 
@@ -15,6 +16,30 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
         .order('played_at', { ascending: false })
     if (error || !data) return []
     return data.map(mapPersonalMatchRow)
+}
+
+/**
+ * 개인 경기 목록 + 상호 확인 경기의 결과 제안/확인 상태(confirmation) 부착.
+ * source_request_id를 모아 match_requests를 1회 in() 조회한다 (당사자 SELECT 정책으로 자연 필터).
+ * 목록 화면 전용 — 레이팅 재계산 등은 confirmation이 필요 없으므로 fetchPersonalMatchesByUser를 쓴다.
+ */
+export async function fetchPersonalMatchesWithConfirmation(userId: string): Promise<PersonalMatch[]> {
+    const matches = await fetchPersonalMatchesByUser(userId)
+    const requestIds = [...new Set(matches.map((m) => m.sourceRequestId).filter((id): id is string => !!id))]
+    if (requestIds.length === 0) return matches
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_requests')
+        .select('id, requester_id, result_status, proposed_by, proposed_set_scores, dispute_reason')
+        .in('id', requestIds)
+    if (error || !data) return matches
+
+    const byId = new Map(data.map((row) => [row.id, row]))
+    return matches.map((m) => {
+        const row = m.sourceRequestId ? byId.get(m.sourceRequestId) : undefined
+        return row ? { ...m, confirmation: buildConfirmation(row, userId) } : m
+    })
 }
 
 export async function fetchPersonalMatchById(id: string): Promise<PersonalMatch | null> {

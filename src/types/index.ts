@@ -155,12 +155,29 @@ export type PersonalMatch = {
     opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
     sourceRequestId?: string  // 상호 확인 대진(match_requests)에서 확정된 경기 — 있으면 수정/삭제 잠금
+    // 상호 확인 경기의 결과 제안/확인 상태 (목록 조회 시 match_requests에서 부착, 그 외 경로는 undefined)
+    confirmation?: PersonalMatchConfirmation
     createdAt: string
+}
+
+/**
+ * 상호 확인 경기의 결과 제안/확인 상태 — match_requests.result_status를 보는 사람(viewer) 관점으로 정리한 것.
+ * none: 결과 없음 / proposed: 한쪽이 세트 제안 → 상대 확인 대기 / confirmed: 양측 확정 / disputed: 이의 제기됨(재제안 가능)
+ */
+export type PersonalMatchConfirmation = {
+    requestId: string
+    status: MatchResultStatus
+    proposedByMe: boolean
+    proposedSets: PersonalMatchSetScore[]  // viewer 관점으로 반전 완료된 제안 세트
+    disputeReason?: string
 }
 
 // ── 상호 확인 대진 요청 (회원 간 단식) ────────────────────────────────
 
 export type MatchRequestStatus = 'pending' | 'accepted' | 'rejected' | 'canceled'
+
+// 수락 후 결과(세트) 제안/확인 상태 — none → proposed → confirmed | disputed(→ 재제안)
+export type MatchResultStatus = 'none' | 'proposed' | 'confirmed' | 'disputed'
 
 export type MatchRequest = {
     id: string
@@ -175,4 +192,10 @@ export type MatchRequest = {
     status: MatchRequestStatus
     createdAt: string
     respondedAt?: string
+    // ── 결과 제안/확인 (0037) ──
+    resultStatus: MatchResultStatus
+    proposedSetScores: PersonalMatchSetScore[]  // 요청자 관점. 표시 시 viewer가 상대면 반전
+    proposedBy?: string
+    proposedAt?: string
+    disputeReason?: string
 }

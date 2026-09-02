@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
-import { deletePersonalMatchAction } from '@/lib/actions/personal-matches'
 import { PersonalMatchMonthGroup } from '@/components/personal-matches/personal-match-month-group'
+import { MatchActions } from '@/components/personal-matches/match-actions'
 
 type Filter = 'all' | 'singles' | 'doubles'
 
@@ -19,36 +19,7 @@ type Props = {
     matches: PersonalMatch[]
 }
 
-function MatchActions({ match }: { match: PersonalMatch }) {
-    const [isPending, startTransition] = useTransition()
-    function handleDelete() {
-        if (!confirm('이 경기 기록을 삭제할까요?')) return
-        startTransition(async () => { await deletePersonalMatchAction(match.id) })
-    }
-    // 상호 확인으로 확정된 경기는 양쪽 전적에 함께 기록되어 수정/삭제 불가
-    if (match.sourceRequestId) {
-        return (
-            <span
-                className="text-xs px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary"
-                title="상대 수락으로 확정된 경기는 수정·삭제할 수 없습니다"
-            >
-                상호 확인
-            </span>
-        )
-    }
-    return (
-        <span className="flex items-center gap-2">
-            <Link href={`/me/personal-matches/${match.id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                수정
-            </Link>
-            <button onClick={handleDelete} disabled={isPending} className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
-                삭제
-            </button>
-        </span>
-    )
-}
-
-/** 개인 경기 목록 — 단식/복식 필터 + 월별 그룹 카드. */
+/** 개인 경기 목록 — 단식/복식 필터 + 월별 그룹 카드. 카드 액션(결과 입력·수정·삭제)은 MatchActions. */
 export function PersonalMatchList({ matches }: Props) {
     const [filter, setFilter] = useState<Filter>('all')
 

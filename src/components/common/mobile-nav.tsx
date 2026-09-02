@@ -30,13 +30,23 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
         supabase.auth.getUser().then(async ({ data: { user } }) => {
             if (!isMounted || !user) return
             setUserId(user.id)
-            // 받은 확인 요청 pending 건수 (RLS로 당사자만 조회됨)
-            const { count } = await supabase
-                .from('match_requests')
-                .select('id', { count: 'exact', head: true })
-                .eq('opponent_user_id', user.id)
-                .eq('status', 'pending')
-            if (isMounted) setPendingRequestCount(count ?? 0)
+            // 받은 확인 요청 pending + 내가 확인해야 할 결과 제안 건수 (RLS로 당사자만 조회됨)
+            // — 서버 fetchPendingReceivedCount(queries/match-requests.ts)와 동일 기준
+            const [pending, proposals] = await Promise.all([
+                supabase
+                    .from('match_requests')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('opponent_user_id', user.id)
+                    .eq('status', 'pending'),
+                supabase
+                    .from('match_requests')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('status', 'accepted')
+                    .eq('result_status', 'proposed')
+                    .neq('proposed_by', user.id)
+                    .or(`requester_id.eq.${user.id},opponent_user_id.eq.${user.id}`),
+            ])
+            if (isMounted) setPendingRequestCount((pending.count ?? 0) + (proposals.count ?? 0))
         })
 
         return () => {

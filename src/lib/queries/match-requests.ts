@@ -2,7 +2,9 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
-import type { CourtSurface, MatchRequest, MatchRequestStatus, MatchType, PersonalMatchSetScore } from '@/types'
+import type {
+    CourtSurface, MatchRequest, MatchRequestStatus, MatchResultStatus, MatchType, PersonalMatchSetScore,
+} from '@/types'
 
 type MatchRequestRow = Database['public']['Tables']['match_requests']['Row']
 
@@ -35,6 +37,11 @@ function mapMatchRequestRow(row: MatchRequestRow): MatchRequest {
         status: row.status as MatchRequestStatus,
         createdAt: row.created_at,
         respondedAt: row.responded_at ?? undefined,
+        resultStatus: row.result_status as MatchResultStatus,
+        proposedSetScores: (row.proposed_set_scores as PersonalMatchSetScore[]) ?? [],
+        proposedBy: row.proposed_by ?? undefined,
+        proposedAt: row.proposed_at ?? undefined,
+        disputeReason: row.dispute_reason ?? undefined,
     }
 }
 
@@ -88,14 +95,46 @@ export async function fetchSentMatchRequests(userId: string): Promise<MatchReque
     }))
 }
 
-/** 내가 받은 pending 요청 건수 — 사이드바/모바일 nav 뱃지용 */
+/**
+ * 내가 확인해야 할 결과 제안 (수락된 경기에서 상대가 세트를 제안한 것, 최신 제안순).
+ * 요청자/상대 어느 쪽이든 확인자가 될 수 있으므로 양쪽 프로필을 임베드한 뒤 viewer 기준으로 상대측을 고른다.
+ */
+export async function fetchPendingResultConfirmations(userId: string): Promise<MatchRequestWithUser[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_requests')
+        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS})`)
+        .eq('status', 'accepted')
+        .eq('result_status', 'proposed')
+        .neq('proposed_by', userId)
+        .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`)
+        .order('proposed_at', { ascending: false })
+    if (error || !data) return []
+    return data.map((row) => ({
+        request: mapMatchRequestRow(row),
+        counterpart: mapCounterpart(row.requester_id === userId ? row.opponent : row.requester),
+    }))
+}
+
+/**
+ * 사이드바/모바일 nav 뱃지 건수 — 받은 pending 요청 + 내가 확인해야 할 결과 제안.
+ * (모바일 nav는 브라우저 클라이언트로 같은 두 조건을 직접 질의한다 — common/mobile-nav.tsx)
+ */
 export async function fetchPendingReceivedCount(userId: string): Promise<number> {
     const supabase = await createClient()
-    const { count, error } = await supabase
-        .from('match_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('opponent_user_id', userId)
-        .eq('status', 'pending')
-    if (error) return 0
-    return count ?? 0
+    const [pending, proposals] = await Promise.all([
+        supabase
+            .from('match_requests')
+            .select('id', { count: 'exact', head: true })
+            .eq('opponent_user_id', userId)
+            .eq('status', 'pending'),
+        supabase
+            .from('match_requests')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'accepted')
+            .eq('result_status', 'proposed')
+            .neq('proposed_by', userId)
+            .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`),
+    ])
+    return (pending.error ? 0 : pending.count ?? 0) + (proposals.error ? 0 : proposals.count ?? 0)
 }

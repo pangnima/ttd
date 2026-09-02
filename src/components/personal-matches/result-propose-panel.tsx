@@ -1,0 +1,62 @@
+'use client'
+
+import type { PersonalMatchSetScore } from '@/types'
+import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
+import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
+import { SetScoreChips } from '@/components/personal-matches/set-score-chips'
+import { useSetScores, MAX_SETS } from '@/components/personal-matches/use-set-scores'
+
+type Props = {
+    opponentName: string
+    initialSets?: PersonalMatchSetScore[]
+    onSubmit: (sets: PersonalMatchSetScore[]) => void
+    isPending: boolean
+    error: string | null
+    submitLabel?: string
+}
+
+/**
+ * 결과 등록 Dialog의 입력 패널 — 세트 추가/삭제 + 실시간 결과 미리보기 + 저장.
+ * 세트 입력 부품(SetsSection/SetScoreRow)은 로테이션 복식과 공유한다. 단식 관점(나 vs 상대)으로만 받는다.
+ */
+export function ResultProposePanel({
+    opponentName, initialSets, onSubmit, isPending, error, submitLabel = '결과 저장',
+}: Props) {
+    const s = useSetScores(initialSets)
+
+    return (
+        <div className="space-y-4">
+            <SetsSection
+                sets={s.sets}
+                isDoubles={false}
+                opponentLabel={opponentName}
+                enableAdDeuce={false}
+                onAddSet={s.addSet}
+                onUpdateSet={s.updateSet}
+                onRemoveSet={s.removeSet}
+            />
+            {!s.canAdd && (
+                <p className="text-xs text-muted-foreground">세트는 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>
+            )}
+
+            {/* 미리보기: 유효한 세트만으로 현재 결과 계산 */}
+            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-1">
+                <p className="text-xs text-muted-foreground">예상 결과</p>
+                <SetScoreChips sets={s.sets} />
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+
+            <DialogFooter showCloseButton>
+                <Button
+                    type="button"
+                    disabled={!s.isValid || isPending}
+                    onClick={() => onSubmit(s.cleanSets())}
+                >
+                    {isPending ? '저장 중...' : submitLabel}
+                </Button>
+            </DialogFooter>
+        </div>
+    )
+}

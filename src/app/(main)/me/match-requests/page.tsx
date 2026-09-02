@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchReceivedMatchRequests, fetchSentMatchRequests } from '@/lib/queries/match-requests'
+import {
+    fetchPendingResultConfirmations, fetchReceivedMatchRequests, fetchSentMatchRequests,
+} from '@/lib/queries/match-requests'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
+import { ResultConfirmCard } from '@/components/match-requests/result-confirm-card'
 import { Badge } from '@/components/ui/badge'
 import { CARD_BASE, EMPTY_BLOCK, SECTION_LABEL } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
@@ -21,11 +24,13 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
     const { tab } = await searchParams
     const activeTab = tab === 'sent' ? 'sent' : 'received'
 
-    const [received, sent] = await Promise.all([
+    const [received, sent, confirmations] = await Promise.all([
         fetchReceivedMatchRequests(user.id),
         fetchSentMatchRequests(user.id),
+        fetchPendingResultConfirmations(user.id),
     ])
-    const pendingCount = received.filter((r) => r.request.status === 'pending').length
+    // 받은 탭 배지 = 대기 중 요청 + 내가 확인해야 할 결과 제안 (사이드바 뱃지와 동일 기준)
+    const pendingCount = received.filter((r) => r.request.status === 'pending').length + confirmations.length
 
     const tabClass = (active: boolean) =>
         cn(
@@ -59,6 +64,18 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
                     보낸 요청
                 </Link>
             </div>
+
+            {/* 결과 확인 대기 — 수락된 경기에서 상대가 세트를 제안한 것 (받은 탭 상단) */}
+            {activeTab === 'received' && confirmations.length > 0 && (
+                <section className="space-y-2">
+                    <h2 className={SECTION_LABEL}>결과 확인 대기</h2>
+                    <div className={`${CARD_BASE} divide-y divide-border`}>
+                        {confirmations.map((item) => (
+                            <ResultConfirmCard key={item.request.id} item={item} viewerId={user.id} />
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {items.length === 0 ? (
                 <div className={EMPTY_BLOCK}>
