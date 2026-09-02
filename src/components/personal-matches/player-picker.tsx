@@ -5,7 +5,7 @@ import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import { buildPlayerSuggestionGroups, type PlayerSuggestion } from '@/lib/personal-matches/player-suggestions'
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
-import { FieldToggle } from '@/components/personal-matches/field-toggle'
+import { FieldToggle } from '@/components/common/field-toggle'
 import { PlayerAutocomplete } from '@/components/personal-matches/player-autocomplete'
 
 type Hand = 'right' | 'left' | ''

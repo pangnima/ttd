@@ -2,7 +2,7 @@
 
 import type { CourtSurface } from '@/types'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
-import { FieldToggle } from '@/components/personal-matches/field-toggle'
+import { FieldToggle } from '@/components/common/field-toggle'
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { roundToHalfHour } from '@/lib/format'
 

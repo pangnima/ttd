@@ -1,6 +1,6 @@
 'use client'
 
-import { FieldToggle } from '@/components/personal-matches/field-toggle'
+import { FieldToggle } from '@/components/common/field-toggle'
 
 export type DoublesMode = 'fixed' | 'rotation'
 
