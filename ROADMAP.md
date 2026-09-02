@@ -504,10 +504,10 @@
 ### 중기: 기술 부채 / 품질 개선
 <!-- 완료: d9c38e9 에러 바운더리·로딩 일관화, Week 13 레이아웃 통일·린트 정리 -->
 - [ ] **통계 단일 소스화** — `lib/analytics/*`(순수함수) vs `lib/queries/stats.ts`(RPC) 이중 경로 통합. 현재 두 경로가 동일 수치를 내나 유지 비용과 불일치 리스크 잠재 (가장 큰 기술 부채)
-- [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 로컬 `.sql`로 버전관리, 현재 0032까지 편입)
+- [ ] **SQL 마이그레이션 전면 버전관리** — 0001~0015를 `supabase/migrations/`로 backfill (0016부터 로컬 `.sql`로 버전관리, 현재 0033까지 편입)
 - [x] **통계 단위 테스트** — `lib/analytics/*`(form·rival·head-to-head·partner-chemistry·hour-heatmap·doubles-court·trend-stats·date-utils) + `lib/personal-matches/*`(rotation·explode·grouping) + `lib/match-games/special-match` + `lib/rating/*`(elo·tier·display·personal-rating)에 Vitest 테스트 적용 완료 (Week 14~15). _잔여: 미적용 순수함수 일부만_
 - [ ] **최근 폼 정렬 개선** — 클럽 경기는 일 단위 날짜만 있어 같은 날 경기 순서가 UUID에 의존. `match_game_matches.created_at` 컬럼 추가 시 더 정확한 정렬 가능
-- [ ] **데드 RPC 정리** — `get_user_match_stats` v1 DROP 마이그레이션
+- [ ] **데드 RPC 정리** — `get_user_match_stats` v1, `get_user_head_to_head_unified`, `get_user_match_stats_unified` DROP 마이그레이션 (TS 래퍼는 2026-09-02 제거됨)
 - [ ] **폼 검증 라이브러리** — react-hook-form + zod 도입 검토 (현재 Server Action 직접 검증)
 - [ ] **테스트 도입** — Playwright e2e (로그인, 클럽 생성, 대진표 생성·결과 입력 플로우)
 - [ ] **접근성(a11y)** — 색 대비, ARIA 레이블, 키보드 네비게이션 점검

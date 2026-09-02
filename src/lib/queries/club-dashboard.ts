@@ -14,12 +14,6 @@ export type PendingMemberWithUser = {
     user: User
 }
 
-export type ClubMemberStats = {
-    totalCount: number
-    newThisMonthCount: number
-    activeThisMonthCount: number
-}
-
 export type ClubMatchGameSummary = {
     id: string
     name: string
@@ -82,42 +76,6 @@ export async function fetchPendingMembersByClubId(clubId: string): Promise<Pendi
             joinedAt: row.joined_at,
             user: mapUserRow(row.users as UserRow),
         }))
-}
-
-export async function fetchClubMemberStats(clubId: string): Promise<ClubMemberStats> {
-    const supabase = await createClient()
-
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const thirtyDaysAgoIso = thirtyDaysAgo.toISOString()
-
-    const { data: allMembers } = await supabase
-        .from('club_members')
-        .select('user_id, joined_at')
-        .eq('club_id', clubId)
-        .eq('status', 'approved')
-
-    const totalCount = allMembers?.length ?? 0
-    const newThisMonthCount = allMembers?.filter((m) => m.joined_at >= thirtyDaysAgoIso).length ?? 0
-
-    // 최근 30일 이내 is_fixed 대진표에 참여한 distinct 회원 수 (활동률 산출용)
-    const { data: activeData } = await supabase
-        .from('match_game_matches')
-        .select('player1_id, player2_id, team1, team2, match_games!inner(club_id, is_fixed, date)')
-        .eq('match_games.club_id', clubId)
-        .eq('match_games.is_fixed', true)
-        .gte('match_games.date', thirtyDaysAgoIso.split('T')[0])
-        .eq('status', 'finished')
-
-    const activeUserIds = new Set<string>()
-    for (const row of activeData ?? []) {
-        if (row.player1_id) activeUserIds.add(row.player1_id)
-        if (row.player2_id) activeUserIds.add(row.player2_id)
-        for (const id of row.team1 ?? []) activeUserIds.add(id)
-        for (const id of row.team2 ?? []) activeUserIds.add(id)
-    }
-
-    return { totalCount, newThisMonthCount, activeThisMonthCount: activeUserIds.size }
 }
 
 export async function fetchClubMatchGameActivity(clubId: string): Promise<ClubMatchGameActivity> {

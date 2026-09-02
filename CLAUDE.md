@@ -68,7 +68,6 @@ src/
 │   │   ├── clubs.ts
 │   │   ├── club-members.ts       # 가입 승인·거절·탈퇴·초대 링크 발급/가입
 │   │   ├── match-games.ts
-│   │   ├── match-game-courts.ts  # 복식 코트 사이드 저장
 │   │   ├── personal-matches.ts
 │   │   ├── match-requests.ts     # 확인 요청 생성/취소/거절/수락(RPC)
 │   │   ├── profile.ts
@@ -134,7 +133,7 @@ src/
 /forgot-password → 비밀번호 재설정 메일 요청
 /reset-password → 새 비밀번호 입력 (메일 링크 진입)
 /auth/confirm → 인증/재설정 토큰 핸들러 (Route Handler, UI 없음)
-/clubs → 클럽 리스트 (로그인 후 기본 진입점)
+/clubs → 클럽 리스트
 /clubs/new → 클럽 생성
 /clubs/join/[token] → 초대 링크 가입 (비공개 클럽, 비로그인 미리보기 + 로그인 후 복귀)
 /clubs/[clubId] → 클럽 홈 (owner/officer이면 하단에 운영 섹션 인라인)
@@ -144,7 +143,7 @@ src/
 /clubs/[clubId]/match-games/new → 대진표 생성
 /clubs/[clubId]/match-games/[matchGameId] → 대진표 상세
 /clubs/[clubId]/settings → 클럽 설정 (owner 전용)
-/profile/[userId] → 개인 통계 허브
+/profile/[userId] → 개인 통계 허브 (로그인 후 기본 진입점: 본인 프로필 ?scope=personal)
   ├── 본인: scope 탭(전체/개인) + 심층 분석 풀버전 + AI 코칭
   └── 타인: 공개 통계 요약 (프라이버시 설정 반영)
 /profile/settings → 내 정보 수정
@@ -343,7 +342,7 @@ npx tsc --noEmit     # 타입 에러 확인
 ```
 
 ## 관리자 계정
-pangnima@gmail.com / 123123
+admin@admin.com / 123123
 
 ## 절대 하지 말 것
 - `any` 타입 사용 금지

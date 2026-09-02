@@ -97,36 +97,6 @@ export function buildHeadToHeadList(
     return [...map.values()].sort((a, b) => b.matches - a.matches)
 }
 
-// ── 상대 강/약 선별 (강한 상대 / 약한 상대 카드용) ─────────────────────────
-
-export type OpponentRec = UnifiedHeadToHead & { winRate: number }
-
-/**
- * "내가 강한 상대" 카드용 — minGames 이상 맞붙고 승률 minWinRate 이상인 상대만,
- * 승률 내림차순(동률 시 경기 많은 순)으로 정렬한다.
- */
-export function selectStrongOpponents(
-    list: UnifiedHeadToHead[], minGames = 10, minWinRate = 60,
-): OpponentRec[] {
-    return list
-        .map((o) => ({ ...o, winRate: calcWinRate(o.wins, o.losses) }))
-        .filter((o) => o.matches >= minGames && o.winRate >= minWinRate)
-        .sort((a, b) => b.winRate - a.winRate || b.matches - a.matches)
-}
-
-/**
- * "내가 약한 상대" 카드용 — minGames 이상 맞붙고 승률 maxWinRate 미만인 상대만,
- * 승률 오름차순(동률 시 경기 많은 순)으로 정렬한다.
- */
-export function selectWeakOpponents(
-    list: UnifiedHeadToHead[], minGames = 10, maxWinRate = 40,
-): OpponentRec[] {
-    return list
-        .map((o) => ({ ...o, winRate: calcWinRate(o.wins, o.losses) }))
-        .filter((o) => o.matches >= minGames && o.winRate < maxWinRate)
-        .sort((a, b) => a.winRate - b.winRate || b.matches - a.matches)
-}
-
 // ── 통합 1:1 맞대결 상세 (클럽+개인 매치) ─────────────────────────────────
 
 export type HeadToHeadMatchEntry = {

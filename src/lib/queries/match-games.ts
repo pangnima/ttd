@@ -91,15 +91,6 @@ function mapMatchGameRow(
 }
 
 
-export async function fetchMatchGameCountByClubId(clubId: string): Promise<number> {
-    const supabase = await createClient()
-    const { count } = await supabase
-        .from('match_games')
-        .select('id', { count: 'exact', head: true })
-        .eq('club_id', clubId)
-    return count ?? 0
-}
-
 // PostgREST embed 문법(alias:table(*))으로 4개 테이블을 단일 쿼리로 JOIN.
 // RLS는 match_games, match_game_courts, match_game_rounds, match_game_matches 각 테이블에 독립 적용됨.
 export async function fetchMatchGamesByClubId(clubId: string): Promise<MatchGame[]> {

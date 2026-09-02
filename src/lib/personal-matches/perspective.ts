@@ -1,4 +1,4 @@
-import type { PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { PersonalMatchSetScore } from '@/types'
 
 /**
  * 상호 확인 대진(match_requests)의 스코어는 요청자 관점으로 저장된다.
@@ -7,10 +7,4 @@ import type { PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
  */
 export function invertSetScores(sets: PersonalMatchSetScore[]): PersonalMatchSetScore[] {
     return sets.map((s) => ({ me: s.opp, opp: s.me }))
-}
-
-export function invertWinner(winner: PersonalMatchWinner): PersonalMatchWinner {
-    if (winner === 'me') return 'opponent'
-    if (winner === 'opponent') return 'me'
-    return 'draw'
 }

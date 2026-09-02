@@ -11,12 +11,6 @@ type UserRow = Database['public']['Tables']['users']['Row']
 
 export type MemberWithUser = ClubMember & { user: User }
 
-export type PendingEntry = {
-    club: Club
-    member: ClubMember
-    user: User
-}
-
 function mapClubRow(row: ClubRow): Club {
     return {
         id: row.id,
@@ -144,46 +138,6 @@ export async function fetchMyMembership(
         .maybeSingle()
     if (error || !data) return null
     return mapMemberRow(data)
-}
-
-export async function fetchPendingMembersByOwner(userId: string): Promise<PendingEntry[]> {
-    const supabase = await createClient()
-    const { data: ownedClubs, error: clubErr } = await supabase
-        .from('clubs')
-        .select('*')
-        .eq('owner_id', userId)
-    if (clubErr || !ownedClubs || ownedClubs.length === 0) return []
-
-    const clubIds = ownedClubs.map((c) => c.id)
-    const { data: pendingData, error: pendErr } = await supabase
-        .from('club_members')
-        .select('*, users(*)')
-        .in('club_id', clubIds)
-        .eq('status', 'pending')
-    if (pendErr || !pendingData) return []
-
-    const clubMap = new Map(ownedClubs.map((c) => [c.id, mapClubRow(c)]))
-
-    return pendingData
-        .filter((row) => row.users)
-        .map((row) => ({
-            club: clubMap.get(row.club_id)!,
-            member: mapMemberRow(row),
-            user: mapUserRow(row.users as UserRow),
-        }))
-}
-
-export async function fetchFirstJoinedClubId(userId: string): Promise<string | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('club_members')
-        .select('club_id')
-        .eq('user_id', userId)
-        .eq('status', 'approved')
-        .limit(1)
-        .maybeSingle()
-    if (error || !data) return null
-    return data.club_id
 }
 
 // 설정 페이지용: 현재 활성·미만료 초대 토큰 (없으면 null). club_invites SELECT RLS는 owner만 허용.

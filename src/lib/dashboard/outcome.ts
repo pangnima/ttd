@@ -38,19 +38,6 @@ export const H2H_OUTCOME_LABEL: Record<'W' | 'L' | 'D', string> = {
     D: '무',
 }
 
-// ── 개인 경기용 (me/opponent/draw) ────────────────────────────────────
-export const PERSONAL_OUTCOME_STYLE: Record<'me' | 'opponent' | 'draw', string> = {
-    me: 'text-win font-bold',
-    opponent: 'text-loss font-bold',
-    draw: 'text-muted-foreground font-bold',
-}
-
-export const PERSONAL_OUTCOME_LABEL: Record<'me' | 'opponent' | 'draw', string> = {
-    me: '승',
-    opponent: '패',
-    draw: '무',
-}
-
 /** 전적 문자열: "3승 1패" / 무가 있으면 "3승 1패 1무". draws 기본값 0. */
 export function formatRecord(wins: number, losses: number, draws = 0): string {
     return `${wins}승 ${losses}패${draws > 0 ? ` ${draws}무` : ''}`
