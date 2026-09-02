@@ -50,7 +50,7 @@ src/
 │   ├── clubs/                    # 클럽 (ClubLogoField, LeaveClubButton, ClubInviteCard, InviteJoinButton 등)
 │   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
-│   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, rotation/ 입력, use-user-search 등)
+│   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchCard, PlayerPicker+PlayerAutocomplete 상대 자동완성, rotation/ 입력, use-user-search 등)
 │   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, 상태 뱃지)
 │   ├── profile/                  # 프로필 헤더·통계 조합 (DeleteAccountButton 등)
 │   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
@@ -99,8 +99,9 @@ src/
 │   │   ├── former-members.ts     # augmentWithFormerMembers (탈퇴 선수 이름 복원)
 │   │   ├── match-view-helpers.ts # 매트릭스/리스트 뷰 헬퍼
 │   │   └── attendance-stats.ts
-│   ├── personal-matches/         # 개인 경기 매핑·세트 분해·승자 판정·로테이션 복식
-│   │   ├── map.ts / explode.ts / grouping.ts / winner.ts
+│   ├── personal-matches/         # 개인 경기 매핑·세트 분해·승자 판정·로테이션 복식·상대 자동완성 후보
+│   │   ├── map.ts / explode.ts / grouping.ts / winner.ts   # explode가 결과 미확정(winner NULL) 제외의 단일 초크포인트
+│   │   ├── player-suggestions.ts # 상대 자동완성 그룹(만나본 사람/클럽 회원/전체 회원) 순수 빌더
 │   │   ├── rotation.ts           # 아메리칸(로테이션) 복식 게임 분해
 │   │   └── validators.ts
 │   ├── rating/                   # 레이팅 순수 엔진 (docs/rating-system.md)
@@ -149,8 +150,8 @@ src/
 /profile/settings → 내 정보 수정
 /me/analytics → /profile/[내id]?mode=total 리다이렉트
 /me/personal-matches → 개인 경기 기록 목록
-/me/personal-matches/new → 개인 경기 추가 (회원 상대 단식은 확인 요청 플로우로 전환)
-/me/personal-matches/[id]/edit → 개인 경기 수정 (상호 확인 경기는 진입 차단)
+/me/personal-matches/new → 개인 경기 추가 (세트 없이 결과 미확정으로 저장, 회원 상대 단식은 확인 요청 플로우로 전환)
+/me/personal-matches/[id]/edit → 개인 경기 수정 (상호 확인 경기는 진입 차단, 기존 세트는 보존)
 /me/match-requests → 경기 확인 요청 허브 (받은/보낸 탭, 수락·거절·취소)
 /guide → 신규 사용자 사용 가이드 (정적, 개인 경기 기록 1순위)
 /tiers → 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
@@ -185,6 +186,11 @@ src/
   - [x] 진입점 정비 — 사이드바·모바일 nav에 개인 경기 등록 링크, 사용 가이드 메뉴
   - [x] 온보딩 체크리스트 (`lib/onboarding.ts`·`components/onboarding/`, 내 전적 통합 탭, localStorage 닫기)
   - [x] 첫 로그인 환영 모달 + 정적 가이드 페이지 `/guide`
+- [x] Week 17: 개인 경기 등록 폼 개편 (0034 마이그레이션)
+  - [x] 경기 타입·코트 표면 라디오형 선택 (FieldToggle), 세트 스코어 입력 제거 → 결과 미확정(winner NULL) 저장
+  - [x] 상대 단일 자동완성 입력 (base-ui Autocomplete) + 회원/만나본 사람 선택 시 손잡이·NTRP 자동 채움
+  - [x] 확인 요청도 세트 없이 요청 (수락 시 양측 미확정 기록), 통계·레이팅은 미확정 제외
+  - [ ] 미확정 경기의 세트·결과 등록 플로우 (상호 확인 경기는 RESTRICTIVE RLS라 RPC 필요)
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
@@ -216,8 +222,8 @@ Client Component (read-only)
 | `club_members` | approved 멤버만 SELECT, owner/officer만 승인/거절 |
 | `match_games` | approved 멤버만 SELECT/INSERT, owner만 DELETE |
 | `match_game_courts/rounds/time_slots/matches` | 상위 match_game의 RLS를 따름 (courts.surface 포함) |
-| `personal_matches` | 본인(user_id)만 CRUD. 상호 확인 경기(`source_request_id` 보유)는 RESTRICTIVE 정책으로 수정/삭제 잠금 |
-| `match_requests` | 당사자 둘만 SELECT, requester만 INSERT/취소, opponent만 거절. 수락은 RPC로만 |
+| `personal_matches` | 본인(user_id)만 CRUD. `winner` NULL = 결과 미확정(세트 미등록, 집계 제외). 상호 확인 경기(`source_request_id` 보유)는 RESTRICTIVE 정책으로 수정/삭제 잠금 |
+| `match_requests` | 당사자 둘만 SELECT, requester만 INSERT/취소, opponent만 거절. 수락은 RPC로만. `set_scores`는 빈 배열 허용(미확정 요청) |
 | `ai_coaching_cache` | 본인 통계 묶음 해시 기반 캐시 (24h) |
 | `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만 |
 | `club_invites` | owner만 관리, 미리보기·가입은 SECURITY DEFINER RPC로만 |
@@ -227,9 +233,10 @@ RPC: `create_match_game`, `update_match_game`, `add_guest_player` (트랜잭션 
 RPC: `get_user_match_stats`, `get_user_head_to_head` (통계 집계)
 RPC: `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts` (클럽 대시보드 집계)
 RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`join_club_via_invite` (초대 링크)
-RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 생성 + 상태 전이)
+RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 생성 + 상태 전이, 세트 없으면 양측 winner NULL)
+RPC: `get_user_match_stats_unified`, `get_user_head_to_head_unified` (클럽+개인 통합 집계, 미확정 제외 — 현재 src 미호출)
 View: `user_match_participations` (security_invoker=on)
-마이그레이션: 0001~0033 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
+마이그레이션: 0001~0034 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -252,6 +259,7 @@ View: `user_match_participations` (security_invoker=on)
 | **초대 토큰** | `club_invites.token` — 비공개 클럽 가입용. SECURITY DEFINER RPC로만 미리보기·가입 |
 | **로테이션 복식** | 4명 이상 파트너 교대(아메리칸) 복식을 게임별 개인 경기 레코드로 분해 저장 |
 | **확인 요청 / 상호 확인 경기** | 회원 간 단식 대진 요청(`match_requests`, pending→accepted/rejected/canceled). 수락 시 양측 관점 `personal_matches` 2행 생성(`source_request_id` 표식, 수정/삭제 잠금) |
+| **결과 미확정** | `personal_matches.winner = NULL` — 세트 스코어 없이 등록된 개인 경기. 카드에 '미확정' 배지, 통계·레이팅·AI 코칭 집계에서 제외(`explodePersonalMatchSets`·통합 RPC). 세트가 등록되면 `winner`가 파생되어 확정 |
 
 ## 코딩 규칙
 

@@ -2,7 +2,7 @@
 
 import type { CourtSurface } from '@/types'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
-import { EnumSelect } from '@/components/match/enum-select'
+import { FieldToggle } from '@/components/personal-matches/field-toggle'
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { roundToHalfHour } from '@/lib/format'
 
@@ -16,7 +16,7 @@ type MatchMetaSectionProps = {
 }
 
 /**
- * 경기 메타 정보 — 날짜·시각·코트 표면.
+ * 경기 메타 정보 — 날짜·시각·코트 표면(라디오형 FieldToggle).
  * 향후 경기 장소/코트명 등 위치 정보 필드를 이 섹션에 추가한다.
  */
 export function MatchMetaSection({
@@ -50,15 +50,14 @@ export function MatchMetaSection({
                 </div>
             </div>
             <div>
-                <label className={MATCH_FORM_LABEL}>코트 표면 *</label>
-                <EnumSelect
-                    value={surface}
-                    onValueChange={onSurfaceChange}
+                <FieldToggle
+                    label="코트 표면"
+                    required
                     options={SURFACE_OPTIONS}
-                    placeholder="선택"
-                    ariaLabel="코트 표면"
+                    value={surface || undefined}
+                    onChange={onSurfaceChange}
                 />
-                <p className="mt-1 text-xs text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
+                <p className="mt-2 text-xs text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
             </div>
         </>
     )

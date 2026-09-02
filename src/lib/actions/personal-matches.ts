@@ -35,8 +35,9 @@ function buildPersonalMatchRow(input: PersonalMatchInput) {
         surface: input.surface ?? null,
         opponent_ntrp: input.opponentNtrp ?? null,
         set_scores: input.setScores,
-        // winner는 세트 점수로부터 자동 판정 (수동 선택 제거)
-        winner: resolveMatchWinner(input.setScores),
+        // winner는 세트가 있으면 세트 승수로 자동 판정, 세트가 없으면 NULL(결과 미확정).
+        // resolveMatchWinner([])는 'draw'를 돌려주므로 반드시 길이 가드를 거친다.
+        winner: input.setScores.length > 0 ? resolveMatchWinner(input.setScores) : null,
         notes: input.notes?.trim() || null,
     }
 }
@@ -77,8 +78,8 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
 
 /**
  * 여러 개인 경기를 일괄 INSERT하는 범용 액션.
- * 신규 등록은 세트 전체를 담은 단일 경기 1건(1요소 배열)으로 호출한다.
- * 각 경기의 winner는 buildPersonalMatchRow에서 setScores 승수로 자동 판정된다.
+ * 신규 등록은 세트 없이 단일 경기 1건(1요소 배열, 결과 미확정)으로, 로테이션은 게임별 다건으로 호출한다.
+ * 각 경기의 winner는 buildPersonalMatchRow에서 세트가 있을 때만 자동 판정된다.
  */
 export async function createPersonalMatchesAction(
     inputs: PersonalMatchInput[],

@@ -36,9 +36,9 @@ function poolById(pool: PoolPlayer[], ref: string | null): PoolPlayer | undefine
     return ref ? pool.find((p) => p.tempId === ref) : undefined
 }
 
-// 손잡이는 회원 미선택(직접 입력)일 때만 저장 (기존 buildBaseInput 규칙과 동일)
+// 손잡이는 회원·비회원 모두 저장 (고정 페어 폼의 buildInput 규칙과 동일 — 회원은 프로필 값이 자동 채워진다)
 function handOf(p: PlayerPickerValue): 'right' | 'left' | undefined {
-    return !p.userId && (p.hand === 'right' || p.hand === 'left') ? p.hand : undefined
+    return p.hand === 'right' || p.hand === 'left' ? p.hand : undefined
 }
 
 function ntrpNum(ntrp: string): number | undefined {

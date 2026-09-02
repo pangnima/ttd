@@ -55,6 +55,7 @@ export function aggregateByOpponentHand(
     }
 
     for (const pm of bundle.personalMatches) {
+        if (!pm.winner) continue  // 결과 미확정은 집계 제외 (입력은 분해본이라 실제로는 걸러져 있음)
         const hand1 = resolveHand(pm.opponentDominantHand, pm.opponentUserId)
         if (hand1) tally(hand1, pm.winner)
 

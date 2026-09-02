@@ -33,7 +33,7 @@ export function useUserSearch(selfUserId?: string) {
             if (!escaped) return
             const { data } = await supabase
                 .from('users')
-                .select('id, name, nickname, ntrp, personal_ntrp')
+                .select('id, name, nickname, ntrp, personal_ntrp, dominant_hand')
                 .eq('is_guest', false)
                 .is('deleted_at', null)
                 .neq('id', selfUserId)
@@ -47,6 +47,7 @@ export function useUserSearch(selfUserId?: string) {
                     nickname: u.nickname,
                     ntrp: u.ntrp ?? undefined,
                     personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+                    dominantHand: u.dominant_hand === 'right' || u.dominant_hand === 'left' ? u.dominant_hand : undefined,
                     isGuest: false,
                     clubNames: [],
                 })),

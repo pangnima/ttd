@@ -101,7 +101,7 @@ export function resolveSelfSideRating(
     return (currentRating + partnerStrength) / 2
 }
 
-/** winner('me'|'opponent'|'draw') → '나' 입장의 스코어(승1/패0/무0.5). */
+/** winner('me'|'opponent'|'draw') → '나' 입장의 스코어(승1/패0/무0.5). null(미확정)은 호출 전에 걸러진다. */
 function selfScoreOf(winner: PersonalMatch['winner']): number {
     if (winner === 'me') return 1
     if (winner === 'opponent') return 0
@@ -137,6 +137,7 @@ export function replayPersonalRatings(
     const history: PersonalRatingPoint[] = []
 
     for (const m of sorted) {
+        if (!m.winner) continue  // 결과 미확정은 레이팅에 반영하지 않는다 (explode에서 이미 제외되지만 이중 방어)
         const oppRating = resolveOpponentRating(m, selfNtrp, oppNtrpById)
         const selfScore = selfScoreOf(m.winner)
         // marginFactor는 {team1, team2} 세트 형식을 받는다 — 나=team1, 상대=team2로 매핑.

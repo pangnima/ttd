@@ -38,6 +38,11 @@ export const H2H_OUTCOME_LABEL: Record<'W' | 'L' | 'D', string> = {
     D: '무',
 }
 
+// ── 개인 경기 결과 미확정(winner NULL) 배지 — 경기 카드·확인 요청 요약이 공유 ──────
+export const PENDING_RESULT_LABEL = '미확정'
+export const PENDING_RESULT_BADGE = 'bg-muted text-muted-foreground border border-dashed border-border'
+export const PENDING_RESULT_BAR = 'bg-border'
+
 /** 전적 문자열: "3승 1패" / 무가 있으면 "3승 1패 1무". draws 기본값 0. */
 export function formatRecord(wins: number, losses: number, draws = 0): string {
     return `${wins}승 ${losses}패${draws > 0 ? ` ${draws}무` : ''}`

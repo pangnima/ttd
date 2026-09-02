@@ -50,6 +50,7 @@
 - `p_scope IN ('total','club')` 로 클럽 매치 필터
 - `p_scope IN ('total','personal')` 로 개인 매치 포함
 - 개인 매치의 세트: `set_scores` JSONB에서 `s->>'me'`/`s->>'opp'` 파싱
+- (0034) `pm.winner IS NOT NULL` 필터 — 결과 미확정(세트 미등록, winner NULL) 개인 경기는 경기 수·승패·세트 모두 집계 제외. 클라이언트 순수함수 경로도 `explodePersonalMatchSets`에서 동일하게 제외한다.
 
 ### 2-4. get_user_doubles_court_stats
 
@@ -65,6 +66,7 @@
 - 복식 한 경기에서 상대 선수 2명 각각에 대해 별도로 카운트됨
 - 즉 "한 선수 기준 상대별 경기수"가 아닌 "내가 그 상대와 같은 코트에 선 횟수"
 - UI에서 H2H 카드에 표시할 때 이 의미를 명확히 해야 함 (현재 OK)
+- (0034) `personal_agg`에 `pm.winner IS NOT NULL` 필터 추가 — 결과 미확정 개인 경기는 H2H에서도 제외. 정의 원문은 `supabase/migrations/0034_personal_match_pending_result.sql`에 수록
 
 ### 2-6. get_user_match_stats (v1, 레거시)
 

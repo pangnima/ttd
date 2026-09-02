@@ -9,8 +9,8 @@ export function ConfirmFlowNotice({ opponentName }: { opponentName: string }) {
             <UserCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground break-keep">
                 <span className="text-foreground font-medium">{opponentName}</span>님은 플랫폼 회원입니다.
-                저장하면 확인 요청이 전송되고, 상대가 수락하면 양쪽 전적에 함께 기록됩니다.
-                상대 NTRP는 상대의 레이팅에서 자동 반영됩니다.
+                저장하면 확인 요청이 전송되고, 상대가 수락하면 양쪽 기록에 함께 추가됩니다.
+                결과는 세트 스코어 등록 시 확정되며, 상대 NTRP는 상대의 레이팅에서 자동 반영됩니다.
             </p>
         </div>
     )

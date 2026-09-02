@@ -59,17 +59,23 @@ export type OpponentCandidate = {
     nickname?: string      // 전체 회원 검색 결과에서만 채움 (닉네임 매칭 표시·필터용)
     ntrp?: number          // 정적 자가선언 NTRP (fallback)
     personalNtrp?: number  // 동적 개인 NTRP(개인경기 기반 캐시). 있으면 프리필 우선
+    dominantHand?: 'right' | 'left'  // 프로필 손잡이 — 선택 시 손잡이 자동 채움
     isGuest: boolean
     clubNames: string[]
 }
 
+/** users.dominant_hand 원시값 → 유니온 (NULL·미지원 값은 undefined) */
+export function toDominantHand(value: string | null | undefined): 'right' | 'left' | undefined {
+    return value === 'right' || value === 'left' ? value : undefined
+}
+
 // 내가 가입(approved)한 클럽의 모든 멤버 목록 (자신 제외, 중복 제거).
-// 개인 매치 등록 폼에서 상대 검색 콤보에 사용.
+// 개인 매치 등록 폼에서 상대 자동완성 후보(클럽 회원 그룹)에 사용.
 export async function fetchOpponentCandidates(userId: string): Promise<OpponentCandidate[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('club_members')
-        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, personal_ntrp, is_guest)')
+        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, personal_ntrp, dominant_hand, is_guest)')
         .eq('status', 'approved')
         .neq('user_id', userId)
 
@@ -77,7 +83,10 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
 
     const map = new Map<string, OpponentCandidate>()
     for (const row of data) {
-        const u = row.users as { id: string; name: string; ntrp: number | null; personal_ntrp: number | null; is_guest: boolean } | null
+        const u = row.users as {
+            id: string; name: string; ntrp: number | null; personal_ntrp: number | null
+            dominant_hand: string | null; is_guest: boolean
+        } | null
         const club = row.clubs as { name: string } | null
         if (!u) continue
         const existing = map.get(u.id)
@@ -89,6 +98,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
                 name: u.name,
                 ntrp: u.ntrp ?? undefined,
                 personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+                dominantHand: toDominantHand(u.dominant_hand),
                 isGuest: u.is_guest ?? false,
                 clubNames: club ? [club.name] : [],
             })

@@ -1,23 +1,25 @@
 import type { CourtSurface, PersonalMatchSetScore } from '@/types'
 import { SURFACE_LABELS, SURFACE_TEXT_CLASS } from '@/lib/dashboard/surface'
+import { PENDING_RESULT_BADGE, PENDING_RESULT_LABEL } from '@/lib/dashboard/outcome'
 import { resolveMatchWinner } from '@/lib/personal-matches/winner'
 
 type Props = {
     playedAt: string   // "2026-09-01"
     playedTime: string // "18:30"
     surface: CourtSurface
-    sets: PersonalMatchSetScore[]  // 보는 사람 관점으로 반전 완료된 스코어
+    sets: PersonalMatchSetScore[]  // 보는 사람 관점으로 반전 완료된 스코어. 빈 배열 = 결과 미확정
 }
 
 const RESULT_BADGE = {
     me: { label: 'WIN', className: 'bg-win text-win-foreground' },
     opponent: { label: 'LOSS', className: 'bg-loss text-loss-foreground' },
     draw: { label: '무', className: 'bg-muted text-muted-foreground' },
+    pending: { label: PENDING_RESULT_LABEL, className: PENDING_RESULT_BADGE },
 } as const
 
-/** 요청 카드 공용: 일시·코트 표면 + 내 관점 세트 스코어 칩 + 결과 배지 */
+/** 요청 카드 공용: 일시·코트 표면 + 내 관점 세트 스코어 칩 + 결과 배지 (세트 없으면 '미확정') */
 export function RequestMatchSummary({ playedAt, playedTime, surface, sets }: Props) {
-    const result = RESULT_BADGE[resolveMatchWinner(sets)]
+    const result = RESULT_BADGE[sets.length > 0 ? resolveMatchWinner(sets) : 'pending']
     return (
         <div className="space-y-1.5">
             <p className="text-xs text-muted-foreground tabular-nums">

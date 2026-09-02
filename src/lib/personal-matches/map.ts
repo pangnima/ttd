@@ -28,7 +28,7 @@ export function mapPersonalMatchRow(row: PersonalMatchRow): PersonalMatch {
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface) ?? undefined,
         setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],
-        winner: row.winner as PersonalMatchWinner,
+        winner: (row.winner as PersonalMatchWinner | null) ?? null,  // null = 결과 미확정
         opponentNtrp: row.opponent_ntrp != null ? Number(row.opponent_ntrp) : undefined,
         notes: row.notes ?? undefined,
         sourceRequestId: row.source_request_id ?? undefined,

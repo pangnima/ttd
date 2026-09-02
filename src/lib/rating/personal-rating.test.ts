@@ -153,7 +153,7 @@ describe('replayPersonalRatings — 복식', () => {
             id: '1', playedAt: '2025-01-01', winner: 'me', matchType: 'men_doubles',
             opponentNtrp: 3.0, opponent2Ntrp: 3.0, partnerUserId: 'p1', setScores: [{ me: 6, opp: 4 }],
         })
-        const noPartner = replayPersonalRatings([pm({ ...m, partnerUserId: undefined })], null, noResolver)
+        const noPartner = replayPersonalRatings([pm({ ...m, winner: 'me', partnerUserId: undefined })], null, noResolver)
         const memberPartner = replayPersonalRatings([m], null, (id) => (id === 'p1' ? 6.0 : null))
         // 회원 파트너 강도(6.0)가 반영되어 상승폭이 더 작아야 한다
         expect(memberPartner.history[0].delta).toBeLessThan(noPartner.history[0].delta)

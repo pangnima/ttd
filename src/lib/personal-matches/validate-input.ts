@@ -23,9 +23,9 @@ export type PersonalMatchInput = {
     playedTime?: string  // 'HH:MM' (선택)
     matchType: MatchType
     surface?: CourtSurface
-    setScores: PersonalMatchSetScore[]
+    setScores: PersonalMatchSetScore[]  // 빈 배열 허용 — 등록 폼은 세트 없이 저장(결과 미확정)
     opponentNtrp?: number  // 상대(단식)/상대1(복식) 추정 NTRP (1.0~7.0, 필수) — 개인 레이팅 계산용
-    // winner는 입력받지 않고 setScores로부터 자동 판정한다.
+    // winner는 입력받지 않는다. 세트가 있으면 setScores로 자동 판정, 없으면 NULL(결과 미확정).
     notes?: string
 }
 
@@ -78,8 +78,8 @@ export function validatePersonalMatchInput(
             }
         }
     }
-    // 세트 검증: 1개 이상, 각 세트 점수가 0~99 정수, 0-0(미입력) 세트 금지, 세트별 애드/듀스 enum(선택)
-    if (!input.setScores.length) return '세트 스코어를 입력해주세요.'
+    // 세트 검증: 빈 배열은 결과 미확정으로 허용. 세트가 있으면 각 세트 점수가 0~99 정수,
+    // 0-0(미입력) 세트 금지, 세트별 애드/듀스 enum(선택). 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.
     for (const s of input.setScores) {
         if (!isValidScore(s.me) || !isValidScore(s.opp)) return '세트 스코어를 올바르게 입력해주세요.'
         if (s.me === 0 && s.opp === 0) return '0-0 세트는 저장할 수 없습니다.'

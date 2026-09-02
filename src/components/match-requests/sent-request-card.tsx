@@ -52,7 +52,7 @@ export function SentRequestCard({ item }: Props) {
             />
             {request.status === 'pending' && (
                 <p className="text-xs text-muted-foreground break-keep">
-                    내용을 고치려면 취소 후 다시 등록해주세요. 상대가 수락하면 양쪽 전적에 기록됩니다.
+                    내용을 고치려면 취소 후 다시 등록해주세요. 상대가 수락하면 양쪽 기록에 추가되고, 결과는 세트 스코어 등록 시 확정됩니다.
                 </p>
             )}
             {error && <p className="text-xs text-destructive">{error}</p>}

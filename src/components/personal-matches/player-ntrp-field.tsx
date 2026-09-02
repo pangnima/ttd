@@ -2,6 +2,7 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
+import type { PlayerSuggestion } from '@/lib/personal-matches/player-suggestions'
 import { PlayerPicker, type PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import { MATCH_FORM_INPUT as inputClass, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 
@@ -23,8 +24,9 @@ type Props = {
 }
 
 /**
- * 선수 선택(PlayerPicker) + 그 선수의 추정 NTRP 입력을 묶은 필드.
- * 클럽 회원을 고르면 그 회원의 ntrp를 NTRP에 자동 프리필한다(이후 편집 가능).
+ * 선수 자동완성(PlayerPicker) + 그 선수의 추정 NTRP 입력을 묶은 필드.
+ * 후보(회원·만나본 사람)를 고르면 그 항목의 NTRP를 자동 프리필한다(이후 편집 가능).
+ * 회원은 동적 개인 NTRP 우선, 없으면 자가선언 NTRP. 만나본 사람은 마지막에 입력한 NTRP.
  */
 export function PlayerNtrpField({
     label,
@@ -40,16 +42,9 @@ export function PlayerNtrpField({
     searchResults,
     onSearchTermChange,
 }: Props) {
-    function handlePlayerChange(next: PlayerPickerValue) {
+    function handlePlayerChange(next: PlayerPickerValue, picked?: PlayerSuggestion) {
         onPlayerChange(next)
-        // 회원 선택 시 NTRP 자동 프리필 — 동적 개인 NTRP 우선, 없으면 정적 자가선언 NTRP.
-        if (next.userId) {
-            const c =
-                candidates.find((cand) => cand.id === next.userId) ??
-                searchResults?.find((cand) => cand.id === next.userId)
-            const prefill = c?.personalNtrp ?? c?.ntrp
-            if (prefill) onNtrpChange(String(Number(prefill.toFixed(3))))
-        }
+        if (picked?.ntrp != null) onNtrpChange(String(Number(picked.ntrp.toFixed(3))))
     }
 
     return (

@@ -1,23 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo } from 'react'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
-import { MATCH_FORM_INPUT as inputClass, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { buildPlayerSuggestionGroups, type PlayerSuggestion } from '@/lib/personal-matches/player-suggestions'
+import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { FieldToggle } from '@/components/personal-matches/field-toggle'
+import { PlayerAutocomplete } from '@/components/personal-matches/player-autocomplete'
 
 type Hand = 'right' | 'left' | ''
 
@@ -37,9 +26,9 @@ type Props = {
     candidates: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
     value: PlayerPickerValue
-    onChange: (value: PlayerPickerValue) => void
+    // picked: 후보를 골랐을 때 그 항목 (NTRP 프리필용). 타이핑이면 undefined
+    onChange: (value: PlayerPickerValue, picked?: PlayerSuggestion) => void
     placeholder?: string
-    // 손잡이 입력 노출 여부 (직접 입력 모드에서만 실제 표시)
     showHand?: boolean
     // 플랫폼 전체 회원 검색 (선택) — 전달 시 검색어를 위로 올리고 결과를 "전체 회원" 그룹으로 표시
     searchResults?: OpponentCandidate[]
@@ -47,160 +36,57 @@ type Props = {
 }
 
 /**
- * 개인 경기 선수(상대/파트너) 선택 입력.
- * 콤보박스(클럽 회원 + 만나본 사람) ↔ 직접 입력 모드를 토글하며, 직접 입력 시 손잡이를 필수로 받는다.
+ * 개인 경기 선수(상대/파트너) 입력 — 단일 자동완성 입력 + 손잡이.
+ * 이름을 타이핑하면 [만나본 사람 / 클럽 회원 / 전체 회원] 후보가 뜨고, 고르면 userId·손잡이(·NTRP)가 채워진다.
+ * 고르지 않으면 입력한 이름 그대로 게스트로 저장된다. 이름을 다시 수정하면 회원 연결이 해제된다.
+ * 손잡이는 항상 노출 — 게스트는 필수, 회원은 프로필 값이 자동 채워지며 수정 가능.
  */
 export function PlayerPicker({
     label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true,
     searchResults, onSearchTermChange,
 }: Props) {
-    // userId가 있으면 회원 모드, 없으면 직접 입력 모드
-    const [mode, setMode] = useState<'member' | 'external'>(value.userId ? 'member' : 'external')
-    const [comboOpen, setComboOpen] = useState(false)
+    const groups = useMemo(
+        () => buildPlayerSuggestionGroups(value.name, { pastOpponents, candidates, searchResults }),
+        [value.name, pastOpponents, candidates, searchResults],
+    )
+    const linked = value.userId
+        ? candidates.find((c) => c.id === value.userId) ?? searchResults?.find((c) => c.id === value.userId)
+        : undefined
 
-    const selected = candidates.find((c) => c.id === value.userId)
-    // 콤보박스로 고를 대상(클럽 회원, 만나본 사람, 전체 검색)이 하나라도 있으면 모드 토글 노출
-    const searchable = !!onSearchTermChange
-    const hasPickable = candidates.length > 0 || pastOpponents.length > 0 || searchable
-    // 전체 검색 결과에서 클럽 후보와 중복되는 회원은 제외 (클럽 그룹 우선)
-    const candidateIds = new Set(candidates.map((c) => c.id))
-    const filteredSearchResults = (searchResults ?? []).filter((c) => !candidateIds.has(c.id))
+    function handleInputChange(name: string) {
+        onChange({ userId: undefined, name, hand: value.hand })
+        onSearchTermChange?.(name)
+    }
 
-    function switchMode(next: 'member' | 'external') {
-        setMode(next)
-        onChange({ userId: undefined, name: '', hand: '' })
+    function handlePick(item: PlayerSuggestion) {
+        onChange({ userId: item.userId, name: item.label, hand: item.hand ?? value.hand }, item)
+        onSearchTermChange?.('')
     }
 
     return (
         <div>
-            <label className={MATCH_FORM_LABEL}>{label}</label>
+            <div className="flex items-center justify-between gap-2 mb-2">
+                <label className={`${MATCH_FORM_LABEL} mb-0`}>{label}</label>
+                {value.userId && (
+                    <span className="text-[11px] px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary">
+                        {linked?.isGuest ? '게스트 회원' : '회원 연결됨'}
+                    </span>
+                )}
+            </div>
 
-            {/* 입력 방식 — 현재 모드가 강조 표시되어 상태가 분명하다 */}
-            {hasPickable && (
-                <div className="mb-2">
-                    <FieldToggle
-                        options={[
-                            { value: 'member', label: '목록에서 선택' },
-                            { value: 'external', label: '직접 입력' },
-                        ]}
-                        value={mode}
-                        onChange={(m) => { if (m !== mode) switchMode(m) }}
-                    />
-                </div>
-            )}
+            <PlayerAutocomplete
+                value={value.name}
+                groups={groups}
+                placeholder={placeholder ?? '이름 또는 닉네임'}
+                onInputChange={handleInputChange}
+                onPick={handlePick}
+            />
 
-            {mode === 'member' ? (
-                <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                    <PopoverTrigger
-                        type="button"
-                        className={`${inputClass} text-left flex items-center justify-between`}
-                    >
-                        {selected ? (
-                            <span>
-                                {selected.name}
-                                {selected.ntrp ? ` (${selected.ntrp})` : ''}
-                                {selected.isGuest ? ' (게스트)' : ''}
-                            </span>
-                        ) : value.name ? (
-                            <span>{value.name}</span>
-                        ) : (
-                            <span className="text-muted-foreground">상대 선택...</span>
-                        )}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 p-0" align="start">
-                        <Command>
-                            <CommandInput
-                                placeholder={searchable ? '이름·닉네임으로 검색...' : '이름으로 검색...'}
-                                onValueChange={onSearchTermChange}
-                            />
-                            <CommandList>
-                                <CommandEmpty>검색 결과가 없습니다</CommandEmpty>
-                                {candidates.length > 0 && (
-                                    <CommandGroup heading="클럽 회원">
-                                        {candidates.map((c) => (
-                                            <CommandItem
-                                                key={c.id}
-                                                value={`member-${c.name}`}
-                                                onSelect={() => {
-                                                    onChange({ userId: c.id, name: c.name, hand: '' })
-                                                    setComboOpen(false)
-                                                }}
-                                            >
-                                                <span>{c.name}</span>
-                                                {c.ntrp && <span className="ml-1 text-muted-foreground">({c.ntrp})</span>}
-                                                {c.isGuest && <span className="ml-1 text-muted-foreground text-xs">게스트</span>}
-                                                {c.clubNames.length > 0 && (
-                                                    <span className="ml-auto text-muted-foreground text-xs">
-                                                        {c.clubNames[0]}
-                                                    </span>
-                                                )}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                )}
-                                {filteredSearchResults.length > 0 && (
-                                    <CommandGroup heading="전체 회원">
-                                        {filteredSearchResults.map((c) => (
-                                            <CommandItem
-                                                key={c.id}
-                                                value={`search-${c.name} ${c.nickname ?? ''} ${c.id.slice(0, 4)}`}
-                                                onSelect={() => {
-                                                    onChange({ userId: c.id, name: c.name, hand: '' })
-                                                    setComboOpen(false)
-                                                }}
-                                            >
-                                                <span>{c.name}</span>
-                                                {c.ntrp && <span className="ml-1 text-muted-foreground">({c.ntrp})</span>}
-                                                {c.nickname && (
-                                                    <span className="ml-auto text-muted-foreground text-xs">{c.nickname}</span>
-                                                )}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                )}
-                                {pastOpponents.length > 0 && (
-                                    <CommandGroup heading="만나본 사람">
-                                        {pastOpponents.map((p) => (
-                                            <CommandItem
-                                                key={`past-${p.name}`}
-                                                value={`past-${p.name}`}
-                                                onSelect={() => {
-                                                    // 비회원이므로 직접 입력 모드로 전환해 이름·손잡이를 편집·검증할 수 있게 한다.
-                                                    onChange({ userId: undefined, name: p.name, hand: p.hand ?? '' })
-                                                    setMode('external')
-                                                    setComboOpen(false)
-                                                }}
-                                            >
-                                                <span>{p.name}</span>
-                                                {p.hand && (
-                                                    <span className="ml-auto text-muted-foreground text-xs">
-                                                        {p.hand === 'left' ? '왼손' : '오른손'}
-                                                    </span>
-                                                )}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                )}
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
-            ) : (
-                <input
-                    type="text"
-                    value={value.name}
-                    onChange={(e) => onChange({ ...value, userId: undefined, name: e.target.value })}
-                    placeholder={placeholder ?? '이름 또는 닉네임'}
-                    className={inputClass}
-                />
-            )}
-
-            {/* 손잡이 (직접 입력 모드만, 필수) */}
-            {showHand && mode === 'external' && (
+            {showHand && (
                 <div className="mt-3">
                     <FieldToggle
                         label="손잡이"
-                        required
+                        required={!value.userId}
                         options={HAND_OPTIONS}
                         value={value.hand || undefined}
                         onChange={(hand) => onChange({ ...value, hand })}

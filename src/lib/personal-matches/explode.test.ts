@@ -34,6 +34,15 @@ describe('explodePersonalMatchSets', () => {
         expect(games[0].id).toBe('c')
     })
 
+    it('결과 미확정(winner null) 레코드는 세트 유무와 무관하게 제외', () => {
+        const games = explodePersonalMatchSets([
+            pm('d', [], null),
+            pm('e', [{ me: 6, opp: 4 }], null),
+            pm('f', [{ me: 6, opp: 2 }], 'me'),
+        ])
+        expect(games.map((g) => g.id)).toEqual(['f#0'])
+    })
+
     it('빈 입력은 빈 배열', () => {
         expect(explodePersonalMatchSets([])).toEqual([])
     })

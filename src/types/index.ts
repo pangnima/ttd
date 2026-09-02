@@ -148,8 +148,8 @@ export type PersonalMatch = {
     playedTime?: string     // "18:30" (선택, 요일×시간 히트맵용). 미입력 시 undefined
     matchType: MatchType
     surface?: CourtSurface
-    setScores: PersonalMatchSetScore[]
-    winner: PersonalMatchWinner
+    setScores: PersonalMatchSetScore[]  // 빈 배열 = 세트 미등록 (등록 폼은 세트 없이 저장)
+    winner: PersonalMatchWinner | null  // null = 결과 미확정 — 통계·레이팅 집계에서 제외 (explodePersonalMatchSets)
     opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
     sourceRequestId?: string  // 상호 확인 대진(match_requests)에서 확정된 경기 — 있으면 수정/삭제 잠금
@@ -168,7 +168,7 @@ export type MatchRequest = {
     playedTime: string      // "18:30"
     matchType: MatchType    // v1은 'singles'만 (DB check)
     surface: CourtSurface
-    setScores: PersonalMatchSetScore[]  // 요청자 관점
+    setScores: PersonalMatchSetScore[]  // 요청자 관점. 빈 배열 허용(결과 미확정 요청)
     notes?: string
     status: MatchRequestStatus
     createdAt: string

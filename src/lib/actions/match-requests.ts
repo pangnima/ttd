@@ -10,6 +10,7 @@ import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
  * 상호 확인 대진 요청 입력 (v1: 회원 간 단식 전용).
  * opponentName은 검증·표시용일 뿐 저장되지 않는다 — 확정 시 RPC가 users에서 실명을 가져온다.
  * 상대 NTRP도 입력받지 않는다 — 수락 시 RPC가 상대의 레이팅에서 파생한다.
+ * setScores는 선택 — 등록 폼은 세트 없이 요청하며, 수락 시 양측에 결과 미확정(winner NULL)으로 기록된다.
  */
 export type MatchRequestInput = {
     opponentUserId: string
@@ -17,16 +18,17 @@ export type MatchRequestInput = {
     playedAt: string
     playedTime: string  // 'HH:MM'
     surface: CourtSurface
-    setScores: PersonalMatchSetScore[]  // 요청자 관점
+    setScores?: PersonalMatchSetScore[]  // 요청자 관점 (생략 = 미확정)
     notes?: string
 }
 
 export async function createMatchRequestAction(
     input: MatchRequestInput,
 ): Promise<{ error: string | null }> {
+    const setScores = input.setScores ?? []
     // 자유 기록과 동일한 규칙으로 검증하되, 상대 NTRP는 수락 시 서버 파생이므로 생략
     const validationError = validatePersonalMatchInput(
-        { ...input, matchType: 'singles' },
+        { ...input, setScores, matchType: 'singles' },
         { skipNtrp: true },
     )
     if (validationError) return { error: validationError }
@@ -42,7 +44,7 @@ export async function createMatchRequestAction(
         played_at: input.playedAt,
         played_time: input.playedTime,
         surface: input.surface,
-        set_scores: input.setScores,
+        set_scores: setScores,
         notes: input.notes?.trim() || null,
     })
 

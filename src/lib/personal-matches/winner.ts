@@ -1,4 +1,11 @@
-import type { PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { PersonalMatch, PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+
+/** 결과가 확정된 개인 경기 — winner가 NULL(미확정)이 아닌 레코드. 통계·레이팅 경로의 입력 타입. */
+export type SettledPersonalMatch = PersonalMatch & { winner: PersonalMatchWinner }
+
+export function isSettledPersonalMatch(m: PersonalMatch): m is SettledPersonalMatch {
+    return m.winner !== null
+}
 
 // 한 세트의 승자 판정 (나 > 상대 = 승, 상대 > 나 = 패, 동점 = 무)
 export function resolveSetWinner(set: PersonalMatchSetScore): PersonalMatchWinner {

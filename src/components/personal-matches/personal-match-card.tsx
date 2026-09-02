@@ -3,7 +3,9 @@ import type { PersonalMatch } from '@/types'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { SURFACE_LABELS, SURFACE_TEXT_CLASS } from '@/lib/dashboard/surface'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
-import { formatRecord } from '@/lib/dashboard/outcome'
+import {
+    formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
+} from '@/lib/dashboard/outcome'
 import { resolveSetWinner } from '@/lib/personal-matches/winner'
 
 type Props = {
@@ -17,13 +19,16 @@ const RESULT = {
     me: { bar: 'bg-win', badge: 'bg-win text-win-foreground', label: 'WIN' },
     opponent: { bar: 'bg-loss', badge: 'bg-loss text-loss-foreground', label: 'LOSS' },
     draw: { bar: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground', label: '무' },
+    // 결과 미확정(winner NULL) — 세트 미등록. 통계에는 반영되지 않는다.
+    pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
 } as const
 
 // 개인 경기 1건 카드. 코트·경기시간은 데이터가 없어 미표기.
 // 동호인 경기: 세트 1개 = 게임 1개. 단일 세트는 WIN/LOSS, 멀티 세트는 'N승 M패' 전적으로 표시.
+// 세트가 없는 미확정 경기는 '미확정' 배지만 표시한다.
 export function PersonalMatchCard({ match: m, actions }: Props) {
     const [, mm, dd] = m.playedAt.split('-')
-    const result = RESULT[m.winner]
+    const result = RESULT[m.winner ?? 'pending']
     const isDoubles = m.matchType !== 'singles'
     const opponentLabel = m.opponent2Name ? `${m.opponentName} · ${m.opponent2Name}` : m.opponentName
 

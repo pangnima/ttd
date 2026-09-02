@@ -535,7 +535,7 @@ export type Database = {
           played_time: string
           requester_id: string
           responded_at?: string | null
-          set_scores: Json
+          set_scores?: Json
           status?: string
           surface: string
         }
@@ -594,7 +594,7 @@ export type Database = {
           source_request_id: string | null
           surface: string | null
           user_id: string
-          winner: string
+          winner: string | null
         }
         Insert: {
           created_at?: string
@@ -619,7 +619,7 @@ export type Database = {
           source_request_id?: string | null
           surface?: string | null
           user_id: string
-          winner: string
+          winner?: string | null
         }
         Update: {
           created_at?: string
@@ -644,7 +644,7 @@ export type Database = {
           source_request_id?: string | null
           surface?: string | null
           user_id?: string
-          winner?: string
+          winner?: string | null
         }
         Relationships: [
           {

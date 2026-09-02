@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import type { PersonalMatch, MatchType, CourtSurface, PersonalMatchSetScore } from '@/types'
+import type { PersonalMatch, MatchType, CourtSurface } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import {
@@ -13,16 +13,15 @@ import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import { createMatchRequestAction } from '@/lib/actions/match-requests'
 import { useUserSearch } from '@/components/personal-matches/use-user-search'
 import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
-import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { PendingResultNotice } from '@/components/personal-matches/form-sections/pending-result-notice'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
-import { isNtrpValid, isPlayerFilled, isSetValid } from '@/lib/personal-matches/validators'
+import { isNtrpValid, isPlayerFilled } from '@/lib/personal-matches/validators'
 import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
-import { EnumSelect } from '@/components/match/enum-select'
+import { FieldToggle } from '@/components/personal-matches/field-toggle'
 import { PlayersSection } from '@/components/personal-matches/form-sections/players-section'
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
-import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
 import { FormFooter } from '@/components/personal-matches/form-sections/form-footer'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
@@ -40,6 +39,16 @@ type Props = {
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
+// 손잡이는 회원·비회원 모두 저장한다 (회원 선택 시 프로필 값이 자동 채워지고, 이후 편집 가능)
+function handOf(p: PlayerPickerValue): 'right' | 'left' | undefined {
+    return p.hand || undefined
+}
+
+/**
+ * 개인 경기 등록/수정 폼.
+ * 세트 스코어는 받지 않는다 — 저장 시 결과 미확정(winner NULL)으로 기록되고 세트는 추후 별도 등록한다.
+ * 로테이션 복식만 예외적으로 게임별 세트를 그대로 입력받는다.
+ */
 export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [], selfUserId }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -75,9 +84,6 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     const [partnerNtrp, setPartnerNtrp] = useState<string>(
         initialData?.partnerNtrp != null ? String(initialData.partnerNtrp) : ''
     )
-    const [sets, setSets] = useState<PersonalMatchSetScore[]>(
-        initialData?.setScores?.length ? initialData.setScores : [{ me: 0, opp: 0 }]
-    )
     const [notes, setNotes] = useState(initialData?.notes ?? '')
     // 복식 입력 방식 — 페어 고정(기본) vs 로테이션. 로테이션은 신규 등록에서만 지원.
     const [doublesMode, setDoublesMode] = useState<DoublesMode>('fixed')
@@ -95,30 +101,6 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
     // 게스트·직접 입력·복식·수정 모드는 기존 자유 기록으로 저장한다.
     const isConfirmFlow =
         !initialData && matchType === 'singles' && !!selfUserId && !!opponent.userId && !opponentIsGuest
-
-    function addSet() {
-        setSets((prev) => [...prev, { me: 0, opp: 0 }])
-    }
-    function removeSet(i: number) {
-        setSets((prev) => prev.filter((_, idx) => idx !== i))
-    }
-    function updateSet(i: number, field: 'me' | 'opp', val: string) {
-        // 빈 값(전체 삭제)은 NaN으로 보관해 입력란을 비울 수 있게 하고, 제출 시 0으로 정리한다.
-        if (val === '') {
-            setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: NaN } : s))
-            return
-        }
-        const num = parseInt(val, 10)
-        if (isNaN(num) || num < 0 || num > 99) return
-        setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: num } : s))
-    }
-    // 세트별 애드/듀스 갱신 (복식). undefined = 미지정(둘 다 듀스).
-    function setMyAd(i: number, v: 'me' | 'partner' | undefined) {
-        setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, myAd: v } : s))
-    }
-    function setOppAd(i: number, v: 'opponent' | 'opponent2' | undefined) {
-        setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, oppAd: v } : s))
-    }
 
     // 파트너 NTRP는 선택 — 비어있으면 통과, 입력 시 유효해야 함.
     const partnerNtrpOk = partnerNtrp.trim() === '' || isNtrpValid(partnerNtrp)
@@ -140,32 +122,30 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         )) &&
         !!playedAt &&
         !!playedTime &&
-        !!surface &&
-        sets.length > 0 &&
-        sets.every(isSetValid)
+        !!surface
 
     const isValid = isRotation ? rotation.isValid(buildSessionMeta()) : fixedValid
 
-    // setScores를 제외한 공통 입력 필드
-    function buildBaseInput(): Omit<PersonalMatchInput, 'setScores'> {
+    // 자유 기록 페이로드. 세트는 신규면 빈 배열(미확정), 수정이면 기존 세트를 그대로 보존한다.
+    function buildInput(): PersonalMatchInput {
         return {
             opponentName: opponent.name.trim(),
             opponentUserId: opponent.userId,
-            // 손잡이는 직접 입력(회원 미선택) 모드에서만 저장
-            opponentDominantHand: !opponent.userId && opponent.hand ? opponent.hand : undefined,
+            opponentDominantHand: handOf(opponent),
             // 복식 전용 필드 (단식이면 액션에서 NULL 처리)
             partnerName: partner.name.trim() || undefined,
             partnerUserId: partner.userId,
-            partnerDominantHand: !partner.userId && partner.hand ? partner.hand : undefined,
+            partnerDominantHand: handOf(partner),
             partnerNtrp: isDoubles && partnerNtrp ? Number(partnerNtrp) : undefined,
             opponent2Name: opponent2.name.trim() || undefined,
             opponent2UserId: opponent2.userId,
-            opponent2DominantHand: !opponent2.userId && opponent2.hand ? opponent2.hand : undefined,
+            opponent2DominantHand: handOf(opponent2),
             opponent2Ntrp: isDoubles && opponent2Ntrp ? Number(opponent2Ntrp) : undefined,
             playedAt,
             playedTime: playedTime || undefined,
             matchType,
             surface: surface || undefined,
+            setScores: initialData?.setScores ?? [],
             opponentNtrp: opponentNtrp ? Number(opponentNtrp) : undefined,
             notes: notes || undefined,
         }
@@ -191,16 +171,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             return
         }
 
-        const base = buildBaseInput()
-        const cleanSets = sets.map((s) => ({
-            me: Number.isNaN(s.me) ? 0 : s.me,
-            opp: Number.isNaN(s.opp) ? 0 : s.opp,
-            // 애드/듀스는 복식에서만 보존(단식은 제외)
-            ...(isDoubles && s.myAd ? { myAd: s.myAd } : {}),
-            ...(isDoubles && s.oppAd ? { oppAd: s.oppAd } : {}),
-        }))
-
-        // 상호 확인 요청: 직접 저장하지 않고 요청을 생성 — 상대가 수락하면 양쪽 전적에 기록된다
+        // 상호 확인 요청: 직접 저장하지 않고 요청을 생성 — 상대가 수락하면 양쪽 기록에 미확정으로 추가된다
         if (isConfirmFlow && opponent.userId && surface && playedTime) {
             const opponentUserId = opponent.userId
             startTransition(async () => {
@@ -210,7 +181,6 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                     playedAt,
                     playedTime,
                     surface,
-                    setScores: cleanSets,
                     notes: notes || undefined,
                 })
                 if (res.error) setError(res.error)
@@ -219,12 +189,11 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             return
         }
 
+        const input = buildInput()
         startTransition(async () => {
             const res = initialData
-                // 수정: 기존 한 레코드를 그대로 유지 (모든 세트 포함, winner 자동 판정)
-                ? await updatePersonalMatchAction(initialData.id, { ...base, setScores: cleanSets })
-                // 신규: 모든 세트를 담은 단일 경기 1건으로 저장 (winner는 세트 승수로 자동 판정)
-                : await createPersonalMatchesAction([{ ...base, setScores: cleanSets }])
+                ? await updatePersonalMatchAction(initialData.id, input)
+                : await createPersonalMatchesAction([input])
             if (res.error) {
                 setError(res.error)
             } else {
@@ -233,30 +202,24 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
         })
     }
 
-    // 세트 스코어 우측 라벨 (상대/상대팀 표시 이름)
-    const opponentLabel = opponent.name.trim() || '상대'
-
     // 섹션 카드 제목 — 경기 타입/방식에 따라 동적
     const participantsTitle = isRotation ? '참가자 (나 제외)' : isDoubles ? '참가자' : '상대'
-    const scoreTitle = isRotation ? '게임' : '세트 스코어'
 
     return (
         <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl space-y-5 lg:max-w-5xl">
-            {/* 넓은 화면에서는 2열로 분할해 폼 길이를 줄인다 (좌: 누구와 / 우: 언제·결과) */}
+            {/* 넓은 화면에서는 2열로 분할해 폼 길이를 줄인다 (좌: 누구와 / 우: 언제·어디서) */}
             <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
                 {/* ── 왼쪽 열: 경기 타입 + 참가자 ── */}
                 <div className="space-y-5">
             {/* 01 경기 타입 (인원 입력란을 동적으로 결정하므로 최상단) */}
             <FormSectionCard title="경기 타입" step="01" contentClassName="space-y-4">
-                <div>
-                    <label className={MATCH_FORM_LABEL}>경기 타입 *</label>
-                    <EnumSelect
-                        value={matchType}
-                        onValueChange={setMatchType}
-                        options={MATCH_TYPE_OPTIONS}
-                        ariaLabel="경기 타입"
-                    />
-                </div>
+                <FieldToggle
+                    label="경기 타입"
+                    required
+                    options={MATCH_TYPE_OPTIONS}
+                    value={matchType}
+                    onChange={setMatchType}
+                />
 
                 {/* 복식 신규 등록 시에만 방식 토글 노출 (수정 모드는 단일 레코드라 미지원) */}
                 {isDoubles && !initialData && (
@@ -292,7 +255,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
             </FormSectionCard>
                 </div>
 
-                {/* ── 오른쪽 열: 경기 정보 + 점수 + 메모 ── */}
+                {/* ── 오른쪽 열: 경기 정보 + (로테이션 게임) + 메모 ── */}
                 <div className="space-y-5">
             {/* 03 경기 정보 */}
             <FormSectionCard title="경기 정보" step="03" contentClassName="space-y-4">
@@ -304,11 +267,13 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                     surface={surface}
                     onSurfaceChange={setSurface}
                 />
+                {/* 세트 스코어는 받지 않으므로 결과 미확정 저장을 안내 (로테이션은 게임별 세트를 입력받아 해당 없음) */}
+                {!isRotation && <PendingResultNotice existingSets={initialData?.setScores} />}
             </FormSectionCard>
 
-            {/* 04 세트 스코어 / 게임 */}
-            <FormSectionCard title={scoreTitle} step="04">
-                {isRotation ? (
+            {/* 04 게임 (로테이션 복식 전용 — 게임별 세트 입력은 기존 방식 유지) */}
+            {isRotation && (
+                <FormSectionCard title="게임" step="04">
                     <GameBuilderSection
                         games={rotation.games}
                         pool={rotation.pool}
@@ -321,21 +286,8 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                         onMyAd={rotation.setMyAd}
                         onOppAd={rotation.setOppAd}
                     />
-                ) : (
-                    <SetsSection
-                        sets={sets}
-                        isDoubles={isDoubles}
-                        opponentLabel={opponentLabel}
-                        myAdLabels={{ me: '나', partner: partner.name.trim() || '파트너' }}
-                        oppAdLabels={{ opponent: opponent.name.trim() || '상대1', opponent2: opponent2.name.trim() || '상대2' }}
-                        onAddSet={addSet}
-                        onUpdateSet={updateSet}
-                        onRemoveSet={removeSet}
-                        onMyAd={setMyAd}
-                        onOppAd={setOppAd}
-                    />
-                )}
-            </FormSectionCard>
+                </FormSectionCard>
+            )}
 
             {/* 메모 */}
             <FormSectionCard title="메모" step="선택">
