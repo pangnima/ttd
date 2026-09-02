@@ -1,6 +1,6 @@
 import type { PersonalMatchSetScore, MatchType, CourtSurface } from '@/types'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
-import type { PersonalMatchInput } from '@/lib/actions/personal-matches'
+import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import { isNtrpValid, isPlayerFilled, isSetValid } from './validators'
 
 /**

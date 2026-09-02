@@ -12,9 +12,6 @@ import {
     type PersonalMatchInput,
 } from '@/lib/personal-matches/validate-input'
 
-// 기존 import 경로 호환 (폼 등이 이 모듈에서 타입을 가져간다)
-export type { PersonalMatchInput }
-
 /**
  * insert/update 공통: 단식이면 복식 컬럼을 모두 NULL로, 복식이면 입력값을 매핑한 행 데이터 생성.
  */

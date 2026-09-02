@@ -8,8 +8,8 @@ import type { PastOpponent } from '@/lib/queries/personal-matches'
 import {
     createPersonalMatchesAction,
     updatePersonalMatchAction,
-    type PersonalMatchInput,
 } from '@/lib/actions/personal-matches'
+import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import { createMatchRequestAction } from '@/lib/actions/match-requests'
 import { useUserSearch } from '@/components/personal-matches/use-user-search'
 import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
