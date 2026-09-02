@@ -5,6 +5,7 @@ import type { MatchRequestWithUser } from '@/lib/queries/match-requests'
 import { confirmMatchResultAction, disputeMatchResultAction } from '@/lib/actions/match-results'
 import { invertSetScores } from '@/lib/personal-matches/perspective'
 import { RequestMatchSummary } from '@/components/match-requests/request-match-summary'
+import { RequestTeamLine } from '@/components/match-requests/request-team-line'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -35,6 +36,7 @@ export function ResultConfirmCard({ item, viewerId }: Props) {
                     {counterpart.nickname && (
                         <p className="text-xs text-muted-foreground truncate">{counterpart.nickname}</p>
                     )}
+                    <RequestTeamLine request={request} counterpartName={counterpart.name} viewerIsRequester={request.requesterId === viewerId} />
                 </div>
                 <Button size="sm" className="h-7 text-xs shrink-0" onClick={d.openDialog}>
                     결과 확인

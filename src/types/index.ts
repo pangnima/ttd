@@ -172,6 +172,28 @@ export type PersonalMatchConfirmation = {
     disputeReason?: string
 }
 
+// ── 로테이션(파트너 교체) 복식 세션 (0038) ────────────────────────────
+// 등록 시 선수 풀만 저장하고, 게임(팀 구성+세트)은 카드 '결과 입력'에서 입력해 게임별 personal_matches로 분해된다.
+
+export type RotationPoolPlayer = {
+    userId?: string
+    name: string
+    hand?: 'right' | 'left'
+    ntrp?: number
+}
+
+export type RotationSession = {
+    id: string
+    userId: string
+    playedAt: string        // "2025-04-12"
+    playedTime: string      // "18:30"
+    matchType: MatchType    // 복식 3종
+    surface: CourtSurface
+    notes?: string
+    players: RotationPoolPlayer[]  // 나 제외, 3명 이상
+    createdAt: string
+}
+
 // ── 상호 확인 대진 요청 (회원 간 단식) ────────────────────────────────
 
 export type MatchRequestStatus = 'pending' | 'accepted' | 'rejected' | 'canceled'
@@ -185,13 +207,22 @@ export type MatchRequest = {
     opponentUserId: string
     playedAt: string        // "2025-04-12"
     playedTime: string      // "18:30"
-    matchType: MatchType    // v1은 'singles'만 (DB check)
+    matchType: MatchType    // 단식 + 페어 고정 복식 (로테이션은 확인 요청 불가)
     surface: CourtSurface
     setScores: PersonalMatchSetScore[]  // 요청자 관점. 빈 배열 허용(결과 미확정 요청)
     notes?: string
     status: MatchRequestStatus
     createdAt: string
     respondedAt?: string
+    // ── 복식 전용 (0038): 요청자 파트너 / 상대팀 2번째. opponentUserId는 상대팀 대표 확인자 ──
+    partnerUserId?: string
+    partnerName?: string
+    partnerDominantHand?: 'right' | 'left'
+    partnerNtrp?: number
+    opponent2UserId?: string
+    opponent2Name?: string
+    opponent2DominantHand?: 'right' | 'left'
+    opponent2Ntrp?: number
     // ── 결과 제안/확인 (0037) ──
     resultStatus: MatchResultStatus
     proposedSetScores: PersonalMatchSetScore[]  // 요청자 관점. 표시 시 viewer가 상대면 반전

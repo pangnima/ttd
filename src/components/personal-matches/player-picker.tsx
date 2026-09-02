@@ -7,6 +7,7 @@ import { buildPlayerSuggestionGroups, type PlayerSuggestion } from '@/lib/person
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { PlayerAutocomplete } from '@/components/personal-matches/player-autocomplete'
+import { useUserSearch } from '@/components/personal-matches/use-user-search'
 
 type Hand = 'right' | 'left' | ''
 
@@ -30,9 +31,9 @@ type Props = {
     onChange: (value: PlayerPickerValue, picked?: PlayerSuggestion) => void
     placeholder?: string
     showHand?: boolean
-    // 플랫폼 전체 회원 검색 (선택) — 전달 시 검색어를 위로 올리고 결과를 "전체 회원" 그룹으로 표시
-    searchResults?: OpponentCandidate[]
-    onSearchTermChange?: (term: string) => void
+    // 플랫폼 전체 회원 검색 — 로그인 유저 id를 주면 이 필드 안에서 디바운스 검색해 "전체 회원" 그룹을 붙인다.
+    // 필드마다 독립된 검색 상태를 가지므로 복식 3필드·로테이션 풀 행이 서로 간섭하지 않는다.
+    searchSelfUserId?: string
 }
 
 /**
@@ -42,9 +43,10 @@ type Props = {
  * 손잡이는 항상 노출 — 게스트는 필수, 회원은 프로필 값이 자동 채워지며 수정 가능.
  */
 export function PlayerPicker({
-    label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true,
-    searchResults, onSearchTermChange,
+    label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true, searchSelfUserId,
 }: Props) {
+    const search = useUserSearch(searchSelfUserId)
+    const searchResults = searchSelfUserId ? search.results : undefined
     const groups = useMemo(
         () => buildPlayerSuggestionGroups(value.name, { pastOpponents, candidates, searchResults }),
         [value.name, pastOpponents, candidates, searchResults],
@@ -55,12 +57,12 @@ export function PlayerPicker({
 
     function handleInputChange(name: string) {
         onChange({ userId: undefined, name, hand: value.hand })
-        onSearchTermChange?.(name)
+        if (searchSelfUserId) search.setTerm(name)
     }
 
     function handlePick(item: PlayerSuggestion) {
         onChange({ userId: item.userId, name: item.label, hand: item.hand ?? value.hand }, item)
-        onSearchTermChange?.('')
+        if (searchSelfUserId) search.setTerm('')
     }
 
     return (

@@ -12,7 +12,7 @@ type SetsSectionProps = {
     onAddSet: () => void
     onUpdateSet: (i: number, field: 'me' | 'opp', val: string) => void
     onRemoveSet: (i: number) => void
-    // 복식 애드/듀스 토글 노출 여부 (기본 true). 로테이션 복식은 false.
+    // 복식 애드/듀스 토글 노출 여부 (기본 true). 라벨·핸들러가 모두 있어야 실제로 렌더된다.
     enableAdDeuce?: boolean
     myAdLabels?: { me: string; partner: string }
     oppAdLabels?: { opponent: string; opponent2: string }

@@ -1,0 +1,145 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import type { CourtSurface, MatchType, RotationPoolPlayer } from '@/types'
+import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
+import { isDoublesMatchType, validateSetScores } from '@/lib/personal-matches/validate-input'
+import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
+
+/**
+ * 로테이션(파트너 교체) 복식 세션 — 등록 시 선수 풀만 저장(rotation_sessions),
+ * 게임(팀 구성+세트)은 카드 '결과 입력'에서 finalize RPC로 게임별 personal_matches 행으로 분해한다.
+ * 세션 자체는 어떤 통계에도 잡히지 않는다.
+ */
+
+type ActionResult = { error: string | null }
+
+export type RotationSessionInput = {
+    playedAt: string
+    playedTime: string  // 'HH:MM'
+    matchType: MatchType
+    surface: CourtSurface
+    notes?: string
+    players: RotationPoolPlayer[]  // 나 제외, 3명 이상
+}
+
+const MAX_GAMES = 20
+
+function validatePlayer(p: RotationPoolPlayer): string | null {
+    if (!p.name.trim()) return '참가자 이름을 입력해주세요.'
+    if (!p.userId && !p.hand) return '비회원 참가자는 손잡이를 선택해주세요.'
+    if (p.hand != null && !['right', 'left'].includes(p.hand)) return '손잡이 값이 올바르지 않습니다.'
+    if (p.ntrp != null && (!Number.isFinite(p.ntrp) || p.ntrp < 1 || p.ntrp > 7)) return 'NTRP는 1.0~7.0 범위로 입력해주세요.'
+    return null
+}
+
+function cleanPlayer(p: RotationPoolPlayer): RotationPoolPlayer {
+    return {
+        name: p.name.trim(),
+        ...(p.userId ? { userId: p.userId } : {}),
+        ...(p.hand ? { hand: p.hand } : {}),
+        ...(p.ntrp != null ? { ntrp: p.ntrp } : {}),
+    }
+}
+
+export async function createRotationSessionAction(input: RotationSessionInput): Promise<ActionResult> {
+    if (!isDoublesMatchType(input.matchType)) return { error: '로테이션은 복식에서만 등록할 수 있습니다.' }
+    if (!input.playedAt) return { error: '경기 날짜를 입력해주세요.' }
+    if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return { error: '경기 시각을 입력해주세요.' }
+    if (!input.surface) return { error: '코트 표면을 선택해주세요.' }
+    if (input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
+    for (const p of input.players) {
+        const err = validatePlayer(p)
+        if (err) return { error: err }
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.from('rotation_sessions').insert({
+        user_id: user.id,
+        played_at: input.playedAt,
+        played_time: input.playedTime,
+        match_type: input.matchType,
+        surface: input.surface,
+        notes: input.notes?.trim() || null,
+        players: input.players.map(cleanPlayer),
+    })
+    if (error) return { error: '로테이션 세션 저장에 실패했습니다.' }
+
+    revalidatePath('/me/personal-matches')
+    return { error: null }
+}
+
+export async function deleteRotationSessionAction(id: string): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { data, error } = await supabase
+        .from('rotation_sessions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select('id')
+    if (error) return { error: '세션 삭제에 실패했습니다.' }
+    if (!data?.length) return { error: '이미 삭제되었거나 존재하지 않는 세션입니다.' }
+
+    revalidatePath('/me/personal-matches')
+    return { error: null }
+}
+
+/** RPC가 raise하는 식별자 → 사용자 안내 문구 */
+const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
+    ['session_not_found', '이미 처리되었거나 존재하지 않는 세션입니다.'],
+    ['invalid_games', '게임 구성을 확인해주세요. (파트너·상대1·상대2 필수)'],
+    ['invalid_set_scores', '세트 스코어를 올바르게 입력해주세요.'],
+]
+
+/** 게임별 personal_matches 행으로 분해 저장 + 세션 삭제 (RPC 한 트랜잭션) */
+export async function finalizeRotationSessionAction(
+    sessionId: string,
+    games: RotationGamePayload[],
+): Promise<ActionResult> {
+    if (games.length < 1) return { error: '게임을 1개 이상 추가해주세요.' }
+    if (games.length > MAX_GAMES) return { error: `게임은 최대 ${MAX_GAMES}개까지 등록할 수 있습니다.` }
+    for (const g of games) {
+        for (const p of [g.partner, g.opp1, g.opp2]) {
+            const err = validatePlayer(p)
+            if (err) return { error: err }
+        }
+        const setError = validateSetScores(g.sets)
+        if (setError) return { error: setError }
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const payload = games.map((g) => ({
+        partner: cleanPlayer(g.partner),
+        opp1: cleanPlayer(g.opp1),
+        opp2: cleanPlayer(g.opp2),
+        sets: g.sets.map((s) => ({
+            me: s.me,
+            opp: s.opp,
+            ...(s.myAd ? { myAd: s.myAd } : {}),
+            ...(s.oppAd ? { oppAd: s.oppAd } : {}),
+        })),
+    }))
+    const { error } = await supabase.rpc('finalize_rotation_session', {
+        p_session_id: sessionId,
+        p_games: payload,
+    })
+    if (error) {
+        const known = FINALIZE_ERROR_MESSAGES.find(([key]) => error.message.includes(key))
+        return { error: known ? known[1] : '게임 저장에 실패했습니다.' }
+    }
+
+    await recomputePersonalNtrp(user.id)
+    revalidatePath('/me/personal-matches')
+    revalidatePath('/me/analytics')
+    return { error: null }
+}

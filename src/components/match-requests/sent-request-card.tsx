@@ -6,6 +6,7 @@ import type { MatchRequestWithUser } from '@/lib/queries/match-requests'
 import { cancelMatchRequestAction } from '@/lib/actions/match-requests'
 import { RequestMatchSummary } from '@/components/match-requests/request-match-summary'
 import { RequestStatusBadge } from '@/components/match-requests/request-status-badge'
+import { RequestTeamLine } from '@/components/match-requests/request-team-line'
 
 type Props = { item: MatchRequestWithUser }
 
@@ -34,6 +35,7 @@ export function SentRequestCard({ item }: Props) {
                         {counterpart.nickname && (
                             <p className="text-xs text-muted-foreground truncate">{counterpart.nickname}</p>
                         )}
+                        <RequestTeamLine request={request} counterpartName={counterpart.name} viewerIsRequester />
                     </div>
                     <RequestStatusBadge status={request.status} />
                 </div>

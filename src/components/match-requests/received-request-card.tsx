@@ -7,6 +7,7 @@ import { acceptMatchRequestAction, rejectMatchRequestAction } from '@/lib/action
 import { invertSetScores } from '@/lib/personal-matches/perspective'
 import { RequestMatchSummary } from '@/components/match-requests/request-match-summary'
 import { RequestStatusBadge } from '@/components/match-requests/request-status-badge'
+import { RequestTeamLine } from '@/components/match-requests/request-team-line'
 
 type Props = { item: MatchRequestWithUser }
 
@@ -34,6 +35,7 @@ export function ReceivedRequestCard({ item }: Props) {
                     {counterpart.nickname && (
                         <p className="text-xs text-muted-foreground truncate">{counterpart.nickname}</p>
                     )}
+                    <RequestTeamLine request={request} counterpartName={counterpart.name} viewerIsRequester={false} />
                 </div>
                 {request.status === 'pending' && !counterpart.deleted ? (
                     <div className="flex gap-1.5 shrink-0">

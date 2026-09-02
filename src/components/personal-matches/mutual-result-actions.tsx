@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import {
     confirmMatchResultAction, disputeMatchResultAction, proposeMatchResultAction,
 } from '@/lib/actions/match-results'
+import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -19,11 +20,14 @@ const WAITING_BADGE = 'text-xs px-1.5 py-0.5 rounded-sm border border-dashed bor
  *  - none/disputed: [결과 입력] → propose (disputed면 사유 표시)
  *  - proposed & 내 제안: '상대 확인 대기' + [제안 수정]
  *  - proposed & 상대 제안: [결과 확인] → review (확인/이의)
+ * 복식은 상대팀 대표 1명과 주고받으며, 세트별 애드/듀스도 제안에 포함된다.
  */
 export function MutualResultActions({ match }: Props) {
     const d = useResultDialog()
     const c = match.confirmation
     const requestId = match.sourceRequestId
+    const opponentName = formatOpponents(match)
+    const teams = formatTeams(match)
 
     if (match.winner !== null || !c || !requestId || c.status === 'confirmed') {
         return (
@@ -58,8 +62,9 @@ export function MutualResultActions({ match }: Props) {
                     mode="review"
                     open={d.open}
                     onOpenChange={d.setOpen}
-                    opponentName={match.opponentName}
+                    opponentName={opponentName}
                     title="경기 결과 확인"
+                    description={teams}
                     proposedSets={c.proposedSets}
                     onConfirm={() => d.run(() => confirmMatchResultAction(requestId))}
                     onDispute={(reason) => d.run(() => disputeMatchResultAction(requestId, reason))}
@@ -71,14 +76,15 @@ export function MutualResultActions({ match }: Props) {
                     mode="propose"
                     open={d.open}
                     onOpenChange={d.setOpen}
-                    opponentName={match.opponentName}
+                    opponentName={opponentName}
                     title={editingOwn ? '제안 결과 수정' : '경기 결과 입력'}
                     description={
                         c.status === 'disputed' && c.disputeReason
-                            ? `상대 이의 사유: ${c.disputeReason}`
-                            : `vs ${match.opponentName} · 저장하면 상대에게 확인을 요청합니다`
+                            ? `${teams} · 상대 이의 사유: ${c.disputeReason}`
+                            : `${teams} · 저장하면 상대에게 확인을 요청합니다`
                     }
                     initialSets={c.proposedSets.length > 0 ? c.proposedSets : undefined}
+                    adLabels={buildAdLabels(match)}
                     submitLabel="확인 요청"
                     onSubmit={(sets) => d.run(() => proposeMatchResultAction(requestId, sets))}
                     isPending={d.isPending}

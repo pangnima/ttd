@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import type { PersonalMatchSetScore } from '@/types'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
-import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import {
-    buildRotationInputs,
-    validateRotation,
+    buildRotationGamePayloads,
+    validateRotationGames,
+    validateRotationPool,
     type PoolPlayer,
     type RotationGame,
+    type RotationGamePayload,
     type RotationSessionMeta,
 } from '@/lib/personal-matches/rotation'
 
@@ -24,11 +25,14 @@ function emptyPoolPlayer(): PoolPlayer {
 
 /**
  * 로테이션 복식 입력 상태(선수 풀 + 게임 배열)와 핸들러를 관리하는 훅.
+ * 등록 폼은 풀만 쓰고(세션 저장), 결과 입력 Dialog는 세션의 풀을 initialPool로 받아 게임을 구성한다.
  * 순수 매핑/검증은 lib/personal-matches/rotation.ts에 위임한다.
  */
-export function useRotationGames() {
+export function useRotationGames(initialPool?: PoolPlayer[]) {
     // 로테이션은 최소 3명이 필요하므로 기본 3칸을 비워둔 채 시작한다.
-    const [pool, setPool] = useState<PoolPlayer[]>(() => [emptyPoolPlayer(), emptyPoolPlayer(), emptyPoolPlayer()])
+    const [pool, setPool] = useState<PoolPlayer[]>(
+        () => initialPool ?? [emptyPoolPlayer(), emptyPoolPlayer(), emptyPoolPlayer()],
+    )
     const [games, setGames] = useState<RotationGame[]>([])
 
     // ── 풀 핸들러 ──
@@ -55,7 +59,7 @@ export function useRotationGames() {
     function addGame() {
         setGames((prev) => [
             ...prev,
-            { tempId: uid(), partnerRef: null, opp1Ref: null, opp2Ref: null, sets: [{ me: 0, opp: 0 }] },
+            { tempId: uid(), partnerRef: null, opp1Ref: null, opp2Ref: null, sets: [{ me: NaN, opp: NaN }] },
         ])
     }
     function updateGame(tempId: string, patch: Partial<Omit<RotationGame, 'tempId'>>) {
@@ -70,7 +74,7 @@ export function useRotationGames() {
         setGames((prev) => prev.map((g) => (g.tempId === tempId ? { ...g, sets: updater(g.sets) } : g)))
     }
     function addSet(gameId: string) {
-        updateGameSets(gameId, (sets) => [...sets, { me: 0, opp: 0 }])
+        updateGameSets(gameId, (sets) => [...sets, { me: NaN, opp: NaN }])
     }
     function removeSet(gameId: string, i: number) {
         updateGameSets(gameId, (sets) => sets.filter((_, idx) => idx !== i))
@@ -95,11 +99,12 @@ export function useRotationGames() {
         updateGameSets(gameId, (sets) => sets.map((s, idx) => (idx === i ? { ...s, oppAd: v } : s)))
     }
 
-    function isValid(meta: RotationSessionMeta): boolean {
-        return validateRotation(pool, games, meta)
+    function isPoolValid(meta: RotationSessionMeta): boolean {
+        return validateRotationPool(pool, meta)
     }
-    function buildInputs(meta: RotationSessionMeta): PersonalMatchInput[] {
-        return buildRotationInputs(meta, games, pool)
+    const isGamesValid = validateRotationGames(pool, games)
+    function buildPayloads(): RotationGamePayload[] {
+        return buildRotationGamePayloads(games, pool)
     }
 
     return {
@@ -107,6 +112,6 @@ export function useRotationGames() {
         addPoolPlayer, updatePoolPlayer, removePoolPlayer,
         addGame, updateGame, removeGame,
         addSet, removeSet, updateSet, setMyAd, setOppAd,
-        isValid, buildInputs,
+        isPoolValid, isGamesValid, buildPayloads,
     }
 }

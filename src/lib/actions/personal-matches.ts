@@ -179,8 +179,13 @@ export async function updatePersonalMatchSetsAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    // 결과 등록 Dialog는 애드/듀스를 받지 않으므로 me/opp만 저장한다
-    const cleanSets = sets.map((s) => ({ me: s.me, opp: s.opp }))
+    // me/opp + (복식) 세트별 애드/듀스만 저장 — doubles-court 통계가 setScores[].myAd를 읽는다
+    const cleanSets = sets.map((s) => ({
+        me: s.me,
+        opp: s.opp,
+        ...(s.myAd ? { myAd: s.myAd } : {}),
+        ...(s.oppAd ? { oppAd: s.oppAd } : {}),
+    }))
     const { data: updated, error } = await supabase
         .from('personal_matches')
         .update({ set_scores: cleanSets, winner: resolveMatchWinner(cleanSets) })

@@ -13,12 +13,15 @@ type PlayerPoolSectionProps = {
     onAdd: () => void
     onUpdate: (tempId: string, patch: Partial<Omit<PoolPlayer, 'tempId'>>) => void
     onRemove: (tempId: string) => void
+    // 전체 회원 검색 활성화 (로그인 유저 id)
+    searchSelfUserId?: string
 }
 
 /**
- * 로테이션 참가자 풀 입력 — 나를 제외한 함께 친 선수들을 한 번씩 등록한다(게임에서 재사용).
+ * 로테이션 참가자 풀 입력 — 나를 제외한 함께 친 선수들을 한 번씩 등록한다.
+ * 게임(팀 구성·스코어)은 저장 후 카드의 '결과 입력'에서 이 풀을 참조해 만든다.
  */
-export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUpdate, onRemove }: PlayerPoolSectionProps) {
+export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUpdate, onRemove, searchSelfUserId }: PlayerPoolSectionProps) {
     return (
         <div className="space-y-4">
             {pool.length === 0 && (
@@ -36,6 +39,7 @@ export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUp
                         onChange={(patch) => onUpdate(p.tempId, patch)}
                         onRemove={() => onRemove(p.tempId)}
                         canRemove
+                        searchSelfUserId={searchSelfUserId}
                     />
                 ))}
             </div>

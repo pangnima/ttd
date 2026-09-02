@@ -2,6 +2,7 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
+import type { NtrpField } from '@/lib/personal-matches/validate-input'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 
@@ -20,11 +21,10 @@ type PlayersSectionProps = {
     opponent: PlayerFieldState
     partner: PlayerFieldState
     opponent2: PlayerFieldState
-    // 단식 상대 전용: 전체 회원 검색 (상호 확인 요청 대상 지정)
-    opponentSearchResults?: OpponentCandidate[]
-    onOpponentSearchTermChange?: (term: string) => void
-    // 상호 확인 플로우 — 상대 NTRP는 수락 시 서버 파생이므로 입력란 숨김
-    hideOpponentNtrp?: boolean
+    // 로그인 유저 id — 전달 시 모든 선수 필드에 플랫폼 전체 회원 검색 활성화 (상호 확인 요청 대상 지정)
+    searchSelfUserId?: string
+    // 상호 확인 플로우 — 회원 참가자의 NTRP는 수락 시 서버 파생이므로 해당 필드 입력란 숨김
+    hideNtrpFor?: NtrpField[]
 }
 
 /**
@@ -32,26 +32,26 @@ type PlayersSectionProps = {
  * 단식은 상대 1명, 복식은 내 팀(파트너) + 상대팀(상대1·상대2) 박스로 구성한다.
  */
 export function PlayersSection({
-    isDoubles, candidates, pastOpponents, opponent, partner, opponent2,
-    opponentSearchResults, onOpponentSearchTermChange, hideOpponentNtrp,
+    isDoubles, candidates, pastOpponents, opponent, partner, opponent2, searchSelfUserId, hideNtrpFor = [],
 }: PlayersSectionProps) {
+    const field = (label: string, s: PlayerFieldState, key: NtrpField, placeholder: string, ntrpRequired: boolean) => (
+        <PlayerNtrpField
+            label={label}
+            candidates={candidates}
+            pastOpponents={pastOpponents}
+            player={s.player}
+            onPlayerChange={s.onPlayerChange}
+            ntrp={s.ntrp}
+            onNtrpChange={s.onNtrpChange}
+            ntrpRequired={ntrpRequired}
+            placeholder={placeholder}
+            searchSelfUserId={searchSelfUserId}
+            hideNtrp={hideNtrpFor.includes(key)}
+        />
+    )
+
     if (!isDoubles) {
-        return (
-            <PlayerNtrpField
-                label="상대 *"
-                candidates={candidates}
-                pastOpponents={pastOpponents}
-                player={opponent.player}
-                onPlayerChange={opponent.onPlayerChange}
-                ntrp={opponent.ntrp}
-                onNtrpChange={opponent.onNtrpChange}
-                ntrpRequired
-                placeholder="상대방 이름 또는 닉네임"
-                searchResults={opponentSearchResults}
-                onSearchTermChange={onOpponentSearchTermChange}
-                hideNtrp={hideOpponentNtrp}
-            />
-        )
+        return field('상대 *', opponent, 'opponent', '상대방 이름 또는 닉네임', true)
     }
     return (
         <div>
@@ -61,50 +61,19 @@ export function PlayersSection({
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
                     <span className="text-xs text-muted-foreground">나 + 파트너</span>
                 </div>
-                <PlayerNtrpField
-                    label="내 파트너 *"
-                    candidates={candidates}
-                    pastOpponents={pastOpponents}
-                    player={partner.player}
-                    onPlayerChange={partner.onPlayerChange}
-                    ntrp={partner.ntrp}
-                    onNtrpChange={partner.onNtrpChange}
-                    placeholder="파트너 이름 또는 닉네임"
-                />
+                {field('내 파트너 *', partner, 'partner', '파트너 이름 또는 닉네임', false)}
             </div>
 
-            {/* 상대팀 선수 1 (상대1 + 상대2) */}
+            {/* 상대팀 (상대1 + 상대2) */}
             <div className="mt-6 border-t border-border pt-6 space-y-3">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
-                    <span className="text-xs text-muted-foreground">상대1 + 상대2</span>
+                    <span className="text-xs text-muted-foreground">상대1 + 상대2 · 회원이 있으면 그 사람이 대표로 확인합니다</span>
                 </div>
-                <PlayerNtrpField
-                    label="상대팀 선수 1 *"
-                    candidates={candidates}
-                    pastOpponents={pastOpponents}
-                    player={opponent.player}
-                    onPlayerChange={opponent.onPlayerChange}
-                    ntrp={opponent.ntrp}
-                    onNtrpChange={opponent.onNtrpChange}
-                    ntrpRequired
-                    placeholder="상대방 이름 또는 닉네임"
-                />
+                {field('상대팀 선수 1 *', opponent, 'opponent', '상대방 이름 또는 닉네임', true)}
             </div>
-
-            {/* 상대팀 선수 2 */}
             <div className="mt-6 border-t border-border pt-6">
-                <PlayerNtrpField
-                    label="상대팀 선수 2 *"
-                    candidates={candidates}
-                    pastOpponents={pastOpponents}
-                    player={opponent2.player}
-                    onPlayerChange={opponent2.onPlayerChange}
-                    ntrp={opponent2.ntrp}
-                    onNtrpChange={opponent2.onNtrpChange}
-                    ntrpRequired
-                    placeholder="상대방 이름 또는 닉네임"
-                />
+                {field('상대팀 선수 2 *', opponent2, 'opponent2', '상대방 이름 또는 닉네임', true)}
             </div>
         </div>
     )

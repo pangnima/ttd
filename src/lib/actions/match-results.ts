@@ -55,8 +55,13 @@ export async function proposeMatchResultAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    // RPC가 me/opp 정수만 남기고 정규화하므로 여분 키(myAd 등)는 보내지 않는다
-    const payload = sets.map((s) => ({ me: s.me, opp: s.opp }))
+    // me/opp + (복식) 세트별 애드/듀스만 전달 — RPC가 정규화하며 단식이면 애드 키를 버린다
+    const payload = sets.map((s) => ({
+        me: s.me,
+        opp: s.opp,
+        ...(s.myAd ? { myAd: s.myAd } : {}),
+        ...(s.oppAd ? { oppAd: s.oppAd } : {}),
+    }))
     const { error } = await supabase.rpc('propose_match_result', {
         p_request_id: requestId,
         p_set_scores: payload,

@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
+import { fetchRotationSessionsByUser } from '@/lib/queries/rotation-sessions'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
+import { RotationSessionList } from '@/components/personal-matches/rotation-session-list'
 import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { PageContainer } from '@/components/common/page-container'
 
@@ -13,7 +15,10 @@ export default async function PersonalMatchesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const matches = await fetchPersonalMatchesWithConfirmation(user.id)
+    const [matches, sessions] = await Promise.all([
+        fetchPersonalMatchesWithConfirmation(user.id),
+        fetchRotationSessionsByUser(user.id),
+    ])
 
     return (
         <PageContainer>
@@ -30,7 +35,10 @@ export default async function PersonalMatchesPage() {
                 </Link>
             </div>
 
-            {matches.length === 0 ? (
+            {/* 로테이션 세션(게임 미입력)은 통계 밖이므로 목록 위 별도 섹션 */}
+            <RotationSessionList sessions={sessions} />
+
+            {matches.length === 0 && sessions.length === 0 ? (
                 <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>
                     {/* 정적 SVG 장식 (내 전적 > 개인 빈 상태와 통일) */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -42,9 +50,9 @@ export default async function PersonalMatchesPage() {
                         </Link>
                     </span>
                 </div>
-            ) : (
+            ) : matches.length > 0 ? (
                 <PersonalMatchList matches={matches} />
-            )}
+            ) : null}
         </PageContainer>
     )
 }

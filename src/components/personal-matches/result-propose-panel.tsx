@@ -1,6 +1,7 @@
 'use client'
 
 import type { PersonalMatchSetScore } from '@/types'
+import type { AdLabels } from '@/lib/personal-matches/labels'
 import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
 import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
@@ -8,20 +9,23 @@ import { SetScoreChips } from '@/components/personal-matches/set-score-chips'
 import { useSetScores, MAX_SETS } from '@/components/personal-matches/use-set-scores'
 
 type Props = {
-    opponentName: string
+    opponentName: string  // 단식 상대 또는 "상대1 · 상대2"
     initialSets?: PersonalMatchSetScore[]
     onSubmit: (sets: PersonalMatchSetScore[]) => void
     isPending: boolean
     error: string | null
     submitLabel?: string
+    // 복식: 세트별 애드(백핸드) 코트 토글 노출용 라벨. 단식이면 undefined
+    adLabels?: AdLabels
 }
 
 /**
  * 결과 등록 Dialog의 입력 패널 — 세트 추가/삭제 + 실시간 결과 미리보기 + 저장.
- * 세트 입력 부품(SetsSection/SetScoreRow)은 로테이션 복식과 공유한다. 단식 관점(나 vs 상대)으로만 받는다.
+ * 세트 입력 부품(SetsSection/SetScoreRow)은 로테이션 게임 빌더와 공유한다.
+ * 복식이면 adLabels로 세트별 애드/듀스 토글이 켜진다(doubles-court 통계 입력).
  */
 export function ResultProposePanel({
-    opponentName, initialSets, onSubmit, isPending, error, submitLabel = '결과 저장',
+    opponentName, initialSets, onSubmit, isPending, error, submitLabel = '결과 저장', adLabels,
 }: Props) {
     const s = useSetScores(initialSets)
 
@@ -29,12 +33,16 @@ export function ResultProposePanel({
         <div className="space-y-4">
             <SetsSection
                 sets={s.sets}
-                isDoubles={false}
+                isDoubles={!!adLabels}
                 opponentLabel={opponentName}
-                enableAdDeuce={false}
+                enableAdDeuce={!!adLabels}
+                myAdLabels={adLabels?.myAdLabels}
+                oppAdLabels={adLabels?.oppAdLabels}
                 onAddSet={s.addSet}
                 onUpdateSet={s.updateSet}
                 onRemoveSet={s.removeSet}
+                onMyAd={adLabels ? s.setMyAd : undefined}
+                onOppAd={adLabels ? s.setOppAd : undefined}
             />
             {!s.canAdd && (
                 <p className="text-xs text-muted-foreground">세트는 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>

@@ -7,6 +7,7 @@ import {
     formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
 } from '@/lib/dashboard/outcome'
 import { resolveSetWinner } from '@/lib/personal-matches/winner'
+import { formatOpponents } from '@/lib/personal-matches/labels'
 
 type Props = {
     match: PersonalMatch
@@ -30,7 +31,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
     const [, mm, dd] = m.playedAt.split('-')
     const result = RESULT[m.winner ?? 'pending']
     const isDoubles = m.matchType !== 'singles'
-    const opponentLabel = m.opponent2Name ? `${m.opponentName} · ${m.opponent2Name}` : m.opponentName
+    const opponentLabel = formatOpponents(m)
 
     // 세트(게임) 전적 집계
     const tally = m.setScores.reduce(

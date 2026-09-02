@@ -14,13 +14,15 @@ type PoolPlayerRowProps = {
     onChange: (patch: Partial<Omit<PoolPlayer, 'tempId'>>) => void
     onRemove: () => void
     canRemove: boolean
+    // 전체 회원 검색 활성화 (로그인 유저 id)
+    searchSelfUserId?: string
 }
 
 /**
- * 선수 풀의 한 항목 — 이름 선택(PlayerNtrpField 재사용) + NTRP. 삭제 버튼.
- * NTRP는 로테이션에서 상대 역할로 쓰일 수 있어 필수로 표시한다.
+ * 선수 풀의 한 항목 — 이름 선택(PlayerNtrpField 재사용, 회원 선택 시 손잡이·NTRP 자동 채움) + NTRP. 삭제 버튼.
+ * NTRP는 게임에서 상대 역할일 때 필수가 되므로 미리 입력을 권장한다.
  */
-export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChange, onRemove, canRemove }: PoolPlayerRowProps) {
+export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChange, onRemove, canRemove, searchSelfUserId }: PoolPlayerRowProps) {
     return (
         <div className={cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6')}>
             <div className="flex items-center justify-between">
@@ -41,6 +43,7 @@ export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChang
                 onNtrpChange={(n) => onChange({ ntrp: n })}
                 ntrpRequired
                 placeholder="이름 또는 닉네임"
+                searchSelfUserId={searchSelfUserId}
             />
         </div>
     )

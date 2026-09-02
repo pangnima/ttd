@@ -47,7 +47,7 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
             <div>
                 <h1 className={`${SECTION_LABEL} text-2xl`}>경기 확인 요청</h1>
                 <p className="text-sm text-muted-foreground mt-1 break-keep">
-                    회원 간 단식 경기는 상대가 수락하면 양쪽 전적에 함께 기록됩니다
+                    회원 간 경기(단식·페어 고정 복식)는 상대가 수락하면 양쪽 전적에 함께 기록됩니다
                 </p>
             </div>
 

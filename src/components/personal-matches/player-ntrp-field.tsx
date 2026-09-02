@@ -16,11 +16,10 @@ type Props = {
     onNtrpChange: (v: string) => void
     ntrpRequired?: boolean
     placeholder?: string
-    // 상호 확인 요청 플로우 — 상대 NTRP는 수락 시 서버가 파생하므로 입력란을 숨긴다
+    // 상호 확인 요청 플로우 — 회원 참가자의 NTRP는 수락 시 서버가 파생하므로 입력란을 숨긴다
     hideNtrp?: boolean
     // 플랫폼 전체 회원 검색 (선택) — PlayerPicker로 그대로 전달
-    searchResults?: OpponentCandidate[]
-    onSearchTermChange?: (term: string) => void
+    searchSelfUserId?: string
 }
 
 /**
@@ -39,8 +38,7 @@ export function PlayerNtrpField({
     ntrpRequired = false,
     placeholder,
     hideNtrp = false,
-    searchResults,
-    onSearchTermChange,
+    searchSelfUserId,
 }: Props) {
     function handlePlayerChange(next: PlayerPickerValue, picked?: PlayerSuggestion) {
         onPlayerChange(next)
@@ -56,8 +54,7 @@ export function PlayerNtrpField({
                 value={player}
                 onChange={handlePlayerChange}
                 placeholder={placeholder}
-                searchResults={searchResults}
-                onSearchTermChange={onSearchTermChange}
+                searchSelfUserId={searchSelfUserId}
             />
             {!hideNtrp && (
                 <div>

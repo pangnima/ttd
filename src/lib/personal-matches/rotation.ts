@@ -1,4 +1,4 @@
-import type { PersonalMatchSetScore, MatchType, CourtSurface } from '@/types'
+import type { PersonalMatchSetScore, MatchType, CourtSurface, RotationPoolPlayer } from '@/types'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import { isNtrpValid, isPlayerFilled, isSetValid } from './validators'
@@ -6,7 +6,8 @@ import { isNtrpValid, isPlayerFilled, isSetValid } from './validators'
 /**
  * 로테이션(아메리칸) 복식: 4명 이상이 파트너를 바꿔가며 여러 게임을 치는 경기.
  * 각 게임은 파트너·상대 구성이 달라 독립된 경기이므로 게임마다 별도 레코드로 저장한다.
- * 선수는 풀(PoolPlayer)에 한 번만 등록하고, 게임은 풀 항목을 tempId로 참조한다.
+ * 등록 시에는 선수 풀만 세션(rotation_sessions)으로 저장하고, 게임은 카드 '결과 입력'에서
+ * 풀 항목을 tempId로 참조해 구성한 뒤 finalize RPC로 분해한다.
  */
 
 export type PoolPlayer = {
@@ -32,6 +33,14 @@ export type RotationSessionMeta = {
     notes: string
 }
 
+// finalize RPC 페이로드 (게임 1건): 풀 항목을 직렬화한 선수 3명 + 세트
+export type RotationGamePayload = {
+    partner: RotationPoolPlayer
+    opp1: RotationPoolPlayer
+    opp2: RotationPoolPlayer
+    sets: PersonalMatchSetScore[]
+}
+
 function poolById(pool: PoolPlayer[], ref: string | null): PoolPlayer | undefined {
     return ref ? pool.find((p) => p.tempId === ref) : undefined
 }
@@ -43,6 +52,39 @@ function handOf(p: PlayerPickerValue): 'right' | 'left' | undefined {
 
 function ntrpNum(ntrp: string): number | undefined {
     return ntrp.trim() ? Number(ntrp) : undefined
+}
+
+function cleanSets(sets: PersonalMatchSetScore[]): PersonalMatchSetScore[] {
+    return sets.map((s) => ({
+        me: Number.isNaN(s.me) ? 0 : s.me,
+        opp: Number.isNaN(s.opp) ? 0 : s.opp,
+        ...(s.myAd ? { myAd: s.myAd } : {}),
+        ...(s.oppAd ? { oppAd: s.oppAd } : {}),
+    }))
+}
+
+// ── 풀 ↔ 세션 players(jsonb) 직렬화 ──
+
+export function poolPlayerToJson(p: PoolPlayer): RotationPoolPlayer {
+    return {
+        userId: p.player.userId,
+        name: p.player.name.trim(),
+        hand: handOf(p.player),
+        ntrp: ntrpNum(p.ntrp),
+    }
+}
+
+export function poolToPlayers(pool: PoolPlayer[]): RotationPoolPlayer[] {
+    return pool.map(poolPlayerToJson)
+}
+
+/** 세션 players → 편집용 풀 (tempId 재부여). makeId는 테스트에서 결정적 id를 주입하기 위한 훅. */
+export function playersToPool(players: RotationPoolPlayer[], makeId: () => string = () => crypto.randomUUID()): PoolPlayer[] {
+    return players.map((p) => ({
+        tempId: makeId(),
+        player: { userId: p.userId, name: p.name, hand: p.hand ?? '' },
+        ntrp: p.ntrp != null ? String(p.ntrp) : '',
+    }))
 }
 
 /**
@@ -58,12 +100,6 @@ export function rotationGameToInput(
     const partner = poolById(pool, game.partnerRef)
     const opp1 = poolById(pool, game.opp1Ref)
     const opp2 = poolById(pool, game.opp2Ref)
-    const cleanSets = game.sets.map((s) => ({
-        me: Number.isNaN(s.me) ? 0 : s.me,
-        opp: Number.isNaN(s.opp) ? 0 : s.opp,
-        ...(s.myAd ? { myAd: s.myAd } : {}),
-        ...(s.oppAd ? { oppAd: s.oppAd } : {}),
-    }))
     return {
         opponentName: opp1?.player.name.trim() ?? '',
         opponentUserId: opp1?.player.userId,
@@ -81,7 +117,7 @@ export function rotationGameToInput(
         playedTime: meta.playedTime || undefined,
         matchType: meta.matchType,
         surface: meta.surface || undefined,
-        setScores: cleanSets,
+        setScores: cleanSets(game.sets),
         notes: meta.notes || undefined,
     }
 }
@@ -94,24 +130,40 @@ export function buildRotationInputs(
     return games.map((g) => rotationGameToInput(meta, g, pool))
 }
 
+/** finalize RPC 페이로드 — 검증(validateRotationGames)을 통과한 게임만 넘긴다. */
+export function buildRotationGamePayloads(games: RotationGame[], pool: PoolPlayer[]): RotationGamePayload[] {
+    return games.map((g) => {
+        const partner = poolById(pool, g.partnerRef)
+        const opp1 = poolById(pool, g.opp1Ref)
+        const opp2 = poolById(pool, g.opp2Ref)
+        const empty: RotationPoolPlayer = { name: '' }
+        return {
+            partner: partner ? poolPlayerToJson(partner) : empty,
+            opp1: opp1 ? poolPlayerToJson(opp1) : empty,
+            opp2: opp2 ? poolPlayerToJson(opp2) : empty,
+            sets: cleanSets(g.sets),
+        }
+    })
+}
+
 /**
- * 로테이션 입력 전체 유효성. 저장 버튼 활성화 판단에 쓴다.
- * - 공통 메타(날짜·시각·표면) 입력
- * - 풀 3명 이상, 각 풀 항목 선수 입력 완료
- * - 게임 1개 이상, 각 게임 파트너/상대2 ref가 풀에 실존하고 서로 중복 없음
- * - 상대1·상대2 NTRP 필수, 파트너 NTRP 선택(입력 시 유효)
- * - 각 게임 세트 유효
+ * 세션 등록 단계 검증 — 공통 메타(날짜·시각·표면) + 풀 3명 이상, 각 풀 항목 선수 입력 완료.
+ * NTRP는 게임에서 상대 역할일 때만 필수이므로 등록 단계에서는 입력 시에만 범위를 본다.
  */
-export function validateRotation(
-    pool: PoolPlayer[],
-    games: RotationGame[],
-    meta: RotationSessionMeta,
-): boolean {
+export function validateRotationPool(pool: PoolPlayer[], meta: RotationSessionMeta): boolean {
     if (!meta.playedAt || !meta.playedTime || !meta.surface) return false
     if (pool.length < 3) return false
     if (!pool.every((p) => isPlayerFilled(p.player))) return false
-    if (games.length < 1) return false
+    if (!pool.every((p) => p.ntrp.trim() === '' || isNtrpValid(p.ntrp))) return false
+    return true
+}
 
+/**
+ * 게임 단계 검증 — 게임 1개 이상, 각 게임 파트너/상대 ref가 풀에 실존하고 서로 중복 없음,
+ * 상대1·상대2 NTRP 필수, 파트너 NTRP 선택(입력 시 유효), 각 게임 세트 유효.
+ */
+export function validateRotationGames(pool: PoolPlayer[], games: RotationGame[]): boolean {
+    if (games.length < 1) return false
     for (const g of games) {
         const refs = [g.partnerRef, g.opp1Ref, g.opp2Ref]
         if (refs.some((r) => r === null)) return false
@@ -128,4 +180,9 @@ export function validateRotation(
         if (g.sets.length < 1 || !g.sets.every(isSetValid)) return false
     }
     return true
+}
+
+/** 풀 + 게임 전체 유효성 (등록 폼에서 게임까지 한 번에 저장하던 구 경로·테스트 호환). */
+export function validateRotation(pool: PoolPlayer[], games: RotationGame[], meta: RotationSessionMeta): boolean {
+    return validateRotationPool(pool, meta) && validateRotationGames(pool, games)
 }

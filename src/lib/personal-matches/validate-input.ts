@@ -39,9 +39,11 @@ function isValidScore(n: number): boolean {
     return Number.isInteger(n) && n >= 0 && n <= 99
 }
 
+export type NtrpField = 'opponent' | 'partner' | 'opponent2'
+
 type ValidateOptions = {
-    // 상호 확인 요청은 상대 NTRP를 수락 시 서버(RPC)가 파생하므로 입력 검증을 건너뛴다.
-    skipNtrp?: boolean
+    // 상호 확인 요청은 회원 참가자의 NTRP를 수락 시 서버(RPC)가 파생하므로 해당 필드 검증을 건너뛴다.
+    skipNtrpFor?: NtrpField[]
 }
 
 export function validatePersonalMatchInput(
@@ -62,20 +64,23 @@ export function validatePersonalMatchInput(
     }
     // 코트 표면(필수)
     if (!input.surface) return '코트 표면을 선택해주세요.'
-    if (!options.skipNtrp) {
+    const skip = new Set(options.skipNtrpFor ?? [])
+    if (!skip.has('opponent')) {
         // 상대 NTRP(필수): 1.0~7.0 범위 (복식이면 상대1)
         if (input.opponentNtrp == null) return doubles ? '상대1 NTRP를 입력해주세요.' : '상대 NTRP를 입력해주세요.'
         if (input.opponentNtrp < 1 || input.opponentNtrp > 7) {
             return doubles ? '상대1 NTRP는 1.0~7.0 범위로 입력해주세요.' : '상대 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
-        if (doubles) {
+    }
+    if (doubles) {
+        if (!skip.has('opponent2')) {
             // 상대2 NTRP(필수)
             if (input.opponent2Ntrp == null) return '상대2 NTRP를 입력해주세요.'
             if (input.opponent2Ntrp < 1 || input.opponent2Ntrp > 7) return '상대2 NTRP는 1.0~7.0 범위로 입력해주세요.'
-            // 파트너 NTRP(선택): 입력 시 범위 검증
-            if (input.partnerNtrp != null && (input.partnerNtrp < 1 || input.partnerNtrp > 7)) {
-                return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
-            }
+        }
+        // 파트너 NTRP(선택): 입력 시 범위 검증
+        if (!skip.has('partner') && input.partnerNtrp != null && (input.partnerNtrp < 1 || input.partnerNtrp > 7)) {
+            return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
     }
     // 세트 검증: 빈 배열은 결과 미확정으로 허용. 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.

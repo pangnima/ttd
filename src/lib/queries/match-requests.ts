@@ -42,7 +42,20 @@ function mapMatchRequestRow(row: MatchRequestRow): MatchRequest {
         proposedBy: row.proposed_by ?? undefined,
         proposedAt: row.proposed_at ?? undefined,
         disputeReason: row.dispute_reason ?? undefined,
+        // 복식 전용 (단식은 전부 NULL)
+        partnerUserId: row.partner_user_id ?? undefined,
+        partnerName: row.partner_name ?? undefined,
+        partnerDominantHand: toHand(row.partner_dominant_hand),
+        partnerNtrp: row.partner_ntrp != null ? Number(row.partner_ntrp) : undefined,
+        opponent2UserId: row.opponent2_user_id ?? undefined,
+        opponent2Name: row.opponent2_name ?? undefined,
+        opponent2DominantHand: toHand(row.opponent2_dominant_hand),
+        opponent2Ntrp: row.opponent2_ntrp != null ? Number(row.opponent2_ntrp) : undefined,
     }
+}
+
+function toHand(v: string | null): 'right' | 'left' | undefined {
+    return v === 'right' || v === 'left' ? v : undefined
 }
 
 type CounterpartRow = {

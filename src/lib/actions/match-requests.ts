@@ -2,19 +2,31 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { CourtSurface, PersonalMatchSetScore } from '@/types'
-import { validatePersonalMatchInput } from '@/lib/personal-matches/validate-input'
+import type { CourtSurface, MatchType, PersonalMatchSetScore } from '@/types'
+import { isDoublesMatchType, validatePersonalMatchInput, type NtrpField } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 
 /**
- * 상호 확인 대진 요청 입력 (v1: 회원 간 단식 전용).
- * opponentName은 검증·표시용일 뿐 저장되지 않는다 — 확정 시 RPC가 users에서 실명을 가져온다.
- * 상대 NTRP도 입력받지 않는다 — 수락 시 RPC가 상대의 레이팅에서 파생한다.
+ * 상호 확인 대진 요청 입력 (단식 + 페어 고정 복식).
+ * opponentUserId는 상대팀 대표 확인자(회원). 복식이면 파트너·상대2를 함께 저장하되,
+ * 그들이 회원이어도 기록은 요청자/대표 2행만 생성된다 (대표 확인 모델).
+ * 회원 참가자의 NTRP는 수락 시 RPC가 파생하므로 입력받지 않고, 비회원 상대2 NTRP만 필수.
  * setScores는 선택 — 등록 폼은 세트 없이 요청하며, 수락 시 양측에 결과 미확정(winner NULL)으로 기록된다.
  */
 export type MatchRequestInput = {
+    matchType: MatchType
     opponentUserId: string
     opponentName: string
+    opponentDominantHand?: 'right' | 'left'
+    // ── 복식 전용 ──
+    partnerName?: string
+    partnerUserId?: string
+    partnerDominantHand?: 'right' | 'left'
+    partnerNtrp?: number
+    opponent2Name?: string
+    opponent2UserId?: string
+    opponent2DominantHand?: 'right' | 'left'
+    opponent2Ntrp?: number
     playedAt: string
     playedTime: string  // 'HH:MM'
     surface: CourtSurface
@@ -25,12 +37,13 @@ export type MatchRequestInput = {
 export async function createMatchRequestAction(
     input: MatchRequestInput,
 ): Promise<{ error: string | null }> {
+    const doubles = isDoublesMatchType(input.matchType)
     const setScores = input.setScores ?? []
-    // 자유 기록과 동일한 규칙으로 검증하되, 상대 NTRP는 수락 시 서버 파생이므로 생략
-    const validationError = validatePersonalMatchInput(
-        { ...input, setScores, matchType: 'singles' },
-        { skipNtrp: true },
-    )
+    // 자유 기록과 동일한 규칙으로 검증하되, 회원 참가자의 NTRP는 수락 시 서버 파생이므로 생략
+    const skipNtrpFor: NtrpField[] = ['opponent']
+    if (input.partnerUserId) skipNtrpFor.push('partner')
+    if (input.opponent2UserId) skipNtrpFor.push('opponent2')
+    const validationError = validatePersonalMatchInput({ ...input, setScores }, { skipNtrpFor })
     if (validationError) return { error: validationError }
 
     const supabase = await createClient()
@@ -38,14 +51,28 @@ export async function createMatchRequestAction(
     if (!user) return { error: '로그인이 필요합니다.' }
     if (input.opponentUserId === user.id) return { error: '자기 자신에게는 요청할 수 없습니다.' }
 
+    // 회원 참가자 중복 방지 (나·대표·파트너·상대2)
+    const memberIds = [user.id, input.opponentUserId, input.partnerUserId, input.opponent2UserId]
+        .filter((id): id is string => !!id)
+    if (new Set(memberIds).size !== memberIds.length) return { error: '같은 회원을 두 번 지정할 수 없습니다.' }
+
     const { error } = await supabase.from('match_requests').insert({
         requester_id: user.id,
         opponent_user_id: input.opponentUserId,
+        match_type: input.matchType,
         played_at: input.playedAt,
         played_time: input.playedTime,
         surface: input.surface,
         set_scores: setScores,
         notes: input.notes?.trim() || null,
+        partner_name: doubles ? (input.partnerName?.trim() || null) : null,
+        partner_user_id: doubles ? (input.partnerUserId ?? null) : null,
+        partner_dominant_hand: doubles ? (input.partnerDominantHand ?? null) : null,
+        partner_ntrp: doubles ? (input.partnerNtrp ?? null) : null,
+        opponent2_name: doubles ? (input.opponent2Name?.trim() || null) : null,
+        opponent2_user_id: doubles ? (input.opponent2UserId ?? null) : null,
+        opponent2_dominant_hand: doubles ? (input.opponent2DominantHand ?? null) : null,
+        opponent2_ntrp: doubles ? (input.opponent2Ntrp ?? null) : null,
     })
 
     if (error) {
