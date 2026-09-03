@@ -66,7 +66,7 @@ export function ReceivedRequestCard({ item }: Props) {
             />
             {request.status === 'pending' && (
                 <p className="text-caption text-muted-foreground break-keep">
-                    수락하면 양쪽 기록에 함께 추가되며 이후 수정할 수 없습니다. 결과는 세트 스코어 등록 시 확정됩니다.
+                    수락하면 양쪽 기록에 함께 추가되며 이후 수정할 수 없습니다. 결과는 게임 스코어 등록 시 확정됩니다.
                 </p>
             )}
             {error && <p className="text-caption text-destructive">{error}</p>}

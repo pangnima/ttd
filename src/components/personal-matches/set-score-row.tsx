@@ -8,7 +8,9 @@ type SetScoreRowProps = {
     index: number
     set: PersonalMatchSetScore
     isDoubles: boolean
-    // 세트가 2개 이상일 때만 삭제 버튼 노출
+    // 행 라벨 (기본 'N게임'). 로테이션 게임처럼 스코어 1줄 고정이면 '스코어'
+    label?: string
+    // 게임이 2개 이상일 때만 삭제 버튼 노출
     removable: boolean
     onChange: (field: 'me' | 'opp', val: string) => void
     onRemove: () => void
@@ -24,12 +26,12 @@ type SetScoreRowProps = {
 const scoreInputClass = 'w-14 h-10 rounded-lg border border-input bg-background px-2 text-body font-semibold text-center'
 
 /**
- * 개인 경기기록의 세트 한 줄(번호 + 내/상대 점수 + 삭제 + 복식 애드/듀스).
+ * 개인 경기기록의 게임(세트) 한 줄(번호 + 내/상대 점수 + 삭제 + 복식 애드/듀스).
  * 입력 정규화(빈값→NaN→제출 시 0)는 상위 폼이 담당하고, 여기서는 표시·이벤트 전달만 한다.
  * 클럽 대진표의 SetScore(team1/team2 문자열)와는 별개 모델(PersonalMatchSetScore)이다.
  */
 export function SetScoreRow({
-    index, set, isDoubles, removable,
+    index, set, isDoubles, label, removable,
     onChange, onRemove, enableAdDeuce = true, onMyAdChange, onOppAdChange,
     myAdLabels, oppAdLabels,
 }: SetScoreRowProps) {
@@ -38,7 +40,7 @@ export function SetScoreRow({
     return (
         <div className={isDoubles ? cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6') : ''}>
             <div className="flex items-center gap-2">
-                <span className="text-caption text-muted-foreground w-10">{index + 1}세트</span>
+                <span className="text-caption text-muted-foreground w-10">{label ?? `${index + 1}게임`}</span>
                 <input
                     type="number"
                     min={0} max={99}
@@ -60,7 +62,7 @@ export function SetScoreRow({
                     </button>
                 )}
             </div>
-            {/* 복식: 세트별 애드/듀스 코트 */}
+            {/* 복식: 게임별 애드/듀스 코트 */}
             {showAdDeuce && (
                 <div className="grid grid-cols-2 gap-2">
                     <AdDeuceToggle

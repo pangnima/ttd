@@ -27,7 +27,7 @@ const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
     ['cannot_confirm_own_proposal', '본인이 제안한 결과는 직접 확정할 수 없습니다.'],
     ['cannot_dispute_own_proposal', '본인이 제안한 결과에는 이의를 제기할 수 없습니다. 제안을 수정해주세요.'],
     ['counterpart_deleted', '상대가 탈퇴하여 결과를 확정할 수 없습니다.'],
-    ['invalid_set_scores', '세트 스코어를 올바르게 입력해주세요.'],
+    ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요.'],
     ['dispute_reason_too_long', '이의 사유는 200자 이내로 입력해주세요.'],
     ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
 ]

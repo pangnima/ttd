@@ -101,7 +101,7 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
 const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
     ['session_not_found', '이미 처리되었거나 존재하지 않는 세션입니다.'],
     ['invalid_games', '게임 구성을 확인해주세요. (파트너·상대1·상대2 필수)'],
-    ['invalid_set_scores', '세트 스코어를 올바르게 입력해주세요.'],
+    ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요. (게임당 스코어 1줄)'],
 ]
 
 /** 게임별 personal_matches 행으로 분해 저장 + 세션 삭제 (RPC 한 트랜잭션) */
@@ -116,7 +116,8 @@ export async function finalizeRotationSessionAction(
             const err = validatePlayer(p)
             if (err) return { error: err }
         }
-        const setError = validateSetScores(g.sets)
+        // 게임 1건 = 스코어 1줄 (클라 validateRotationGames·RPC와 3중 방어)
+        const setError = validateSetScores(g.sets, { max: 1 })
         if (setError) return { error: setError }
     }
 

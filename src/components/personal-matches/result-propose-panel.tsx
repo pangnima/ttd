@@ -15,14 +15,14 @@ type Props = {
     isPending: boolean
     error: string | null
     submitLabel?: string
-    // 복식: 세트별 애드(백핸드) 코트 토글 노출용 라벨. 단식이면 undefined
+    // 복식: 게임별 애드(백핸드) 코트 토글 노출용 라벨. 단식이면 undefined
     adLabels?: AdLabels
 }
 
 /**
- * 결과 등록 Dialog의 입력 패널 — 세트 추가/삭제 + 실시간 결과 미리보기 + 저장.
- * 세트 입력 부품(SetsSection/SetScoreRow)은 로테이션 게임 빌더와 공유한다.
- * 복식이면 adLabels로 세트별 애드/듀스 토글이 켜진다(doubles-court 통계 입력).
+ * 결과 등록 Dialog의 입력 패널 — 게임 추가/삭제 + 실시간 게임별 결과 미리보기 + 저장.
+ * 스코어 입력 부품(SetsSection/SetScoreRow)은 로테이션 게임 빌더와 공유한다(로테이션은 single 모드).
+ * 복식이면 adLabels로 게임별 애드/듀스 토글이 켜진다(doubles-court 통계 입력).
  */
 export function ResultProposePanel({
     opponentName, initialSets, onSubmit, isPending, error, submitLabel = '결과 저장', adLabels,
@@ -45,12 +45,12 @@ export function ResultProposePanel({
                 onOppAd={adLabels ? s.setOppAd : undefined}
             />
             {!s.canAdd && (
-                <p className="text-caption text-muted-foreground">세트는 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>
+                <p className="text-caption text-muted-foreground">게임은 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>
             )}
 
-            {/* 미리보기: 유효한 세트만으로 현재 결과 계산 */}
+            {/* 미리보기: 유효한 게임만으로 게임별 결과·전적 계산 */}
             <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-1">
-                <p className="text-caption text-muted-foreground">예상 결과</p>
+                <p className="text-caption text-muted-foreground">게임별 결과</p>
                 <SetScoreChips sets={s.sets} />
             </div>
 

@@ -108,20 +108,20 @@ type SetScoresOptions = {
 }
 
 /**
- * 세트 스코어 배열 검증 — 각 세트 점수가 0~99 정수, 0-0(미입력) 세트 금지, 세트별 애드/듀스 enum(선택).
+ * 게임(세트) 스코어 배열 검증 — 각 게임 점수가 0~99 정수, 0-0(미입력) 금지, 게임별 애드/듀스 enum(선택).
  * 결과 등록 액션(updatePersonalMatchSetsAction·proposeMatchResultAction)과 등록 폼 검증이 공유하며,
- * DB helper validate_set_scores와 동일 규칙이다.
+ * DB helper validate_set_scores와 동일 규칙이다. 사용자 문구는 '게임'(동호인 경기: 세트 1개 = 게임 1개).
  */
 export function validateSetScores(sets: PersonalMatchSetScore[], options: SetScoresOptions = {}): string | null {
     const { min = 1, max = 5 } = options
-    if (!Array.isArray(sets)) return '세트 스코어를 올바르게 입력해주세요.'
-    if (sets.length < min) return '세트를 1개 이상 입력해주세요.'
-    if (sets.length > max) return `세트는 최대 ${max}개까지 등록할 수 있습니다.`
+    if (!Array.isArray(sets)) return '게임 스코어를 올바르게 입력해주세요.'
+    if (sets.length < min) return '게임을 1개 이상 입력해주세요.'
+    if (sets.length > max) return `게임은 최대 ${max}개까지 등록할 수 있습니다.`
     for (const s of sets) {
-        if (!isValidScore(s.me) || !isValidScore(s.opp)) return '세트 스코어를 올바르게 입력해주세요.'
-        if (s.me === 0 && s.opp === 0) return '0-0 세트는 저장할 수 없습니다.'
-        if (s.myAd != null && !['me', 'partner'].includes(s.myAd)) return '세트 애드 코트 값이 올바르지 않습니다.'
-        if (s.oppAd != null && !['opponent', 'opponent2'].includes(s.oppAd)) return '세트 애드 코트 값이 올바르지 않습니다.'
+        if (!isValidScore(s.me) || !isValidScore(s.opp)) return '게임 스코어를 올바르게 입력해주세요.'
+        if (s.me === 0 && s.opp === 0) return '0-0 게임은 저장할 수 없습니다.'
+        if (s.myAd != null && !['me', 'partner'].includes(s.myAd)) return '게임 애드 코트 값이 올바르지 않습니다.'
+        if (s.oppAd != null && !['opponent', 'opponent2'].includes(s.oppAd)) return '게임 애드 코트 값이 올바르지 않습니다.'
     }
     return null
 }

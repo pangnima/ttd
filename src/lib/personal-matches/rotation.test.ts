@@ -130,6 +130,12 @@ describe('validateRotation', () => {
         expect(validateRotation(P, [game('g1', 'b', 'c', 'd', [{ me: 0, opp: 0 }])], meta)).toBe(false)
     })
 
+    it('게임 1건 = 스코어 1줄 — 세트가 2개면 false, 0개도 false', () => {
+        expect(validateRotationGames(P, [game('g1', 'b', 'c', 'd', [{ me: 6, opp: 4 }, { me: 4, opp: 6 }])])).toBe(false)
+        expect(validateRotationGames(P, [game('g1', 'b', 'c', 'd', [])])).toBe(false)
+        expect(validateRotationGames(P, [game('g1', 'b', 'c', 'd')])).toBe(true)
+    })
+
     it('미선택 ref(null)이면 false', () => {
         expect(validateRotation(P, [{ tempId: 'g1', partnerRef: 'b', opp1Ref: null, opp2Ref: 'd', sets: [{ me: 6, opp: 4 }] }], meta)).toBe(false)
     })

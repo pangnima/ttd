@@ -3,7 +3,7 @@ import type { PersonalMatch } from '@/types'
 import {
     formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
 } from '@/lib/dashboard/outcome'
-import { resolveSetWinner } from '@/lib/personal-matches/winner'
+import { resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
 import { formatOpponents } from '@/lib/personal-matches/labels'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
@@ -11,6 +11,8 @@ import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 type Props = {
     match: PersonalMatch
     actions?: ReactNode
+    // 로테이션 그룹 안의 카드 — 시각·코트명·메모는 그룹 헤더가 보여주므로 숨긴다
+    hideMeta?: boolean
 }
 
 const RESULT = {
@@ -20,31 +22,21 @@ const RESULT = {
     // 결과 미확정(winner NULL) — 세트 미등록. 통계에는 반영되지 않는다.
     pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
 } as const
+// 게임(세트) 2개 이상 — 게임마다 승패가 다르므로 다수결 색을 쓰지 않고 중립 바 + 'N승 M패' 전적
+const MULTI = { bar: 'bg-border', badge: 'bg-muted text-muted-foreground' } as const
 
-// 개인 경기 1건 카드. 선수 줄 아래에 시각·코트명·메모(있는 것만)를 표시한다.
-// 동호인 경기: 세트 1개 = 게임 1개. 단일 세트는 WIN/LOSS, 멀티 세트는 'N승 M패' 전적으로 표시.
-// 세트가 없는 미확정 경기는 '미확정' 배지만 표시한다.
-export function PersonalMatchCard({ match: m, actions }: Props) {
-    const result = RESULT[m.winner ?? 'pending']
+// 개인 경기 1건 카드. 동호인 경기: 세트 1개 = 게임 1개.
+// 게임 1개는 WIN/LOSS, 2개 이상은 'N승 M패' 전적, 세트가 없는 미확정 경기는 '미확정' 배지.
+export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props) {
     const isDoubles = m.matchType !== 'singles'
     const opponentLabel = formatOpponents(m)
+    const isMulti = m.setScores.length > 1
 
-    // 세트(게임) 전적 집계
-    const tally = m.setScores.reduce(
-        (acc, s) => {
-            const w = resolveSetWinner(s)
-            if (w === 'me') acc.wins++
-            else if (w === 'opponent') acc.losses++
-            else acc.draws++
-            return acc
-        },
-        { wins: 0, losses: 0, draws: 0 },
-    )
-    const isMultiSet = m.setScores.length > 1
-    // 멀티 세트는 전적 라벨, 단일/무세트는 기존 WIN/LOSS/무 배지 라벨. 색은 우세(m.winner) 기준 유지.
-    const resultLabel = isMultiSet
-        ? formatRecord(tally.wins, tally.losses, tally.draws)
-        : result.label
+    const result = m.winner === null
+        ? RESULT.pending
+        : isMulti
+            ? (() => { const t = tallySets(m.setScores); return { ...MULTI, label: formatRecord(t.wins, t.losses, t.draws) } })()
+            : RESULT[m.setScores.length === 1 ? resolveSetWinner(m.setScores[0]) : m.winner]
 
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
@@ -64,12 +56,14 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                             <span className="text-muted-foreground">vs </span>{opponentLabel}
                         </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${result.badge}`}>{resultLabel}</span>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${result.badge}`}>{result.label}</span>
                 </div>
 
-                <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
+                {!hideMeta && (
+                    <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
+                )}
 
-                {/* 세트 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}
+                {/* 게임 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}
                 {(m.setScores.length > 0 || actions) && (
                     <div className="flex items-end justify-between gap-2 mt-2">
                         <div className="flex items-center gap-1.5 flex-wrap min-w-0">

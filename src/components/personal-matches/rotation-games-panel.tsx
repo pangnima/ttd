@@ -15,7 +15,7 @@ type Props = {
 }
 
 /**
- * 로테이션 세션 결과 입력 패널 — 세션의 선수 풀을 참조해 게임(파트너·상대1·상대2 + 세트)을 구성한다.
+ * 로테이션 세션 결과 입력 패널 — 세션의 선수 풀을 참조해 게임(파트너·상대1·상대2 + 스코어 1줄)을 구성한다.
  * 등록 폼에서 쓰던 GameBuilderSection/GameRow/PoolSelect를 그대로 재사용하며, 저장하면 게임별 경기로 분해된다.
  */
 export function RotationGamesPanel({ session, onSubmit, isPending, error }: Props) {
@@ -32,9 +32,7 @@ export function RotationGamesPanel({ session, onSubmit, isPending, error }: Prop
                 onAddGame={r.addGame}
                 onUpdateGame={r.updateGame}
                 onRemoveGame={r.removeGame}
-                onAddSet={r.addSet}
                 onUpdateSet={r.updateSet}
-                onRemoveSet={r.removeSet}
                 onMyAd={r.setMyAd}
                 onOppAd={r.setOppAd}
             />

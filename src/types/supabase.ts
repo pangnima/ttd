@@ -718,12 +718,14 @@ export type Database = {
       personal_matches: {
         Row: {
           created_at: string
+          group_seq: number | null
           court_name: string | null
           id: string
           match_type: string
           notes: string | null
           played_at: string
           played_time: string | null
+          rotation_session_id: string | null
           set_scores: Json
           source_request_id: string | null
           source_type: string
@@ -733,12 +735,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          group_seq?: number | null
           court_name?: string | null
           id?: string
           match_type: string
           notes?: string | null
           played_at: string
           played_time?: string | null
+          rotation_session_id?: string | null
           set_scores?: Json
           source_request_id?: string | null
           source_type?: string
@@ -748,12 +752,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          group_seq?: number | null
           court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
           played_at?: string
           played_time?: string | null
+          rotation_session_id?: string | null
           set_scores?: Json
           source_request_id?: string | null
           source_type?: string

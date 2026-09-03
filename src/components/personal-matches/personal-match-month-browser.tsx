@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { PersonalMatchCard } from '@/components/personal-matches/personal-match-card'
+import { MatchGroupList } from '@/components/personal-matches/match-group-list'
 
 type Props = {
     groups: MonthGroup[]   // 월 내림차순(최신 먼저)
@@ -61,9 +61,7 @@ export function PersonalMatchMonthBrowser({ groups }: Props) {
 
             <div className="max-h-[600px] overflow-y-auto pr-1">
                 <div className={`${CARD_BASE} divide-y divide-border/60`}>
-                    {selected.matches.map((m) => (
-                        <PersonalMatchCard key={m.id} match={m} />
-                    ))}
+                    <MatchGroupList groups={selected.groups} />
                 </div>
             </div>
         </div>

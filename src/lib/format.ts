@@ -28,7 +28,7 @@ export function formatYearMonth(dateStr: string): string {
 // 개인 경기 시각은 시(hour)만 받는다. 저장 포맷은 기존과 같은 'HH:MM'(분은 항상 00)이라 DB time 컬럼·검증 정규식은 그대로.
 
 /** 경기 시각 select 옵션 — 값 'HH:00', 라벨 'N시' (00시~23시) */
-export const HOUR_OPTIONS: ReadonlyArray<{ value: string; label: string }> = Array.from({ length: 24 }, (_, h) => ({
+export const HOUR_OPTIONS: { value: string; label: string }[] = Array.from({ length: 24 }, (_, h) => ({
     value: `${String(h).padStart(2, '0')}:00`,
     label: `${h}시`,
 }))

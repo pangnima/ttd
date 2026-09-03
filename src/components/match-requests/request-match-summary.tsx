@@ -11,7 +11,7 @@ type Props = {
     sets: PersonalMatchSetScore[]  // 보는 사람 관점으로 반전 완료된 스코어. 빈 배열 = 결과 미확정
 }
 
-/** 요청 카드 공용: 일시·코트 표면(·코트명) + 내 관점 세트 스코어 칩 + 결과 배지 (세트 없으면 '미확정') */
+/** 요청 카드 공용: 일시·코트 표면(·코트명) + 내 관점 게임 스코어 칩 + 결과 배지 (게임 없으면 '미확정') */
 export function RequestMatchSummary({ playedAt, playedTime, surface, courtName, sets }: Props) {
     return (
         <div className="space-y-1.5">

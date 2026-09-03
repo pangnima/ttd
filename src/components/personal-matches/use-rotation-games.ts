@@ -59,6 +59,7 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
     function addGame() {
         setGames((prev) => [
             ...prev,
+            // 빈 게임(구성 미선택) + 스코어 1줄. 게임 1건 = 세트 1개 고정
             { tempId: uid(), partnerRef: null, opp1Ref: null, opp2Ref: null, sets: [{ me: NaN, opp: NaN }] },
         ])
     }
@@ -69,15 +70,9 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
         setGames((prev) => prev.filter((g) => g.tempId !== tempId))
     }
 
-    // ── 게임별 세트 핸들러 ──
+    // ── 게임별 스코어 핸들러 — 게임 1건 = 스코어(세트) 1줄 고정이라 추가/삭제는 없다 ──
     function updateGameSets(tempId: string, updater: (sets: PersonalMatchSetScore[]) => PersonalMatchSetScore[]) {
         setGames((prev) => prev.map((g) => (g.tempId === tempId ? { ...g, sets: updater(g.sets) } : g)))
-    }
-    function addSet(gameId: string) {
-        updateGameSets(gameId, (sets) => [...sets, { me: NaN, opp: NaN }])
-    }
-    function removeSet(gameId: string, i: number) {
-        updateGameSets(gameId, (sets) => sets.filter((_, idx) => idx !== i))
     }
     function updateSet(gameId: string, i: number, field: 'me' | 'opp', val: string) {
         updateGameSets(gameId, (sets) =>
@@ -91,7 +86,7 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
             }),
         )
     }
-    // 세트별 애드/듀스 (복식). undefined = 미지정(둘 다 듀스).
+    // 게임별 애드/듀스 (복식). undefined = 미지정(둘 다 듀스).
     function setMyAd(gameId: string, i: number, v: 'me' | 'partner' | undefined) {
         updateGameSets(gameId, (sets) => sets.map((s, idx) => (idx === i ? { ...s, myAd: v } : s)))
     }
@@ -111,7 +106,7 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
         pool, games,
         addPoolPlayer, updatePoolPlayer, removePoolPlayer,
         addGame, updateGame, removeGame,
-        addSet, removeSet, updateSet, setMyAd, setOppAd,
+        updateSet, setMyAd, setOppAd,
         isPoolValid, isGamesValid, buildPayloads,
     }
 }

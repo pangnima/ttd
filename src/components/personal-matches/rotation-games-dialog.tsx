@@ -6,6 +6,7 @@ import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { RotationGamesPanel } from '@/components/personal-matches/rotation-games-panel'
+import { formatHourLabel } from '@/lib/format'
 
 type Props = {
     open: boolean
@@ -17,7 +18,7 @@ type Props = {
 }
 
 /**
- * 로테이션 세션 '결과 입력' 레이어 팝업 — 게임 빌더는 폭이 넓어(셀렉트 3개 + 세트 + 애드 토글) 넓은 Dialog로 연다.
+ * 로테이션 세션 '결과 입력' 레이어 팝업 — 게임 빌더는 폭이 넓어(셀렉트 3개 + 스코어 + 애드 토글) 넓은 Dialog로 연다.
  * 닫히면 패널이 언마운트되어 게임 입력 state가 초기화된다.
  */
 export function RotationGamesDialog({ open, onOpenChange, session, onSubmit, isPending, error }: Props) {
@@ -27,7 +28,7 @@ export function RotationGamesDialog({ open, onOpenChange, session, onSubmit, isP
                 <DialogHeader>
                     <DialogTitle>로테이션 게임 입력</DialogTitle>
                     <DialogDescription>
-                        {session.playedAt.replaceAll('-', '.')} {session.playedTime} · 게임마다 파트너·상대를 고르고 세트를 입력하면 게임별 경기로 저장됩니다.
+                        {session.playedAt.replaceAll('-', '.')} {formatHourLabel(session.playedTime)} · 게임마다 파트너·상대를 고르고 스코어를 입력하면 게임별 경기로 저장됩니다.
                     </DialogDescription>
                 </DialogHeader>
                 <RotationGamesPanel session={session} onSubmit={onSubmit} isPending={isPending} error={error} />

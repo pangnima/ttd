@@ -11,7 +11,7 @@ const REASON_MAX = 200
 
 type Props = {
     opponentName: string
-    sets: PersonalMatchSetScore[]  // 상대가 제안한 세트 — 내 관점으로 반전 완료
+    sets: PersonalMatchSetScore[]  // 상대가 제안한 게임(세트) 스코어 — 내 관점으로 반전 완료
     onConfirm: () => void
     onDispute: (reason: string) => void
     isPending: boolean
@@ -19,7 +19,7 @@ type Props = {
 }
 
 /**
- * 결과 검토 패널 — 상대가 제안한 세트를 내 관점으로 보여주고 [확인] 또는 [이의 제기(사유 선택)]를 받는다.
+ * 결과 검토 패널 — 상대가 제안한 게임 스코어를 내 관점으로 보여주고 [확인] 또는 [이의 제기(사유 선택)]를 받는다.
  * 확인하면 양측 기록이 확정되어 이후 수정할 수 없다.
  */
 export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, isPending, error }: Props) {
@@ -45,7 +45,7 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, is
                         value={reason}
                         maxLength={REASON_MAX}
                         rows={3}
-                        placeholder="예: 2세트는 6-3이었어요"
+                        placeholder="예: 2게임은 6-3이었어요"
                         onChange={(e) => setReason(e.target.value)}
                     />
                 </div>

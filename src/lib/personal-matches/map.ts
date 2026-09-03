@@ -41,6 +41,9 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         notes: row.notes ?? undefined,
         courtName: row.court_name ?? undefined,
         sourceRequestId: row.source_request_id ?? undefined,
+        sourceType: row.source_type as PersonalMatch['sourceType'],
+        rotationSessionId: row.rotation_session_id ?? undefined,
+        groupSeq: row.group_seq ?? undefined,
         createdAt: row.created_at,
     }
 }

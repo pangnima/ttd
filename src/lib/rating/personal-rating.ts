@@ -123,12 +123,15 @@ export function replayPersonalRatings(
 ): PersonalRatingSnapshot {
     const start = usableNtrp(selfNtrp) ?? DEFAULT_RATING
 
-    // 시간순(과거→최신) 정렬. 동일 시점은 id로 안정 정렬해 결정성을 보장한다.
+    // 시간순(과거→최신) 정렬. 같은 일시의 로테이션 게임은 세션 내 순번(groupSeq, 실제 입력 순)으로,
+    // 그래도 같으면 id로 안정 정렬해 결정성을 보장한다.
     const sorted = [...matches].sort((a, b) => {
         const d = a.playedAt.localeCompare(b.playedAt)
         if (d !== 0) return d
         const t = (a.playedTime ?? '').localeCompare(b.playedTime ?? '')
         if (t !== 0) return t
+        const s = (a.groupSeq ?? 0) - (b.groupSeq ?? 0)
+        if (s !== 0) return s
         return a.id.localeCompare(b.id)
     })
 

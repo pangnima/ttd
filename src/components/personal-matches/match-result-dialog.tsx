@@ -13,7 +13,7 @@ type ProposeProps = {
     initialSets?: PersonalMatchSetScore[]
     onSubmit: (sets: PersonalMatchSetScore[]) => void
     submitLabel?: string
-    adLabels?: AdLabels  // 복식이면 세트별 애드/듀스 토글
+    adLabels?: AdLabels  // 복식이면 게임별 애드/듀스 토글
 }
 type ReviewProps = {
     mode: 'review'
@@ -34,9 +34,9 @@ type Props = (ProposeProps | ReviewProps) & {
 
 /**
  * 개인 경기 결과 등록 레이어 팝업.
- *  - propose: 세트별 스코어 입력(추가/삭제) → 저장 (자유 기록은 즉시 확정, 상호 확인 경기는 상대 확인 대기)
- *  - review : 상대가 제안한 세트를 검토 → 확인 / 이의 제기
- * 닫히면 내부 패널이 언마운트되어 입력 state가 초기화된다. 복식 세트의 애드/듀스는 propose 모드에서 입력한다.
+ *  - propose: 게임별 스코어 입력(추가/삭제) → 저장 (자유 기록은 즉시 확정, 상호 확인 경기는 상대 확인 대기)
+ *  - review : 상대가 제안한 게임 스코어를 검토 → 확인 / 이의 제기
+ * 닫히면 내부 패널이 언마운트되어 입력 state가 초기화된다. 복식 게임의 애드/듀스는 propose 모드에서 입력한다.
  */
 export function MatchResultDialog(props: Props) {
     const { open, onOpenChange, opponentName, title, description, isPending, error } = props

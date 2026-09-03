@@ -11,9 +11,7 @@ type GameRowProps = {
     pool: PoolPlayer[]
     onChange: (patch: Partial<Omit<RotationGame, 'tempId'>>) => void
     onRemove: () => void
-    onAddSet: () => void
     onUpdateSet: (i: number, field: 'me' | 'opp', val: string) => void
-    onRemoveSet: (i: number) => void
     onMyAd: (i: number, v: 'me' | 'partner' | undefined) => void
     onOppAd: (i: number, v: 'opponent' | 'opponent2' | undefined) => void
 }
@@ -24,10 +22,10 @@ function nameOf(pool: PoolPlayer[], ref: string | null, fallback: string): strin
 }
 
 /**
- * 로테이션 게임 1건 — 내 파트너/상대1/상대2 선택(풀에서) + 세트 스코어.
- * 세트별 애드/듀스 라벨은 이 게임의 풀 참조(파트너·상대 이름)로 동적 계산한다.
+ * 로테이션 게임 1건 — 내 파트너/상대1/상대2 선택(풀에서) + 스코어 1줄(게임 1건 = 세트 1개).
+ * 애드/듀스 라벨은 이 게임의 풀 참조(파트너·상대 이름)로 동적 계산한다.
  */
-export function GameRow({ index, game, pool, onChange, onRemove, onAddSet, onUpdateSet, onRemoveSet, onMyAd, onOppAd }: GameRowProps) {
+export function GameRow({ index, game, pool, onChange, onRemove, onUpdateSet, onMyAd, onOppAd }: GameRowProps) {
     const present = (refs: (string | null)[]) => refs.filter((r): r is string => !!r)
     const opp1Name = nameOf(pool, game.opp1Ref, '상대1')
     const opp2Name = nameOf(pool, game.opp2Ref, '상대2')
@@ -66,12 +64,11 @@ export function GameRow({ index, game, pool, onChange, onRemove, onAddSet, onUpd
             <SetsSection
                 sets={game.sets}
                 isDoubles
+                single
                 opponentLabel={oppLabel}
                 myAdLabels={{ me: '나', partner: nameOf(pool, game.partnerRef, '파트너') }}
                 oppAdLabels={{ opponent: opp1Name, opponent2: opp2Name }}
-                onAddSet={onAddSet}
                 onUpdateSet={onUpdateSet}
-                onRemoveSet={onRemoveSet}
                 onMyAd={onMyAd}
                 onOppAd={onOppAd}
             />

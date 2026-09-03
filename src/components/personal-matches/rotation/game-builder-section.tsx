@@ -11,19 +11,17 @@ type GameBuilderSectionProps = {
     onAddGame: () => void
     onUpdateGame: (tempId: string, patch: Partial<Omit<RotationGame, 'tempId'>>) => void
     onRemoveGame: (tempId: string) => void
-    onAddSet: (gameId: string) => void
     onUpdateSet: (gameId: string, i: number, field: 'me' | 'opp', val: string) => void
-    onRemoveSet: (gameId: string, i: number) => void
     onMyAd: (gameId: string, i: number, v: 'me' | 'partner' | undefined) => void
     onOppAd: (gameId: string, i: number, v: 'opponent' | 'opponent2' | undefined) => void
 }
 
 /**
- * 로테이션 게임 빌더 — 게임을 자유롭게 추가하며 각 게임의 페어·스코어를 입력한다.
- * 참가자 3명 이상이어야 게임을 만들 수 있다.
+ * 로테이션 게임 빌더 — 게임을 자유롭게 추가하며 각 게임의 페어·스코어(1줄)를 입력한다.
+ * 참가자 3명 이상이어야 게임을 만들 수 있다. 같은 구성으로 여러 게임을 쳤으면 게임을 그만큼 추가한다.
  */
 export function GameBuilderSection({
-    games, pool, onAddGame, onUpdateGame, onRemoveGame, onAddSet, onUpdateSet, onRemoveSet, onMyAd, onOppAd,
+    games, pool, onAddGame, onUpdateGame, onRemoveGame, onUpdateSet, onMyAd, onOppAd,
 }: GameBuilderSectionProps) {
     const canAddGame = pool.length >= 3
     return (
@@ -41,18 +39,16 @@ export function GameBuilderSection({
                         pool={pool}
                         onChange={(patch) => onUpdateGame(g.tempId, patch)}
                         onRemove={() => onRemoveGame(g.tempId)}
-                        onAddSet={() => onAddSet(g.tempId)}
                         onUpdateSet={(si, f, v) => onUpdateSet(g.tempId, si, f, v)}
-                        onRemoveSet={(si) => onRemoveSet(g.tempId, si)}
                         onMyAd={(si, v) => onMyAd(g.tempId, si, v)}
                         onOppAd={(si, v) => onOppAd(g.tempId, si, v)}
                     />
                 ))}
             </div>
-            {/* 게임(세트 추가)이 있을 때는 게임 추가와 구분선으로 분리 */}
+            {/* 게임이 있을 때는 게임 추가와 구분선으로 분리 */}
             <div className={cn(games.length > 0 && 'border-t border-border pt-4')}>
                 <AddButton label="게임 추가" onClick={onAddGame} disabled={!canAddGame} />
-                <p className="mt-2 text-body2 text-destructive">게임마다 별도 경기로 저장됩니다. 파트너를 바꿔가며 추가하세요.</p>
+                <p className="mt-2 text-body2 text-muted-foreground">게임 1개 = 스코어 1줄. 게임마다 별도 경기로 저장되며 목록에서는 한 묶음으로 보입니다.</p>
             </div>
         </div>
     )

@@ -21,7 +21,7 @@ export type RotationGame = {
     partnerRef: string | null // 내 파트너 (pool[].tempId)
     opp1Ref: string | null
     opp2Ref: string | null
-    sets: PersonalMatchSetScore[]
+    sets: PersonalMatchSetScore[]  // 항상 길이 1 — 게임 1건 = 스코어 1줄 (배열 형태는 PersonalMatchSetScore[] 계약 유지용)
 }
 
 // 세션 공통 메타 — 모든 게임에 동일 적용 (선수·세트 제외)
@@ -162,7 +162,7 @@ export function validateRotationPool(pool: PoolPlayer[], meta: RotationSessionMe
 
 /**
  * 게임 단계 검증 — 게임 1개 이상, 각 게임 파트너/상대 ref가 풀에 실존하고 서로 중복 없음,
- * 파트너·상대1·상대2 NTRP 모두 필수, 각 게임 세트 유효.
+ * 파트너·상대1·상대2 NTRP 모두 필수, 게임당 스코어 정확히 1줄(세트 1개 = 게임 1개)이며 유효.
  */
 export function validateRotationGames(pool: PoolPlayer[], games: RotationGame[]): boolean {
     if (games.length < 1) return false
@@ -177,7 +177,7 @@ export function validateRotationGames(pool: PoolPlayer[], games: RotationGame[])
         const opp2 = poolById(pool, g.opp2Ref)!
         if (!isNtrpValid(partner.ntrp) || !isNtrpValid(opp1.ntrp) || !isNtrpValid(opp2.ntrp)) return false
 
-        if (g.sets.length < 1 || !g.sets.every(isSetValid)) return false
+        if (g.sets.length !== 1 || !g.sets.every(isSetValid)) return false
     }
     return true
 }

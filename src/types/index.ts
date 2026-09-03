@@ -156,6 +156,9 @@ export type PersonalMatch = {
     notes?: string
     courtName?: string      // 코트명(선택, ≤40자) — 등록 폼 '최근 코트' 자동완성 후보로 재사용
     sourceRequestId?: string  // 상호 확인 대진(match_requests)에서 확정된 경기 — 있으면 수정/삭제 잠금
+    sourceType?: 'direct' | 'confirmation' | 'rotation'  // 출처 (0040). 픽스처·테스트 리터럴은 생략 가능
+    rotationSessionId?: string  // 로테이션 세션 tombstone id (0044) — 같은 값이면 같은 로테이션에서 분해된 게임(목록 그룹 키)
+    groupSeq?: number           // 로테이션 세션 내 게임 순번 (0044). finalize 루프 순서 = 실제 입력 순서
     // 상호 확인 경기의 결과 제안/확인 상태 (목록 조회 시 match_requests에서 부착, 그 외 경로는 undefined)
     confirmation?: PersonalMatchConfirmation
     createdAt: string

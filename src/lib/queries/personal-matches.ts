@@ -14,6 +14,9 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
         .select('*, participants:personal_match_participants(*)')
         .eq('user_id', userId)
         .order('played_at', { ascending: false })
+        .order('played_time', { ascending: false, nullsFirst: false })
+        // 같은 일시의 로테이션 게임은 세션 내 순번(입력 순)으로 — 표시 그룹핑(buildMatchGroups)도 같은 키로 재정렬한다
+        .order('group_seq', { ascending: true, nullsFirst: false })
     if (error || !data) return []
     return data.map((row) => mapPersonalMatchRow(row, row.participants))
 }
