@@ -23,14 +23,14 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
                 const cardContent = (
                     <>
                         <Avatar className="w-8 h-8 shrink-0">
-                            <AvatarFallback className="text-xs text-foreground/75">{m.user.name[0]}</AvatarFallback>
+                            <AvatarFallback className="text-caption text-foreground/75">{m.user.name[0]}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-foreground/90 truncate">
+                            <p className="text-caption font-medium text-foreground/90 truncate">
                                 {m.role === 'owner' ? '👑 ' : ''}{m.user.name}
                             </p>
                             <div className="flex items-center gap-1">
-                                <span className="text-xs text-muted-foreground font-mono">
+                                <span className="text-caption text-muted-foreground font-mono">
                                     {effectiveNtrp(m.user).toFixed(1)}
                                 </span>
                                 {m.user.isGuest && <GuestBadge />}
@@ -72,7 +72,7 @@ export function ClubMembersPreview({ members, maxDisplay = 8, clubRatings = {} }
             })}
             {members.length > maxDisplay && (
                 <div className="flex items-center justify-center p-2.5 rounded-xl border border-dashed border-input">
-                    <span className="text-xs text-muted-foreground">+{members.length - maxDisplay}명</span>
+                    <span className="text-caption text-muted-foreground">+{members.length - maxDisplay}명</span>
                 </div>
             )}
         </div>

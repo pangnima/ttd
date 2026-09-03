@@ -29,7 +29,7 @@ export function ClubRankingCard({ clubId, entries, forms }: ClubRankingCardProps
             </div>
             <div className={`${CARD_BASE} p-2 sm:p-3`}>
                 {entries.length === 0 ? (
-                    <p className={`text-xs ${TEXT_MUTED} py-6 text-center`}>아직 확정된 경기가 없습니다</p>
+                    <p className={`text-body2 ${TEXT_MUTED} py-6 text-center`}>아직 확정된 경기가 없습니다</p>
                 ) : (
                     <div>
                         {/* 컬럼 헤더 (sm 이상) */}
@@ -78,7 +78,7 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
         <div className="flex items-center gap-3 px-2 py-2.5">
             {/* 순위 */}
             <div className="w-6 shrink-0 flex justify-center">
-                <RankBadge index={index} iconClass="w-4 h-4" textClass="text-sm" />
+                <RankBadge index={index} iconClass="w-4 h-4" textClass="text-body2" />
             </div>
 
             {/* 선수 */}
@@ -92,11 +92,11 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
                 <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                         {profileHref ? (
-                            <Link href={profileHref} className="text-sm font-medium text-foreground truncate leading-tight">
+                            <Link href={profileHref} className="text-body2 font-medium text-foreground truncate leading-tight">
                                 {name}
                             </Link>
                         ) : (
-                            <p className="text-sm font-medium text-foreground truncate leading-tight">{name}</p>
+                            <p className="text-body2 font-medium text-foreground truncate leading-tight">{name}</p>
                         )}
                         {isGuest && <GuestBadge />}
                     </div>
@@ -109,7 +109,7 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
             {/* 티어 */}
             <div className="w-8 sm:w-24 shrink-0 flex items-center gap-1.5">
                 <TierIcon tier={tier} size={24} />
-                <span className={cn('hidden sm:inline text-sm font-medium', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
+                <span className={cn('hidden sm:inline text-body2 font-medium', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
             </div>
 
             {/* 최근 5 */}

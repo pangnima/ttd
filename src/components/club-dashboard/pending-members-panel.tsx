@@ -28,7 +28,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
         <section className="space-y-3">
             <div className="flex items-center gap-2">
                 <h2 className={TYPO.h4}>가입 대기</h2>
-                <Badge variant="outline" className="text-xs text-orange-600 dark:text-orange-400 border-orange-400/50">
+                <Badge variant="outline" className="text-caption text-orange-600 dark:text-orange-400 border-orange-400/50">
                     {pendingMembers.length}명
                 </Badge>
             </div>
@@ -38,14 +38,14 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
                         <div className="flex items-center gap-2 min-w-0">
                             <Clock className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
                             <div className="min-w-0">
-                                <p className="text-sm text-foreground truncate">{m.user.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{m.user.nickname}</p>
+                                <p className="text-body2 text-foreground truncate">{m.user.name}</p>
+                                <p className="text-caption text-muted-foreground truncate">{m.user.nickname}</p>
                             </div>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
                             <Button
                                 size="sm"
-                                className="h-7 text-xs"
+                                className="h-7 text-caption"
                                 onClick={() => handleApprove(m.userId)}
                                 disabled={isPending}
                             >
@@ -54,7 +54,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-7 text-xs"
+                                className="h-7 text-caption"
                                 onClick={() => handleReject(m.userId)}
                                 disabled={isPending}
                             >

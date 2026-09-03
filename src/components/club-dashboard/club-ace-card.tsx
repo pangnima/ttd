@@ -49,8 +49,8 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                             )}
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-foreground leading-none">
-                                {ace.winRate}<span className={`text-xs font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
+                            <span className="text-h2 font-bold tabular-nums text-foreground leading-none">
+                                {ace.winRate}<span className={`text-caption font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
                             </span>
                             <span className={`text-caption ${TEXT_MUTED}`}>{formatRecord(ace.winCount, ace.lossCount)}</span>
                         </div>
@@ -64,19 +64,19 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                                 return (
                                     <div key={entry.userId} className="flex items-center gap-2">
                                         <div className="w-4 shrink-0 flex justify-center">
-                                            <RankBadge index={idx + 1} iconClass="w-3.5 h-3.5" textClass="text-xs" />
+                                            <RankBadge index={idx + 1} iconClass="w-3.5 h-3.5" textClass="text-caption" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             {href ? (
-                                                <Link href={href} className="text-sm text-foreground hover:text-foreground truncate block leading-tight">
+                                                <Link href={href} className="text-body2 text-foreground hover:text-foreground truncate block leading-tight">
                                                     {entryName(entry)}
                                                 </Link>
                                             ) : (
-                                                <p className="text-sm text-foreground truncate leading-tight">{entryName(entry)}</p>
+                                                <p className="text-body2 text-foreground truncate leading-tight">{entryName(entry)}</p>
                                             )}
                                             <p className={`text-caption ${TEXT_MUTED}`}>{formatRecord(entry.winCount, entry.lossCount)}</p>
                                         </div>
-                                        <span className="text-sm font-semibold text-foreground shrink-0">
+                                        <span className="text-body2 font-semibold text-foreground shrink-0">
                                             {entry.winRate}<span className={`text-caption font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
                                         </span>
                                     </div>
@@ -86,7 +86,7 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                     )}
                 </div>
             ) : (
-                <p className={`text-xs ${TEXT_MUTED} py-3`}>아직 에이스 없음</p>
+                <p className={`text-body2 ${TEXT_MUTED} py-3`}>아직 에이스 없음</p>
             )}
         </div>
     )

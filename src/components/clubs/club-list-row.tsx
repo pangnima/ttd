@@ -51,7 +51,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 type="button"
                 onClick={handleCancel}
                 disabled={isPending}
-                className="text-xs whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
+                className="text-caption whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
             >
                 취소
             </button>
@@ -60,7 +60,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 type="button"
                 onClick={handleApply}
                 disabled={isPending}
-                className="text-xs whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
+                className="text-caption whitespace-nowrap border border-foreground/20 rounded-full px-3 py-1 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors disabled:opacity-40"
             >
                 가입 신청
             </button>
@@ -75,10 +75,10 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
             >
                 <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="md" />
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors truncate">
+                    <p className="text-body2 font-medium text-foreground/90 group-hover:text-foreground transition-colors truncate">
                         {club.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground overflow-hidden">
+                    <div className="flex items-center gap-2 mt-0.5 text-caption text-muted-foreground overflow-hidden">
                         {club.region && (
                             <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
                                 <MapPin className="w-3 h-3 shrink-0" />

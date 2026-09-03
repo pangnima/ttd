@@ -41,7 +41,7 @@ export function LeaveClubButton({ clubId, clubName }: Props) {
             <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                className="h-8 gap-1.5 text-caption text-destructive border-destructive/40 hover:bg-destructive/10"
                 onClick={() => {
                     setError(null)
                     setOpen(true)
@@ -60,7 +60,7 @@ export function LeaveClubButton({ clubId, clubName }: Props) {
                         </DialogDescription>
                     </DialogHeader>
 
-                    {error && <p className="text-xs text-destructive">{error}</p>}
+                    {error && <p className="text-caption text-destructive">{error}</p>}
 
                     <DialogFooter showCloseButton>
                         <Button

@@ -46,24 +46,24 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
     const inner = (
         <>
             <Avatar className="w-9 h-9 shrink-0">
-                <AvatarFallback className="text-sm">
+                <AvatarFallback className="text-body2">
                     {user.name[0]}
                 </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <span className="text-xs text-muted-foreground">({user.nickname})</span>
+                    <p className="text-body2 font-medium">{user.name}</p>
+                    <span className="text-caption text-muted-foreground">({user.nickname})</span>
                     {user.isGuest && <GuestBadge />}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
                     </span>
                     {winRate !== null && (
                         <>
-                            <span className="text-xs text-muted-foreground">·</span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-caption text-muted-foreground">·</span>
+                            <span className="text-caption text-muted-foreground">
                                 {formatRecord(wins ?? 0, losses ?? 0)} ({winRate}%)
                             </span>
                         </>
@@ -74,12 +74,12 @@ export function MemberListItem({ member, user, clubId, clubRating, wins, losses 
                 {hasClubRating && (
                     <TierEmblem rating={clubRating!.rating} matchesPlayed={clubRating!.matchesPlayed} />
                 )}
-                <Badge variant="outline" className="text-xs font-mono">
+                <Badge variant="outline" className="text-caption font-mono">
                     NTRP {effectiveNtrp(user).toFixed(1)}
                 </Badge>
                 <Badge
                     variant={roleBadgeVariant[member.role]}
-                    className={member.role === 'officer' ? 'text-xs text-info border-info/40' : 'text-xs'}
+                    className={member.role === 'officer' ? 'text-caption text-info border-info/40' : 'text-caption'}
                 >
                     {roleLabel[member.role]}
                 </Badge>

@@ -88,7 +88,7 @@ export function ClubInviteCard({ clubId, activeToken }: Props) {
                     {isPending ? '생성 중…' : '초대 링크 생성'}
                 </Button>
             )}
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-caption text-destructive">{error}</p>}
         </div>
     )
 }

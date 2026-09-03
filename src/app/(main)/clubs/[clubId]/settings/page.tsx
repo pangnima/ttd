@@ -32,7 +32,7 @@ export default async function ClubSettingsPage({ params }: SettingsPageProps) {
 
             <section className="space-y-2 border-t border-foreground/8 pt-6">
                 <h2 className={TYPO.h4}>초대 링크</h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     링크를 받은 사람은 접속 즉시 멤버로 가입됩니다.
                     검색에 노출되지 않는 비공개 클럽은 이 링크로만 새 멤버를 받을 수 있습니다.
                 </p>
@@ -41,7 +41,7 @@ export default async function ClubSettingsPage({ params }: SettingsPageProps) {
 
             <section className="space-y-2 border-t border-foreground/8 pt-6">
                 <h2 className={TYPO.h4}>클럽 레이팅</h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     확정된 모든 경기를 처음부터 다시 계산해 클럽 레이팅을 갱신합니다.
                     과거 경기 반영이나 문제 복구가 필요할 때 사용하세요.
                 </p>

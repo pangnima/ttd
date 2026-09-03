@@ -25,21 +25,21 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
         <section className="space-y-3">
             <h2 className={TYPO.h4}>대진표 현황</h2>
             <div className={`${CARD_BASE} p-4 space-y-4`}>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-                    <span className={TEXT_MUTED}>확정 완료 <span className="text-base font-bold text-foreground">{activity.fixedCount}</span></span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-body2">
+                    <span className={TEXT_MUTED}>확정 완료 <span className="text-body font-bold text-foreground">{activity.fixedCount}</span></span>
                     <span className="text-border">·</span>
-                    <span className={TEXT_MUTED}>진행 예정 <span className="text-base font-bold text-foreground">{activity.pendingCount}</span></span>
+                    <span className={TEXT_MUTED}>진행 예정 <span className="text-body font-bold text-foreground">{activity.pendingCount}</span></span>
                     {totalMatches > 0 && (
                         <>
                             <span className="text-border">·</span>
-                            <span className={TEXT_MUTED}>총 <span className="text-base font-bold text-foreground">{totalMatches}</span>경기</span>
+                            <span className={TEXT_MUTED}>총 <span className="text-body font-bold text-foreground">{totalMatches}</span>경기</span>
                             <span className="mx-0.5 h-4 w-px bg-border hidden sm:block" />
                             {MATCH_TYPE_ORDER.map(({ type, key }) => (
                                 <span key={type} className="flex items-center gap-1">
                                     <span className={`${getMatchTypeBadgeClass(type)} border rounded-[4px] px-1.5 py-0.5 text-micro font-medium shrink-0`}>
                                         {MATCH_TYPE_LABELS[type]}
                                     </span>
-                                    <span className="text-sm font-semibold text-foreground">{activity.matchTypeCounts[key]}</span>
+                                    <span className="text-body2 font-semibold text-foreground">{activity.matchTypeCounts[key]}</span>
                                 </span>
                             ))}
                         </>
@@ -49,13 +49,13 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                 {activity.nextGame && (
                     <div className="flex items-center gap-2 pt-3 border-t border-border">
                         <Calendar className={`w-3.5 h-3.5 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-xs ${TEXT_MUTED}`}>다음 예정</span>
+                        <span className={`text-caption ${TEXT_MUTED}`}>다음 예정</span>
                         <span className={`${PILL_BASE} text-micro border-info/40 text-info bg-info/10`}>
                             {formatShortDate(activity.nextGame.date)}
                         </span>
                         <Link
                             href={`/clubs/${clubId}/match-games/${activity.nextGame.id}`}
-                            className={`text-xs ${TEXT_MUTED} hover:text-foreground truncate flex-1 text-right`}
+                            className={`text-caption ${TEXT_MUTED} hover:text-foreground truncate flex-1 text-right`}
                         >
                             {activity.nextGame.name}
                         </Link>
@@ -65,10 +65,10 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                 {activity.recentGames.length > 0 && (
                     <div className="space-y-2 pt-3 border-t border-border">
                         <div className="flex items-center justify-between">
-                            <span className={`text-xs font-medium text-muted-foreground`}>최근 대진표</span>
+                            <span className={`text-caption font-medium text-muted-foreground`}>최근 대진표</span>
                             <Link
                                 href={`/clubs/${clubId}/match-games`}
-                                className={`text-xs ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5`}
+                                className={`text-caption ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5`}
                             >
                                 전체보기 <ChevronRight className="w-3 h-3" />
                             </Link>
@@ -81,10 +81,10 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                             >
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <Trophy className={`w-3 h-3 shrink-0 ${TEXT_MUTED}`} />
-                                    <span className="text-sm text-foreground truncate">{g.name}</span>
+                                    <span className="text-body2 text-foreground truncate">{g.name}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className={`text-xs ${TEXT_MUTED}`}>{formatShortDate(g.date)}</span>
+                                    <span className={`text-caption ${TEXT_MUTED}`}>{formatShortDate(g.date)}</span>
                                     <span className={`${PILL_BASE} text-micro ${g.isFixed ? 'border-win/40 text-win bg-win/10' : 'border-border text-muted-foreground'}`}>
                                         {g.isFixed ? '확정' : '예정'}
                                     </span>

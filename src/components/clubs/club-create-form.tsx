@@ -61,7 +61,7 @@ export function ClubCreateForm() {
                     <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="description">클럽 소개</Label>
-                            <span className="text-xs text-muted-foreground">선택</span>
+                            <span className="text-caption text-muted-foreground">선택</span>
                         </div>
                         <Textarea
                             id="description"
@@ -71,7 +71,7 @@ export function ClubCreateForm() {
                             maxLength={200}
                             onChange={(e) => setDescLen(e.target.value.length)}
                         />
-                        <p className="text-right text-xs text-muted-foreground tabular-nums">
+                        <p className="text-right text-caption text-muted-foreground tabular-nums">
                             {descLen} / 200
                         </p>
                     </div>
@@ -91,8 +91,8 @@ export function ClubCreateForm() {
                                     : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className={cn('text-sm font-semibold', isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>공개</p>
-                            <p className={cn('mt-1 text-xs', isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
+                            <p className={cn('text-body2 font-semibold', isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>공개</p>
+                            <p className={cn('mt-1 text-caption', isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
                                 누구나 검색하고 둘러볼 수 있어요
                             </p>
                         </button>
@@ -107,8 +107,8 @@ export function ClubCreateForm() {
                                     : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className={cn('text-sm font-semibold', !isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>비공개</p>
-                            <p className={cn('mt-1 text-xs', !isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
+                            <p className={cn('text-body2 font-semibold', !isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>비공개</p>
+                            <p className={cn('mt-1 text-caption', !isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
                                 초대 링크로만 가입할 수 있어요
                             </p>
                         </button>
@@ -156,16 +156,16 @@ export function ClubCreateForm() {
                     </div>
 
                     {passwordMismatch && (
-                        <p className="text-xs text-destructive">비밀번호가 일치하지 않습니다.</p>
+                        <p className="text-body2 text-destructive">비밀번호가 일치하지 않습니다.</p>
                     )}
 
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         클럽을 해체할 때 사용되며, 안전하게 보관됩니다.
                     </p>
             </FormSectionCard>
 
             {state?.error && (
-                <p className="text-sm text-destructive">{state.error}</p>
+                <p className="text-body2 text-destructive">{state.error}</p>
             )}
 
             <div className="flex gap-2 pt-1">

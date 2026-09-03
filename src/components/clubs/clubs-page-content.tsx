@@ -49,7 +49,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                 actions={
                     <Link
                         href="/clubs/new"
-                        className="flex items-center gap-1.5 text-sm border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors"
+                        className="flex items-center gap-1.5 text-body2 border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors"
                     >
                         <Plus className="w-3.5 h-3.5" />
                         클럽 만들기
@@ -64,7 +64,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                     placeholder="클럽 이름·지역으로 검색"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="h-12 pl-11 text-base bg-background border-input"
+                    className="h-12 pl-11 text-body bg-background border-input"
                 />
             </div>
 
@@ -98,13 +98,13 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src="/empty/clubs-empty.svg" alt="" aria-hidden width={132} height={96} draggable={false} />
                             <div className="space-y-1">
-                                <p className="text-sm font-medium text-foreground">아직 가입 가능한 클럽이 없습니다.</p>
-                                <p className="text-xs text-muted-foreground">첫 번째 클럽을 만들어 멤버를 모아보세요.</p>
+                                <p className="text-body font-medium text-foreground">아직 가입 가능한 클럽이 없습니다.</p>
+                                <p className="text-body2 text-muted-foreground">첫 번째 클럽을 만들어 멤버를 모아보세요.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Link
                                     href="/clubs/new"
-                                    className="inline-flex items-center gap-1.5 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    className="inline-flex items-center gap-1.5 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     클럽 만들기
@@ -112,7 +112,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                                 <button
                                     type="button"
                                     onClick={() => router.refresh()}
-                                    className="inline-flex items-center gap-1.5 text-sm rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
+                                    className="inline-flex items-center gap-1.5 text-body2 rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
                                     새로고침

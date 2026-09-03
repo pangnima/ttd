@@ -31,18 +31,18 @@ export function ActivityRankingCard({ clubId, ranking }: ActivityRankingCardProp
                                     userId={entry.userId}
                                     isGuest={!entry.user || entry.user.isGuest}
                                     clubId={clubId}
-                                    className="text-sm font-medium text-foreground hover:text-foreground truncate block"
+                                    className="text-body2 font-medium text-foreground hover:text-foreground truncate block"
                                 >
                                     {entry.user?.name ?? '알 수 없음'}
                                 </ProfileLink>
-                                <p className={`text-xs ${TEXT_MUTED}`}>{entry.user?.nickname}</p>
+                                <p className={`text-caption ${TEXT_MUTED}`}>{entry.user?.nickname}</p>
                             </div>
                             <div className="text-right shrink-0">
-                                <p className="text-lg font-bold text-foreground">
+                                <p className="text-h4 font-bold tabular-nums text-foreground">
                                     {entry.matchCount}
-                                    <span className={`text-xs font-normal ml-0.5 ${TEXT_MUTED}`}>경기</span>
+                                    <span className={`text-caption font-normal ml-0.5 ${TEXT_MUTED}`}>경기</span>
                                 </p>
-                                <p className={`text-xs ${TEXT_MUTED}`}>
+                                <p className={`text-caption ${TEXT_MUTED}`}>
                                     {winRate !== null ? `승률 ${winRate}%` : '기록 없음'}
                                 </p>
                             </div>

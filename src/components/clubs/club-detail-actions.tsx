@@ -19,14 +19,14 @@ export function ClubDetailActions({ clubId, membershipStatus }: Props) {
     if (membershipStatus === 'pending') {
         return (
             <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                <span className="flex items-center gap-1 text-caption text-amber-600 dark:text-amber-400">
                     <Clock className="w-3.5 h-3.5" />
                     가입승인 대기중
                 </span>
                 <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                    className="h-8 text-caption text-destructive border-destructive/40 hover:bg-destructive/10"
                     onClick={() => startTransition(async () => { await cancelApplicationAction(clubId) })}
                     disabled={isPending}
                 >

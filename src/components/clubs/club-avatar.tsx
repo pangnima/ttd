@@ -9,9 +9,9 @@ type ClubAvatarProps = {
 }
 
 const sizeStyles: Record<NonNullable<ClubAvatarProps['size']>, string> = {
-    sm: 'w-8 h-8 text-xs rounded-md',
-    md: 'w-9 h-9 text-sm rounded-md',
-    lg: 'w-14 h-14 text-base rounded-xl',
+    sm: 'w-8 h-8 text-caption rounded-md',
+    md: 'w-9 h-9 text-body2 rounded-md',
+    lg: 'w-14 h-14 text-body rounded-xl',
 }
 
 export function ClubAvatar({ name, logoUrl, size = 'md', className }: ClubAvatarProps) {

@@ -104,9 +104,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             </span>
                         </div>
                         {club.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{club.description}</p>
+                            <p className="text-body2 text-muted-foreground mt-1">{club.description}</p>
                         )}
-                        <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs ${TEXT_MUTED} pt-0.5`}>
+                        <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption ${TEXT_MUTED} pt-0.5`}>
                             <span>정회원 <span className="font-medium text-foreground/80">{regularMembers.length}</span>명</span>
                             {guestMembers.length > 0 && (
                                 <>
@@ -145,7 +145,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 {ownerMember && (
                     <div className="flex items-start gap-3 px-4 py-3">
                         <Crown className={`w-4 h-4 shrink-0 mt-0.5 ${TEXT_MUTED}`} />
-                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0 mt-0.5`}>운영진</span>
+                        <span className={`text-body2 ${TEXT_MUTED} w-16 shrink-0 mt-0.5`}>운영진</span>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body text-foreground/90">
                             <ProfileLink
                                 userId={ownerMember.userId}
@@ -157,7 +157,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             </ProfileLink>
                             {officerMembers.map((m) => (
                                 <span key={m.userId} className="flex items-center gap-1">
-                                    <span className={`text-xs ${TEXT_MUTED}`}>·</span>
+                                    <span className={`text-caption ${TEXT_MUTED}`}>·</span>
                                     <span className="text-caption text-info">임원</span>
                                     <ProfileLink
                                         userId={m.userId}
@@ -175,14 +175,14 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 {club.region && (
                     <div className="flex items-center gap-3 px-4 py-3">
                         <MapPin className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>지역</span>
+                        <span className={`text-body2 ${TEXT_MUTED} w-16 shrink-0`}>지역</span>
                         <span className="text-body font-medium text-foreground/90">{club.region}</span>
                     </div>
                 )}
                 {club.courtSchedule && (
                     <div className="flex items-center gap-3 px-4 py-3">
                         <Clock className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
-                        <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>정기시간</span>
+                        <span className={`text-body2 ${TEXT_MUTED} w-16 shrink-0`}>정기시간</span>
                         <span className="text-body font-medium text-foreground/90">{club.courtSchedule}</span>
                     </div>
                 )}
@@ -210,7 +210,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <h2 className={TYPO.h3}>회원 ({regularMembers.length}명)</h2>
                     <Link
                         href={`/clubs/${clubId}/members`}
-                        className={`text-xs ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5 transition-colors`}
+                        className={`text-caption ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5 transition-colors`}
                     >
                         전체보기 <ChevronRight className="w-3.5 h-3.5" />
                     </Link>

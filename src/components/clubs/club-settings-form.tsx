@@ -75,12 +75,12 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                                 <div className="space-y-1.5">
                                     <label
                                         htmlFor="settings-logo"
-                                        className="inline-flex items-center gap-1.5 text-xs border border-foreground/20 rounded-full px-3 py-1.5 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors cursor-pointer"
+                                        className="inline-flex items-center gap-1.5 text-caption border border-foreground/20 rounded-full px-3 py-1.5 text-foreground/85 hover:bg-foreground/8 hover:border-foreground/35 transition-colors cursor-pointer"
                                     >
                                         <ImagePlus className="w-3.5 h-3.5" />
                                         이미지 변경
                                     </label>
-                                    <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
+                                    <p className="text-caption text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
                                     <input
                                         id="settings-logo"
                                         name="logo"
@@ -168,7 +168,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                         </div>
 
                         {state?.error && (
-                            <p className="text-sm text-destructive">{state.error}</p>
+                            <p className="text-body2 text-destructive">{state.error}</p>
                         )}
 
                         <Button type="submit" className="w-full" disabled={isSaving}>
@@ -185,7 +185,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                     <CardTitle className="text-h4 text-destructive">위험 구역</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-body2 text-muted-foreground mb-4">
                         클럽을 삭제하면 모든 데이터가 영구적으로 제거됩니다.
                     </p>
                     <Button
@@ -224,7 +224,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                             autoComplete="off"
                         />
                         {deleteError && (
-                            <p className="text-xs text-destructive">{deleteError}</p>
+                            <p className="text-caption text-destructive">{deleteError}</p>
                         )}
                     </div>
 

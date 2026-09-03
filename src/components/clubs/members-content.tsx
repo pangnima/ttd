@@ -69,18 +69,18 @@ export function MembersContent({
         <>
             <div className="mb-6">
                 <h1 className="text-h1 font-bold text-foreground">회원 목록</h1>
-                {clubName && <p className="text-sm text-muted-foreground mt-1">{clubName}</p>}
+                {clubName && <p className="text-body2 text-muted-foreground mt-1">{clubName}</p>}
             </div>
 
             <section>
                 <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
                         <h2 className="text-h4 font-semibold text-foreground">정회원</h2>
-                        <Badge variant="secondary" className="text-xs">{regularMembers.length}명</Badge>
+                        <Badge variant="secondary" className="text-caption">{regularMembers.length}명</Badge>
                     </div>
                     <button
                         onClick={() => setSortByRating((v) => !v)}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-caption text-muted-foreground hover:text-foreground transition-colors"
                     >
                         {sortByRating ? '가입순' : '계급순'}
                     </button>
@@ -99,7 +99,7 @@ export function MembersContent({
                             {isOwner && m.role !== 'owner' && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger
-                                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md p-0 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+                                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md p-0 text-body2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                                         disabled={isPending}
                                     >
                                         ···
@@ -132,7 +132,7 @@ export function MembersContent({
                     <section>
                         <div className="flex items-center gap-2 mb-2">
                             <h2 className="text-h4 font-semibold text-foreground">게스트</h2>
-                            <Badge variant="outline" className="text-xs">{guestMembers.length}명</Badge>
+                            <Badge variant="outline" className="text-caption">{guestMembers.length}명</Badge>
                         </div>
                         <div className="border rounded-lg divide-y">
                             {guestMembers.map((m) => (
@@ -155,7 +155,7 @@ export function MembersContent({
                     <section>
                         <div className="flex items-center gap-2 mb-2">
                             <h2 className="text-h4 font-semibold text-foreground">가입 대기</h2>
-                            <Badge variant="outline" className="text-xs text-orange-600 dark:text-orange-400 border-orange-400/50">
+                            <Badge variant="outline" className="text-caption text-orange-600 dark:text-orange-400 border-orange-400/50">
                                 {pendingMembers.length}명
                             </Badge>
                         </div>
@@ -169,7 +169,7 @@ export function MembersContent({
                                         <div className="flex gap-1.5 shrink-0">
                                             <Button
                                                 size="sm"
-                                                className="h-7 text-xs"
+                                                className="h-7 text-caption"
                                                 onClick={() => handleApprove(m.userId)}
                                                 disabled={isPending}
                                             >
@@ -178,7 +178,7 @@ export function MembersContent({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-7 text-xs"
+                                                className="h-7 text-caption"
                                                 onClick={() => handleReject(m.userId)}
                                                 disabled={isPending}
                                             >
@@ -190,7 +190,7 @@ export function MembersContent({
                             ))}
                         </div>
                         {!canManagePending && (
-                            <p className="text-xs text-muted-foreground mt-2">
+                            <p className="text-caption text-muted-foreground mt-2">
                                 ※ 승인/거절은 운영자 또는 임원만 가능합니다.
                             </p>
                         )}

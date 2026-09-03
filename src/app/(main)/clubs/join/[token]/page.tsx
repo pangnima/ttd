@@ -45,9 +45,9 @@ export default async function ClubJoinPage({ params }: JoinPageProps) {
         return (
             <PageContainer>
                 <div className={`${CARD_BASE} p-8 text-center space-y-3 max-w-md mx-auto w-full`}>
-                    <p className="text-sm font-medium text-foreground">유효하지 않거나 만료된 초대 링크입니다.</p>
-                    <p className="text-xs text-muted-foreground">링크가 비활성화되었거나 잘못되었을 수 있어요.</p>
-                    <Link href="/clubs" className="inline-block text-xs text-info hover:underline">
+                    <p className="text-body font-medium text-foreground">유효하지 않거나 만료된 초대 링크입니다.</p>
+                    <p className="text-body2 text-muted-foreground">링크가 비활성화되었거나 잘못되었을 수 있어요.</p>
+                    <Link href="/clubs" className="inline-block text-caption text-info hover:underline">
                         클럽 목록으로 가기
                     </Link>
                 </div>
@@ -58,13 +58,13 @@ export default async function ClubJoinPage({ params }: JoinPageProps) {
     return (
         <PageContainer>
             <div className={`${CARD_BASE} p-6 space-y-5 max-w-md mx-auto w-full`}>
-                <p className="text-xs text-muted-foreground text-center">클럽 초대를 받았습니다</p>
+                <p className="text-caption text-muted-foreground text-center">클럽 초대를 받았습니다</p>
                 <div className="flex flex-col items-center gap-3 text-center">
                     <ClubAvatar name={preview.name} logoUrl={preview.logo_url ?? undefined} size="lg" />
                     <div>
-                        <p className="text-lg font-bold text-foreground">{preview.name}</p>
+                        <p className="text-h4 font-bold text-foreground">{preview.name}</p>
                         {preview.region && (
-                            <span className="flex items-center justify-center gap-1 mt-1 text-xs text-muted-foreground">
+                            <span className="flex items-center justify-center gap-1 mt-1 text-caption text-muted-foreground">
                                 <MapPin className="w-3 h-3" />
                                 {preview.region}
                             </span>

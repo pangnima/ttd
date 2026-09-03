@@ -34,7 +34,7 @@ export function InviteJoinButton({ token }: Props) {
                 <UserPlus className="w-4 h-4" />
                 {isPending ? '가입 중…' : '가입하기'}
             </Button>
-            {error && <p className="text-xs text-destructive text-center">{error}</p>}
+            {error && <p className="text-caption text-destructive text-center">{error}</p>}
         </div>
     )
 }
