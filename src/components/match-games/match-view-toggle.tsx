@@ -60,7 +60,7 @@ function ToggleButton({
         <button
             type="button"
             onClick={onClick}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body2 font-medium transition-all ${
                 active
                     ? 'bg-background text-foreground shadow-sm border border-border'
                     : 'text-muted-foreground hover:text-foreground'

@@ -321,14 +321,14 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             {/* 코트 목록 */}
             <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                    <span className="text-sm font-medium">코트 목록</span>
+                    <span className="text-body2 font-medium">코트 목록</span>
                     <Button type="button" variant="outline" size="sm" className="h-8 text-body2 gap-1" onClick={addCourt}>
                         <Plus className="w-3 h-3" /> 코트 추가
                     </Button>
                 </div>
 
                 {courts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-6">
+                    <p className="text-body2 text-muted-foreground text-center py-6">
                         코트 추가 버튼을 눌러 코트를 등록하세요.
                     </p>
                 ) : (
@@ -389,7 +389,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             {/* 참석자 명단 */}
             <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                    <span className="text-sm font-medium">참석자</span>
+                    <span className="text-body2 font-medium">참석자</span>
                 </div>
                 <div className="px-4 py-3">
                     <AttendeePicker
@@ -406,7 +406,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             {/* 자동 배치 */}
             <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                    <span className="text-sm font-medium">자동 배치</span>
+                    <span className="text-body2 font-medium">자동 배치</span>
                 </div>
                 <div className="px-4 py-3 space-y-2">
                     <AutoGeneratePanel
@@ -417,7 +417,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         onApply={handleAutoApply}
                     />
                     {warnings.length > 0 && (
-                        <ul className="space-y-0.5 text-xs text-amber-600">
+                        <ul className="space-y-0.5 text-caption text-amber-600">
                             {warnings.map((w, i) => (
                                 <li key={i}>⚠ {w}</li>
                             ))}
@@ -429,11 +429,11 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             {/* 게임 목록 */}
             <div className={CARD_BASE}>
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b">
-                    <span className="text-sm font-medium">게임 목록</span>
+                    <span className="text-body2 font-medium">게임 목록</span>
                     <div className="flex flex-wrap items-center gap-2">
                         {/* 게임 추가 시 자동 채울 시작 시간 / 경기 시간 설정 */}
                         <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground shrink-0">시작</span>
+                            <span className="text-caption text-muted-foreground shrink-0">시작</span>
                             <Input
                                 type="time"
                                 value={baseStart}
@@ -442,7 +442,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                             />
                         </div>
                         <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground shrink-0">경기</span>
+                            <span className="text-caption text-muted-foreground shrink-0">경기</span>
                             <Select
                                 value={String(slotMinutes)}
                                 onValueChange={(v) => setSlotMinutes(Number(v))}
@@ -472,7 +472,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 </div>
 
                 {entries.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-10">
+                    <p className="text-body2 text-muted-foreground text-center py-10">
                         게임 추가 버튼을 눌러 게임을 등록하세요.
                     </p>
                 ) : (
@@ -492,9 +492,9 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 <TableRow key={`header-${group.key}`} className="bg-muted/30 hover:bg-muted/30">
                                     <TableCell colSpan={6} className="py-2">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <span className="text-xs font-semibold text-foreground">{group.label}</span>
+                                            <span className="text-caption font-semibold text-foreground">{group.label}</span>
                                             {(restNamesBySlot.get(group.key)?.length ?? 0) > 0 && (
-                                                <span className="text-xs font-normal text-muted-foreground">
+                                                <span className="text-caption font-normal text-muted-foreground">
                                                     휴식: {restNamesBySlot.get(group.key)!.join(', ')}
                                                 </span>
                                             )}
@@ -534,7 +534,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                     className="h-9 w-16"
                                                     placeholder="09:00"
                                                 />
-                                                <span className="text-xs text-muted-foreground shrink-0">~</span>
+                                                <span className="text-caption text-muted-foreground shrink-0">~</span>
                                                 <Input
                                                     value={entry.endAt}
                                                     onChange={(e) => updateEntry(entry.id, { endAt: e.target.value })}
@@ -550,7 +550,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                 onValueChange={(v) => updateEntry(entry.id, { matchType: v as MatchType })}
                                             >
                                                 <SelectTrigger className="h-8 text-body2 w-20">
-                                                    <Badge variant={MATCH_TYPE_VARIANTS[entry.matchType]} className="text-xs px-1.5">
+                                                    <Badge variant={MATCH_TYPE_VARIANTS[entry.matchType]} className="text-caption px-1.5">
                                                         {MATCH_TYPE_LABELS[entry.matchType]}
                                                     </Badge>
                                                 </SelectTrigger>
@@ -619,10 +619,10 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                 <AttendanceSummary gameCounts={gameCounts} />
             )}
 
-            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            {error && <p className="text-body2 text-destructive text-center">{error}</p>}
 
             {initialData && (
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-caption text-muted-foreground text-center">
                     선수가 바뀐 경기의 점수는 초기화됩니다.
                 </p>
             )}

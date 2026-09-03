@@ -27,7 +27,7 @@ export function AttendanceSummary({ gameCounts, restingBySlot, className }: Atte
                         {restingBySlot
                             .filter((s) => s.names.length > 0)
                             .map((s) => (
-                                <li key={s.key} className="text-xs text-foreground">
+                                <li key={s.key} className="text-caption text-foreground">
                                     <span className="text-muted-foreground">{s.label}</span>
                                     {'  '}휴식: {s.names.join(', ')}
                                 </li>
@@ -45,7 +45,7 @@ export function AttendanceSummary({ gameCounts, restingBySlot, className }: Atte
                         {gameCounts.map((g) => (
                             <span
                                 key={g.id}
-                                className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-xs text-foreground"
+                                className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-caption text-foreground"
                             >
                                 {g.name}
                                 <span className="font-semibold tabular-nums">{g.count}게임</span>

@@ -42,7 +42,7 @@ export function AttendeePicker({ allPlayers, attendeeIds, onAdd, onAddAll, onRem
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-9 shrink-0 gap-1 text-xs"
+                    className="h-9 shrink-0 gap-1 text-caption"
                     onClick={onAddAll}
                     disabled={addableMemberCount === 0}
                 >
@@ -51,11 +51,11 @@ export function AttendeePicker({ allPlayers, attendeeIds, onAdd, onAddAll, onRem
             </div>
 
             {attendees.length === 0 ? (
-                <p className="text-sm text-muted-foreground">참석자를 추가해주세요.</p>
+                <p className="text-body2 text-muted-foreground">참석자를 추가해주세요.</p>
             ) : (
                 <div className="flex flex-wrap gap-1.5">
                     {attendees.map((user) => (
-                        <Badge key={user.id} variant="secondary" className="gap-1 pr-1 text-xs font-normal">
+                        <Badge key={user.id} variant="secondary" className="gap-1 pr-1 text-caption font-normal">
                             <span>{GENDER_EMOJI[user.gender]}</span>
                             <span>{user.nickname}</span>
                             {user.isGuest && <span className="text-muted-foreground">(게스트)</span>}

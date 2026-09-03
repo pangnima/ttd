@@ -34,7 +34,7 @@ type TeamPlayersCellProps = {
 export function TeamPlayersCell({
     playerIds, teamKey, winner, isFixed, adPlayerId, getName, isFormerMember, onToggle, justify, deltas, ratingByUser, hideSideToggle,
 }: TeamPlayersCellProps) {
-    if (!playerIds.length) return <span className="text-muted-foreground text-xs">-</span>
+    if (!playerIds.length) return <span className="text-muted-foreground text-caption">-</span>
     const outcome = teamOutcome(winner, teamKey)
     return (
         <div className="space-y-1">
@@ -84,7 +84,7 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
     if (confirmed) {
         return (
             <div className="flex items-center gap-2">
-                <div className={`flex items-center ${compact ? 'gap-1.5' : 'gap-2'} font-mono text-sm`}>
+                <div className={`flex items-center ${compact ? 'gap-1.5' : 'gap-2'} font-mono text-body2`}>
                     <span className={winner === 'team1' ? 'font-black text-win' : winner === 'team2' ? 'text-loss' : 'text-foreground/70'}>
                         {sets[0].team1}
                     </span>
@@ -121,7 +121,7 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                 className={`${inputCls} text-center rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
                 placeholder="P1"
             />
-            <span className="text-muted-foreground text-xs">:</span>
+            <span className="text-muted-foreground text-caption">:</span>
             <input
                 type="text"
                 value={sets[0].team2}

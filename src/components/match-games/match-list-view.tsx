@@ -26,24 +26,24 @@ export function MatchListView({
         <>
             {/* 데스크탑 테이블 (md 이상) */}
             <div className="hidden md:block rounded-xl border border-border bg-card overflow-hidden">
-                <table className="w-full text-sm">
+                <table className="w-full text-body2">
                     <thead>
                         <tr className="border-b border-border">
-                            <th className="px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground whitespace-nowrap w-16">코트</th>
-                            <th className="px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground whitespace-nowrap w-16">종류</th>
-                            <th className="px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground">플레이어 1</th>
-                            <th className="px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground">플레이어 2</th>
-                            <th className="px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground">스코어</th>
+                            <th className="px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground whitespace-nowrap w-16">코트</th>
+                            <th className="px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground whitespace-nowrap w-16">종류</th>
+                            <th className="px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground">플레이어 1</th>
+                            <th className="px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground">플레이어 2</th>
+                            <th className="px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground">스코어</th>
                         </tr>
                     </thead>
                     <tbody>
                         {slotGroups.flatMap((group) => [
                             <tr key={`header-${group.slotId}`} className="bg-muted/30 border-y border-border">
-                                <td colSpan={5} className="px-3 py-2.5 text-sm font-semibold text-foreground">
+                                <td colSpan={5} className="px-3 py-2.5 text-body2 font-semibold text-foreground">
                                     <div className="flex items-center justify-between gap-3">
                                         <span className={SLOT_TIME_CLASS}>{group.label}</span>
                                         {restNames(group.slotId).length > 0 && (
-                                            <span className="text-xs font-normal text-muted-foreground">
+                                            <span className="text-caption font-normal text-muted-foreground">
                                                 휴식: {restNames(group.slotId).join(', ')}
                                             </span>
                                         )}
@@ -154,9 +154,9 @@ export function MatchListView({
                 {slotGroups.map((group) => (
                     <div key={group.slotId}>
                         <div className="flex flex-wrap items-center justify-between gap-x-2 pb-2">
-                            <p className={cn('text-sm font-semibold', SLOT_TIME_CLASS)}>{group.label}</p>
+                            <p className={cn('text-body2 font-semibold', SLOT_TIME_CLASS)}>{group.label}</p>
                             {restNames(group.slotId).length > 0 && (
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-caption text-muted-foreground">
                                     휴식: {restNames(group.slotId).join(', ')}
                                 </p>
                             )}

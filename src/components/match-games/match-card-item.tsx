@@ -44,7 +44,7 @@ export function MatchCardItem({
             isSelfRow && SELF_CARD_CLASS
         )}>
             <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-sm text-foreground shrink-0">
+                <span className="font-semibold text-body2 text-foreground shrink-0">
                     {getCourtLabel(match.courtId)}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
@@ -58,7 +58,7 @@ export function MatchCardItem({
             <div className="space-y-2">
                 {match.matchType === 'singles' ? (
                     <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-muted-foreground shrink-0">P1</span>
+                        <span className="text-caption text-muted-foreground shrink-0">P1</span>
                         <PlayerName
                             name={getName(match.player1Id ?? '')}
                             rating={ratingByUser?.[match.player1Id ?? '']?.rating}
@@ -68,7 +68,7 @@ export function MatchCardItem({
                             isFormerMember={isFormerMember?.(match.player1Id ?? '')}
                             className="flex-1"
                         />
-                        <span className="text-muted-foreground text-xs mx-1">vs</span>
+                        <span className="text-muted-foreground text-caption mx-1">vs</span>
                         <PlayerName
                             name={getName(match.player2Id ?? '')}
                             rating={ratingByUser?.[match.player2Id ?? '']?.rating}
@@ -78,7 +78,7 @@ export function MatchCardItem({
                             isFormerMember={isFormerMember?.(match.player2Id ?? '')}
                             className="flex-1 justify-end text-right"
                         />
-                        <span className="text-xs text-muted-foreground shrink-0">P2</span>
+                        <span className="text-caption text-muted-foreground shrink-0">P2</span>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 gap-3">

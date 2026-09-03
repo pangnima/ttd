@@ -30,7 +30,7 @@ function outcomeClass(outcome: PlayerOutcome): string {
 
 export function PlayerName({ name, rating, outcome, delta, showDelta, isFormerMember, className }: PlayerNameProps) {
     return (
-        <span className={cn('text-sm inline-flex items-center gap-1', outcomeClass(outcome), className)}>
+        <span className={cn('text-body2 inline-flex items-center gap-1', outcomeClass(outcome), className)}>
             <TierIcon rating={rating ?? DEFAULT_RATING} size={14} className="shrink-0" />
             <span className={cn(isFormerMember && 'line-through')}>{name}</span>
             {isFormerMember && (

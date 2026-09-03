@@ -53,26 +53,26 @@ export function AutoGeneratePanel({ courts, attendees, baseStart, slotMinutes, o
     return (
         <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground shrink-0">라운드</span>
+                <span className="text-caption text-muted-foreground shrink-0">라운드</span>
                 <Input
                     type="number"
                     min={1}
                     max={20}
                     value={Number.isNaN(rounds) ? '' : rounds}
                     onChange={(e) => handleRoundsChange(e.target.value)}
-                    className="h-8 text-xs w-16"
+                    className="h-8 text-caption w-16"
                 />
             </div>
             <Button
                 type="button"
                 size="sm"
-                className="h-8 text-xs gap-1"
+                className="h-8 text-caption gap-1"
                 onClick={handleGenerate}
                 disabled={!ready}
             >
                 <Wand2 className="w-3.5 h-3.5" /> 자동 배치
             </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
                 참석자 {attendees.length}명 · 코트 {courts.length}개 · 기준 NTRP {defaultNtrp.toFixed(1)}
                 <span className="ml-1">(기존 게임 목록을 덮어씁니다)</span>
             </p>

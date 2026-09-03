@@ -56,11 +56,11 @@ export function MatchConfirmFooter({
 
     return (
         <div className="flex flex-col gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/8 px-4 py-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <div className="flex items-center gap-2 text-body2 font-semibold text-foreground">
                 <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 경기 입력 현황 {total - pending.length}/{total}
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-caption text-muted-foreground leading-relaxed">
                 남은 경기: {previews.join(', ')}
                 {remainder > 0 && ` 외 ${remainder}개`}
                 <br />

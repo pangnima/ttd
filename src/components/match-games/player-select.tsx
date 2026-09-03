@@ -90,10 +90,10 @@ export function PlayerSelect({ users, value, onChange, placeholder = '선수 선
                             </ComboboxItem>
                         ) : (
                             <ComboboxItem key={item.id} value={item} className="gap-1.5">
-                                <span className="text-xs shrink-0">{GENDER_EMOJI[item.gender]}</span>
+                                <span className="text-caption shrink-0">{GENDER_EMOJI[item.gender]}</span>
                                 <span className="truncate">{item.nickname}</span>
                                 {item.isGuest && (
-                                    <span className="text-xs text-muted-foreground shrink-0">(게스트)</span>
+                                    <span className="text-caption text-muted-foreground shrink-0">(게스트)</span>
                                 )}
                             </ComboboxItem>
                         )

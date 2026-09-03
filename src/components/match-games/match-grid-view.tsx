@@ -21,16 +21,16 @@ export function MatchGridView({
 
     return (
         <div className="rounded-xl border border-border bg-card overflow-x-auto">
-            <table className="w-full border-separate border-spacing-0 text-sm">
+            <table className="w-full border-separate border-spacing-0 text-body2">
                 <thead>
                     <tr>
-                        <th className="sticky left-0 z-20 bg-card border-b border-r border-border px-3 py-3 text-left text-xs font-medium tracking-widest uppercase text-muted-foreground w-32 min-w-[8rem]">
+                        <th className="sticky left-0 z-20 bg-card border-b border-r border-border px-3 py-3 text-left text-caption font-medium tracking-widest uppercase text-muted-foreground w-32 min-w-[8rem]">
                             시간 / 코트
                         </th>
                         {courts.map((court) => (
                             <th
                                 key={court.id}
-                                className="border-b border-border px-3 py-3 text-left text-xs font-semibold text-foreground min-w-[10rem]"
+                                className="border-b border-border px-3 py-3 text-left text-caption font-semibold text-foreground min-w-[10rem]"
                             >
                                 {court.label}
                             </th>
@@ -43,7 +43,7 @@ export function MatchGridView({
                         return (
                             <tr key={slot.slotId}>
                                 <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-3 align-top w-32 min-w-[8rem]">
-                                    <p className={cn('text-sm font-semibold whitespace-nowrap', SLOT_TIME_CLASS)}>{slot.label}</p>
+                                    <p className={cn('text-body2 font-semibold whitespace-nowrap', SLOT_TIME_CLASS)}>{slot.label}</p>
                                     {rests.length > 0 && (
                                         <p className="mt-1 text-caption text-muted-foreground leading-snug">
                                             휴식: {rests.join(', ')}
@@ -74,7 +74,7 @@ export function MatchGridView({
                                                     editScore={editScore}
                                                 />
                                             ) : (
-                                                <div className="h-full min-h-[3rem] flex items-center justify-center text-muted-foreground text-xs">
+                                                <div className="h-full min-h-[3rem] flex items-center justify-center text-muted-foreground text-caption">
                                                     -
                                                 </div>
                                             )}

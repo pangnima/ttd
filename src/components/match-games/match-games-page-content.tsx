@@ -69,12 +69,12 @@ export function MatchGamesPageContent({
                     <Lock className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="text-center space-y-1">
-                    <p className="text-sm font-medium text-foreground">이 클럽의 멤버가 아닙니다</p>
-                    <p className="text-xs text-muted-foreground">클럽에 가입한 후 대진표를 확인할 수 있습니다.</p>
+                    <p className="text-body font-medium text-foreground">이 클럽의 멤버가 아닙니다</p>
+                    <p className="text-body2 text-muted-foreground">클럽에 가입한 후 대진표를 확인할 수 있습니다.</p>
                 </div>
                 <Link
                     href={`/clubs/${clubId}`}
-                    className="mt-1 text-xs border border-input rounded-full px-4 py-1.5 text-muted-foreground hover:border-input hover:text-foreground transition-colors"
+                    className="mt-1 text-caption border border-input rounded-full px-4 py-1.5 text-muted-foreground hover:border-input hover:text-foreground transition-colors"
                 >
                     클럽 페이지로 이동
                 </Link>
@@ -90,7 +90,7 @@ export function MatchGamesPageContent({
                 actions={
                     <Link
                         href={`/clubs/${clubId}/match-games/new`}
-                        className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
+                        className="flex items-center gap-1.5 text-body2 font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
                     >
                         <Plus className="w-4 h-4" />
                         대진표 만들기
@@ -105,8 +105,8 @@ export function MatchGamesPageContent({
                         <Trophy className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="text-center space-y-1">
-                        <p className="text-sm text-foreground">아직 대진표가 없습니다.</p>
-                        <p className="text-xs text-muted-foreground">대진표 만들기 버튼으로 첫 대진표를 생성해보세요.</p>
+                        <p className="text-body text-foreground">아직 대진표가 없습니다.</p>
+                        <p className="text-body2 text-muted-foreground">대진표 만들기 버튼으로 첫 대진표를 생성해보세요.</p>
                     </div>
                 </div>
             ) : (
@@ -115,12 +115,12 @@ export function MatchGamesPageContent({
                     <div className="space-y-3">
                         <div className="flex items-end justify-between gap-2">
                             <div className="min-w-0">
-                                <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
+                                <span className="text-caption font-medium tracking-widest uppercase text-muted-foreground">
                                     최신 대진표
                                 </span>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <p className="text-base font-semibold text-foreground truncate">{latestMatchGame!.name}</p>
-                                    <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                                    <p className="text-body font-semibold text-foreground truncate">{latestMatchGame!.name}</p>
+                                    <span className="flex items-center gap-1 text-caption text-muted-foreground shrink-0">
                                         <Calendar className="w-3 h-3" />
                                         {latestMatchGame!.date}
                                     </span>
@@ -128,7 +128,7 @@ export function MatchGamesPageContent({
                             </div>
                             <Link
                                 href={`/clubs/${clubId}/match-games/${latestMatchGame!.id}`}
-                                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                className="text-caption text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             >
                                 상세 보기 →
                             </Link>
@@ -148,7 +148,7 @@ export function MatchGamesPageContent({
                         <div className="space-y-3">
                             <div className="flex items-center gap-3">
                                 <div className="h-px flex-1 bg-border" />
-                                <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground shrink-0">
+                                <span className="text-caption font-medium tracking-widest uppercase text-muted-foreground shrink-0">
                                     이전 대진표
                                 </span>
                                 <div className="h-px flex-1 bg-border" />
@@ -162,10 +162,10 @@ export function MatchGamesPageContent({
                                                     <Trophy className="w-4 h-4 text-muted-foreground" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm text-foreground/90 truncate">{mg.name}</p>
+                                                    <p className="font-medium text-body2 text-foreground/90 truncate">{mg.name}</p>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
                                                         <Calendar className="w-3 h-3 text-muted-foreground" />
-                                                        <span className="text-xs text-muted-foreground">{mg.date}</span>
+                                                        <span className="text-caption text-muted-foreground">{mg.date}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">

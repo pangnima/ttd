@@ -23,7 +23,7 @@ export function RatingChangeSummary({ byUserTotal, members }: Props) {
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {entries.map((e) => (
                         <div key={e.userId} className="flex items-center gap-1.5">
-                            <span className="text-sm text-foreground">{nameOf(e.userId)}</span>
+                            <span className="text-body2 text-foreground">{nameOf(e.userId)}</span>
                             <TierDeltaBadge before={e.before} after={e.after} />
                         </div>
                     ))}
