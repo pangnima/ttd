@@ -34,7 +34,7 @@ import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { effectiveNtrp } from '@/lib/rating/display'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
-import { SECTION_LABEL, PILL_BASE } from '@/lib/dashboard/tokens'
+import { SECTION_LABEL } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
 type Props = {
@@ -42,12 +42,6 @@ type Props = {
     me: User
     scope: AnalyticsScope
     ratingHistory?: RatingHistoryPoint[]
-}
-
-function getScopeLabel(scope: AnalyticsScope): string {
-    if (scope.kind === 'personal') return '클럽 외 개인 경기 통계'
-    if (scope.kind === 'club') return `${scope.clubName} 경기 통계`
-    return '클럽 + 개인 경기 통합 통계'
 }
 
 type EmptyCta = { recordHref?: string; browseHref?: string; browseLabel?: string }
@@ -159,15 +153,10 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
 
     return (
         <div className="space-y-8">
-            {/* 전적 통계 (4칸) — 세트 표기 숨김(심플), scope는 칩으로 노출 */}
+            {/* 전적 통계 (4칸) — 세트 표기 숨김(심플). scope 범위는 상단 ProfileScopeTabs가 표시 */}
             <section className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
-                    <div className="flex flex-wrap items-center gap-2 min-w-0">
-                        <p className={`${SECTION_LABEL} shrink-0`}>전적 통계</p>
-                        <span className={`${PILL_BASE} text-primary border-primary/30 bg-primary/10 font-medium`}>
-                            {getScopeLabel(scope)}
-                        </span>
-                    </div>
+                    <p className={`${SECTION_LABEL} shrink-0`}>전적 통계</p>
                     <div className="ml-auto">
                         <StatsPrivacyToggle hidden={me.statsHidden} />
                     </div>

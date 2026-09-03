@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { BarChart3 } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { topNavItems, myMatchNavItems, clubNavItems } from '@/lib/nav-items'
+import {
+    topNavItems, myMatchNavItems, clubNavItems, buildPersonalNavItem, isPersonalNavActive,
+} from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
@@ -12,42 +13,26 @@ import { useSidebar } from '@/components/common/sidebar-context'
 
 type SidebarProps = {
     currentPath?: string
-    /** 가입한 클럽 목록 (layout에서 주입, 대진표·개인 분석 하위 메뉴로 노출) */
+    /** 가입한 클럽 목록 (layout에서 주입, 클럽 트리로 노출) */
     clubs?: { id: string; name: string }[]
-    /** 로그인 사용자 id (개인 분석 하위 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
+    /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
     /** 받은 경기 확인 요청 중 pending 건수 (경기 확인 요청 메뉴 뱃지) */
     pendingRequestCount?: number
 }
 
-/**
- * rail(접힘) 상태에서 아이콘에 호버 시 오른쪽으로 열리는 플라이아웃.
- * 바깥 래퍼는 투명 브릿지 패딩(pl-1.5)으로 아이콘과 패널 사이 hover 영역을 잇고,
- * 실제 패널(배경·보더)은 안쪽 div에 둔다 → 마우스가 끊기지 않고 패널까지 도달.
- * 호버 전용(focus-within 미사용) — 클릭 후 포커스 잔류로 패널이 닫히지 않는 겹침을 방지.
- */
-function RailFlyout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="invisible absolute left-full -top-1.5 z-50 pl-1.5 opacity-0 transition-opacity group-hover/rail:visible group-hover/rail:opacity-100">
-            <div className="min-w-44 rounded-lg border border-border bg-popover p-1.5 shadow-sm dark:shadow-md">
-                {children}
-            </div>
-        </div>
-    )
-}
-
 export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount = 0 }: SidebarProps) {
     const pathname = usePathname()
-    const searchParams = useSearchParams()
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
-    // 내 전적 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
-    const onProfile = activePath.startsWith('/profile/')
-    const currentScope = searchParams.get('scope') ?? 'total'
-    const scopeActive = (scope: string) => onProfile && currentScope === scope
-    // 개인 경기 등록(목록·생성·수정)·경기 확인 요청 active 판정
-    const onPersonalMatches = activePath.startsWith('/me/personal-matches')
-    const onMatchRequests = activePath.startsWith('/me/match-requests')
+
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록(목록·생성·수정) + 경기 확인 요청
+    const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
+    const myNavActive = (href: string) => {
+        if (href.startsWith('/me/personal-matches')) return activePath.startsWith('/me/personal-matches')
+        if (href.startsWith('/me/match-requests')) return activePath.startsWith('/me/match-requests')
+        return userId ? isPersonalNavActive(activePath, userId) : false
+    }
 
     // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위(/clubs/[id]/...)는
     // "내가 가입한 클럽" 트리가 담당하므로 prefix 매칭을 쓰지 않는다.
@@ -68,13 +53,6 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
         'overflow-hidden whitespace-nowrap transition-all duration-200',
         collapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
     )
-
-    // 플라이아웃 내부(펼친 형태) 하위 링크 스타일
-    const flyLinkClass = (active: boolean) =>
-        cn(
-            'flex items-center px-3 py-2 rounded-md text-[13px] font-medium transition-colors',
-            active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-        )
 
     return (
         <aside
@@ -111,44 +89,11 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                     </Link>
                 ))}
 
-                {/* 내 전적: 클럽 무관 통합/개인 전적 (로그인 시) */}
-                {userId &&
-                    (collapsed ? (
-                        <div className="group/rail relative mt-2 pt-2 border-t border-border/40">
-                            <div className={rowClass(onProfile)}>
-                                <BarChart3 className="w-4 h-4 shrink-0" />
-                            </div>
-                            <RailFlyout>
-                                <Link href={`/profile/${userId}?scope=total`} className={flyLinkClass(scopeActive('total'))}>
-                                    통합
-                                </Link>
-                                <Link href={`/profile/${userId}?scope=personal`} className={flyLinkClass(scopeActive('personal'))}>
-                                    개인
-                                </Link>
-                            </RailFlyout>
-                        </div>
-                    ) : (
-                        <div className="mt-2 pt-2 border-t border-border/40">
-                            <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground">
-                                <BarChart3 className="w-4 h-4 shrink-0" />
-                                <span className={labelClass}>내 전적</span>
-                            </div>
-                            <div className="space-y-0.5">
-                                <Link href={`/profile/${userId}?scope=total`} className={cn(rowClass(scopeActive('total')), 'pl-9 text-[13px]')}>
-                                    통합
-                                </Link>
-                                <Link href={`/profile/${userId}?scope=personal`} className={cn(rowClass(scopeActive('personal')), 'pl-9 text-[13px]')}>
-                                    개인
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
-
-                {/* 개인 경기: 등록·확인 요청 독립 메뉴 (로그인 시) */}
-                {userId && (
+                {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 개인 경기 등록 + 경기 확인 요청 (로그인 시) */}
+                {myNavItems.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
-                        {myMatchNavItems.map(({ href, label, icon: Icon }) => {
-                            const active = href === '/me/personal-matches' ? onPersonalMatches : onMatchRequests
+                        {myNavItems.map(({ href, label, icon: Icon }) => {
+                            const active = myNavActive(href)
                             const showBadge = href === '/me/match-requests' && pendingRequestCount > 0
                             return (
                                 <Link
@@ -173,7 +118,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                     </div>
                 )}
 
-                {/* 클럽 찾기 — 내 전적 아래, 가입 클럽 트리 위 */}
+                {/* 클럽 찾기 — 개인 섹션 아래, 가입 클럽 트리 위 */}
                 <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
                     {clubNavItems.map(({ href, label, icon: Icon }) => (
                         <Link
@@ -187,8 +132,8 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                         </Link>
                     ))}
 
-                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표·클럽 전적을 아코디언으로 노출 */}
-                    <ClubNavTree clubs={clubs} userId={userId} variant="desktop" collapsed={collapsed} />
+                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표를 아코디언으로 노출 */}
+                    <ClubNavTree clubs={clubs} variant="desktop" collapsed={collapsed} />
                 </div>
             </nav>
 

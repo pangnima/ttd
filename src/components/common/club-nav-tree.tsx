@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { UsersRound, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type ClubNavTreeProps = {
     clubs: { id: string; name: string }[]
-    userId?: string | null
     variant: 'desktop' | 'mobile'
     /** 모바일 시트에서 링크 클릭 시 시트를 닫기 위한 콜백 */
     onNavigate?: () => void
@@ -37,17 +36,13 @@ const VARIANT = {
     },
 } as const
 
-export function ClubNavTree({ clubs, userId, variant, onNavigate, collapsed = false }: ClubNavTreeProps) {
+export function ClubNavTree({ clubs, variant, onNavigate, collapsed = false }: ClubNavTreeProps) {
     const pathname = usePathname()
-    const searchParams = useSearchParams()
     const s = VARIANT[variant]
 
-    // 내 전적 하위 메뉴 active 판정 — scope 미지정은 'total'로 간주
-    const onProfile = pathname.startsWith('/profile/')
-    const currentScope = searchParams.get('scope') ?? 'total'
-    const scopeActive = (scope: string) => onProfile && currentScope === scope
+    // 클럽 활성 판정 — 경로 기반(홈·대진표). 클럽별 전적은 '개인' 페이지의 클럽 탭이 담당한다.
     const isClubActive = (id: string) =>
-        pathname === `/clubs/${id}` || pathname.startsWith(`/clubs/${id}/match-games`) || scopeActive(id)
+        pathname === `/clubs/${id}` || pathname.startsWith(`/clubs/${id}/match-games`)
 
     // 현재 보고 있는 클럽 — 펼침 기본값 및 경로 변경 시 자동 펼침에 사용
     const activeClubId = clubs.find((c) => isClubActive(c.id))?.id ?? null
@@ -117,11 +112,6 @@ export function ClubNavTree({ clubs, userId, variant, onNavigate, collapsed = fa
                                     <Link href={`/clubs/${club.id}/match-games`} className={flyLinkClass(pathname.startsWith(`/clubs/${club.id}/match-games`))}>
                                         대진표
                                     </Link>
-                                    {userId && (
-                                        <Link href={`/profile/${userId}?scope=${club.id}`} className={flyLinkClass(scopeActive(club.id))}>
-                                            내 전적
-                                        </Link>
-                                    )}
                                 </div>
                             </div>
                         ))}
@@ -169,15 +159,6 @@ export function ClubNavTree({ clubs, userId, variant, onNavigate, collapsed = fa
                                     >
                                         대진표
                                     </Link>
-                                    {userId && (
-                                        <Link
-                                            href={`/profile/${userId}?scope=${club.id}`}
-                                            onClick={onNavigate}
-                                            className={linkClass(scopeActive(club.id))}
-                                        >
-                                            내 전적
-                                        </Link>
-                                    )}
                                 </div>
                             )}
                         </div>
