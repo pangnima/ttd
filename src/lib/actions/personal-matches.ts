@@ -15,33 +15,66 @@ import {
 import type { PersonalMatchSetScore } from '@/types'
 
 /**
- * insert/update 공통: 단식이면 복식 컬럼을 모두 NULL로, 복식이면 입력값을 매핑한 행 데이터 생성.
+ * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
  */
-function buildPersonalMatchRow(input: PersonalMatchInput) {
-    const doubles = isDoublesMatchType(input.matchType)
+function buildPersonalMatchBaseRow(input: PersonalMatchInput, userId: string) {
     return {
-        opponent_name: input.opponentName.trim(),
-        opponent_user_id: input.opponentUserId ?? null,
-        opponent_dominant_hand: input.opponentDominantHand ?? null,
-        partner_name: doubles ? (input.partnerName?.trim() || null) : null,
-        partner_user_id: doubles ? (input.partnerUserId ?? null) : null,
-        partner_dominant_hand: doubles ? (input.partnerDominantHand ?? null) : null,
-        partner_ntrp: doubles ? (input.partnerNtrp ?? null) : null,
-        opponent2_name: doubles ? (input.opponent2Name?.trim() || null) : null,
-        opponent2_user_id: doubles ? (input.opponent2UserId ?? null) : null,
-        opponent2_dominant_hand: doubles ? (input.opponent2DominantHand ?? null) : null,
-        opponent2_ntrp: doubles ? (input.opponent2Ntrp ?? null) : null,
+        user_id: userId,
+        source_type: 'direct' as const,
         played_at: input.playedAt,
         played_time: input.playedTime || null,
         match_type: input.matchType,
         surface: input.surface ?? null,
-        opponent_ntrp: input.opponentNtrp ?? null,
         set_scores: input.setScores,
         // winner는 세트가 있으면 세트 승수로 자동 판정, 세트가 없으면 NULL(결과 미확정).
         // resolveMatchWinner([])는 'draw'를 돌려주므로 반드시 길이 가드를 거친다.
         winner: input.setScores.length > 0 ? resolveMatchWinner(input.setScores) : null,
         notes: input.notes?.trim() || null,
     }
+}
+
+/**
+ * personal_match_participants 행 생성 — 단식은 opponent 1행, 복식은 partner/opponent2까지 최대 3행.
+ * role별 name은 NOT NULL이므로 폼에서 항상 채워진다는 전제(회원 선택 시 자동 채움, 기존 opponent_name과 동일 전제).
+ */
+function buildParticipantRows(input: PersonalMatchInput, matchId: string) {
+    const doubles = isDoublesMatchType(input.matchType)
+    const rows: Array<{
+        match_id: string
+        role: 'opponent' | 'partner' | 'opponent2'
+        user_id: string | null
+        name: string
+        dominant_hand: 'right' | 'left' | null
+        ntrp_snapshot: number | null
+    }> = [
+        {
+            match_id: matchId,
+            role: 'opponent',
+            user_id: input.opponentUserId ?? null,
+            name: input.opponentName.trim(),
+            dominant_hand: input.opponentDominantHand ?? null,
+            ntrp_snapshot: input.opponentNtrp ?? null,
+        },
+    ]
+    if (doubles) {
+        rows.push({
+            match_id: matchId,
+            role: 'partner',
+            user_id: input.partnerUserId ?? null,
+            name: input.partnerName?.trim() || '',
+            dominant_hand: input.partnerDominantHand ?? null,
+            ntrp_snapshot: input.partnerNtrp ?? null,
+        })
+        rows.push({
+            match_id: matchId,
+            role: 'opponent2',
+            user_id: input.opponent2UserId ?? null,
+            name: input.opponent2Name?.trim() || '',
+            dominant_hand: input.opponent2DominantHand ?? null,
+            ntrp_snapshot: input.opponent2Ntrp ?? null,
+        })
+    }
+    return rows
 }
 
 /**
@@ -96,13 +129,13 @@ export async function createPersonalMatchesAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    const rows = inputs.map((input) => ({
-        user_id: user.id,
-        ...buildPersonalMatchRow(input),
-    }))
-    const { error } = await supabase.from('personal_matches').insert(rows)
+    const baseRows = inputs.map((input) => buildPersonalMatchBaseRow(input, user.id))
+    const { data: inserted, error } = await supabase.from('personal_matches').insert(baseRows).select('id')
+    if (error || !inserted) return { error: '경기 저장에 실패했습니다.' }
 
-    if (error) return { error: '경기 저장에 실패했습니다.' }
+    const participantRows = inputs.flatMap((input, i) => buildParticipantRows(input, inserted[i].id))
+    const { error: participantsError } = await supabase.from('personal_match_participants').insert(participantRows)
+    if (participantsError) return { error: '경기 저장에 실패했습니다.' }
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
@@ -121,10 +154,13 @@ export async function updatePersonalMatchAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    // 상호 확인 경기(source_request_id 보유)는 수정 불가 — RESTRICTIVE RLS와 이중 방어
+    // 상호 확인 경기(source_type='confirmation')는 수정 불가 — RESTRICTIVE RLS와 이중 방어
+    const { user_id: _omit, source_type: _omit2, ...baseRow } = buildPersonalMatchBaseRow(input, user.id)
+    void _omit
+    void _omit2
     const { data: updated, error } = await supabase
         .from('personal_matches')
-        .update(buildPersonalMatchRow(input))
+        .update(baseRow)
         .eq('id', id)
         .eq('user_id', user.id)
         .is('source_request_id', null)
@@ -132,6 +168,13 @@ export async function updatePersonalMatchAction(
 
     if (error) return { error: '경기 수정에 실패했습니다.' }
     if (!updated?.length) return { error: '상호 확인된 경기는 수정·삭제할 수 없습니다.' }
+
+    // 참가자 재작성: 기존 역할별 행을 삭제 후 새로 삽입(부분 upsert보다 단순하고, 카디널리티 변경도 처리됨)
+    await supabase.from('personal_match_participants').delete().eq('match_id', id)
+    const { error: participantsError } = await supabase
+        .from('personal_match_participants')
+        .insert(buildParticipantRows(input, id))
+    if (participantsError) return { error: '경기 수정에 실패했습니다.' }
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')

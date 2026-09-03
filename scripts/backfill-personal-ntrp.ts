@@ -35,8 +35,10 @@ async function main() {
         if (u.ntrp != null && Number(u.ntrp) > 0) ntrpById.set(u.id, Number(u.ntrp))
     }
 
-    // 전 개인경기 (service-role → RLS 우회)
-    const { data: rows, error: pErr } = await supabase.from('personal_matches').select('*')
+    // 전 개인경기 (service-role → RLS 우회). 참가자(opponent/partner/opponent2)는 별도 정규화 테이블에서 조인.
+    const { data: rows, error: pErr } = await supabase
+        .from('personal_matches')
+        .select('*, participants:personal_match_participants(*)')
     if (pErr || !rows) {
         console.error('personal_matches 조회 실패:', pErr?.message)
         process.exit(1)
@@ -53,7 +55,7 @@ async function main() {
         const userRows = byUser.get(u.id)
         if (!userRows || userRows.length === 0) continue // 경기 없는 유저는 null 유지
 
-        const matches = userRows.map(mapPersonalMatchRow)
+        const matches = userRows.map((row) => mapPersonalMatchRow(row, row.participants))
         const games = explodePersonalMatchSets(matches)
         const selfNtrp = u.ntrp != null && Number(u.ntrp) > 0 ? Number(u.ntrp) : null
         const snap = replayPersonalRatings(games, selfNtrp, (id) => ntrpById.get(id))

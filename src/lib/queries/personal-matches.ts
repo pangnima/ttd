@@ -11,11 +11,11 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('personal_matches')
-        .select('*')
+        .select('*, participants:personal_match_participants(*)')
         .eq('user_id', userId)
         .order('played_at', { ascending: false })
     if (error || !data) return []
-    return data.map(mapPersonalMatchRow)
+    return data.map((row) => mapPersonalMatchRow(row, row.participants))
 }
 
 /**
@@ -31,14 +31,26 @@ export async function fetchPersonalMatchesWithConfirmation(userId: string): Prom
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, result_status, proposed_by, proposed_set_scores, dispute_reason')
+        .select('id, requester_id, negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason)')
         .in('id', requestIds)
     if (error || !data) return matches
 
     const byId = new Map(data.map((row) => [row.id, row]))
     return matches.map((m) => {
         const row = m.sourceRequestId ? byId.get(m.sourceRequestId) : undefined
-        return row ? { ...m, confirmation: buildConfirmation(row, userId) } : m
+        if (!row) return m
+        const neg = row.negotiation
+        return {
+            ...m,
+            confirmation: buildConfirmation({
+                id: row.id,
+                requester_id: row.requester_id,
+                result_status: neg?.result_status ?? 'none',
+                proposed_by: neg?.proposed_by ?? null,
+                proposed_set_scores: neg?.proposed_set_scores ?? [],
+                dispute_reason: neg?.dispute_reason ?? null,
+            }, userId),
+        }
     })
 }
 
@@ -46,11 +58,11 @@ export async function fetchPersonalMatchById(id: string): Promise<PersonalMatch 
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('personal_matches')
-        .select('*')
+        .select('*, participants:personal_match_participants(*)')
         .eq('id', id)
         .single()
     if (error || !data) return null
-    return mapPersonalMatchRow(data)
+    return mapPersonalMatchRow(data, data.participants)
 }
 
 // 이전에 만난 비회원 상대. hand·ntrp는 가장 최근 경기에 입력한 값 (자동 채움용)
@@ -63,29 +75,26 @@ export type PastOpponent = { name: string; hand?: 'right' | 'left'; ntrp?: numbe
  */
 export async function fetchPastOpponents(userId: string): Promise<PastOpponent[]> {
     const supabase = await createClient()
+    // personal_match_participants(role별 상대/파트너/상대2) → 소유 경기(personal_matches.user_id)로 필터.
     const { data, error } = await supabase
-        .from('personal_matches')
-        .select('opponent_name, opponent_user_id, opponent_dominant_hand, opponent_ntrp, partner_name, partner_user_id, partner_dominant_hand, partner_ntrp, opponent2_name, opponent2_user_id, opponent2_dominant_hand, opponent2_ntrp')
-        .eq('user_id', userId)
-        .order('played_at', { ascending: false })
+        .from('personal_match_participants')
+        .select('name, user_id, dominant_hand, ntrp_snapshot, match:personal_matches!inner(user_id, played_at)')
+        .eq('match.user_id', userId)
     if (error || !data) return []
 
-    // 이름 기준 distinct — 최근(먼저 조회된) 값을 우선 유지
+    // 최근 경기 우선(내림차순) 정렬 후 이름 기준 distinct — 최근 값을 우선 유지
+    const rows = [...data].sort((a, b) => (b.match?.played_at ?? '').localeCompare(a.match?.played_at ?? ''))
+
     const map = new Map<string, PastOpponent>()
-    const add = (name: string | null, userIdRef: string | null, hand: string | null, ntrp: number | null) => {
-        const trimmed = name?.trim()
-        if (!trimmed || userIdRef) return  // 회원 선택분은 클럽 후보에 이미 존재하므로 제외
-        if (map.has(trimmed)) return
+    for (const row of rows) {
+        const trimmed = row.name?.trim()
+        if (!trimmed || row.user_id) continue  // 회원 선택분은 클럽 후보에 이미 존재하므로 제외
+        if (map.has(trimmed)) continue
         map.set(trimmed, {
             name: trimmed,
-            hand: hand === 'right' || hand === 'left' ? hand : undefined,
-            ntrp: ntrp != null ? Number(ntrp) : undefined,
+            hand: row.dominant_hand === 'right' || row.dominant_hand === 'left' ? row.dominant_hand : undefined,
+            ntrp: row.ntrp_snapshot != null ? Number(row.ntrp_snapshot) : undefined,
         })
-    }
-    for (const row of data) {
-        add(row.opponent_name, row.opponent_user_id, row.opponent_dominant_hand, row.opponent_ntrp)
-        add(row.partner_name, row.partner_user_id, row.partner_dominant_hand, row.partner_ntrp)
-        add(row.opponent2_name, row.opponent2_user_id, row.opponent2_dominant_hand, row.opponent2_ntrp)
     }
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
 }

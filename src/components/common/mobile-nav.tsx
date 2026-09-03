@@ -40,10 +40,10 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                     .eq('status', 'pending'),
                 supabase
                     .from('match_requests')
-                    .select('id', { count: 'exact', head: true })
+                    .select('id, negotiation:match_result_negotiations!inner(result_status, proposed_by)', { count: 'exact', head: true })
                     .eq('status', 'accepted')
-                    .eq('result_status', 'proposed')
-                    .neq('proposed_by', user.id)
+                    .eq('negotiation.result_status', 'proposed')
+                    .neq('negotiation.proposed_by', user.id)
                     .or(`requester_id.eq.${user.id},opponent_user_id.eq.${user.id}`),
             ])
             if (isMounted) setPendingRequestCount((pending.count ?? 0) + (proposals.count ?? 0))

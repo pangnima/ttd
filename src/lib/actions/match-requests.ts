@@ -56,30 +56,34 @@ export async function createMatchRequestAction(
         .filter((id): id is string => !!id)
     if (new Set(memberIds).size !== memberIds.length) return { error: '같은 회원을 두 번 지정할 수 없습니다.' }
 
-    const { error } = await supabase.from('match_requests').insert({
-        requester_id: user.id,
-        opponent_user_id: input.opponentUserId,
-        match_type: input.matchType,
-        played_at: input.playedAt,
-        played_time: input.playedTime,
-        surface: input.surface,
-        set_scores: setScores,
-        notes: input.notes?.trim() || null,
-        partner_name: doubles ? (input.partnerName?.trim() || null) : null,
-        partner_user_id: doubles ? (input.partnerUserId ?? null) : null,
-        partner_dominant_hand: doubles ? (input.partnerDominantHand ?? null) : null,
-        partner_ntrp: doubles ? (input.partnerNtrp ?? null) : null,
-        opponent2_name: doubles ? (input.opponent2Name?.trim() || null) : null,
-        opponent2_user_id: doubles ? (input.opponent2UserId ?? null) : null,
-        opponent2_dominant_hand: doubles ? (input.opponent2DominantHand ?? null) : null,
-        opponent2_ntrp: doubles ? (input.opponent2Ntrp ?? null) : null,
+    // 요청 원장 INSERT + (복식이면) 참가자 2행을 원자적으로 생성해야 하므로 RPC 경유(직접 INSERT 정책 폐지).
+    const { error } = await supabase.rpc('create_match_request', {
+        p_opponent_user_id: input.opponentUserId,
+        p_played_at: input.playedAt,
+        p_played_time: input.playedTime,
+        p_match_type: input.matchType,
+        p_surface: input.surface,
+        p_notes: input.notes?.trim() || undefined,
+        p_set_scores: setScores,
+        p_partner: doubles ? {
+            user_id: input.partnerUserId ?? null,
+            name: input.partnerName?.trim() || null,
+            dominant_hand: input.partnerDominantHand ?? null,
+            ntrp: input.partnerNtrp ?? null,
+        } : undefined,
+        p_opponent2: doubles ? {
+            user_id: input.opponent2UserId ?? null,
+            name: input.opponent2Name?.trim() || null,
+            dominant_hand: input.opponent2DominantHand ?? null,
+            ntrp: input.opponent2Ntrp ?? null,
+        } : undefined,
     })
 
     if (error) {
         // 부분 유니크 인덱스(pending 중복) 위반
         if (error.code === '23505') return { error: '같은 상대·같은 일시로 이미 대기 중인 요청이 있습니다.' }
-        // RLS with check(게스트/탈퇴 상대) 또는 CHECK 제약 위반
-        if (error.code === '42501' || error.code === '23514') return { error: '요청할 수 없는 상대입니다.' }
+        if (error.message.includes('invalid_opponent')) return { error: '요청할 수 없는 상대입니다.' }
+        if (error.message.includes('doubles_players_required')) return { error: '복식은 파트너와 상대팀 2번째 선수를 모두 입력해주세요.' }
         return { error: '확인 요청 전송에 실패했습니다.' }
     }
 

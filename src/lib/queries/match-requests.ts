@@ -7,6 +7,12 @@ import type {
 } from '@/types'
 
 type MatchRequestRow = Database['public']['Tables']['match_requests']['Row']
+type NegotiationRow = Database['public']['Tables']['match_result_negotiations']['Row']
+type RequestParticipantRow = Database['public']['Tables']['match_request_participants']['Row']
+type MatchRequestRowWithJoins = MatchRequestRow & {
+    negotiation: NegotiationRow | null
+    participants: RequestParticipantRow[]
+}
 
 // 요청 카드에 표시할 상대측(요청자 또는 수신자) 프로필 요약
 export type MatchRequestCounterpart = {
@@ -22,7 +28,10 @@ export type MatchRequestWithUser = {
     counterpart: MatchRequestCounterpart  // 받은 요청이면 요청자, 보낸 요청이면 상대
 }
 
-function mapMatchRequestRow(row: MatchRequestRow): MatchRequest {
+function mapMatchRequestRow(row: MatchRequestRowWithJoins): MatchRequest {
+    const neg = row.negotiation
+    const partner = row.participants?.find((p) => p.role === 'partner')
+    const opponent2 = row.participants?.find((p) => p.role === 'opponent2')
     return {
         id: row.id,
         requesterId: row.requester_id,
@@ -37,20 +46,20 @@ function mapMatchRequestRow(row: MatchRequestRow): MatchRequest {
         status: row.status as MatchRequestStatus,
         createdAt: row.created_at,
         respondedAt: row.responded_at ?? undefined,
-        resultStatus: row.result_status as MatchResultStatus,
-        proposedSetScores: (row.proposed_set_scores as PersonalMatchSetScore[]) ?? [],
-        proposedBy: row.proposed_by ?? undefined,
-        proposedAt: row.proposed_at ?? undefined,
-        disputeReason: row.dispute_reason ?? undefined,
-        // 복식 전용 (단식은 전부 NULL)
-        partnerUserId: row.partner_user_id ?? undefined,
-        partnerName: row.partner_name ?? undefined,
-        partnerDominantHand: toHand(row.partner_dominant_hand),
-        partnerNtrp: row.partner_ntrp != null ? Number(row.partner_ntrp) : undefined,
-        opponent2UserId: row.opponent2_user_id ?? undefined,
-        opponent2Name: row.opponent2_name ?? undefined,
-        opponent2DominantHand: toHand(row.opponent2_dominant_hand),
-        opponent2Ntrp: row.opponent2_ntrp != null ? Number(row.opponent2_ntrp) : undefined,
+        resultStatus: (neg?.result_status as MatchResultStatus) ?? 'none',
+        proposedSetScores: (neg?.proposed_set_scores as PersonalMatchSetScore[]) ?? [],
+        proposedBy: neg?.proposed_by ?? undefined,
+        proposedAt: neg?.proposed_at ?? undefined,
+        disputeReason: neg?.dispute_reason ?? undefined,
+        // 복식 전용 (단식은 참가자 행 없음)
+        partnerUserId: partner?.user_id ?? undefined,
+        partnerName: partner?.name ?? undefined,
+        partnerDominantHand: toHand(partner?.dominant_hand ?? null),
+        partnerNtrp: partner?.ntrp_snapshot != null ? Number(partner.ntrp_snapshot) : undefined,
+        opponent2UserId: opponent2?.user_id ?? undefined,
+        opponent2Name: opponent2?.name ?? undefined,
+        opponent2DominantHand: toHand(opponent2?.dominant_hand ?? null),
+        opponent2Ntrp: opponent2?.ntrp_snapshot != null ? Number(opponent2.ntrp_snapshot) : undefined,
     }
 }
 
@@ -77,13 +86,15 @@ function mapCounterpart(row: CounterpartRow): MatchRequestCounterpart {
 }
 
 const COUNTERPART_COLUMNS = 'id, name, nickname, profile_image, deleted_at'
+// 결과 협상(match_result_negotiations, 1:1)·참가자(match_request_participants, 복식 partner/opponent2) 공용 임베드.
+const REQUEST_JOINS = 'negotiation:match_result_negotiations(*), participants:match_request_participants(*)'
 
 /** 내가 받은 확인 요청 (상대측 = 요청자 프로필 포함, 최신순) */
 export async function fetchReceivedMatchRequests(userId: string): Promise<MatchRequestWithUser[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS})`)
+        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
         .eq('opponent_user_id', userId)
         .order('created_at', { ascending: false })
     if (error || !data) return []
@@ -98,7 +109,7 @@ export async function fetchSentMatchRequests(userId: string): Promise<MatchReque
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select(`*, opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS})`)
+        .select(`*, opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
         .eq('requester_id', userId)
         .order('created_at', { ascending: false })
     if (error || !data) return []
@@ -111,22 +122,24 @@ export async function fetchSentMatchRequests(userId: string): Promise<MatchReque
 /**
  * 내가 확인해야 할 결과 제안 (수락된 경기에서 상대가 세트를 제안한 것, 최신 제안순).
  * 요청자/상대 어느 쪽이든 확인자가 될 수 있으므로 양쪽 프로필을 임베드한 뒤 viewer 기준으로 상대측을 고른다.
+ * result_status/proposed_by는 match_result_negotiations로 이전됐으므로 !inner로 조인해 필터한다.
  */
 export async function fetchPendingResultConfirmations(userId: string): Promise<MatchRequestWithUser[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS})`)
+        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), participants:match_request_participants(*), negotiation:match_result_negotiations!inner(*)`)
         .eq('status', 'accepted')
-        .eq('result_status', 'proposed')
-        .neq('proposed_by', userId)
+        .eq('negotiation.result_status', 'proposed')
+        .neq('negotiation.proposed_by', userId)
         .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`)
-        .order('proposed_at', { ascending: false })
     if (error || !data) return []
-    return data.map((row) => ({
+    const rows = data.map((row) => ({
         request: mapMatchRequestRow(row),
         counterpart: mapCounterpart(row.requester_id === userId ? row.opponent : row.requester),
     }))
+    rows.sort((a, b) => (b.request.proposedAt ?? '').localeCompare(a.request.proposedAt ?? ''))
+    return rows
 }
 
 /**
@@ -143,10 +156,10 @@ export async function fetchPendingReceivedCount(userId: string): Promise<number>
             .eq('status', 'pending'),
         supabase
             .from('match_requests')
-            .select('id', { count: 'exact', head: true })
+            .select('id, negotiation:match_result_negotiations!inner(result_status, proposed_by)', { count: 'exact', head: true })
             .eq('status', 'accepted')
-            .eq('result_status', 'proposed')
-            .neq('proposed_by', userId)
+            .eq('negotiation.result_status', 'proposed')
+            .neq('negotiation.proposed_by', userId)
             .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`),
     ])
     return (pending.error ? 0 : pending.count ?? 0) + (proposals.error ? 0 : proposals.count ?? 0)

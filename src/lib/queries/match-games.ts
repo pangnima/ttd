@@ -10,6 +10,7 @@ type CourtRow           = Database['public']['Tables']['match_game_courts']['Row
 type RoundRow           = Database['public']['Tables']['match_game_rounds']['Row']
 type TimeSlotRow        = Database['public']['Tables']['match_game_time_slots']['Row']
 type MatchRow           = Database['public']['Tables']['match_game_matches']['Row']
+type MatchParticipantRow = Database['public']['Tables']['match_game_participants']['Row']
 type UserRow            = Database['public']['Tables']['users']['Row']
 
 function mapCourtRow(row: CourtRow): Court {
@@ -40,12 +41,21 @@ function mapRoundRow(row: RoundRow & { time_slots: TimeSlotRow[] }): Round {
 //   단식에서 player1 = team1, player2 = team2 로 매핑되는 규약에 따름.
 // player1Id/player2Id(단식)와 team1/team2(복식)는 상호 배제 —
 //   matchType이 'singles'이면 player1/2만, 복식이면 team1/2만 유효.
-export function mapMatchRow(row: MatchRow): Match {
+// 단식/복식 다형성은 match_game_participants(side별 1~2행)로 정규화되어 있으므로,
+// side('team1'/'team2')·is_ad로 그룹핑해 예전 플랫 컬럼 형태로 복원한다.
+export function mapMatchRow(row: MatchRow & { participants?: MatchParticipantRow[] }): Match {
     let result: MatchResult | undefined
     if (row.result_sets && row.winner_id) {
         const sets = (row.result_sets as Array<{ team1: number; team2: number }>)
         result = { sets, winnerId: row.winner_id as 'team1' | 'team2' | 'draw' }
     }
+    const participants = row.participants ?? []
+    const team1 = participants.filter((p) => p.side === 'team1').map((p) => p.user_id)
+    const team2 = participants.filter((p) => p.side === 'team2').map((p) => p.user_id)
+    const team1Ad = participants.find((p) => p.side === 'team1' && p.is_ad)?.user_id
+    const team2Ad = participants.find((p) => p.side === 'team2' && p.is_ad)?.user_id
+    const isSingles = row.match_type === 'singles'
+
     return {
         id: row.id,
         matchGameId: row.match_game_id,
@@ -53,12 +63,12 @@ export function mapMatchRow(row: MatchRow): Match {
         courtId: row.court_id,
         timeSlotId: row.time_slot_id,
         matchType: row.match_type as MatchType,
-        player1Id: row.player1_id ?? undefined,
-        player2Id: row.player2_id ?? undefined,
-        team1: row.team1 ?? undefined,
-        team2: row.team2 ?? undefined,
-        team1AdPlayerId: row.team1_ad_player_id ?? undefined,
-        team2AdPlayerId: row.team2_ad_player_id ?? undefined,
+        player1Id: isSingles ? team1[0] : undefined,
+        player2Id: isSingles ? team2[0] : undefined,
+        team1: isSingles ? undefined : team1,
+        team2: isSingles ? undefined : team2,
+        team1AdPlayerId: isSingles ? undefined : team1Ad,
+        team2AdPlayerId: isSingles ? undefined : team2Ad,
         status: row.status as Match['status'],
         result,
     }
@@ -101,7 +111,7 @@ export async function fetchMatchGamesByClubId(clubId: string): Promise<MatchGame
             *,
             courts:match_game_courts(*),
             rounds:match_game_rounds(*, time_slots:match_game_time_slots(*)),
-            matches:match_game_matches(*)
+            matches:match_game_matches(*, participants:match_game_participants(*))
         `)
         .eq('club_id', clubId)
         .order('created_at', { ascending: false })
@@ -117,7 +127,7 @@ export async function fetchMatchGameById(id: string): Promise<MatchGame | null> 
             *,
             courts:match_game_courts(*),
             rounds:match_game_rounds(*, time_slots:match_game_time_slots(*)),
-            matches:match_game_matches(*)
+            matches:match_game_matches(*, participants:match_game_participants(*))
         `)
         .eq('id', id)
         .single()
@@ -127,11 +137,9 @@ export async function fetchMatchGameById(id: string): Promise<MatchGame | null> 
 
 export type MatchGameMeta = { id: string; name: string; date: string; clubId: string }
 
-// 단식/복식 모두 커버하는 단일 쿼리. match_games(name, date)를 embed해서 메타 동봉.
-// court:match_game_courts(surface)도 embed해서 표면 정보를 courtSurfaceByMatchId에 담아 반환.
-// - 단식: player1_id.eq / player2_id.eq
-// - 복식: team1.cs.{userId} / team2.cs.{userId}
-//   cs = PostgreSQL 배열 contains 연산자 ({userId}는 배열 리터럴 형식)
+// 단식/복식 모두 커버하는 단일 쿼리. match_game_participants(user_id=본인)에서 시작해
+// 소속 match_game_matches를 역참조(has-one)로 embed한다 — 단식/복식 구분 없이 참가자 테이블 하나로 필터.
+// match_games(name, date)와 court:match_game_courts(surface)도 함께 embed해서 메타/표면 정보 동봉.
 // clubId 지정 시 해당 클럽의 경기만 반환 (JS 필터).
 export async function fetchMatchesByUser(userId: string, clubId?: string): Promise<{
     matches: Match[]
@@ -141,16 +149,17 @@ export async function fetchMatchesByUser(userId: string, clubId?: string): Promi
 }> {
     const supabase = await createClient()
     const { data, error } = await supabase
-        .from('match_game_matches')
-        .select('*, match_games(id, name, date, club_id, is_fixed), court:match_game_courts(surface), time_slot:match_game_time_slots(start_at)')
-        .or(`player1_id.eq.${userId},player2_id.eq.${userId},team1.cs.{${userId}},team2.cs.{${userId}}`)
-        .eq('status', 'finished')
+        .from('match_game_participants')
+        .select('match:match_game_matches(*, match_games(id, name, date, club_id, is_fixed), court:match_game_courts(surface), time_slot:match_game_time_slots(start_at), participants:match_game_participants(*))')
+        .eq('user_id', userId)
     if (error || !data) return { matches: [], gameMetaById: {}, courtSurfaceByMatchId: {}, matchTimeById: {} }
 
-    // 클라이언트 집계와 RPC 통계(is_fixed=true 기준)의 모집단을 통일.
-    const fixedData = data.filter((row) => {
+    const rows = data.map((r) => r.match).filter((m): m is NonNullable<typeof m> => !!m)
+
+    // 클라이언트 집계와 RPC 통계(is_fixed=true, status='finished' 기준)의 모집단을 통일.
+    const fixedData = rows.filter((row) => {
         const g = row.match_games as { is_fixed: boolean } | null
-        return g?.is_fixed === true
+        return g?.is_fixed === true && row.status === 'finished'
     })
 
     const gameMetaById: Record<string, MatchGameMeta> = {}

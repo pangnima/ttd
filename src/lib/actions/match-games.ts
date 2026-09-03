@@ -11,6 +11,17 @@ import { revalidatePath } from 'next/cache'
 import { recalculateClubRatings } from './ratings'
 import type { Court, Match, MatchType, Round } from '@/types'
 
+// player1Id/player2Id(단식)·team1/team2(복식)+ad 플레이어 id를 참가자 배열({user_id, side, is_ad})로 변환.
+// match_game_matches는 더 이상 이 컬럼들을 갖지 않고 match_game_participants로 정규화되어 있다.
+function buildParticipantsPayload(m: Match): Array<{ user_id: string; side: 'team1' | 'team2'; is_ad: boolean }> {
+    const participants: Array<{ user_id: string; side: 'team1' | 'team2'; is_ad: boolean }> = []
+    if (m.player1Id) participants.push({ user_id: m.player1Id, side: 'team1', is_ad: false })
+    if (m.player2Id) participants.push({ user_id: m.player2Id, side: 'team2', is_ad: false })
+    for (const uid of m.team1 ?? []) participants.push({ user_id: uid, side: 'team1', is_ad: uid === m.team1AdPlayerId })
+    for (const uid of m.team2 ?? []) participants.push({ user_id: uid, side: 'team2', is_ad: uid === m.team2AdPlayerId })
+    return participants
+}
+
 // temp_id 패턴: 클라이언트는 임시 UUID로 courts/rounds/timeSlots를 연결하고,
 // RPC 내부에서 INSERT 후 실제 DB ID로 매핑하여 matches에 FK를 연결함.
 function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[]) {
@@ -37,10 +48,7 @@ function buildMatchGamePayload(courts: Court[], rounds: Round[], matches: Match[
         round_temp_id: m.roundId,
         time_slot_temp_id: m.timeSlotId,
         match_type: m.matchType as MatchType,
-        player1_id: m.player1Id ?? '',
-        player2_id: m.player2Id ?? '',
-        team1: m.team1 ?? [],
-        team2: m.team2 ?? [],
+        participants: buildParticipantsPayload(m),
         prev_match_id: m.prevMatchId ?? null,
     }))
 
@@ -152,15 +160,29 @@ export async function saveCourtSidesAction(
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
 
-    const { error } = await supabase
-        .from('match_game_matches')
-        .update({
-            team1_ad_player_id: team1AdPlayerId,
-            team2_ad_player_id: team2AdPlayerId,
-        })
-        .eq('id', matchId)
+    // is_ad는 match_game_participants로 정규화됨 — side별 전체 false 초기화 후 지정된 선수만 true.
+    const [r1, r2] = await Promise.all([
+        supabase.from('match_game_participants').update({ is_ad: false }).eq('match_id', matchId).eq('side', 'team1'),
+        supabase.from('match_game_participants').update({ is_ad: false }).eq('match_id', matchId).eq('side', 'team2'),
+    ])
+    if (r1.error || r2.error) return { ok: false, error: (r1.error ?? r2.error)!.message }
 
-    if (error) return { ok: false, error: error.message }
+    if (team1AdPlayerId) {
+        const { error } = await supabase
+            .from('match_game_participants')
+            .update({ is_ad: true })
+            .eq('match_id', matchId)
+            .eq('user_id', team1AdPlayerId)
+        if (error) return { ok: false, error: error.message }
+    }
+    if (team2AdPlayerId) {
+        const { error } = await supabase
+            .from('match_game_participants')
+            .update({ is_ad: true })
+            .eq('match_id', matchId)
+            .eq('user_id', team2AdPlayerId)
+        if (error) return { ok: false, error: error.message }
+    }
 
     // 코트 배치는 클라이언트 state(courtSides)가 즉시 반영하므로 페이지 전체 재조회가 불필요하다.
     // revalidatePath를 호출하면 매 토글마다 무거운 대진표 쿼리들이 재실행되어 UI가 잠기므로 생략한다.
