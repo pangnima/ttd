@@ -67,7 +67,7 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
 
     const navLinkClass = (active: boolean) =>
         cn(
-            'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+            'flex items-center gap-3 px-3 py-2 rounded-md text-body2 font-medium transition-colors',
             active
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                 : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'

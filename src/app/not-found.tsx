@@ -3,12 +3,12 @@ import Link from 'next/link'
 export default function NotFound() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
-            <p className="text-6xl font-bold text-muted-foreground">404</p>
+            <p className="text-display font-extrabold text-muted-foreground">404</p>
             <h1 className="text-h2 font-bold">페이지를 찾을 수 없습니다</h1>
             <p className="text-muted-foreground">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
             <Link
                 href="/clubs"
-                className="mt-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="mt-2 rounded-md bg-primary px-4 py-2 text-body2 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
                 클럽 목록으로 돌아가기
             </Link>

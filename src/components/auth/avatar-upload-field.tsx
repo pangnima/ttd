@@ -58,12 +58,12 @@ export function AvatarUploadField() {
             />
 
             <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">프로필 사진</p>
-                <p className="text-xs text-muted-foreground mb-2">기본 이미지를 사용하거나 직접 올릴 수 있어요.</p>
+                <p className="text-body font-medium text-foreground">프로필 사진</p>
+                <p className="text-caption text-muted-foreground mb-2">기본 이미지를 사용하거나 직접 올릴 수 있어요.</p>
                 <div className="flex flex-wrap gap-1.5">
                     <label
                         htmlFor="avatar"
-                        className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
                     >
                         <ImagePlus className="w-3.5 h-3.5" />
                         내 사진 업로드
@@ -72,7 +72,7 @@ export function AvatarUploadField() {
                         <button
                             type="button"
                             onClick={useDefaultInstead}
-                            className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-input transition-colors"
+                            className="inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-input transition-colors"
                         >
                             기본 이미지 사용
                         </button>
@@ -80,7 +80,7 @@ export function AvatarUploadField() {
                         <button
                             type="button"
                             onClick={shuffleDefault}
-                            className="inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-input transition-colors"
+                            className="inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-input transition-colors"
                         >
                             <Shuffle className="w-3.5 h-3.5" />
                             다른 기본 이미지

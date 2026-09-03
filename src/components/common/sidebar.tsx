@@ -41,7 +41,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
     // 단순 메뉴 항목 — rail/펼침 단일 마크업, 클래스만 토글해 폭과 함께 부드럽게 전환
     const rowClass = (active: boolean) =>
         cn(
-            'flex items-center h-10 rounded-lg text-sm font-medium transition-colors',
+            'flex items-center h-10 rounded-lg text-body2 font-medium transition-colors',
             collapsed ? 'gap-0 justify-center px-0 w-10 mx-auto' : 'gap-3 px-3',
             active
                 ? 'bg-muted text-foreground'
@@ -70,7 +70,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
             >
                 <Link href="/clubs" className="flex items-center gap-2.5 min-w-0" aria-label="BASELINE 홈">
                     <BrandLogo wordmark={false} size="sm" className="shrink-0" />
-                    <span className={cn(labelClass, WORDMARK_CLASS, 'text-base')}>BASELINE</span>
+                    <span className={cn(labelClass, WORDMARK_CLASS, 'text-body')}>BASELINE</span>
                 </Link>
             </div>
 

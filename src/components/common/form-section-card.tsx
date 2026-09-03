@@ -32,7 +32,7 @@ export function FormSectionCard({
             <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                 <CardTitle className="text-h4">{title}</CardTitle>
                 {step && (
-                    <span className="text-xs font-medium tracking-widest text-muted-foreground tabular-nums">
+                    <span className="text-caption font-medium tracking-widest text-muted-foreground tabular-nums">
                         {step}
                     </span>
                 )}

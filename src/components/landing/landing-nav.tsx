@@ -50,11 +50,11 @@ export async function LandingNav() {
                                 {profile.profileImage && (
                                     <AvatarImage src={profile.profileImage} alt={profile.nickname} />
                                 )}
-                                <AvatarFallback className="bg-primary/20 text-xs font-bold text-primary">
+                                <AvatarFallback className="bg-primary/20 text-caption font-bold text-primary">
                                     {profile.nickname[0]}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{profile.name}</span>
+                            <span className="text-body2 font-medium">{profile.name}</span>
                         </Link>
                         <form action={logoutAction}>
                             <Button
@@ -72,7 +72,7 @@ export async function LandingNav() {
                     <div className="flex items-center gap-2">
                         <Link
                             href="/login"
-                            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+                            className="hidden text-body2 text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
                         >
                             로그인
                         </Link>

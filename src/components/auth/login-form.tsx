@@ -60,7 +60,7 @@ export function LoginForm({ next }: { next?: string }) {
                 </div>
 
                 {/* UI만: 세션은 Supabase 기본 정책을 따름 */}
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <label className="flex items-center gap-2 text-body2 text-muted-foreground">
                     <input
                         type="checkbox" name="remember" defaultChecked
                         className="size-4 rounded-sm border-input accent-accent-lime"
@@ -69,7 +69,7 @@ export function LoginForm({ next }: { next?: string }) {
                 </label>
 
                 {state?.error && (
-                    <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                    <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                         {state.error}
                     </p>
                 )}

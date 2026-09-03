@@ -11,13 +11,13 @@ export function CtaBanner() {
                     <h2 className="text-h2 font-bold">
                         오늘 첫 경기를 기록해 보세요
                     </h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-2 text-body text-muted-foreground">
                         신용카드 없이 무료로 시작 · 1분이면 충분합니다.
                     </p>
                 </div>
                 <Link
                     href="/signup"
-                    className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'h-11 px-6 text-sm')}
+                    className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'h-11 px-6 text-body2')}
                 >
                     무료로 시작하기
                 </Link>

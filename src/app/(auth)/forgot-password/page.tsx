@@ -14,14 +14,14 @@ export default function ForgotPasswordPage() {
 
                     <div className="mb-8">
                         <h1 className="text-h2 font-bold text-foreground">비밀번호 찾기</h1>
-                        <p className="mt-1.5 text-sm text-muted-foreground">
+                        <p className="mt-1.5 text-body2 text-muted-foreground">
                             가입한 이메일로 재설정 링크를 보내드립니다.
                         </p>
                     </div>
 
                     <ForgotPasswordForm />
 
-                    <p className="mt-6 text-center text-sm text-muted-foreground">
+                    <p className="mt-6 text-center text-body2 text-muted-foreground">
                         비밀번호가 기억나셨나요?{' '}
                         <Link
                             href="/login"

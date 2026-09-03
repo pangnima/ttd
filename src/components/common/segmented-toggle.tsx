@@ -35,7 +35,7 @@ export function SegmentedToggle<T extends string>({
                         aria-pressed={active}
                         onClick={() => onValueChange(opt.value)}
                         className={cn(
-                            'rounded-sm px-3 py-1 text-sm font-medium transition-colors',
+                            'rounded-sm px-3 py-1 text-body2 font-medium transition-colors',
                             active
                                 ? 'bg-card text-foreground shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground',

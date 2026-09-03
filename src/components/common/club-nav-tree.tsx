@@ -18,19 +18,19 @@ type ClubNavTreeProps = {
 const VARIANT = {
     desktop: {
         section: 'mt-2 pt-2 border-t border-border/40',
-        header: 'flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground',
+        header: 'flex items-center gap-3 px-3 py-2.5 text-body2 font-medium text-muted-foreground',
         clubButton:
             'flex items-center gap-1.5 w-full px-3 py-2.5 pl-7 rounded-lg text-body2 font-medium text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors',
-        linkBase: 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+        linkBase: 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-body2 font-medium transition-colors',
         linkActive: 'bg-foreground/10 text-foreground',
         linkIdle: 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
     },
     mobile: {
         section: 'mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10',
-        header: 'flex items-center gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground/70',
+        header: 'flex items-center gap-3 px-3 py-2 text-body2 font-medium text-sidebar-foreground/70',
         clubButton:
             'flex items-center gap-1.5 w-full px-3 py-2 pl-7 rounded-md text-body2 font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
-        linkBase: 'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+        linkBase: 'flex items-center gap-3 px-3 py-2 rounded-md text-body2 font-medium transition-colors',
         linkActive: 'bg-sidebar-accent text-sidebar-accent-foreground',
         linkIdle: 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
     },

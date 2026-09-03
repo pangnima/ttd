@@ -30,9 +30,9 @@ export function TierEmblem({
     return (
         <span title={TIER_LABELS[tier]} className={cn('inline-flex items-center gap-1.5', className)}>
             <TierIcon tier={tier} size={size} />
-            {showLabel && <span className="text-sm font-medium text-foreground">{TIER_LABELS[tier]}</span>}
+            {showLabel && <span className="text-body2 font-medium text-foreground">{TIER_LABELS[tier]}</span>}
             {showPoints && (
-                <span className={cn('text-xs font-mono tabular-nums font-semibold', TIER_TEXT[tier])}>{points}p</span>
+                <span className={cn('text-caption font-mono tabular-nums font-semibold', TIER_TEXT[tier])}>{points}p</span>
             )}
             {isProv && <span className="text-micro text-amber-600 dark:text-amber-400">잠정</span>}
         </span>

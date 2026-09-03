@@ -12,8 +12,8 @@ type BrandLogoProps = {
 }
 
 const SIZE = {
-    sm: { ball: 'size-6', text: 'text-base' },
-    md: { ball: 'size-8', text: 'text-lg' },
+    sm: { ball: 'size-6', text: 'text-body' },
+    md: { ball: 'size-8', text: 'text-h4' },
 } as const
 
 // 워드마크 — Geist Mono 고정(--font-mono는 Pretendard 우선이라 변수를 직접 지정).

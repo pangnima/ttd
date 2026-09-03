@@ -27,7 +27,7 @@ export function ThemeToggle({ collapsed = false }: ThemeToggleProps) {
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             aria-label={isDark ? '라이트 모드' : '다크 모드'}
             className={cn(
-                'flex items-center h-10 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
+                'flex items-center h-10 rounded-lg text-body2 font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
                 collapsed ? 'gap-0 justify-center w-10 mx-auto px-0' : 'gap-3 w-full px-3'
             )}
         >

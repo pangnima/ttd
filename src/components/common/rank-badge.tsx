@@ -13,7 +13,7 @@ type Props = {
     index: number
     /** 메달 아이콘 크기 클래스 (기본: w-4 h-4) */
     iconClass?: string
-    /** 숫자 텍스트 크기 클래스 (기본: text-sm) */
+    /** 숫자 텍스트 크기 클래스 (기본: text-body2) */
     textClass?: string
 }
 
@@ -22,7 +22,7 @@ type Props = {
  * 1~3위는 메달 아이콘, 4위 이상은 숫자를 표시한다.
  * activity-ranking-card / win-rate-ranking-card 양쪽에서 공유.
  */
-export function RankBadge({ index, iconClass = 'w-4 h-4', textClass = 'text-sm' }: Props) {
+export function RankBadge({ index, iconClass = 'w-4 h-4', textClass = 'text-body2' }: Props) {
     if (index < 3) {
         return <Medal className={`${iconClass} ${RANK_COLORS[index]}`} />
     }

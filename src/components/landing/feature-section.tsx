@@ -39,7 +39,7 @@ export function FeatureSection() {
                 </div>
                 <Link
                     href="#"
-                    className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+                    className="hidden text-body2 font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
                 >
                     전체 기능 →
                 </Link>

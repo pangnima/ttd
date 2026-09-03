@@ -19,7 +19,7 @@ export function HeroPreviewCard() {
                 <div className="space-y-3">
                     {ROWS.map((row) => (
                         <div key={row.team} className="flex items-center justify-between">
-                            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                            <span className="flex items-center gap-2 text-body2 font-medium text-foreground">
                                 <span
                                     className={cn(
                                         'size-1.5 rounded-full',
@@ -28,7 +28,7 @@ export function HeroPreviewCard() {
                                 />
                                 {row.team}
                             </span>
-                            <span className="tabular-nums text-sm font-semibold text-foreground">
+                            <span className="tabular-nums text-body2 font-semibold text-foreground">
                                 {row.sets}
                             </span>
                         </div>
@@ -56,8 +56,8 @@ export function HeroPreviewCard() {
                     <span className="grid size-8 place-items-center rounded-full bg-card">98%</span>
                 </span>
                 <div className="leading-tight">
-                    <p className="text-sm font-semibold text-foreground">4연승 중</p>
-                    <p className="text-xs text-muted-foreground">최근 폼 최고조</p>
+                    <p className="text-body2 font-semibold text-foreground">4연승 중</p>
+                    <p className="text-caption text-muted-foreground">최근 폼 최고조</p>
                 </div>
             </div>
         </div>

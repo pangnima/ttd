@@ -20,7 +20,7 @@ export default async function LoginPage({
                 <div className="w-full max-w-sm">
                     <p className={TYPO.eyebrow}>WELCOME BACK</p>
                     <h1 className={`${TYPO.h2} mt-2`}>다시 만나서 반가워요</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-2 text-body2 text-muted-foreground">
                         계정이 없으신가요?{' '}
                         <Link
                             href="/signup"

@@ -69,15 +69,15 @@ export function Header({ clubs = [], userDisplay = null }: HeaderProps) {
                                         alt={userDisplay.nickname}
                                     />
                                 )}
-                                <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                                <AvatarFallback className="bg-primary/20 text-primary text-caption font-bold">
                                     {userDisplay.nickname[0]}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{userDisplay.name}</span>
+                            <span className="text-body2 font-medium">{userDisplay.name}</span>
                             {userDisplay.role === 'admin' && (
                                 <Badge
                                     variant="outline"
-                                    className="text-xs px-1.5 py-0 h-5 border-amber-500/50 text-amber-600 dark:text-amber-400 gap-1"
+                                    className="text-caption px-1.5 py-0 h-5 border-amber-500/50 text-amber-600 dark:text-amber-400 gap-1"
                                 >
                                     <Shield className="w-2.5 h-2.5" />
                                     관리자

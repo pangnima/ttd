@@ -27,14 +27,14 @@ export function HeroSection() {
                     <br />
                     기록하고 분석하다
                 </h1>
-                <p className="mt-5 max-w-md text-base text-muted-foreground">
+                <p className="mt-5 max-w-md text-body text-muted-foreground">
                     클럽 운영부터 대진표, 개인 경기 통계까지. 코트 밖의 모든 일을 한 곳에서
                     관리하세요.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                     <Link
                         href="/signup"
-                        className={cn(buttonVariants({ size: 'lg' }), 'h-11 px-6 text-sm')}
+                        className={cn(buttonVariants({ size: 'lg' }), 'h-11 px-6 text-body2')}
                     >
                         무료로 시작하기
                     </Link>
@@ -42,7 +42,7 @@ export function HeroSection() {
                         href="#"
                         className={cn(
                             buttonVariants({ variant: 'outline', size: 'lg' }),
-                            'h-11 px-6 text-sm',
+                            'h-11 px-6 text-body2',
                         )}
                     >
                         ▷ 데모 보기
@@ -50,7 +50,7 @@ export function HeroSection() {
                 </div>
                 <div className="mt-8 flex items-center gap-3">
                     <MemberAvatarGroup members={SAMPLE_MEMBERS} max={4} size="sm" />
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-body2 text-muted-foreground">
                         전국 <span className="font-semibold text-foreground">240개 클럽</span>이 함께
                         사용 중
                     </span>

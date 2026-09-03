@@ -33,10 +33,10 @@ export function FeatureCard({
                 </Chip>
             </div>
             <h3 className="text-h4 font-semibold text-foreground">{title}</h3>
-            <p className="mt-2 flex-1 text-sm text-muted-foreground">{description}</p>
+            <p className="mt-2 flex-1 text-body text-muted-foreground">{description}</p>
             <Link
                 href="#"
-                className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-medium text-foreground hover:underline"
+                className="mt-5 inline-flex w-fit items-center gap-1 text-body2 font-medium text-foreground hover:underline"
             >
                 자세히 보기 →
             </Link>

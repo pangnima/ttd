@@ -12,7 +12,7 @@ export function ForgotPasswordForm() {
     // 전송 성공 시 폼 대신 안내 문구만 노출 (이메일 존재 여부는 노출하지 않음)
     if (state?.success) {
         return (
-            <div className="rounded-md border border-border bg-muted/40 px-4 py-5 text-sm text-foreground/80">
+            <div className="rounded-md border border-border bg-muted/40 px-4 py-5 text-body text-foreground/80">
                 입력하신 이메일이 가입되어 있다면 비밀번호 재설정 링크를 보냈습니다.
                 메일함을 확인해 주세요.
             </div>
@@ -32,7 +32,7 @@ export function ForgotPasswordForm() {
             </div>
 
             {state?.error && (
-                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}

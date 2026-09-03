@@ -33,7 +33,7 @@ export function LoginHero() {
                         <br />
                         당신의 실력이 된다
                     </h2>
-                    <p className="mt-4 text-sm text-muted-foreground">
+                    <p className="mt-4 text-body text-muted-foreground">
                         경기를 기록할수록 더 또렷해지는 나의 테니스.
                     </p>
                 </div>
