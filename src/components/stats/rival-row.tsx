@@ -56,7 +56,7 @@ export function RivalRow({ rival, userMap, today }: Props) {
                 <RecentFormBadges outcomes={rival.last5} size="sm" />
                 {/* 최근 맞대결 */}
                 {rival.lastOutcome && rival.lastDate && (
-                    <span className={`text-[11px] ${TEXT_MUTED} shrink-0`}>
+                    <span className={`text-caption ${TEXT_MUTED} shrink-0`}>
                         최근 <span className="text-foreground/80">{OUTCOME_KO[rival.lastOutcome]} {rival.lastScore}</span>
                         <span className="mx-1">·</span>{relativeDayLabel(rival.lastDate, today)}
                     </span>

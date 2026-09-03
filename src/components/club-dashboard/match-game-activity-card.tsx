@@ -36,7 +36,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                             <span className="mx-0.5 h-4 w-px bg-border hidden sm:block" />
                             {MATCH_TYPE_ORDER.map(({ type, key }) => (
                                 <span key={type} className="flex items-center gap-1">
-                                    <span className={`${getMatchTypeBadgeClass(type)} border rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium shrink-0`}>
+                                    <span className={`${getMatchTypeBadgeClass(type)} border rounded-[4px] px-1.5 py-0.5 text-micro font-medium shrink-0`}>
                                         {MATCH_TYPE_LABELS[type]}
                                     </span>
                                     <span className="text-sm font-semibold text-foreground">{activity.matchTypeCounts[key]}</span>
@@ -50,7 +50,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                     <div className="flex items-center gap-2 pt-3 border-t border-border">
                         <Calendar className={`w-3.5 h-3.5 shrink-0 ${TEXT_MUTED}`} />
                         <span className={`text-xs ${TEXT_MUTED}`}>다음 예정</span>
-                        <span className={`${PILL_BASE} text-[10px] border-info/40 text-info bg-info/10`}>
+                        <span className={`${PILL_BASE} text-micro border-info/40 text-info bg-info/10`}>
                             {formatShortDate(activity.nextGame.date)}
                         </span>
                         <Link
@@ -85,7 +85,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <span className={`text-xs ${TEXT_MUTED}`}>{formatShortDate(g.date)}</span>
-                                    <span className={`${PILL_BASE} text-[10px] ${g.isFixed ? 'border-win/40 text-win bg-win/10' : 'border-border text-muted-foreground'}`}>
+                                    <span className={`${PILL_BASE} text-micro ${g.isFixed ? 'border-win/40 text-win bg-win/10' : 'border-border text-muted-foreground'}`}>
                                         {g.isFixed ? '확정' : '예정'}
                                     </span>
                                 </div>

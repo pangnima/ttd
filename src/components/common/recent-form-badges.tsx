@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 type Outcome = 'W' | 'L' | 'D'
 
 const SIZE_CLASS = {
-    sm: 'w-4 h-4 rounded-[3px] text-[9px]',
-    md: 'w-5 h-5 rounded-sm text-[10px]',
+    sm: 'w-4 h-4 rounded-[3px] text-micro',
+    md: 'w-5 h-5 rounded-sm text-micro',
 } as const
 
 type Props = {

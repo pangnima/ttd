@@ -72,7 +72,7 @@ export function MatchListView({
                                         </td>
                                         <td className="px-3 py-3">
                                             <div className="flex flex-wrap items-center gap-1">
-                                                <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
+                                                <span className={`inline-flex items-center text-micro px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
                                                     {MATCH_TYPE_LABELS[match.matchType]}
                                                 </span>
                                                 <SpecialMatchBadge close={isClose} rival={isRival} />

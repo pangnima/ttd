@@ -54,7 +54,7 @@ export function WinRateTrendCard({ years }: Props) {
                 <div className="flex items-center gap-2">
                     {years.length > 1 && (
                         <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-                            <SelectTrigger className="h-8 w-[88px] text-sm bg-card">
+                            <SelectTrigger className="h-8 w-[88px] text-body2 bg-card">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -83,7 +83,7 @@ export function WinRateTrendCard({ years }: Props) {
                         ) : (
                             <span />
                         )}
-                        <div className={`ml-auto flex items-center gap-3 text-[10px] ${TEXT_MUTED}`}>
+                        <div className={`ml-auto flex items-center gap-3 text-caption ${TEXT_MUTED}`}>
                             <span className="flex items-center gap-1.5">
                                 <span className="h-0.5 w-3 rounded-full bg-win" />
                                 승률(%)

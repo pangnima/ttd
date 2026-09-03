@@ -25,7 +25,7 @@ export function ClubRankingCard({ clubId, entries, forms }: ClubRankingCardProps
         <section className="space-y-3">
             <div className="flex items-center justify-between">
                 <h2 className={TYPO.h4}>클럽 랭킹</h2>
-                <span className={`text-[11px] ${TEXT_MUTED}`}>경기 결과로 자동 산정</span>
+                <span className={`text-caption ${TEXT_MUTED}`}>경기 결과로 자동 산정</span>
             </div>
             <div className={`${CARD_BASE} p-2 sm:p-3`}>
                 {entries.length === 0 ? (
@@ -33,7 +33,7 @@ export function ClubRankingCard({ clubId, entries, forms }: ClubRankingCardProps
                 ) : (
                     <div>
                         {/* 컬럼 헤더 (sm 이상) */}
-                        <div className={`hidden sm:flex items-center gap-3 px-2 pb-2 text-[11px] ${TEXT_MUTED}`}>
+                        <div className={`hidden sm:flex items-center gap-3 px-2 pb-2 text-caption ${TEXT_MUTED}`}>
                             <span className="w-6 shrink-0 text-center">순위</span>
                             <span className="flex-1 min-w-0">선수</span>
                             <span className="w-24 shrink-0">티어</span>
@@ -100,7 +100,7 @@ function ClubRankingRow({ clubId, entry, index, form }: RowProps) {
                         )}
                         {isGuest && <GuestBadge />}
                     </div>
-                    <p className={`text-[11px] ${TEXT_MUTED} tabular-nums`}>
+                    <p className={`text-caption ${TEXT_MUTED} tabular-nums`}>
                         {formatRecord(wins, losses)}
                     </p>
                 </div>

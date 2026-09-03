@@ -53,7 +53,7 @@ export function MatchGridCell({
             isSelf && SELF_CARD_CLASS
         )}>
             <div className="flex items-center justify-between gap-1">
-                <span className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
+                <span className={`inline-flex items-center text-micro px-1.5 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
                     {MATCH_TYPE_LABELS[match.matchType]}
                 </span>
                 <SpecialMatchBadge close={isClose} rival={isRival} />

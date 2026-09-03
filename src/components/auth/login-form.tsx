@@ -34,7 +34,7 @@ export function LoginForm({ next }: { next?: string }) {
                         <Link
                             href="/forgot-password"
                             tabIndex={-1}
-                            className="mb-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                            className="mb-1.5 text-caption text-muted-foreground hover:text-foreground"
                         >
                             비밀번호 찾기
                         </Link>
@@ -81,7 +81,7 @@ export function LoginForm({ next }: { next?: string }) {
 
             {/* 회원가입 유도 — 시인성을 위해 소셜 로그인 위로 배치 */}
             <div className="space-y-2 pt-1">
-                <p className="text-center text-[11px] text-muted-foreground">계정이 없으신가요?</p>
+                <p className="text-center text-caption text-muted-foreground">계정이 없으신가요?</p>
                 <Link
                     href="/signup"
                     className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full h-11 font-semibold')}
@@ -90,7 +90,7 @@ export function LoginForm({ next }: { next?: string }) {
                 </Link>
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 text-caption text-muted-foreground">
                 <span className="h-px flex-1 bg-border" />
                 OR
                 <span className="h-px flex-1 bg-border" />

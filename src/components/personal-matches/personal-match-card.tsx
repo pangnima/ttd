@@ -59,9 +59,9 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                     {MATCH_TYPE_LABELS[m.matchType]}
                 </span>
                 <div className="text-lg font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
-                <div className="text-[10px] text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
+                <div className="text-caption text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
                 {m.surface && (
-                    <div className={`text-[10px] font-medium ${SURFACE_TEXT_CLASS[m.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
+                    <div className={`text-caption font-medium ${SURFACE_TEXT_CLASS[m.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
                         {SURFACE_LABELS[m.surface] ?? m.surface}
                     </div>
                 )}

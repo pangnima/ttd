@@ -57,9 +57,9 @@ export function SignupTennisSection() {
                     className={inputCls}
                 />
                 {startInvalid ? (
-                    <p className="mt-1 text-[11px] text-destructive">년/월 형식으로 입력해 주세요 (예: 2022/07). 미래 월은 입력할 수 없습니다.</p>
+                    <p className="mt-1 text-caption text-destructive">년/월 형식으로 입력해 주세요 (예: 2022/07). 미래 월은 입력할 수 없습니다.</p>
                 ) : (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
+                    <p className="mt-1 text-caption text-muted-foreground">
                         {parsedStart ? `${parsedStart.year}년 ${parsedStart.month}월부터` : '년/월만 입력합니다 (선택)'}
                     </p>
                 )}
@@ -67,7 +67,7 @@ export function SignupTennisSection() {
 
             <div>
                 <FieldToggle label="NTRP *" labelClassName={labelCls} options={NTRPS} value={ntrp} onChange={setNtrp} columns={7} />
-                <p className="mt-1 text-[11px] text-muted-foreground">1.0 ~ 4.0 (0.5 단위) · 가입 후 변경할 수 없습니다</p>
+                <p className="mt-1 text-caption text-muted-foreground">1.0 ~ 4.0 (0.5 단위) · 가입 후 변경할 수 없습니다</p>
             </div>
 
             <RacketField />

@@ -31,7 +31,7 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
 
     return (
         <div className={`${CARD_BASE} p-4 flex flex-col gap-3`}>
-            <span className={`self-start ${getMatchTypeBadgeClass(type)} border rounded-[4px] px-2 py-0.5 text-[11px] font-medium`}>
+            <span className={`self-start ${getMatchTypeBadgeClass(type)} border rounded-[4px] px-2 py-0.5 text-micro font-medium`}>
                 {MATCH_TYPE_LABELS[type]}
             </span>
             {ace ? (
@@ -41,18 +41,18 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                         <div className="flex items-center gap-1.5 min-w-0">
                             <Crown className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                             {aceHref ? (
-                                <Link href={aceHref} className="text-[15px] font-semibold text-foreground hover:text-foreground truncate">
+                                <Link href={aceHref} className="text-body font-semibold text-foreground hover:text-foreground truncate">
                                     {entryName(ace)}
                                 </Link>
                             ) : (
-                                <span className="text-[15px] font-semibold text-foreground truncate">{entryName(ace)}</span>
+                                <span className="text-body font-semibold text-foreground truncate">{entryName(ace)}</span>
                             )}
                         </div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-bold text-foreground leading-none">
                                 {ace.winRate}<span className={`text-xs font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
                             </span>
-                            <span className={`text-[11px] ${TEXT_MUTED}`}>{formatRecord(ace.winCount, ace.lossCount)}</span>
+                            <span className={`text-caption ${TEXT_MUTED}`}>{formatRecord(ace.winCount, ace.lossCount)}</span>
                         </div>
                     </div>
 
@@ -74,10 +74,10 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                                             ) : (
                                                 <p className="text-sm text-foreground truncate leading-tight">{entryName(entry)}</p>
                                             )}
-                                            <p className={`text-[11px] ${TEXT_MUTED}`}>{formatRecord(entry.winCount, entry.lossCount)}</p>
+                                            <p className={`text-caption ${TEXT_MUTED}`}>{formatRecord(entry.winCount, entry.lossCount)}</p>
                                         </div>
                                         <span className="text-sm font-semibold text-foreground shrink-0">
-                                            {entry.winRate}<span className={`text-[10px] font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
+                                            {entry.winRate}<span className={`text-caption font-normal ml-0.5 ${TEXT_MUTED}`}>%</span>
                                         </span>
                                     </div>
                                 )

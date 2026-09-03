@@ -14,7 +14,7 @@ export function TierDeltaBadge({ before, after }: Props) {
     if (promoted || demoted) {
         const up = promoted
         return (
-            <span className={`text-[10px] font-medium shrink-0 ${up ? 'text-win' : 'text-loss'}`}>
+            <span className={`text-micro font-medium shrink-0 ${up ? 'text-win' : 'text-loss'}`}>
                 {up ? '▲' : '▼'}{TIER_LABELS[toTier]} {up ? '승급' : '강등'}
             </span>
         )
@@ -23,7 +23,7 @@ export function TierDeltaBadge({ before, after }: Props) {
     if (pointDelta === 0) return null
     const up = pointDelta > 0
     return (
-        <span className={`text-[10px] font-mono shrink-0 ${up ? 'text-win' : 'text-loss'}`}>
+        <span className={`text-micro font-mono shrink-0 ${up ? 'text-win' : 'text-loss'}`}>
             {up ? '▲' : '▼'}{Math.abs(pointDelta)}p
         </span>
     )

@@ -61,7 +61,7 @@ export function FieldToggle<T extends string>({
                             role="radio"
                             aria-checked={active}
                             onClick={() => onChange(o.value)}
-                            className={`px-2.5 py-2 text-xs rounded-md border transition-colors ${
+                            className={`px-2.5 py-2 text-body2 rounded-md border transition-colors ${
                                 active
                                     ? 'border-accent-lime bg-accent-lime text-accent-lime-foreground font-semibold'
                                     : 'border-input text-foreground hover:bg-muted/40'

@@ -322,7 +322,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             <div className={CARD_BASE}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     <span className="text-sm font-medium">코트 목록</span>
-                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCourt}>
+                    <Button type="button" variant="outline" size="sm" className="h-8 text-body2 gap-1" onClick={addCourt}>
                         <Plus className="w-3 h-3" /> 코트 추가
                     </Button>
                 </div>
@@ -338,7 +338,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 <Input
                                     value={court.label}
                                     onChange={(e) => updateCourt(court.id, { label: e.target.value })}
-                                    className="h-8 text-xs w-24"
+                                    className="h-9 w-28"
                                     placeholder="1코트"
                                 />
                                 <Select
@@ -346,7 +346,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                     onValueChange={(v) => updateCourt(court.id, { surface: v as CourtSurface | '' })}
                                     items={SURFACE_SELECT_ITEMS}
                                 >
-                                    <SelectTrigger className="h-8 text-xs w-28">
+                                    <SelectTrigger className="h-8 text-body2 w-28">
                                         <SelectValue placeholder="표면 선택" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -361,7 +361,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                     onValueChange={(v) => updateCourt(court.id, { matchType: v as MatchType })}
                                     items={MATCH_TYPE_OPTIONS}
                                 >
-                                    <SelectTrigger className="h-8 text-xs w-24">
+                                    <SelectTrigger className="h-8 text-body2 w-24">
                                         <SelectValue placeholder="종류" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -438,7 +438,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 type="time"
                                 value={baseStart}
                                 onChange={(e) => setBaseStart(e.target.value)}
-                                className="h-7 text-xs w-24"
+                                className="h-9 w-32"
                             />
                         </div>
                         <div className="flex items-center gap-1">
@@ -448,7 +448,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 onValueChange={(v) => setSlotMinutes(Number(v))}
                                 items={SLOT_SELECT_ITEMS}
                             >
-                                <SelectTrigger className="h-7 text-xs w-20">
+                                <SelectTrigger className="h-8 text-body2 w-20">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -462,7 +462,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs gap-1"
+                            className="h-8 text-body2 gap-1"
                             onClick={addEntry}
                             disabled={courts.length === 0}
                         >
@@ -515,7 +515,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                 onValueChange={(v) => updateEntry(entry.id, { courtId: v ?? '' })}
                                                 items={courts.map((c) => ({ value: c.id, label: c.label }))}
                                             >
-                                                <SelectTrigger className="h-8 text-xs w-24">
+                                                <SelectTrigger className="h-8 text-body2 w-24">
                                                     <SelectValue placeholder="코트 선택" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -531,14 +531,14 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                 <Input
                                                     value={entry.startAt}
                                                     onChange={(e) => updateEntry(entry.id, { startAt: e.target.value })}
-                                                    className="h-8 text-xs w-14"
+                                                    className="h-9 w-16"
                                                     placeholder="09:00"
                                                 />
                                                 <span className="text-xs text-muted-foreground shrink-0">~</span>
                                                 <Input
                                                     value={entry.endAt}
                                                     onChange={(e) => updateEntry(entry.id, { endAt: e.target.value })}
-                                                    className="h-8 text-xs w-14"
+                                                    className="h-9 w-16"
                                                     placeholder="09:30"
                                                 />
                                             </div>
@@ -549,7 +549,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                 value={entry.matchType}
                                                 onValueChange={(v) => updateEntry(entry.id, { matchType: v as MatchType })}
                                             >
-                                                <SelectTrigger className="h-8 text-xs w-20">
+                                                <SelectTrigger className="h-8 text-body2 w-20">
                                                     <Badge variant={MATCH_TYPE_VARIANTS[entry.matchType]} className="text-xs px-1.5">
                                                         {MATCH_TYPE_LABELS[entry.matchType]}
                                                     </Badge>

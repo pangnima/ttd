@@ -45,7 +45,7 @@ function RatingChip({ label, value, provisional, matchesPlayed }: ChipProps) {
                 {value}
             </span>
             {provisional && (
-                <span className="text-[10px] font-normal text-muted-foreground" aria-hidden>
+                <span className="text-caption font-normal text-muted-foreground" aria-hidden>
                     잠정
                 </span>
             )}

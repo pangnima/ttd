@@ -64,7 +64,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
                 >
                     {WEEKDAY_LABELS.map((label, w) => (
                         <Fragment key={label}>
-                            <span className={`self-center pr-1.5 text-right text-[12px] font-medium ${TEXT_MUTED}`}>{label}</span>
+                            <span className={`self-center pr-1.5 text-right text-caption font-medium ${TEXT_MUTED}`}>{label}</span>
                             {HOURS.map((h) => (
                                 <div
                                     key={h}
@@ -77,7 +77,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
                     {/* 시간축: 거터 빈칸 + 짝수 시간은 셀 중앙 정렬, 24는 마지막 셀 우측 끝에 표기 */}
                     <span aria-hidden />
                     {HOURS.map((h) => (
-                        <span key={h} className={`relative text-center text-[12px] tabular-nums ${TEXT_MUTED}`}>
+                        <span key={h} className={`relative text-center text-caption tabular-nums ${TEXT_MUTED}`}>
                             {h % 2 === 0 ? h : ''}
                             {h === 23 && (
                                 <span className="absolute right-0 top-0 translate-x-1/2">24</span>
@@ -94,7 +94,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
                     {data.untimed > 0 && <span className="ml-1.5">· 시간 미입력 {data.untimed}건 제외</span>}
                 </p>
                 {!isEmpty && (
-                    <div className={`ml-auto flex items-center gap-1.5 text-[10px] ${TEXT_MUTED}`}>
+                    <div className={`ml-auto flex items-center gap-1.5 text-caption ${TEXT_MUTED}`}>
                         <span>적음</span>
                         {['bg-win/20', 'bg-win/40', 'bg-win/60', 'bg-win/80'].map((c) => (
                             <span key={c} className={`h-2.5 w-2.5 rounded-[2px] ${c}`} />

@@ -34,7 +34,7 @@ export function PlayerName({ name, rating, outcome, delta, showDelta, isFormerMe
             <TierIcon rating={rating ?? DEFAULT_RATING} size={14} className="shrink-0" />
             <span className={cn(isFormerMember && 'line-through')}>{name}</span>
             {isFormerMember && (
-                <span className="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded border border-border text-muted-foreground">
+                <span className="shrink-0 text-micro leading-none px-1 py-0.5 rounded border border-border text-muted-foreground">
                     탈퇴
                 </span>
             )}

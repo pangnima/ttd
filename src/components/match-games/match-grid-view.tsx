@@ -45,7 +45,7 @@ export function MatchGridView({
                                 <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-3 align-top w-32 min-w-[8rem]">
                                     <p className={cn('text-sm font-semibold whitespace-nowrap', SLOT_TIME_CLASS)}>{slot.label}</p>
                                     {rests.length > 0 && (
-                                        <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+                                        <p className="mt-1 text-caption text-muted-foreground leading-snug">
                                             휴식: {rests.join(', ')}
                                         </p>
                                     )}

@@ -27,7 +27,7 @@ export function SignupForm() {
             <div>
                 <label htmlFor="email" className={labelCls}>이메일 *</label>
                 <input id="email" name="email" type="email" placeholder="example@email.com" required autoComplete="email" className={inputCls} />
-                <p className="mt-1 text-[11px] text-muted-foreground">로그인 시 사용할 아이디입니다.</p>
+                <p className="mt-1 text-caption text-muted-foreground">로그인 시 사용할 아이디입니다.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -52,7 +52,7 @@ export function SignupForm() {
                 </div>
             </div>
             {pwMismatch && (
-                <p className="-mt-3 text-[11px] text-destructive">비밀번호가 일치하지 않습니다.</p>
+                <p className="-mt-3 text-caption text-destructive">비밀번호가 일치하지 않습니다.</p>
             )}
 
             <div className="h-px bg-border" />

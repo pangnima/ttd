@@ -59,7 +59,7 @@ export function ClubInviteCard({ clubId, activeToken }: Props) {
             {activeToken ? (
                 <>
                     <div className="flex items-center gap-2">
-                        <Input readOnly value={inviteUrl} className="h-9 text-xs" onFocus={(e) => e.target.select()} />
+                        <Input readOnly value={inviteUrl} className="h-10" onFocus={(e) => e.target.select()} />
                         <Button variant="outline" size="sm" className="h-9 gap-1.5 shrink-0" onClick={handleCopy}>
                             {copied ? <Check className="w-3.5 h-3.5 text-win" /> : <Copy className="w-3.5 h-3.5" />}
                             {copied ? '복사됨' : '복사'}

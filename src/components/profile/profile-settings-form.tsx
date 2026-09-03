@@ -153,7 +153,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                         onCheckedChange={(checked) => setStatsHidden(checked === false)}
                     />
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
+                <p className="text-caption text-muted-foreground mt-1.5">
                     비공개 시 다른 회원이 내 프로필에서 승률·승무패를 볼 수 없습니다
                 </p>
             </div>

@@ -9,7 +9,7 @@ type SpecialMatchBadgeProps = {
     rival?: boolean
 }
 
-const CHIP_BASE = 'inline-flex items-center gap-0.5 text-[10px] leading-none px-1.5 py-0.5 rounded-full border font-medium'
+const CHIP_BASE = 'inline-flex items-center gap-0.5 text-micro leading-none px-1.5 py-0.5 rounded-full border font-medium'
 
 export function SpecialMatchBadge({ close, rival }: SpecialMatchBadgeProps) {
     if (!close && !rival) return null

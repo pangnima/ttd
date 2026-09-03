@@ -47,7 +47,7 @@ export function HeroPreviewCard() {
                 )}
             >
                 <span
-                    className="grid size-11 place-items-center rounded-full text-[11px] font-bold text-foreground"
+                    className="grid size-11 place-items-center rounded-full text-caption font-bold text-foreground"
                     style={{
                         background:
                             'conic-gradient(var(--accent-lime) 0% 98%, var(--muted) 98% 100%)',

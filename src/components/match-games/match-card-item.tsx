@@ -49,7 +49,7 @@ export function MatchCardItem({
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
                     <SpecialMatchBadge close={isClose} rival={isRival} />
-                    <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
+                    <span className={`inline-flex items-center text-micro px-2 py-0.5 rounded-[4px] border ${getMatchTypeBadgeClass(match.matchType)}`}>
                         {MATCH_TYPE_LABELS[match.matchType]}
                     </span>
                 </div>
@@ -83,7 +83,7 @@ export function MatchCardItem({
                 ) : (
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">플레이어 1</p>
+                            <p className="text-caption text-muted-foreground mb-1 uppercase tracking-wider">플레이어 1</p>
                             <TeamPlayersCell
                                 playerIds={match.team1 ?? []}
                                 teamKey="team1"
@@ -99,7 +99,7 @@ export function MatchCardItem({
                             />
                         </div>
                         <div>
-                            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">플레이어 2</p>
+                            <p className="text-caption text-muted-foreground mb-1 uppercase tracking-wider">플레이어 2</p>
                             <TeamPlayersCell
                                 playerIds={match.team2 ?? []}
                                 teamKey="team2"

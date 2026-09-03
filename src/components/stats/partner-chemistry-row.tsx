@@ -42,7 +42,7 @@ export function PartnerChemistryRow({ partner, userMap }: Props) {
                     )}
                     {user?.isGuest && <GuestBadge />}
                     {showStreak && (
-                        <span className="text-[11px] px-1.5 py-0.5 rounded-sm bg-win/20 text-win font-semibold shrink-0">
+                        <span className="text-micro px-1.5 py-0.5 rounded-sm bg-win/20 text-win font-semibold shrink-0">
                             {partner.currentStreak}연승
                         </span>
                     )}

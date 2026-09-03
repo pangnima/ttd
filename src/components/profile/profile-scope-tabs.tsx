@@ -63,7 +63,7 @@ export function ProfileScopeTabs({ scope, personalHref }: Props) {
                             )}
                         >
                             {tab.label}
-                            <span className="text-[10px] font-normal text-muted-foreground/60">준비 중</span>
+                            <span className="text-micro font-normal text-muted-foreground/60">준비 중</span>
                         </span>
                     )
                 })}

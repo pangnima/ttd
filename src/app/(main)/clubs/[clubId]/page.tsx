@@ -146,7 +146,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <div className="flex items-start gap-3 px-4 py-3">
                         <Crown className={`w-4 h-4 shrink-0 mt-0.5 ${TEXT_MUTED}`} />
                         <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0 mt-0.5`}>운영진</span>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-foreground/90">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body text-foreground/90">
                             <ProfileLink
                                 userId={ownerMember.userId}
                                 isGuest={ownerMember.user.isGuest}
@@ -158,7 +158,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                             {officerMembers.map((m) => (
                                 <span key={m.userId} className="flex items-center gap-1">
                                     <span className={`text-xs ${TEXT_MUTED}`}>·</span>
-                                    <span className="text-[13px] text-info">임원</span>
+                                    <span className="text-caption text-info">임원</span>
                                     <ProfileLink
                                         userId={m.userId}
                                         isGuest={m.user.isGuest}
@@ -176,14 +176,14 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <div className="flex items-center gap-3 px-4 py-3">
                         <MapPin className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
                         <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>지역</span>
-                        <span className="text-[15px] font-medium text-foreground/90">{club.region}</span>
+                        <span className="text-body font-medium text-foreground/90">{club.region}</span>
                     </div>
                 )}
                 {club.courtSchedule && (
                     <div className="flex items-center gap-3 px-4 py-3">
                         <Clock className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`} />
                         <span className={`text-sm ${TEXT_MUTED} w-16 shrink-0`}>정기시간</span>
-                        <span className="text-[15px] font-medium text-foreground/90">{club.courtSchedule}</span>
+                        <span className="text-body font-medium text-foreground/90">{club.courtSchedule}</span>
                     </div>
                 )}
             </div>

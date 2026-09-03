@@ -20,7 +20,7 @@ export function AttendanceSummary({ gameCounts, restingBySlot, className }: Atte
         <div className={cn('rounded-xl border border-border bg-card p-4 space-y-3', className)}>
             {restingBySlot && restingBySlot.some((s) => s.names.length > 0) && (
                 <div className="space-y-1">
-                    <p className="text-[10px] font-medium tracking-widest uppercase text-muted-foreground">
+                    <p className="text-caption font-medium tracking-eyebrow uppercase text-muted-foreground">
                         시간대별 휴식
                     </p>
                     <ul className="space-y-0.5">
@@ -38,7 +38,7 @@ export function AttendanceSummary({ gameCounts, restingBySlot, className }: Atte
 
             {gameCounts.length > 0 && (
                 <div className="space-y-1.5">
-                    <p className="text-[10px] font-medium tracking-widest uppercase text-muted-foreground">
+                    <p className="text-caption font-medium tracking-eyebrow uppercase text-muted-foreground">
                         인원별 게임수
                     </p>
                     <div className="flex flex-wrap gap-1.5">

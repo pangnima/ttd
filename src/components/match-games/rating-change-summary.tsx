@@ -28,7 +28,7 @@ export function RatingChangeSummary({ byUserTotal, members }: Props) {
                         </div>
                     ))}
                 </div>
-                <p className={`text-[11px] ${TEXT_MUTED} mt-3`}>이 대진표 확정으로 반영된 순변동입니다.</p>
+                <p className={`text-caption ${TEXT_MUTED} mt-3`}>이 대진표 확정으로 반영된 순변동입니다.</p>
             </div>
         </section>
     )

@@ -54,12 +54,12 @@ export function TeamPlayersCell({
                         {hideSideToggle ? null : !isFixed ? (
                             <button
                                 onClick={() => onToggle(teamKey, pid)}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-info/50 text-info bg-info/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
+                                className={`text-micro px-1.5 py-0.5 rounded border shrink-0 leading-none transition-colors ${isAd ? 'border-info/50 text-info bg-info/10' : 'border-foreground/20 text-foreground/65 hover:border-foreground/35'}`}
                             >
                                 {isAd ? '애드(백)' : '듀스(포)'}
                             </button>
                         ) : (
-                            <span className="text-[10px] text-muted-foreground shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
+                            <span className="text-micro text-muted-foreground shrink-0">{isAd ? '애드(백)' : '듀스(포)'}</span>
                         )}
                     </div>
                 )
@@ -106,7 +106,8 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
         )
     }
 
-    const inputCls = compact ? 'h-7 w-10' : 'h-8 w-12'
+    // 점수 입력은 폼 16px 철칙 적용(globals.css) → 두 자리 점수가 들어가도록 폭 확보
+    const inputCls = compact ? 'h-8 w-11' : 'h-9 w-13'
     const confirmCls = compact
         ? 'w-7 h-7 flex items-center justify-center rounded-md'
         : 'h-8 px-3 flex items-center justify-center'
@@ -117,7 +118,7 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                 type="text"
                 value={sets[0].team1}
                 onChange={(e) => onUpdate(0, 'team1', e.target.value)}
-                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
+                className={`${inputCls} text-center rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
                 placeholder="P1"
             />
             <span className="text-muted-foreground text-xs">:</span>
@@ -125,7 +126,7 @@ export function ScoreCell({ sets, confirmed, winner, canEdit, isPending, compact
                 type="text"
                 value={sets[0].team2}
                 onChange={(e) => onUpdate(0, 'team2', e.target.value)}
-                className={`${inputCls} text-center text-xs rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
+                className={`${inputCls} text-center rounded-md bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/35 transition-colors`}
                 placeholder="P2"
             />
             <button

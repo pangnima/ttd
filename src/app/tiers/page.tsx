@@ -46,7 +46,7 @@ export default function TiersPreviewPage() {
                     <div key={tier} className="rounded-lg border border-border bg-card p-5 flex gap-5">
                         <div className="shrink-0 flex flex-col items-center gap-2">
                             <TierIcon tier={tier} size={96} />
-                            <span className="text-[11px] text-muted-foreground font-mono">{tierIconSrc(tier)}</span>
+                            <span className="text-caption text-muted-foreground font-mono">{tierIconSrc(tier)}</span>
                         </div>
                         <div className="flex-1 min-w-0 space-y-3">
                             <div>
@@ -61,7 +61,7 @@ export default function TiersPreviewPage() {
                                 {PREVIEW_SIZES.map((s) => (
                                     <div key={s} className="flex flex-col items-center gap-1">
                                         <TierIcon tier={tier} size={s} />
-                                        <span className="text-[10px] text-muted-foreground font-mono">{s}px</span>
+                                        <span className="text-caption text-muted-foreground font-mono">{s}px</span>
                                     </div>
                                 ))}
                             </div>

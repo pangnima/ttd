@@ -20,7 +20,7 @@ const VARIANT = {
         section: 'mt-2 pt-2 border-t border-border/40',
         header: 'flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground',
         clubButton:
-            'flex items-center gap-1.5 w-full px-3 py-2.5 pl-7 rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors',
+            'flex items-center gap-1.5 w-full px-3 py-2.5 pl-7 rounded-lg text-body2 font-medium text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors',
         linkBase: 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
         linkActive: 'bg-foreground/10 text-foreground',
         linkIdle: 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
@@ -29,7 +29,7 @@ const VARIANT = {
         section: 'mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10',
         header: 'flex items-center gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground/70',
         clubButton:
-            'flex items-center gap-1.5 w-full px-3 py-2 pl-7 rounded-md text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
+            'flex items-center gap-1.5 w-full px-3 py-2 pl-7 rounded-md text-body2 font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
         linkBase: 'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
         linkActive: 'bg-sidebar-accent text-sidebar-accent-foreground',
         linkIdle: 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -75,11 +75,11 @@ export function ClubNavTree({ clubs, variant, onNavigate, collapsed = false }: C
         })
     }
 
-    const linkClass = (active: boolean) => cn(s.linkBase, active ? s.linkActive : s.linkIdle, 'pl-12 text-[13px]')
+    const linkClass = (active: boolean) => cn(s.linkBase, active ? s.linkActive : s.linkIdle, 'pl-12 text-body2')
     // 플라이아웃 내부 하위 링크 — 좁은 패널에 맞춰 들여쓰기를 줄이고 muted 토큰으로 라이트/다크 대비 확보
     const flyLinkClass = (active: boolean) =>
         cn(
-            'flex items-center pl-7 pr-3 py-2 rounded-md text-[13px] font-medium transition-colors',
+            'flex items-center pl-7 pr-3 py-2 rounded-md text-body2 font-medium transition-colors',
             active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         )
 
@@ -102,7 +102,7 @@ export function ClubNavTree({ clubs, variant, onNavigate, collapsed = false }: C
                     <div className="max-h-[70vh] min-w-52 overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-sm dark:shadow-md">
                         {clubs.map((club) => (
                             <div key={club.id} className="mb-1 last:mb-0">
-                                <div className={cn('px-3 py-1.5 text-[13px] font-medium truncate', isClubActive(club.id) ? 'text-foreground' : 'text-muted-foreground')}>
+                                <div className={cn('px-3 py-1.5 text-body2 font-medium truncate', isClubActive(club.id) ? 'text-foreground' : 'text-muted-foreground')}>
                                     {club.name}
                                 </div>
                                 <div className="space-y-0.5">

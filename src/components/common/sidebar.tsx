@@ -105,7 +105,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                                     <Icon className="w-4 h-4 shrink-0" />
                                     <span className={labelClass}>{label}</span>
                                     {showBadge && !collapsed && (
-                                        <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 tabular-nums">
+                                        <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 tabular-nums">
                                             {pendingRequestCount}
                                         </span>
                                     )}

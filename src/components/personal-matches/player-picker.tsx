@@ -70,7 +70,7 @@ export function PlayerPicker({
             <div className="flex items-center justify-between gap-2 mb-2">
                 <label className={`${MATCH_FORM_LABEL} mb-0`}>{label}</label>
                 {value.userId && (
-                    <span className="text-[11px] px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary">
+                    <span className="text-micro px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary">
                         {linked?.isGuest ? '게스트 회원' : '회원 연결됨'}
                     </span>
                 )}

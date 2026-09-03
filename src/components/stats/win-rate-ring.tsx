@@ -79,7 +79,7 @@ export function WinRateRing({ wins, losses, draws = 0, size = 148 }: Props) {
                     <span className="text-3xl font-bold tabular-nums text-foreground leading-none">
                         {rate === null ? '–' : `${pct}%`}
                     </span>
-                    <span className="mt-1 text-[10px] font-medium tracking-wider text-muted-foreground">승률</span>
+                    <span className="mt-1 text-caption font-medium tracking-wider text-muted-foreground">승률</span>
                 </div>
             </div>
             <div
@@ -88,7 +88,7 @@ export function WinRateRing({ wins, losses, draws = 0, size = 148 }: Props) {
             >
                 {legend.map((l) => (
                     <div key={l.label} className="flex flex-col items-center gap-0.5 px-6">
-                        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5 text-caption text-muted-foreground">
                             <span className={cn('h-1.5 w-1.5 rounded-full', l.dot)} />
                             {l.label}
                         </span>
