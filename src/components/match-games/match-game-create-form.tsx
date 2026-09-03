@@ -438,7 +438,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                 type="time"
                                 value={baseStart}
                                 onChange={(e) => setBaseStart(e.target.value)}
-                                className="h-9 w-32"
+                                className="h-9 w-36 shrink-0"
                             />
                         </div>
                         <div className="flex items-center gap-1">

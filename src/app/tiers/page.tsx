@@ -33,7 +33,7 @@ export default function TiersPreviewPage() {
             <header className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                     <h1 className="text-h1 font-bold text-foreground">계급 아이콘 확인</h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-body2 text-muted-foreground">
                         클럽 레이팅 8계급 엠블럼과 배지. 아이콘 교체 시 <code className="font-mono">public/tiers/*.svg</code> 를
                         갈아끼우고 이 페이지를 새로고침해 확인하세요.
                     </p>
@@ -50,11 +50,11 @@ export default function TiersPreviewPage() {
                         </div>
                         <div className="flex-1 min-w-0 space-y-3">
                             <div>
-                                <p className="text-lg font-semibold">
+                                <p className="text-h4 font-semibold">
                                     {idx + 1}. {TIER_LABELS[tier]}
-                                    <span className="ml-2 text-sm font-normal text-muted-foreground uppercase">{tier}</span>
+                                    <span className="ml-2 text-body2 font-normal text-muted-foreground uppercase">{tier}</span>
                                 </p>
-                                <p className="text-sm text-muted-foreground font-mono">{rangeLabel(tier)}</p>
+                                <p className="text-body2 text-muted-foreground font-mono">{rangeLabel(tier)}</p>
                             </div>
                             <TierEmblem rating={sampleRating(tier)} matchesPlayed={20} />
                             <div className="flex items-end gap-4 pt-1">

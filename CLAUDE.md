@@ -46,7 +46,7 @@ src/
 │   └── page.tsx                  # 랜딩페이지
 ├── components/
 │   ├── ui/                       # shadcn/ui 자동 생성 컴포넌트 (직접 수정 금지)
-│   ├── common/                   # 공통 (Header, Sidebar, sidebar-context, BrandLogo, ProfileLink, TierIcon/TierEmblem, FieldToggle 라디오형 토글, RacketField 주력 라켓 입력 등)
+│   ├── common/                   # 공통 (PageHeader 페이지 제목 블록(h1), Header, Sidebar, sidebar-context, BrandLogo, ProfileLink, TierIcon/TierEmblem, FieldToggle 라디오형 토글, RacketField 주력 라켓 입력 등)
 │   ├── clubs/                    # 클럽 (ClubLogoField, LeaveClubButton, ClubInviteCard, InviteJoinButton 등)
 │   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
@@ -91,7 +91,7 @@ src/
 │   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수). match-type.ts의 toQuadStats가 AnalyticsBundle.stats 형태 단일 출처
 │   ├── redesign-fixtures/        # [임시] 정적 UI/목업 단계 더미 데이터 — 실 쿼리 호출부 대체 (_scenario.ts `?fixture=empty` 스위치, personal-analytics*.ts 개인 통계 데이터있음 픽스처 등). 실 연동 복원 시 제거
 │   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼
-│   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, EMPTY_BLOCK, calcWinRate 등
+│   │   ├── tokens.ts             # TYPO(시맨틱 타이포 조합: display/h1~h4/body/body2/caption/eyebrow/micro), CARD_BASE, EMPTY_BLOCK, FORM_* 폼 토큰, calcWinRate 등
 │   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
 │   │   ├── surface.ts            # SURFACE_LABELS (코트 표면 라벨 통일)
 │   │   ├── match-type-style.ts   # MATCH_TYPE_LABELS, getMatchTypeStyle
@@ -227,6 +227,10 @@ src/
   - [x] NTRP 1.0~4.0 0.5 단위 라디오 (FieldToggle), 프로필 설정에서 NTRP 수정 제거 (읽기 전용)
   - [x] 주력 라켓 라디오 (윌슨/헤드/요넥스/바볼랏/기타+직접 입력) + 라켓명 선택 입력 → `users.racket_brand`·`racket_model`, 설정에서 수정 가능 (`common/RacketField` 공유), `handle_new_user` 트리거 레포 편입
   - [x] `signupAction`이 `signUp` 호출 전 검증 (트리거 실패 = 가입 롤백 방지)
+- [x] Week 22: 타이포그래피 8단계 시맨틱 토큰 체계 (`docs/typography.md`)
+  - [x] `globals.css` @theme `text-display/h1~h4(clamp 유동)/body/body2/caption/micro` + 본문 줄간격 변수 스왑(모바일 1.65 → md 1.55) + 본문·폼 요소 16px(전 뷰포트, iOS 줌 방지)
+  - [x] 구 `.type-*`/`TYPO` 하드코딩·`SECTION_LABEL` 폐기 → `TYPO` 신규 키, `PageHeader` 신설, 헤딩 41곳 태그/클래스 재배치(카드 제목 `<p>`→헤딩), 텍스트 사이즈 약 600곳 용도별 재분류(components/ui 제외 기본 `text-*` 사이즈 0건)
+  - [x] `cn()` tailwind-merge 확장(`text-h1`이 색상으로 오인돼 삭제되던 문제) + `utils.test.ts`·`tokens.test.ts` 가드
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
@@ -318,6 +322,9 @@ View: `user_match_participations` (security_invoker=on, `match_game_participants
 - 파일명은 kebab-case (예: `club-card.tsx`)
 - 컴포넌트명은 PascalCase (예: `ClubCard`)
 - 함수명은 camelCase (예: `getClubById`)
+- 폰트 사이즈는 시맨틱 토큰만 사용: `text-display` `text-h1`~`text-h4` `text-body` `text-body2` `text-caption` (+ 배지·카운트 전용 예외 `text-micro`). `text-sm`·`text-xs`·`text-[13px]` 같은 Tailwind 기본 사이즈·임의값 금지. 굵기·색상은 `lib/dashboard/tokens.ts`의 `TYPO`로 조합 (규칙·판정 기준: `docs/typography.md`)
+- 헤딩은 태그=문서 아웃라인, 클래스=시각 레벨. 페이지 h1은 `common/PageHeader` 사용, 카드 제목은 `<p>`가 아닌 헤딩 태그 + `TYPO.h4`
+- input/textarea/select는 전 뷰포트 16px(`globals.css` 레이어 밖 규칙이 강제, iOS 줌 방지). 폼 요소에 작은 사이즈 클래스를 주지 말고 폭·높이로 조정
 
 ### 컴포넌트 작성 규칙
 - shadcn/ui 컴포넌트를 최대한 활용할 것
@@ -406,6 +413,7 @@ admin@admin.com / 123123
 - `components/ui/` 폴더 내 파일 직접 수정 금지 (shadcn 자동생성)
 - 환경변수를 코드에 하드코딩 금지
 - `console.log`를 커밋에 포함 금지
+- 시맨틱 타이포 토큰 외 폰트 사이즈 클래스(`text-sm`/`text-xs`/`text-[Npx]`/`sm:text-*`) 사용 금지 (components/ui 내부 제외)
 
 ## 작업 완료 후 체크리스트
 - [ ] TypeScript 에러 없음 (`npx tsc --noEmit`)
