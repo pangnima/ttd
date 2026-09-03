@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
                     </Link>
 
                     <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-foreground">비밀번호 찾기</h1>
+                        <h1 className="text-h2 font-bold text-foreground">비밀번호 찾기</h1>
                         <p className="mt-1.5 text-sm text-muted-foreground">
                             가입한 이메일로 재설정 링크를 보내드립니다.
                         </p>

@@ -57,7 +57,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">기본 정보</CardTitle>
+                        <CardTitle className="text-h4">기본 정보</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-5">
                         {/* 로고 */}
@@ -182,7 +182,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
 
             <Card className="border-destructive/20">
                 <CardHeader>
-                    <CardTitle className="text-base text-destructive">위험 구역</CardTitle>
+                    <CardTitle className="text-h4 text-destructive">위험 구역</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">

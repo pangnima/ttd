@@ -28,7 +28,7 @@ export function LoginHero() {
                         <line x1="80" y1="115" x2="319" y2="115" className="stroke-accent-lime" strokeWidth="2" />
                     </svg>
 
-                    <h2 className="type-headline text-foreground">
+                    <h2 className="text-h1 font-bold text-foreground">
                         코트 위의 기록이
                         <br />
                         당신의 실력이 된다

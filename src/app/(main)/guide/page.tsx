@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, BarChart3, ClipboardList, Users, type LucideIcon } from 'lucide-react'
 
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
@@ -64,7 +65,7 @@ function GuideCard({ section }: { section: GuideSection }) {
                 <span className="grid size-10 shrink-0 place-items-center rounded-md bg-secondary text-foreground">
                     <Icon className="size-5" />
                 </span>
-                <h2 className={TYPO.title}>{section.title}</h2>
+                <h2 className={TYPO.h3}>{section.title}</h2>
             </div>
             <p className="text-sm text-muted-foreground">{section.lead}</p>
             <ol className="mt-4 space-y-2">
@@ -91,12 +92,7 @@ function GuideCard({ section }: { section: GuideSection }) {
 export default function GuidePage() {
     return (
         <PageContainer>
-            <div>
-                <h1 className={cn(TYPO.pageTitle)}>사용 가이드</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    BASELINE을 처음 시작하시나요? 아래 순서대로 따라 해보세요.
-                </p>
-            </div>
+            <PageHeader title="사용 가이드" description="BASELINE을 처음 시작하시나요? 아래 순서대로 따라 해보세요." />
 
             <div className="grid gap-5 lg:grid-cols-3">
                 {SECTIONS.map((section) => (

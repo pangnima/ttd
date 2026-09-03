@@ -1,4 +1,4 @@
-import { CARD_BASE, SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import type { ReactNode } from 'react'
 
 type Props = {
@@ -34,7 +34,7 @@ export function SectionCard({
     return (
         <section className="space-y-3 h-full flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                <p className={`${SECTION_LABEL} shrink-0`}>{title}</p>
+                <h2 className={`${TYPO.h4} shrink-0`}>{title}</h2>
                 {headerRight && <div className="ml-auto">{headerRight}</div>}
             </div>
             {isEmpty ? (

@@ -12,7 +12,7 @@ export default function SignupPage() {
                     </Link>
 
                     <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-foreground">계정 만들기</h1>
+                        <h1 className="text-h2 font-bold text-foreground">계정 만들기</h1>
                         <p className="mt-1.5 text-sm text-muted-foreground">
                             이미 계정이 있으신가요?{' '}
                             <Link href="/login" className="text-foreground hover:text-foreground/80 underline underline-offset-2 transition-colors">

@@ -18,8 +18,8 @@ export default async function LoginPage({
 
             <div className="flex items-center justify-center overflow-y-auto bg-background px-6 py-10 lg:justify-start lg:pl-16 xl:pl-24">
                 <div className="w-full max-w-sm">
-                    <p className={TYPO.monoLabel}>WELCOME BACK</p>
-                    <h1 className="type-headline mt-2 text-foreground">다시 만나서 반가워요</h1>
+                    <p className={TYPO.eyebrow}>WELCOME BACK</p>
+                    <h1 className={`${TYPO.h2} mt-2`}>다시 만나서 반가워요</h1>
                     <p className="mt-2 text-sm text-muted-foreground">
                         계정이 없으신가요?{' '}
                         <Link

@@ -1,6 +1,7 @@
 // DB 재설계(Step2b) 임시 더미 데이터 스캐폴드 — 실제 Supabase 연동은 재설계 완료 후 복원한다.
 import { MatchGameCreateForm } from '@/components/match-games/match-game-create-form'
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
 import { FIXTURE_MEMBERS } from '@/lib/redesign-fixtures/match-games'
 
 type NewMatchGamePageProps = {
@@ -14,9 +15,7 @@ export default async function NewMatchGamePage({ params }: NewMatchGamePageProps
 
     return (
         <PageContainer>
-            <div>
-                <h1 className="text-2xl font-bold">대진표 작성</h1>
-            </div>
+            <PageHeader title="대진표 작성" />
             <MatchGameCreateForm clubId={clubId} members={members} />
         </PageContainer>
     )

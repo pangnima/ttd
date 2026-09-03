@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { generateAICoachingAction, type AICoachingResult } from '@/lib/actions/ai-coaching'
-import { CARD_BASE, SECTION_LABEL, AI_COACHING_STYLE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, AI_COACHING_STYLE } from '@/lib/dashboard/tokens'
 import { formatRelativeTime } from '@/lib/format'
 
 type Props = {
@@ -32,7 +32,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between">
-                <p className={SECTION_LABEL}>AI 코칭 분석</p>
+                <h2 className={TYPO.h4}>AI 코칭 분석</h2>
                 {generatedAt && (
                     <span className="text-xs text-muted-foreground">
                         마지막 분석: {formatRelativeTime(generatedAt)}

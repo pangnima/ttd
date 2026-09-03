@@ -4,6 +4,7 @@ import { ProfileSettingsForm } from '@/components/profile/profile-settings-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { DeleteAccountButton } from '@/components/profile/delete-account-button'
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
 
 export default async function ProfileSettingsPage() {
     const supabase = await createClient()
@@ -20,12 +21,10 @@ export default async function ProfileSettingsPage() {
 
     return (
         <PageContainer>
-            <div>
-                <h1 className="text-2xl font-bold text-foreground">내 정보 수정</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                    닉네임, 연락처, 주력 라켓, 프로필 사진, 통계 공개 여부를 수정합니다.
-                </p>
-            </div>
+            <PageHeader
+                title="내 정보 수정"
+                description="닉네임, 연락처, 주력 라켓, 프로필 사진, 통계 공개 여부를 수정합니다."
+            />
             <ProfileSettingsForm initialProfile={data} />
             <PasswordChangeForm />
             <DeleteAccountButton />

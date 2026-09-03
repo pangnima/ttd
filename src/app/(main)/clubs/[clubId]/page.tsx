@@ -27,7 +27,7 @@ import { ActivityRankingCard } from '@/components/club-dashboard/activity-rankin
 import { ClubRankingCard } from '@/components/club-dashboard/club-ranking-card'
 import {
     CARD_BASE,
-    SECTION_LABEL,
+    TYPO,
     PILL_BASE,
     TEXT_MUTED,
 } from '@/lib/dashboard/tokens'
@@ -92,7 +92,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     <ClubAvatar name={club.name} logoUrl={club.logoUrl} size="lg" />
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                            <h1 className={`${SECTION_LABEL} text-2xl`}>{club.name}</h1>
+                            <h1 className={`${TYPO.h1} break-keep`}>{club.name}</h1>
                             <span
                                 className={`${PILL_BASE} ${
                                     club.isPublic
@@ -207,7 +207,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {/* 회원 미리보기 */}
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <p className={SECTION_LABEL}>회원 ({regularMembers.length}명)</p>
+                    <h2 className={TYPO.h3}>회원 ({regularMembers.length}명)</h2>
                     <Link
                         href={`/clubs/${clubId}/members`}
                         className={`text-xs ${TEXT_MUTED} hover:text-foreground flex items-center gap-0.5 transition-colors`}
@@ -221,7 +221,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {/* 게스트 미리보기 */}
             {guestMembers.length > 0 && (
                 <section className="space-y-3">
-                    <p className={SECTION_LABEL}>게스트 ({guestMembers.length}명)</p>
+                    <h2 className={TYPO.h3}>게스트 ({guestMembers.length}명)</h2>
                     <ClubMembersPreview members={guestMembers} maxDisplay={8} clubRatings={clubRatings} />
                 </section>
             )}
@@ -236,7 +236,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 <>
                     <hr className="border-foreground/8" />
                     <div className="space-y-8">
-                        <p className={`${SECTION_LABEL} text-lg`}>클럽 운영</p>
+                        <h2 className={TYPO.h3}>클럽 운영</h2>
                         <PendingMembersPanel clubId={clubId} pendingMembers={pendingMembers} />
                         <ActivityRankingCard clubId={clubId} ranking={activityRanking} />
                     </div>

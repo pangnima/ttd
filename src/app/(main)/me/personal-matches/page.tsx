@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { dummyPersonalMatches, dummyRotationSessions } from '@/lib/redesign-fixtures/personal-matches'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { RotationSessionList } from '@/components/personal-matches/rotation-session-list'
-import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 
 export const metadata = { title: '개인 경기 기록' }
@@ -20,18 +21,18 @@ export default async function PersonalMatchesPage() {
 
     return (
         <PageContainer>
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className={`${SECTION_LABEL} text-2xl`}>개인 경기 기록</h1>
-                    <p className="text-sm text-muted-foreground mt-1">클럽 외부 경기를 직접 기록합니다</p>
-                </div>
-                <Link
-                    href="/me/personal-matches/new"
-                    className="inline-flex items-center gap-1 text-sm border border-border rounded-[4px] px-3 py-2 hover:border-input transition-colors"
-                >
-                    + 경기 추가
-                </Link>
-            </div>
+            <PageHeader
+                title="개인 경기 기록"
+                description="클럽 외부 경기를 직접 기록합니다"
+                actions={
+                    <Link
+                        href="/me/personal-matches/new"
+                        className="inline-flex items-center gap-1 text-sm border border-border rounded-[4px] px-3 py-2 hover:border-input transition-colors"
+                    >
+                        + 경기 추가
+                    </Link>
+                }
+            />
 
             {/* 로테이션 세션(게임 미입력)은 통계 밖이므로 목록 위 별도 섹션 */}
             <RotationSessionList sessions={sessions} />

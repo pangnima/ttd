@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Crown } from 'lucide-react'
-import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import { RankBadge } from '@/components/common/rank-badge'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
@@ -95,7 +95,7 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
 export function ClubAceCard({ clubId, singles, menDoubles, womenDoubles, mixedDoubles }: ClubAceCardProps) {
     return (
         <section className="space-y-3">
-            <p className={SECTION_LABEL}>우리 클럽 에이스</p>
+            <h2 className={TYPO.h4}>우리 클럽 에이스</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <AceColumn type="singles" entries={singles} clubId={clubId} />
                 <AceColumn type="men_doubles" entries={menDoubles} clubId={clubId} />

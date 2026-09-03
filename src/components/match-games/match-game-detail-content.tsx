@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
 import { RatingChangeSummary } from '@/components/match-games/rating-change-summary'
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
 import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 import type { MatchGame, User } from '@/types'
 
@@ -29,21 +30,21 @@ export function MatchGameDetailContent({
 
     return (
         <PageContainer>
-            <div className="flex items-start justify-between gap-2">
-                <div>
-                    <h1 className="text-2xl font-bold">{matchGame.name}</h1>
-                    <p className="text-sm text-muted-foreground mt-1">{matchGame.date}</p>
-                </div>
-                {canEditMatchGame && (
-                    <Link
-                        href={`/clubs/${matchGame.clubId}/match-games/${matchGame.id}/edit`}
-                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0 gap-1.5')}
-                    >
-                        <Pencil className="w-3.5 h-3.5" />
-                        대진표 수정
-                    </Link>
-                )}
-            </div>
+            <PageHeader
+                title={matchGame.name}
+                description={matchGame.date}
+                actions={
+                    canEditMatchGame && (
+                        <Link
+                            href={`/clubs/${matchGame.clubId}/match-games/${matchGame.id}/edit`}
+                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0 gap-1.5')}
+                        >
+                            <Pencil className="w-3.5 h-3.5" />
+                            대진표 수정
+                        </Link>
+                    )
+                }
+            />
             {matchGame.isFixed && ratingChangeTotals && (
                 <RatingChangeSummary byUserTotal={ratingChangeTotals} members={members} />
             )}

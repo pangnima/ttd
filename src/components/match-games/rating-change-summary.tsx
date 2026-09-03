@@ -1,4 +1,4 @@
-import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { TierDeltaBadge } from '@/components/common/tier-delta-badge'
 import type { RatingChange } from '@/lib/queries/ratings'
 import type { User } from '@/types'
@@ -18,7 +18,7 @@ export function RatingChangeSummary({ byUserTotal, members }: Props) {
 
     return (
         <section className="space-y-3">
-            <p className={SECTION_LABEL}>레이팅 변동</p>
+            <h2 className={TYPO.h4}>레이팅 변동</h2>
             <div className={`${CARD_BASE} p-4`}>
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {entries.map((e) => (

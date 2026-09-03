@@ -30,7 +30,7 @@ export function FormSectionCard({
     return (
         <Card className={cn(tone === 'destructive' && 'border-destructive/40', className)}>
             <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-                <CardTitle className="text-base">{title}</CardTitle>
+                <CardTitle className="text-h4">{title}</CardTitle>
                 {step && (
                     <span className="text-xs font-medium tracking-widest text-muted-foreground tabular-nums">
                         {step}

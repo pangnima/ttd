@@ -19,10 +19,10 @@ export function HeroSection() {
     return (
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-24">
             <div>
-                <Chip variant="soft" tone="lime" className="type-mono-label">
+                <Chip variant="soft" tone="lime" className="text-caption font-medium tracking-eyebrow uppercase">
                     TENNIS CLUB OS
                 </Chip>
-                <h1 className="mt-5 text-[2.75rem] font-extrabold leading-[1.05] tracking-tight text-foreground lg:text-[3.5rem]">
+                <h1 className="mt-5 text-display font-extrabold text-foreground">
                     코트 위 모든 경기를
                     <br />
                     기록하고 분석하다

@@ -60,6 +60,46 @@
   --radius-4xl: 1rem;
 }
 
+/* ── 타이포 스케일 (docs/typography.md) ──────────────────────────────
+   Display/H1~H4는 clamp()로 360→1024px 구간 유동(rem 항 포함 — 브라우저 확대 대응),
+   Body/Body2/Caption은 고정. weight는 토큰에 굽지 않고 TYPO(lib/dashboard/tokens.ts)에서 지정.
+   text-micro는 배지·카운트 전용 예외 — 본문·라벨에 사용 금지. */
+@theme {
+  --text-display: clamp(2.25rem, 1.8vw + 1.85rem, 3rem); /* 36→48px */
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: clamp(1.75rem, 1.2vw + 1.48rem, 2.25rem); /* 28→36px */
+  --text-h1--line-height: 1.25;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: clamp(1.5rem, 0.6vw + 1.36rem, 1.75rem); /* 24→28px */
+  --text-h2--line-height: 1.3;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h3: clamp(1.25rem, 0.6vw + 1.11rem, 1.5rem); /* 20→24px */
+  --text-h3--line-height: 1.35;
+  --text-h4: clamp(1.125rem, 0.3vw + 1.06rem, 1.25rem); /* 18→20px */
+  --text-h4--line-height: 1.4;
+  --text-body: 1rem; /* 16px 고정 — 기본 본문·폼 요소 */
+  --text-body--line-height: var(--leading-body);
+  --text-body2: 0.875rem; /* 14px — 부가 텍스트·메타·nav */
+  --text-body2--line-height: var(--leading-body);
+  --text-caption: 0.75rem; /* 12px — 캡션·경고·도움말·범례 */
+  --text-caption--line-height: 1.5;
+  --text-micro: 0.6875rem; /* 11px — 배지·카운트 전용 예외 */
+  --text-micro--line-height: 1;
+  --tracking-eyebrow: 0.16em;
+}
+
+/* 본문 줄간격 — 모바일 1.65 / md(48rem) 이상 1.55.
+   테마 토큰이 아닌 일반 변수(미디어쿼리 스왑용). clamp는 line-height를 뷰포트별로 나눌 수 없어 변수로 처리. */
+:root {
+  --leading-body: 1.65;
+}
+@media (min-width: 48rem) {
+  :root {
+    --leading-body: 1.55;
+  }
+}
+
 :root {
   /* 라이트 — 따뜻한 페이퍼 톤: background < surface-2(secondary/muted) < card/popover */
   /* 깊이는 1px 보더 우선, 그림자 없이 영역을 구분한다 */
@@ -155,9 +195,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* 본문 기본 폰트 플로어 상향 (명시적 text-* 없는 텍스트 가독성) */
-    font-size: 0.9375rem; /* 15px */
-    line-height: 1.5;
+    /* 기본 본문 = Body1 16px 고정, 줄간격은 모바일/데스크톱 변수 스왑 */
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
   }
   html {
     @apply font-sans;
@@ -171,44 +211,16 @@
   }
 }
 
+/* 폼 요소 16px 철칙 — iOS Safari 포커스 줌 방지, 데스크톱 포함 전 뷰포트.
+   @layer 밖 규칙이라 shadcn Input의 md:text-sm 등 유틸리티 클래스보다 항상 우선한다.
+   (components/ui는 수정 금지이므로 여기서 일괄 강제) */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  font-size: var(--text-body);
+}
+
 @layer components {
-  /* 타이포 스케일 (전부 Pretendard) */
-  .type-display {
-    font-weight: 800;
-    font-size: clamp(2.5rem, 6vw, 4.75rem); /* ~76px */
-    line-height: 1;
-    letter-spacing: -0.03em;
-  }
-  .type-headline {
-    font-weight: 800;
-    font-size: 1.875rem; /* 30px */
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-  .type-title {
-    font-weight: 700;
-    font-size: 1.1875rem; /* 19px */
-    line-height: 1.2;
-  }
-  .type-body {
-    font-weight: 400;
-    font-size: 0.9375rem; /* 15px */
-    line-height: 1.5;
-  }
-  .type-caption {
-    font-weight: 400;
-    font-size: 0.8125rem; /* 13px */
-    line-height: 1.5;
-  }
-  /* "Mono Label" 역할 — JetBrains Mono 대신 Pretendard + tabular-nums */
-  .type-mono-label {
-    font-weight: 500;
-    font-size: 0.6875rem; /* 11px */
-    line-height: 1;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-variant-numeric: tabular-nums;
-  }
   /* 스코어(6-3 7-5)·숫자 정렬용 */
   .tabular-nums {
     font-variant-numeric: tabular-nums;

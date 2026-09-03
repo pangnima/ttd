@@ -32,7 +32,7 @@ export function FeatureCard({
                     {chipLabel}
                 </Chip>
             </div>
-            <h3 className="type-title text-foreground">{title}</h3>
+            <h3 className="text-h4 font-semibold text-foreground">{title}</h3>
             <p className="mt-2 flex-1 text-sm text-muted-foreground">{description}</p>
             <Link
                 href="#"

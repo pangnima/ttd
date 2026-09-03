@@ -8,7 +8,7 @@ export function CtaBanner() {
         <section className="mx-auto max-w-6xl px-6 pb-16 lg:pb-20">
             <div className="dark flex flex-col items-start justify-between gap-6 rounded-lg border border-border bg-card px-8 py-10 text-foreground sm:flex-row sm:items-center">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
+                    <h2 className="text-h2 font-bold">
                         오늘 첫 경기를 기록해 보세요
                     </h2>
                     <p className="mt-2 text-sm text-muted-foreground">

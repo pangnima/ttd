@@ -3,7 +3,7 @@ import type { Match, User } from '@/types'
 import type { MatchGameMeta } from '@/lib/queries/match-games'
 import { toMatchView } from '@/lib/dashboard/match-display'
 import { getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
-import { CARD_BASE, PILL_BASE, SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { CARD_BASE, PILL_BASE, TYPO, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { OUTCOME_STYLE, OUTCOME_LABEL } from '@/lib/dashboard/outcome'
 import { ProfileLink } from '@/components/common/profile-link'
 
@@ -63,7 +63,7 @@ export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Pr
 
     return (
         <section className="space-y-3">
-            <p className={SECTION_LABEL}>최근 경기</p>
+            <h2 className={TYPO.h4}>최근 경기</h2>
             {recent.length === 0 ? (
                 <div className={EMPTY_BLOCK}>참여한 경기가 없습니다</div>
             ) : (

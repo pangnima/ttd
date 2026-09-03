@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { ClubListRow } from '@/components/clubs/club-list-row'
-import { SECTION_LABEL, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { Plus, Search, RefreshCw } from 'lucide-react'
 import type { ClubMemberCount } from '@/lib/queries/clubs'
@@ -42,19 +43,19 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
     return (
         <PageContainer>
             {/* 헤더 */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className={TYPO.pageTitle}>클럽 목록</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">가입할 클럽을 찾아보세요</p>
-                </div>
-                <Link
-                    href="/clubs/new"
-                    className="flex items-center gap-1.5 text-sm border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors"
-                >
-                    <Plus className="w-3.5 h-3.5" />
-                    클럽 만들기
-                </Link>
-            </div>
+            <PageHeader
+                title="클럽 목록"
+                description="가입할 클럽을 찾아보세요"
+                actions={
+                    <Link
+                        href="/clubs/new"
+                        className="flex items-center gap-1.5 text-sm border border-border rounded-full px-4 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        클럽 만들기
+                    </Link>
+                }
+            />
 
             {/* 검색 */}
             <div className="relative max-w-2xl">
@@ -70,7 +71,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
             {/* 내 클럽 */}
             {myClubs.length > 0 && (
                 <section className="space-y-3">
-                    <p className={SECTION_LABEL}>내 클럽</p>
+                    <h2 className={TYPO.h3}>내 클럽</h2>
                     <ul className="space-y-2">
                         {myClubs.map((club) => (
                             <ClubListRow
@@ -87,7 +88,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
 
             {/* 전체 클럽 */}
             <section className="space-y-3">
-                <p className={SECTION_LABEL}>전체 클럽</p>
+                <h2 className={TYPO.h3}>전체 클럽</h2>
                 {otherClubs.length === 0 ? (
                     search.trim() ? (
                         <div className={EMPTY_BLOCK}>검색 결과가 없습니다.</div>

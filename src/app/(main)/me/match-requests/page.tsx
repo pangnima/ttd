@@ -9,7 +9,8 @@ import { ReceivedRequestCard } from '@/components/match-requests/received-reques
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
 import { ResultConfirmCard } from '@/components/match-requests/result-confirm-card'
 import { Badge } from '@/components/ui/badge'
-import { CARD_BASE, EMPTY_BLOCK, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { cn } from '@/lib/utils'
 
@@ -43,12 +44,10 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
 
     return (
         <PageContainer>
-            <div>
-                <h1 className={`${SECTION_LABEL} text-2xl`}>경기 확인 요청</h1>
-                <p className="text-sm text-muted-foreground mt-1 break-keep">
-                    회원 간 경기(단식·페어 고정 복식)는 상대가 수락하면 양쪽 전적에 함께 기록됩니다
-                </p>
-            </div>
+            <PageHeader
+                title="경기 확인 요청"
+                description="회원 간 경기(단식·페어 고정 복식)는 상대가 수락하면 양쪽 전적에 함께 기록됩니다"
+            />
 
             <div className="border-b border-border flex">
                 <Link href="/me/match-requests" className={tabClass(activeTab === 'received')}>
@@ -67,7 +66,7 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
             {/* 결과 확인 대기 — 수락된 경기에서 상대가 세트를 제안한 것 (받은 탭 상단) */}
             {activeTab === 'received' && confirmations.length > 0 && (
                 <section className="space-y-2">
-                    <h2 className={SECTION_LABEL}>결과 확인 대기</h2>
+                    <h2 className={TYPO.h3}>결과 확인 대기</h2>
                     <div className={`${CARD_BASE} divide-y divide-border`}>
                         {confirmations.map((item) => (
                             <ResultConfirmCard key={item.request.id} item={item} viewerId={user.id} />

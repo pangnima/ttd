@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CARD_BASE, SECTION_LABEL, TEXT_MUTED, PILL_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, TEXT_MUTED, PILL_BASE } from '@/lib/dashboard/tokens'
 import { formatShortDate } from '@/lib/format'
 import { Trophy, Calendar, ChevronRight } from 'lucide-react'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
@@ -23,7 +23,7 @@ export function MatchGameActivityCard({ clubId, activity }: MatchGameActivityCar
 
     return (
         <section className="space-y-3">
-            <p className={SECTION_LABEL}>대진표 현황</p>
+            <h2 className={TYPO.h4}>대진표 현황</h2>
             <div className={`${CARD_BASE} p-4 space-y-4`}>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
                     <span className={TEXT_MUTED}>확정 완료 <span className="text-base font-bold text-foreground">{activity.fixedCount}</span></span>

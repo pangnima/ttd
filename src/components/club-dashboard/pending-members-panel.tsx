@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { approveMemberAction, rejectMemberAction } from '@/lib/actions/club-members'
 import type { PendingMemberWithUser } from '@/lib/queries/club-dashboard'
-import { CARD_BASE, SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { Clock } from 'lucide-react'
 
 type PendingMembersPanelProps = {
@@ -27,7 +27,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
     return (
         <section className="space-y-3">
             <div className="flex items-center gap-2">
-                <p className={SECTION_LABEL}>가입 대기</p>
+                <h2 className={TYPO.h4}>가입 대기</h2>
                 <Badge variant="outline" className="text-xs text-orange-600 dark:text-orange-400 border-orange-400/50">
                     {pendingMembers.length}명
                 </Badge>

@@ -9,7 +9,7 @@ import {
 } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
 import type { CourtSurface, Match, PersonalMatch, User } from '@/types'
-import { CARD_BASE, SECTION_LABEL, PILL_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
+import { CARD_BASE, PILL_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
 import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL, formatRecord } from '@/lib/dashboard/outcome'
 import { MATCH_TYPE_LABELS, getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
@@ -71,7 +71,7 @@ function H2HAnalysisComment({ lines }: { lines: string[] }) {
     if (lines.length === 0) return null
     return (
         <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1">
-            <p className={TYPO.meta}>분석</p>
+            <p className={TYPO.caption}>분석</p>
             <p className="text-sm text-foreground">{lines[0]}</p>
             {lines.slice(1).map((l, i) => (
                 <p key={i} className="text-sm text-muted-foreground">· {l}</p>
@@ -91,7 +91,7 @@ function BreakdownGroup({
     if (rows.length === 0) return null
     return (
         <div className="space-y-1">
-            <p className={TYPO.meta}>{title}</p>
+            <p className={TYPO.caption}>{title}</p>
             <div className="space-y-0.5">
                 {rows.map((r) => (
                     <div key={r.key} className="grid grid-cols-[5rem_1fr] text-sm">
@@ -309,7 +309,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
-                <p className={`${SECTION_LABEL} shrink-0`}>1:1 맞대결 비교</p>
+                <h2 className={`${TYPO.h4} shrink-0`}>1:1 맞대결 비교</h2>
                 <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)} items={opponentItems}>
                     <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm bg-card">
                         <SelectValue placeholder="상대 선택" />

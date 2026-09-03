@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
-import { SECTION_LABEL, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { TYPO, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
 import { PersonalMatchMonthBrowser } from '@/components/personal-matches/personal-match-month-browser'
 
@@ -14,7 +14,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-                <p className={SECTION_LABEL}>개인 경기 기록</p>
+                <h2 className={TYPO.h4}>개인 경기 기록</h2>
                 <Link
                     href="/me/personal-matches/new"
                     className="inline-flex items-center gap-1 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"

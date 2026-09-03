@@ -1,7 +1,7 @@
 import type { HeadToHead } from '@/lib/stats'
 import type { PartnerStat } from '@/lib/queries/stats'
 import type { User } from '@/types'
-import { CARD_BASE, SECTION_LABEL, calcWinRate } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { ProfileLink } from '@/components/common/profile-link'
@@ -67,7 +67,7 @@ export function RivalryPartnerCard({ rivals, partners, userMap }: Props) {
 
     return (
         <section className="space-y-3">
-            <p className={SECTION_LABEL}>라이벌 · 파트너</p>
+            <h2 className={TYPO.h4}>라이벌 · 파트너</h2>
             <div className={`${CARD_BASE} p-4 grid grid-cols-1 sm:grid-cols-2 gap-6`}>
                 <div className="space-y-3">
                     <p className="text-base font-semibold text-foreground/75">라이벌 TOP</p>

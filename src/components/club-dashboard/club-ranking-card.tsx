@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { CARD_BASE, SECTION_LABEL, TEXT_MUTED } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, TEXT_MUTED } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import { RankBadge } from '@/components/common/rank-badge'
 import { RecentFormBadges } from '@/components/common/recent-form-badges'
@@ -24,7 +24,7 @@ export function ClubRankingCard({ clubId, entries, forms }: ClubRankingCardProps
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between">
-                <p className={SECTION_LABEL}>클럽 랭킹</p>
+                <h2 className={TYPO.h4}>클럽 랭킹</h2>
                 <span className={`text-[11px] ${TEXT_MUTED}`}>경기 결과로 자동 산정</span>
             </div>
             <div className={`${CARD_BASE} p-2 sm:p-3`}>

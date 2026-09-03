@@ -73,7 +73,7 @@ export function OnboardingChecklist({ steps }: { steps: OnboardingStep[] }) {
         <section className={cn(CARD_BASE, 'p-5')}>
             <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                    <h2 className={TYPO.cardTitle}>시작하기</h2>
+                    <h2 className={TYPO.h4}>시작하기</h2>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                         {completed === steps.length
                             ? '모든 준비를 마쳤어요!'

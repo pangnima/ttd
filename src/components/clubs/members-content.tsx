@@ -68,14 +68,14 @@ export function MembersContent({
     return (
         <>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold">회원 목록</h1>
+                <h1 className="text-h1 font-bold text-foreground">회원 목록</h1>
                 {clubName && <p className="text-sm text-muted-foreground mt-1">{clubName}</p>}
             </div>
 
             <section>
                 <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                        <h2 className="font-semibold text-sm">정회원</h2>
+                        <h2 className="text-h4 font-semibold text-foreground">정회원</h2>
                         <Badge variant="secondary" className="text-xs">{regularMembers.length}명</Badge>
                     </div>
                     <button
@@ -131,7 +131,7 @@ export function MembersContent({
                     <Separator className="my-6" />
                     <section>
                         <div className="flex items-center gap-2 mb-2">
-                            <h2 className="font-semibold text-sm">게스트</h2>
+                            <h2 className="text-h4 font-semibold text-foreground">게스트</h2>
                             <Badge variant="outline" className="text-xs">{guestMembers.length}명</Badge>
                         </div>
                         <div className="border rounded-lg divide-y">
@@ -154,7 +154,7 @@ export function MembersContent({
                     <Separator className="my-6" />
                     <section>
                         <div className="flex items-center gap-2 mb-2">
-                            <h2 className="font-semibold text-sm">가입 대기</h2>
+                            <h2 className="text-h4 font-semibold text-foreground">가입 대기</h2>
                             <Badge variant="outline" className="text-xs text-orange-600 dark:text-orange-400 border-orange-400/50">
                                 {pendingMembers.length}명
                             </Badge>

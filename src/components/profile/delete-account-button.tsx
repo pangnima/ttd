@@ -35,7 +35,7 @@ export function DeleteAccountButton() {
 
     return (
         <div className={`${CARD_BASE} p-5 sm:p-6 border-destructive/30`}>
-            <h2 className="text-sm font-semibold text-destructive">회원 탈퇴</h2>
+            <h2 className="text-h4 font-semibold text-destructive">회원 탈퇴</h2>
             <p className="text-xs text-muted-foreground mt-1">
                 탈퇴 시 모든 클럽에서 나가지고 계정 정보가 삭제됩니다. 되돌릴 수 없습니다.
             </p>

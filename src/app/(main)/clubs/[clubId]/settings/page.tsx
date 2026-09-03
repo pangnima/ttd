@@ -5,6 +5,8 @@ import { ClubSettingsForm } from '@/components/clubs/club-settings-form'
 import { ClubInviteCard } from '@/components/clubs/club-invite-card'
 import { RecalculateRatingsButton } from '@/components/club-dashboard/recalculate-ratings-button'
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
+import { TYPO } from '@/lib/dashboard/tokens'
 
 type SettingsPageProps = {
     params: Promise<{ clubId: string }>
@@ -25,14 +27,11 @@ export default async function ClubSettingsPage({ params }: SettingsPageProps) {
 
     return (
         <PageContainer>
-            <div>
-                <h1 className="text-2xl font-bold">클럽 설정</h1>
-                <p className="text-sm text-muted-foreground mt-1">{club.name}</p>
-            </div>
+            <PageHeader title="클럽 설정" description={club.name} />
             <ClubSettingsForm club={club} />
 
             <section className="space-y-2 border-t border-foreground/8 pt-6">
-                <h2 className="text-sm font-semibold">초대 링크</h2>
+                <h2 className={TYPO.h4}>초대 링크</h2>
                 <p className="text-xs text-muted-foreground">
                     링크를 받은 사람은 접속 즉시 멤버로 가입됩니다.
                     검색에 노출되지 않는 비공개 클럽은 이 링크로만 새 멤버를 받을 수 있습니다.
@@ -41,7 +40,7 @@ export default async function ClubSettingsPage({ params }: SettingsPageProps) {
             </section>
 
             <section className="space-y-2 border-t border-foreground/8 pt-6">
-                <h2 className="text-sm font-semibold">클럽 레이팅</h2>
+                <h2 className={TYPO.h4}>클럽 레이팅</h2>
                 <p className="text-xs text-muted-foreground">
                     확정된 모든 경기를 처음부터 다시 계산해 클럽 레이팅을 갱신합니다.
                     과거 경기 반영이나 문제 복구가 필요할 때 사용하세요.

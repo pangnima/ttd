@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { deleteMatchGameAction } from '@/lib/actions/match-games'
 import { PageContainer } from '@/components/common/page-container'
+import { PageHeader } from '@/components/common/page-header'
 import { Plus, Calendar, Trophy, ChevronRight, Trash2, Lock } from 'lucide-react'
 import type { Club, MatchGame, User } from '@/types'
 
@@ -84,18 +85,18 @@ export function MatchGamesPageContent({
     return (
         <PageContainer>
             {/* 헤더 */}
-            <div className="flex items-center justify-between gap-2">
-                <h1 className="text-2xl font-bold text-foreground">
-                    {club ? `${club.name} 대진표` : '대진표'}
-                </h1>
-                <Link
-                    href={`/clubs/${clubId}/match-games/new`}
-                    className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
-                >
-                    <Plus className="w-4 h-4" />
-                    대진표 만들기
-                </Link>
-            </div>
+            <PageHeader
+                title={club ? `${club.name} 대진표` : '대진표'}
+                actions={
+                    <Link
+                        href={`/clubs/${clubId}/match-games/new`}
+                        className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
+                    >
+                        <Plus className="w-4 h-4" />
+                        대진표 만들기
+                    </Link>
+                }
+            />
 
             {sorted.length === 0 ? (
                 /* 빈 상태 */

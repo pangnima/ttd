@@ -34,7 +34,7 @@ import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { effectiveNtrp } from '@/lib/rating/display'
 import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { TYPO } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
 type Props = {
@@ -156,7 +156,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             {/* 전적 통계 (4칸) — 세트 표기 숨김(심플). scope 범위는 상단 ProfileScopeTabs가 표시 */}
             <section className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
-                    <p className={`${SECTION_LABEL} shrink-0`}>전적 통계</p>
+                    <h2 className={`${TYPO.h3} shrink-0`}>전적 통계</h2>
                     <div className="ml-auto">
                         <StatsPrivacyToggle hidden={me.statsHidden} />
                     </div>

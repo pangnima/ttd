@@ -10,7 +10,7 @@ import { StatsQuadCardEmpty } from '@/components/stats/stats-quad-card-empty'
 import { StatsEmpty } from '@/components/stats/stats-empty'
 import { StatsPrivacyToggle } from '@/components/stats/stats-privacy-toggle'
 import { toggleStatsHiddenAction } from '@/lib/actions/profile'
-import { SECTION_LABEL } from '@/lib/dashboard/tokens'
+import { TYPO } from '@/lib/dashboard/tokens'
 
 type Props = {
     gender: User['gender']
@@ -78,7 +78,7 @@ export function StatsQuadGrid({
 
     const header = (label || editable) && (
         <div className="flex items-center justify-between">
-            {label ? <p className={SECTION_LABEL}>{label}</p> : <span />}
+            {label ? <h3 className={TYPO.h4}>{label}</h3> : <span />}
             {editable && <StatsPrivacyToggle hidden={statsHidden} />}
         </div>
     )

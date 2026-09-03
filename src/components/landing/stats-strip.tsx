@@ -12,10 +12,10 @@ export function StatsStrip() {
             <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px md:grid-cols-4">
                 {STATS.map((stat) => (
                     <div key={stat.label} className="px-6 py-8">
-                        <p className="text-3xl font-extrabold tracking-tight text-foreground tabular-nums">
+                        <p className="text-display font-extrabold text-foreground tabular-nums">
                             {stat.value}
                         </p>
-                        <p className="mt-1 type-caption text-muted-foreground">{stat.label}</p>
+                        <p className="mt-1 text-body2 text-muted-foreground">{stat.label}</p>
                     </div>
                 ))}
             </div>

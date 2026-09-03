@@ -11,7 +11,7 @@ export function ProfileError({ error, reset }: Props) {
     return (
         <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
             <p className="text-4xl font-bold text-destructive">오류</p>
-            <h1 className="text-lg font-semibold">프로필을 불러오지 못했습니다</h1>
+            <h1 className="text-h2 font-bold">프로필을 불러오지 못했습니다</h1>
             <p className="text-sm text-muted-foreground">{error.message}</p>
             <div className="flex gap-3 mt-2">
                 <button

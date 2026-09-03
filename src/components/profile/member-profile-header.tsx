@@ -94,7 +94,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                             </Avatar>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-xl sm:text-2xl font-bold leading-tight">{user.name}</h1>
+                                    <h1 className="text-h1 font-bold">{user.name}</h1>
                                     <span className="text-sm text-muted-foreground">({user.nickname})</span>
                                     {user.isGuest && <GuestBadge />}
                                 </div>

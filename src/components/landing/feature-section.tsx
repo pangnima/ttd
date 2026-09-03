@@ -32,8 +32,8 @@ export function FeatureSection() {
         <section id="features" className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
             <div className="mb-8 flex items-end justify-between">
                 <div>
-                    <p className="type-mono-label text-muted-foreground">FEATURES</p>
-                    <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                    <p className="text-caption font-medium tracking-eyebrow uppercase text-muted-foreground">FEATURES</p>
+                    <h2 className="mt-2 text-h2 font-bold text-foreground">
                         클럽과 선수, 모두를 위한 도구
                     </h2>
                 </div>

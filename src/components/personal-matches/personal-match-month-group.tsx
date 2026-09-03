@@ -16,7 +16,7 @@ export function PersonalMatchMonthGroup({ group, renderActions }: Props) {
         <section className="space-y-2">
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-foreground">{group.label}</h3>
+                    <h3 className="text-h4 font-semibold text-foreground">{group.label}</h3>
                     <span className="text-xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
                         {formatRecord(group.wins, group.losses, group.draws)}
                     </span>
