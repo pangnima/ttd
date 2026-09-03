@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-// 재설계 Step2c: DB 연동 대신 더미 픽스처 사용 (UI 작업 완료 후 실제 쿼리로 복원 예정)
-import { dummyPersonalMatches, dummyRotationSessions } from '@/lib/redesign-fixtures/personal-matches'
+import { fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
+import { fetchRotationSessionsByUser } from '@/lib/queries/rotation-sessions'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { RotationSessionList } from '@/components/personal-matches/rotation-session-list'
 import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
@@ -16,8 +16,10 @@ export default async function PersonalMatchesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const matches = dummyPersonalMatches
-    const sessions = dummyRotationSessions
+    const [matches, sessions] = await Promise.all([
+        fetchPersonalMatchesWithConfirmation(user.id),
+        fetchRotationSessionsByUser(user.id),
+    ])
 
     return (
         <PageContainer>

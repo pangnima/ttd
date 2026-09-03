@@ -2,7 +2,9 @@
 // docs/redesign/domain-model.md §2(Confirmation/Dispute 2축 상태머신)의 status × result_status 조합을 표현한다.
 import type { MatchRequest } from '@/types'
 import type { MatchRequestWithUser, MatchRequestCounterpart } from '@/lib/queries/match-requests'
-import { FIXTURE_SELF_ID } from '@/lib/redesign-fixtures/personal-matches'
+
+// 픽스처 관점 '나' — 실 로그인 id와 무관한 가짜 id (개인 경기 픽스처는 실 연동 복원으로 제거됨)
+const FIXTURE_SELF_ID = 'fixture-self'
 
 function counterpart(id: string, name: string, nickname: string, deleted = false): MatchRequestCounterpart {
     return { id, name, nickname, deleted }

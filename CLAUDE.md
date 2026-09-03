@@ -89,7 +89,7 @@ src/
 │   │   ├── stats.ts              # RPC 호출 (get_user_match_stats, get_user_head_to_head)
 │   │   └── users.ts              # mapUserRow 공용 매퍼 (is_guest·personal_ntrp·deleted_at 포함)
 │   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수). match-type.ts의 toQuadStats가 AnalyticsBundle.stats 형태 단일 출처
-│   ├── redesign-fixtures/        # [임시] 정적 UI/목업 단계 더미 데이터 — 실 쿼리 호출부 대체 (_scenario.ts `?fixture=empty` 스위치, personal-analytics*.ts 개인 통계 데이터있음 픽스처 등). 실 연동 복원 시 제거
+│   ├── redesign-fixtures/        # [임시] 정적 UI/목업 단계 더미 데이터 — 실 쿼리 호출부 대체 (clubs/match-games/match-requests/ratings, _scenario.ts `?fixture=empty` 스위치, personal-analytics*.ts 개인 통계 데이터있음 픽스처). 개인 경기 화면은 실 쿼리로 복원 완료(personal-matches 픽스처 제거). 나머지도 실 연동 복원 시 제거
 │   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼
 │   │   ├── tokens.ts             # TYPO(시맨틱 타이포 조합: display/h1~h4/body/body2/caption/eyebrow/micro), CARD_BASE, EMPTY_BLOCK, FORM_* 폼 토큰, calcWinRate 등
 │   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
@@ -209,7 +209,8 @@ src/
   - [x] "내 전적" 메뉴 → 사이드바/모바일 **'개인' 단일 메뉴**로 통합(`buildPersonalNavItem`·`isPersonalNavActive`, 클럽 트리의 클럽별 '내 전적' 링크 제거) + 프로필 본인 화면 개인/클럽/통합 **3탭 스캐폴드**(`ProfileScopeTabs`, 개인만 동작·기본 scope personal, 온보딩 체크리스트도 개인 탭)
   - [x] 개인 통계 **'데이터 있음' 픽스처** — `redesign-fixtures/personal-analytics(-data).ts`가 `fetchAnalyticsBundle` 호출부 대체(원본 PersonalMatch만 작성, stats/h2h는 순수 함수 파생), `?fixture=empty`로 빈 상태 전환, 임계값 회귀 테스트(`personal-analytics.test.ts`)
   - [ ] 클럽/통합 탭 활성화 (클럽 `Match[]` 픽스처 + `ProfileScopeTabs` href 추가) · 타인 프로필 `fetchPlayerStatsBundle` 픽스처화(RPC 집계 결과 수작업)
-  - [ ] 실 Supabase 쿼리 복원 — `lib/queries/*.ts`를 신규 참가자 테이블(`match_game_participants` 등) 기반으로 재작성해 픽스처 제거 (스키마·RPC는 Week 20에서 이미 재작성 완료, 화면 재연동만 잔여). 이때 `revalidatePath('/me/analytics')` 9곳도 `/profile/${userId}`로 교체
+  - [x] 개인 경기 화면(목록/등록/편집) 실 쿼리 복원 — `personal_match_participants` 기반 `lib/queries/personal-matches.ts`·`rotation-sessions.ts`·`users.ts` 재연결, `redesign-fixtures/personal-matches.ts` 제거 (픽스처 세션이 uuid도 아니고 비회원 손잡이도 없어 로테이션 '결과 입력' 저장이 불가능했던 문제 해소) + `finalize_rotation_session`이 실 세션에도 `session_not_found`를 내던 RLS 잠금 결함 수정(0042)
+  - [ ] 실 Supabase 쿼리 복원(잔여: 클럽·대진표·확인 요청·프로필 통계) — `lib/queries/*.ts`를 신규 참가자 테이블(`match_game_participants` 등) 기반으로 재작성해 픽스처 제거 (스키마·RPC는 Week 20에서 이미 재작성 완료, 화면 재연동만 잔여). 이때 `revalidatePath('/me/analytics')` 9곳도 `/profile/${userId}`로 교체
 - [x] Week 20: DB 재설계 — 다형성-컬럼 정규화 (0039~0041 마이그레이션, `docs/redesign/*.md`)
   - [x] 도메인/상태 모델링(Step1) → 정적 UI 재검증(Step2) → 신규 ERD(Step3) → users/club_player_ratings 구조 제외 전체 초기화+재구축(Step4) → TS 계약 회귀 수정(Step5)
   - [x] `match_game_matches`/`personal_matches`/`match_requests`의 단식·복식 컬럼 → 참가자 테이블(`match_game_participants`/`personal_match_participants`/`match_request_participants`) 정규화
@@ -285,9 +286,9 @@ RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`
 RPC: `create_match_request` (요청 원장 + 복식 참가자 2행 원자적 생성 — 참가자 정규화로 직접 INSERT 폐지)
 RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 + participants + match_result_negotiations 1행 생성, 세트 없으면 양측 winner NULL)
 RPC: `propose_match_result`·`confirm_match_result`·`dispute_match_result` (match_result_negotiations에 대해 제안/확인/이의 — confirm이 양측 personal_matches의 세트·winner를 동시 확정, 복식 애드 보존). helper `personal_match_winner`·`invert_set_scores`(애드 교차 반전)·`validate_set_scores`(애드 enum)·`normalize_set_scores`·`derive_public_ntrp`
-RPC: `finalize_rotation_session` (로테이션 세션 → 게임별 personal_matches+participants 분해 + 세션 삭제, 한 트랜잭션)
+RPC: `finalize_rotation_session` (로테이션 세션 → 게임별 personal_matches+participants 분해 + 세션 삭제, 한 트랜잭션. security invoker라 `for update`가 UPDATE 정책 부재로 행을 못 찾던 결함을 0042에서 `delete … returning` 선소비로 수정)
 View: `user_match_participations` (security_invoker=on, `match_game_participants` 기반 재작성 — 4-way UNION 제거)
-마이그레이션: 0001~0041 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력, 0039~0041이 재설계)
+마이그레이션: 0001~0042 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력, 0039~0041이 재설계, 0042는 finalize_rotation_session RLS 잠금 결함 수정)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
