@@ -6,6 +6,7 @@ import {
     confirmMatchResultAction, disputeMatchResultAction, proposeMatchResultAction,
 } from '@/lib/actions/match-results'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
+import { hasResult } from '@/lib/personal-matches/winner'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -29,7 +30,7 @@ export function MutualResultActions({ match }: Props) {
     const opponentName = formatOpponents(match)
     const teams = formatTeams(match)
 
-    if (match.winner !== null || !c || !requestId || c.status === 'confirmed') {
+    if (hasResult(match) || !c || !requestId || c.status === 'confirmed') {
         return (
             <span className={LOCKED_BADGE} title="상대 확인으로 확정된 경기는 수정·삭제할 수 없습니다">
                 상호 확인

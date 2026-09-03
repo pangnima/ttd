@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { resolveMatchWinner, resolveSetWinner, tallySets } from './winner'
+import type { PersonalMatch } from '@/types'
+import { hasResult, resolveSetWinner, tallySets } from './winner'
+
+const base: PersonalMatch = {
+    id: 'a', userId: 'me', opponentName: 'X', playedAt: '2026-06-10', matchType: 'singles', setScores: [], createdAt: '2026-06-10',
+}
+
+describe('hasResult', () => {
+    it('게임 스코어가 하나라도 있으면 확정, 빈 배열이면 미확정', () => {
+        expect(hasResult(base)).toBe(false)
+        expect(hasResult({ ...base, setScores: [{ me: 6, opp: 4 }] })).toBe(true)
+    })
+})
 
 describe('tallySets', () => {
     it('세트 1개 = 게임 1개로 승/패/무를 센다', () => {
@@ -12,15 +24,10 @@ describe('tallySets', () => {
     })
 })
 
-describe('resolveSetWinner / resolveMatchWinner', () => {
-    it('한 세트 승자', () => {
+describe('resolveSetWinner', () => {
+    it('한 세트(게임) 승자', () => {
         expect(resolveSetWinner({ me: 6, opp: 4 })).toBe('me')
         expect(resolveSetWinner({ me: 4, opp: 6 })).toBe('opponent')
         expect(resolveSetWinner({ me: 6, opp: 6 })).toBe('draw')
-    })
-
-    it('종합 승자는 세트 승수 비교 (저장 시 winner 파생용)', () => {
-        expect(resolveMatchWinner([{ me: 6, opp: 4 }, { me: 3, opp: 6 }, { me: 6, opp: 2 }])).toBe('me')
-        expect(resolveMatchWinner([{ me: 6, opp: 4 }, { me: 3, opp: 6 }])).toBe('draw')
     })
 })

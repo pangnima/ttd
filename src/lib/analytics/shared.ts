@@ -1,9 +1,11 @@
-import type { CourtSurface, Match, PersonalMatch } from '@/types'
+import type { CourtSurface, Match } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 
 // ── 번들 구성 타입 ──────────────────────────────────────
 export type BundleWithMatches = { matches: Match[] }
 export type BundleWithGameMeta = { gameMetaById: Record<string, { date: string }> }
-export type BundleWithPersonal = { personalMatches: PersonalMatch[] }
+// 개인 경기는 분해본(게임 1건 = 세트 1개 + winner)만 받는다 — explodePersonalMatchSets 산출
+export type BundleWithPersonal = { personalMatches: SettledPersonalMatch[] }
 export type BundleWithSurface = { courtSurfaceByMatchId: Record<string, CourtSurface | null> }
 export type BundleWithUserMap = { userMap: Map<string, { ntrp?: number }> }
 

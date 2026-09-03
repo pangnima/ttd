@@ -66,8 +66,7 @@ personal_matches (
   source_request_id references match_requests(id) on delete set null,  -- confirmation일 때만 not null
   played_at, played_time,  -- played_time은 nullable 유지 (직접기록은 생략 가능 — 의도된 비대칭, 아래 §7 참고)
   match_type, surface,
-  set_scores jsonb,        -- 빈 배열 = 결과 미확정(winner NULL)
-  winner,                  -- 'me' | 'opponent' | 'draw' | null
+  set_scores jsonb,        -- 빈 배열 = 결과 미확정. 세트 1개 = 게임 1개(행 단위 승자 없음, 0045)
   notes,
   created_at
 )
@@ -85,7 +84,7 @@ personal_match_participants (
 
 단식 = participants 1행(`role='opponent'`), 복식 = 3행. 소유자(`user_id`) 자신은 참가자 테이블에 넣지 않는다(행의 주인이므로 중복 불필요).
 
-**불변식 유지**: "winner=NULL → 통계/레이팅/AI코칭 제외"는 `personal_matches` 컬럼 구조 그대로라 `lib/personal-matches/explode.ts` 초크포인트 무변경. "상호확인 경기(source_type='confirmation') 수정/삭제 잠금"은 RESTRICTIVE 정책을 `source_type = 'confirmation'` 조건으로 갱신.
+**불변식 유지**: "세트 없음 → 통계/레이팅/AI코칭 제외"(구 winner=NULL, 0045에서 컬럼 폐기)는 `personal_matches` 컬럼 구조 그대로라 `lib/personal-matches/explode.ts` 초크포인트 무변경. "상호확인 경기(source_type='confirmation') 수정/삭제 잠금"은 RESTRICTIVE 정책을 `source_type = 'confirmation'` 조건으로 갱신.
 
 **근거(ui-notes-personal-matches.md)**: `sourceRequestId` 유무 + `confirmation` 서브객체 조인이 카드 배지 분기에 필수 확인됨 — `source_type` 명시 컬럼과 `match_result_negotiations` 조인(§5)으로 그대로 제공 가능.
 
@@ -169,7 +168,7 @@ Step2d 조사 결과 랭킹/추세 화면은 "전체 리플레이 후 스냅샷 
 
 ## RPC 영향 범위 (Step5 회귀 검증 대상 예고)
 
-`accept_match_request`, `propose_match_result`, `confirm_match_result`, `dispute_match_result`, `finalize_rotation_session`, `personal_match_winner`, `invert_set_scores`, `validate_set_scores`, `normalize_set_scores`, `derive_public_ntrp`, `create_match_game`, `update_match_game`, `add_guest_player` — 전부 §3~§5 테이블 구조 변경에 맞춰 본문 재작성 필요. `apply_club_rating_snapshot`, `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts`, `get_invite_preview`, `join_club_via_invite`, `handle_new_user`은 무변경.
+`accept_match_request`, `propose_match_result`, `confirm_match_result`, `dispute_match_result`, `finalize_rotation_session`, `invert_set_scores`, `validate_set_scores`, `normalize_set_scores`, `derive_public_ntrp`, `create_match_game`, `update_match_game`, `add_guest_player` — 전부 §3~§5 테이블 구조 변경에 맞춰 본문 재작성 필요. `apply_club_rating_snapshot`, `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts`, `get_invite_preview`, `join_club_via_invite`, `handle_new_user`은 무변경.
 
 ---
 

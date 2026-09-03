@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, PersonalMatch, PersonalMatchSetScore } from '@/types'
+import type { Match, PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { aggregateByDoublesCourtSide } from './doubles-court'
 
 const ME = 'me'
@@ -7,15 +8,15 @@ const ME = 'me'
 // 개인 복식 경기 픽스처 (분해본 = 단일 세트)
 function pmDoubles(
     set: PersonalMatchSetScore,
-    winner: PersonalMatch['winner'],
-): PersonalMatch {
+    winner: PersonalMatchWinner,
+): SettledPersonalMatch {
     return {
         id: 'p', userId: ME, opponentName: 'X', playedAt: '2026-06-01',
         matchType: 'men_doubles', setScores: [set], winner, createdAt: '2026-06-01',
     }
 }
 
-function pmSingles(winner: PersonalMatch['winner']): PersonalMatch {
+function pmSingles(winner: PersonalMatchWinner): SettledPersonalMatch {
     return {
         id: 's', userId: ME, opponentName: 'X', playedAt: '2026-06-01',
         matchType: 'singles', setScores: [{ me: 6, opp: 4 }], winner, createdAt: '2026-06-01',

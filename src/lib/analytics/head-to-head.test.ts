@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, PersonalMatch, User } from '@/types'
+import type { Match, User } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import {
     aggregateHeadToHeadUnified,
     summarizeHeadToHead,
@@ -31,7 +32,7 @@ function emptyBundle() {
     return {
         matches: [] as Match[],
         gameMetaById: {} as Record<string, { date: string }>,
-        personalMatches: [] as PersonalMatch[],
+        personalMatches: [] as SettledPersonalMatch[],
         courtSurfaceByMatchId: {} as Record<string, never>,
     }
 }
@@ -95,7 +96,7 @@ describe('aggregateHeadToHeadUnified — 확장 필드', () => {
     })
 
     it('개인 복식: 상대 슬롯2 선택 시 파트너=슬롯1, 손잡이/NTRP/시간/메모 채택', () => {
-        const pm: PersonalMatch = {
+        const pm: SettledPersonalMatch = {
             id: 'p1', userId: ME, opponentName: '상대A', partnerName: '내짝B',
             opponent2Name: '상대B', opponent2DominantHand: 'left', opponent2Ntrp: 3.0,
             playedAt: '2026-06-02', playedTime: '18:30', matchType: 'mixed_doubles',
@@ -116,7 +117,7 @@ describe('aggregateHeadToHeadUnified — 확장 필드', () => {
     })
 
     it('클럽+개인 통합 요약 분해 (매치타입별 경기수 내림차순)', () => {
-        const pm: PersonalMatch = {
+        const pm: SettledPersonalMatch = {
             id: 'p1', userId: ME, opponentUserId: OPP, opponentName: '상대',
             playedAt: '2026-06-03', matchType: 'singles',
             setScores: [{ me: 6, opp: 4 }], winner: 'opponent', createdAt: '2026-06-03',

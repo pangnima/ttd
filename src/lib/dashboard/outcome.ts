@@ -38,7 +38,7 @@ export const H2H_OUTCOME_LABEL: Record<'W' | 'L' | 'D', string> = {
     D: '무',
 }
 
-// ── 개인 경기 결과 미확정(winner NULL) 배지 — 경기 카드·확인 요청 요약이 공유 ──────
+// ── 개인 경기 결과 미확정(게임 스코어 없음) 배지 — 경기 카드·확인 요청 요약이 공유 ──────
 export const PENDING_RESULT_LABEL = '미확정'
 export const PENDING_RESULT_BADGE = 'bg-muted text-muted-foreground border border-dashed border-border'
 export const PENDING_RESULT_BAR = 'bg-border'

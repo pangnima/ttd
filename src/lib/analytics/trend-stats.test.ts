@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { PersonalMatch } from '@/types'
+import type { PersonalMatchWinner } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import {
     listMatchYears,
     aggregateWeekdayStats,
@@ -9,7 +10,7 @@ import {
 
 const ME = 'me'
 
-function personal(id: string, playedAt: string, winner: PersonalMatch['winner']): PersonalMatch {
+function personal(id: string, playedAt: string, winner: PersonalMatchWinner): SettledPersonalMatch {
     return { id, userId: ME, opponentName: 'X', playedAt, matchType: 'singles', setScores: [{ me: 6, opp: 4 }], winner, createdAt: playedAt }
 }
 

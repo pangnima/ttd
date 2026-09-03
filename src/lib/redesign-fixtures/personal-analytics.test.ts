@@ -24,8 +24,8 @@ describe('getDummyAnalyticsBundle (with-data)', () => {
         expect(bundle.stats.mixedDoubles.totalMatches).toBeGreaterThan(0)
         expect(bundle.personalGames.length).toBeGreaterThan(bundle.personalMatches.length)
         // 미확정 레코드는 표시용 원본에만 남고 통계 분해본에서는 제외된다
-        expect(bundle.personalMatches.some((m) => m.winner === null)).toBe(true)
-        expect(bundle.personalGames.every((m) => m.winner !== null)).toBe(true)
+        expect(bundle.personalMatches.some((m) => m.setScores.length === 0)).toBe(true)
+        expect(bundle.personalGames.every((m) => m.setScores.length === 1 && m.winner !== null)).toBe(true)
     })
 
     it('라이벌(박빙 상대)이 1명 이상 잡힌다', () => {

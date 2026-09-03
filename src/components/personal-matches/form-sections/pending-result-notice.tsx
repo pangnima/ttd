@@ -9,7 +9,7 @@ type Props = {
 }
 
 /**
- * 결과 미확정 안내 — 등록 폼은 게임 스코어를 받지 않으므로 저장 시 winner NULL(미확정)로 기록됨을 알린다.
+ * 결과 미확정 안내 — 등록 폼은 게임 스코어를 받지 않으므로 저장 시 결과 미확정(세트 없음)으로 기록됨을 알린다.
  * 게임이 이미 있는 레코드를 수정할 때는 그대로 보존됨을 안내한다.
  */
 export function PendingResultNotice({ existingSets = [], variant = 'default' }: Props) {

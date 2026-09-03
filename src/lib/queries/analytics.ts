@@ -8,6 +8,7 @@ import { aggregateByMatchType, toQuadStats, type QuadStats } from '@/lib/analyti
 import { buildHeadToHeadList } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
 import type { Match, PersonalMatch, User } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 
 // ── scope 타입 ────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ export type AnalyticsBundle = {
     // 표시용 원본 (레코드 1건 = 카드 1개)
     personalMatches: PersonalMatch[]
     // 통계용 분해본 (세트 1개 = 게임 1개). 집계·레이팅 경로 전용
-    personalGames: PersonalMatch[]
+    personalGames: SettledPersonalMatch[]  // 통계·레이팅용 분해본(게임 1건 = 세트 1개 + winner)
     userMap: Map<string, User>
 }
 

@@ -150,8 +150,9 @@ export type PersonalMatch = {
     playedTime?: string     // "18:30" (선택, 요일×시간 히트맵용). 미입력 시 undefined
     matchType: MatchType
     surface?: CourtSurface
-    setScores: PersonalMatchSetScore[]  // 빈 배열 = 세트 미등록 (등록 폼은 세트 없이 저장)
-    winner: PersonalMatchWinner | null  // null = 결과 미확정 — 통계·레이팅 집계에서 제외 (explodePersonalMatchSets)
+    // 세트 1개 = 게임 1개. 빈 배열 = 결과 미확정(hasResult false) — 통계·레이팅 집계에서 제외(explodePersonalMatchSets).
+    // 행 단위 승자는 없다(0045에서 세트 다수결 winner 폐기) — 게임마다 승패는 resolveSetWinner로 판정한다.
+    setScores: PersonalMatchSetScore[]
     opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
     courtName?: string      // 코트명(선택, ≤40자) — 등록 폼 '최근 코트' 자동완성 후보로 재사용

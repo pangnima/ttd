@@ -6,7 +6,8 @@
 //   - '나' 한 명의 레이팅 시계열만 순차 재생한다(복식 파트너 강함은 무시).
 //   - 상대(팀) 레이팅 = 저장 추정치 → 등록상대 ntrp → 본인 ntrp → 기본 2.5 순서로 결정.
 
-import type { PersonalMatch } from '@/types'
+import type { PersonalMatch, PersonalMatchWinner } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import {
     expectedScore,
     pickK,
@@ -101,8 +102,8 @@ export function resolveSelfSideRating(
     return (currentRating + partnerStrength) / 2
 }
 
-/** winner('me'|'opponent'|'draw') → '나' 입장의 스코어(승1/패0/무0.5). null(미확정)은 호출 전에 걸러진다. */
-function selfScoreOf(winner: PersonalMatch['winner']): number {
+/** 게임 winner('me'|'opponent'|'draw') → '나' 입장의 스코어(승1/패0/무0.5). 미확정은 explode에서 이미 걸러진다. */
+function selfScoreOf(winner: PersonalMatchWinner): number {
     if (winner === 'me') return 1
     if (winner === 'opponent') return 0
     return 0.5
@@ -112,12 +113,12 @@ function selfScoreOf(winner: PersonalMatch['winner']): number {
  * 개인 경기들을 시간순으로 재생해 '나'의 레이팅 시계열을 산출한다.
  * 결정적: 동일 입력 → 동일 스냅샷. fetch는 played_at desc이므로 내부에서 asc 재정렬한다.
  *
- * @param matches 본인의 개인 경기들 (정렬 무관 — 내부에서 (playedAt, playedTime, id) asc 재정렬)
+ * @param matches 본인의 개인 경기 분해본(explodePersonalMatchSets 산출 — 게임 1건 = 세트 1개 + winner). 정렬 무관 — 내부에서 (playedAt, playedTime, groupSeq, id) asc 재정렬
  * @param selfNtrp 본인 자가선언 ntrp (시작 레이팅 + fallback③). 0/null이면 기본 2.5에서 시작.
  * @param oppNtrpById 회원 ntrp 조회기 (fallback②)
  */
 export function replayPersonalRatings(
-    matches: PersonalMatch[],
+    matches: SettledPersonalMatch[],
     selfNtrp: number | null,
     oppNtrpById: OppNtrpResolver,
 ): PersonalRatingSnapshot {

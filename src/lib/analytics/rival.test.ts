@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, PersonalMatch } from '@/types'
+import type { Match } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { buildHeadToHeadList } from './head-to-head'
 import { selectRivals } from './rival'
 
@@ -30,7 +31,7 @@ describe('selectRivals (승률 45~55% 박빙)', () => {
         ...vsRecord('few', 1, 1),    // 2경기 — minGames 미만 제외
     ]
     const gameMetaById = Object.fromEntries(matches.map((m) => [m.id, { date: '2026-06-01' }]))
-    const bundle = { matches, gameMetaById, personalMatches: [] as PersonalMatch[], courtSurfaceByMatchId: {} }
+    const bundle = { matches, gameMetaById, personalMatches: [] as SettledPersonalMatch[], courtSurfaceByMatchId: {} }
 
     it('45~55%만 포함하고 50%에 가까운 순으로 정렬', () => {
         const h2h = buildHeadToHeadList(bundle, ME)
@@ -46,7 +47,7 @@ describe('selectRivals (승률 45~55% 박빙)', () => {
         const onlyStrong = {
             matches: vsRecord('strong', 8, 2),
             gameMetaById: {} as Record<string, { date: string }>,
-            personalMatches: [] as PersonalMatch[],
+            personalMatches: [] as SettledPersonalMatch[],
             courtSurfaceByMatchId: {},
         }
         for (const m of onlyStrong.matches) onlyStrong.gameMetaById[m.id] = { date: '2026-06-01' }

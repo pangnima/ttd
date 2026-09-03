@@ -1,5 +1,5 @@
 import type { Database } from '@/types/supabase'
-import type { CourtSurface, MatchType, PersonalMatch, PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
+import type { CourtSurface, MatchType, PersonalMatch, PersonalMatchSetScore } from '@/types'
 
 type PersonalMatchRow = Database['public']['Tables']['personal_matches']['Row']
 type PersonalMatchParticipantRow = Database['public']['Tables']['personal_match_participants']['Row']
@@ -35,8 +35,7 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         playedTime: row.played_time ? row.played_time.slice(0, 5) : undefined,
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface) ?? undefined,
-        setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],
-        winner: (row.winner as PersonalMatchWinner | null) ?? null,  // null = 결과 미확정
+        setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],  // 빈 배열 = 결과 미확정
         opponentNtrp: opponent?.ntrp_snapshot != null ? Number(opponent.ntrp_snapshot) : undefined,
         notes: row.notes ?? undefined,
         courtName: row.court_name ?? undefined,

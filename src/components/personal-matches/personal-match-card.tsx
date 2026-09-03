@@ -3,7 +3,7 @@ import type { PersonalMatch } from '@/types'
 import {
     formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
 } from '@/lib/dashboard/outcome'
-import { resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
+import { hasResult, resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
 import { formatOpponents } from '@/lib/personal-matches/labels'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
@@ -19,7 +19,7 @@ const RESULT = {
     me: { bar: 'bg-win', badge: 'bg-win text-win-foreground', label: 'WIN' },
     opponent: { bar: 'bg-loss', badge: 'bg-loss text-loss-foreground', label: 'LOSS' },
     draw: { bar: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground', label: '무' },
-    // 결과 미확정(winner NULL) — 세트 미등록. 통계에는 반영되지 않는다.
+    // 결과 미확정 — 게임 스코어 미등록. 통계에는 반영되지 않는다.
     pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
 } as const
 // 게임(세트) 2개 이상 — 게임마다 승패가 다르므로 다수결 색을 쓰지 않고 중립 바 + 'N승 M패' 전적
@@ -32,11 +32,11 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
     const opponentLabel = formatOpponents(m)
     const isMulti = m.setScores.length > 1
 
-    const result = m.winner === null
+    const result = !hasResult(m)
         ? RESULT.pending
         : isMulti
             ? (() => { const t = tallySets(m.setScores); return { ...MULTI, label: formatRecord(t.wins, t.losses, t.draws) } })()
-            : RESULT[m.setScores.length === 1 ? resolveSetWinner(m.setScores[0]) : m.winner]
+            : RESULT[resolveSetWinner(m.setScores[0])]
 
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">

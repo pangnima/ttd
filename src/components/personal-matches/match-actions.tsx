@@ -6,6 +6,7 @@ import type { PersonalMatch } from '@/types'
 import { Button } from '@/components/ui/button'
 import { deletePersonalMatchAction, updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
+import { hasResult } from '@/lib/personal-matches/winner'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import { MutualResultActions } from '@/components/personal-matches/mutual-result-actions'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
@@ -33,7 +34,7 @@ function FreeMatchActions({ match }: Props) {
 
     return (
         <span className="flex items-center gap-2">
-            {match.winner === null && (
+            {!hasResult(match) && (
                 <>
                     <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>
                         결과 입력

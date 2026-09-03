@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import type { PersonalMatch, PersonalMatchWinner, PersonalMatchSetScore } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { replayPersonalRatings, resolveOpponentRating } from './personal-rating'
 import { DEFAULT_RATING, MIN_RATING, MAX_RATING, PROVISIONAL_THRESHOLD } from './elo'
 
 // 개인 경기 생성 헬퍼 (레이팅 계산에 필요한 최소 필드).
-function pm(over: Partial<PersonalMatch> & { id: string; playedAt: string; winner: PersonalMatchWinner }): PersonalMatch {
+function pm(over: Partial<PersonalMatch> & { id: string; playedAt: string; winner: PersonalMatchWinner }): SettledPersonalMatch {
     return {
         userId: 'me',
         opponentName: '상대',
         matchType: 'singles',
         setScores: [{ me: 6, opp: 4 }],
         ...over,
-    } as PersonalMatch
+    } as SettledPersonalMatch
 }
 
 const noResolver = () => undefined
@@ -119,7 +120,7 @@ describe('replayPersonalRatings — 정렬 결정성', () => {
 
 describe('replayPersonalRatings — 잠정기 K 전환', () => {
     it('PROVISIONAL_THRESHOLD 미만은 잠정, 이상은 정착', () => {
-        const make = (n: number): PersonalMatch[] =>
+        const make = (n: number): SettledPersonalMatch[] =>
             Array.from({ length: n }, (_, i) =>
                 pm({ id: `m${i}`, playedAt: `2025-02-${String(i + 1).padStart(2, '0')}`, winner: 'me', opponentNtrp: 3.0 }),
             )
@@ -169,7 +170,7 @@ describe('replayPersonalRatings — 복식', () => {
 
 describe('replayPersonalRatings — 경계 클램프', () => {
     it('극단 연승으로도 MAX_RATING 초과하지 않음', () => {
-        const wins: PersonalMatch[] = Array.from({ length: 60 }, (_, i) =>
+        const wins: SettledPersonalMatch[] = Array.from({ length: 60 }, (_, i) =>
             pm({
                 id: `w${i}`,
                 playedAt: `2025-03-${String((i % 28) + 1).padStart(2, '0')}`,

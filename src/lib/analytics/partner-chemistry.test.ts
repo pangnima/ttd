@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, PersonalMatch } from '@/types'
+import type { Match } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { aggregatePartnerChemistry } from './partner-chemistry'
 
 const ME = 'me'
@@ -76,7 +77,7 @@ describe('aggregatePartnerChemistry', () => {
     })
 
     it('외부 파트너(개인 복식, userId 없음)도 집계', () => {
-        const personalMatches: PersonalMatch[] = [1, 2, 3].map((i) => ({
+        const personalMatches: SettledPersonalMatch[] = [1, 2, 3].map((i) => ({
             id: `p${i}`, userId: ME, opponentName: 'opp',
             partnerName: '김파트너',
             playedAt: `2026-06-0${i}`, matchType: 'men_doubles',

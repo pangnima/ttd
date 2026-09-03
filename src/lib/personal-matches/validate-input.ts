@@ -25,7 +25,7 @@ export type PersonalMatchInput = {
     surface?: CourtSurface
     setScores: PersonalMatchSetScore[]  // 빈 배열 허용 — 등록 폼은 세트 없이 저장(결과 미확정)
     opponentNtrp?: number  // 상대(단식)/상대1(복식) 추정 NTRP (1.0~7.0, 필수) — 개인 레이팅 계산용
-    // winner는 입력받지 않는다. 세트가 있으면 setScores로 자동 판정, 없으면 NULL(결과 미확정).
+    // 행 단위 승자는 없다(0045). 세트가 없으면 결과 미확정, 있으면 게임마다 승패가 세트 스코어로 판정된다.
     notes?: string
     courtName?: string  // 코트명(선택, ≤40자)
 }

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, PersonalMatch } from '@/types'
+import type { Match } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { aggregateHourHeatmap } from './hour-heatmap'
 
 const TODAY = '2026-06-30'
 
-function personal(id: string, playedAt: string, playedTime?: string): PersonalMatch {
+function personal(id: string, playedAt: string, playedTime?: string): SettledPersonalMatch {
     return { id, userId: 'me', opponentName: 'X', playedAt, playedTime, matchType: 'singles', setScores: [{ me: 6, opp: 4 }], winner: 'me', createdAt: playedAt }
 }
 
@@ -16,7 +17,7 @@ function clubMatch(id: string): Match {
     }
 }
 
-const EMPTY = { matches: [] as Match[], gameMetaById: {} as Record<string, { date: string }>, matchTimeById: {} as Record<string, string | null>, personalMatches: [] as PersonalMatch[] }
+const EMPTY = { matches: [] as Match[], gameMetaById: {} as Record<string, { date: string }>, matchTimeById: {} as Record<string, string | null>, personalMatches: [] as SettledPersonalMatch[] }
 
 describe('aggregateHourHeatmap', () => {
     it('개인 경기 시각을 요일×시간에 배치', () => {

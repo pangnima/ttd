@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { aggregateBySurface } from '@/lib/analytics/surface'
 import { aggregateByMatchType } from '@/lib/analytics/match-type'
 import { aggregateByNtrpDiff } from '@/lib/analytics/ntrp'
@@ -24,8 +25,9 @@ export type AICoachingAction = {
     generatedAt: string | null
 }
 
+// 개인 경기는 분해본(게임 1건 = 세트 1개 + winner) — 코칭 통계도 게임 단위
 type CoachingBundle = Awaited<ReturnType<typeof fetchPlayerStatsBundle>> & {
-    personalMatches: Awaited<ReturnType<typeof fetchPersonalMatchesByUser>>
+    personalMatches: SettledPersonalMatch[]
 }
 
 function buildPayload(bundle: CoachingBundle, userId: string, userNtrp: number | null): string {

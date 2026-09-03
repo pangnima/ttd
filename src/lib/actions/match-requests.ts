@@ -11,7 +11,7 @@ import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
  * opponentUserId는 상대팀 대표 확인자(회원). 복식이면 파트너·상대2를 함께 저장하되,
  * 그들이 회원이어도 기록은 요청자/대표 2행만 생성된다 (대표 확인 모델).
  * 회원 참가자의 NTRP는 수락 시 RPC가 파생하므로 입력받지 않고, 비회원 상대2 NTRP만 필수.
- * setScores는 선택 — 등록 폼은 세트 없이 요청하며, 수락 시 양측에 결과 미확정(winner NULL)으로 기록된다.
+ * setScores는 선택 — 등록 폼은 세트 없이 요청하며, 수락 시 양측에 결과 미확정(세트 없음)으로 기록된다.
  */
 export type MatchRequestInput = {
     matchType: MatchType

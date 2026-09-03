@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { resolveMatchWinner } from '@/lib/personal-matches/winner'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
@@ -25,10 +24,8 @@ function buildPersonalMatchBaseRow(input: PersonalMatchInput, userId: string) {
         played_time: input.playedTime || null,
         match_type: input.matchType,
         surface: input.surface ?? null,
+        // 세트 1개 = 게임 1개. 빈 배열 = 결과 미확정. 행 단위 승자 컬럼은 없다(0045).
         set_scores: input.setScores,
-        // winner는 세트가 있으면 세트 승수로 자동 판정, 세트가 없으면 NULL(결과 미확정).
-        // resolveMatchWinner([])는 'draw'를 돌려주므로 반드시 길이 가드를 거친다.
-        winner: input.setScores.length > 0 ? resolveMatchWinner(input.setScores) : null,
         notes: input.notes?.trim() || null,
         court_name: input.courtName?.trim() || null,
     }
@@ -115,7 +112,7 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
 /**
  * 여러 개인 경기를 일괄 INSERT하는 범용 액션.
  * 신규 등록은 세트 없이 단일 경기 1건(1요소 배열, 결과 미확정)으로, 로테이션은 게임별 다건으로 호출한다.
- * 각 경기의 winner는 buildPersonalMatchRow에서 세트가 있을 때만 자동 판정된다.
+ * 세트가 없으면 결과 미확정으로 저장되고, 있으면 게임마다 승패가 세트 스코어로 판정된다(행 단위 winner 없음).
  */
 export async function createPersonalMatchesAction(
     inputs: PersonalMatchInput[],
@@ -209,7 +206,7 @@ export async function deletePersonalMatchAction(
 }
 
 /**
- * 결과 미확정(winner NULL)인 자유 기록에 세트 스코어만 등록해 즉시 확정하는 경량 액션.
+ * 결과 미확정(세트 없음)인 자유 기록에 게임 스코어만 등록해 즉시 확정하는 경량 액션.
  * 상호 확인 경기(source_request_id 보유)는 여기서 다루지 않는다 — actions/match-results.ts의 제안/확인 플로우 전용.
  */
 export async function updatePersonalMatchSetsAction(
@@ -232,7 +229,7 @@ export async function updatePersonalMatchSetsAction(
     }))
     const { data: updated, error } = await supabase
         .from('personal_matches')
-        .update({ set_scores: cleanSets, winner: resolveMatchWinner(cleanSets) })
+        .update({ set_scores: cleanSets })
         .eq('id', id)
         .eq('user_id', user.id)
         .is('source_request_id', null)

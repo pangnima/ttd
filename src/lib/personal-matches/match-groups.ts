@@ -1,5 +1,5 @@
 import type { PersonalMatch } from '@/types'
-import { isSettledPersonalMatch, tallySets, type SetTally } from '@/lib/personal-matches/winner'
+import { hasResult, tallySets, type SetTally } from '@/lib/personal-matches/winner'
 
 /**
  * 개인 경기 목록의 표시 그룹 — 카드(경기 1건)는 그대로 두고, 같은 로테이션 세션에서 분해된 게임 카드들을
@@ -41,13 +41,9 @@ function groupKeyOf(m: PersonalMatch): string {
     return m.rotationSessionId ? `rotation:${m.rotationSessionId}:${m.playedAt}` : `record:${m.id}`
 }
 
-// 전적 집계 — 미확정 행 제외(explode 초크포인트와 동일). 세트 없이 확정된 레거시 행은 winner 1건으로 센다.
+// 전적 집계 — 미확정 행(세트 없음)은 0 (explode 초크포인트와 동일 규칙)
 function tallyMatch(m: PersonalMatch): SetTally {
-    if (!isSettledPersonalMatch(m)) return { wins: 0, losses: 0, draws: 0 }
-    if (m.setScores.length === 0) {
-        return { wins: m.winner === 'me' ? 1 : 0, losses: m.winner === 'opponent' ? 1 : 0, draws: m.winner === 'draw' ? 1 : 0 }
-    }
-    return tallySets(m.setScores)
+    return hasResult(m) ? tallySets(m.setScores) : { wins: 0, losses: 0, draws: 0 }
 }
 
 function addParticipants(names: string[], m: PersonalMatch) {

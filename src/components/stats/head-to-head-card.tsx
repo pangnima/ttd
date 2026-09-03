@@ -8,7 +8,8 @@ import {
     type UnifiedHeadToHeadDetail,
 } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
-import type { CourtSurface, Match, PersonalMatch, User } from '@/types'
+import type { CourtSurface, Match, User } from '@/types'
+import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
 import { CARD_BASE, PILL_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
 import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL, formatRecord } from '@/lib/dashboard/outcome'
 import { MATCH_TYPE_LABELS, getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
@@ -28,7 +29,7 @@ type Props = {
     bundle: {
         matches: Match[]
         gameMetaById: Record<string, { date: string }>
-        personalMatches: PersonalMatch[]
+        personalMatches: SettledPersonalMatch[]  // 분해본(personalGames)
         courtSurfaceByMatchId: Record<string, CourtSurface | null>
     }
     userId: string

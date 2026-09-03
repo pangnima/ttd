@@ -731,7 +731,6 @@ export type Database = {
           source_type: string
           surface: string | null
           user_id: string
-          winner: string | null
         }
         Insert: {
           created_at?: string
@@ -748,7 +747,6 @@ export type Database = {
           source_type?: string
           surface?: string | null
           user_id: string
-          winner?: string | null
         }
         Update: {
           created_at?: string
@@ -765,7 +763,6 @@ export type Database = {
           source_type?: string
           surface?: string | null
           user_id?: string
-          winner?: string | null
         }
         Relationships: [
           {
@@ -1062,7 +1059,6 @@ export type Database = {
         Args: { p_keep_ad: boolean; p_sets: Json }
         Returns: Json
       }
-      personal_match_winner: { Args: { p_sets: Json }; Returns: string }
       propose_match_result: {
         Args: { p_request_id: string; p_set_scores: Json }
         Returns: undefined

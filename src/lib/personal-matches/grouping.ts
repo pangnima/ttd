@@ -17,7 +17,7 @@ export type MonthGroup = {
 
 /**
  * 개인 경기를 월별로 묶고(월 내림차순) 월별 승패·승률을 집계한다.
- * 세트 1개 = 게임 1개로 집계하며, 결과 미확정(winner NULL) 행은 제외한다(통계 경로 explode와 동일 규칙).
+ * 세트 1개 = 게임 1개로 집계하며, 결과 미확정(세트 없음) 행은 제외한다(통계 경로 explode와 동일 규칙).
  */
 export function groupByMonth(matches: PersonalMatch[]): MonthGroup[] {
     const buckets = new Map<string, PersonalMatch[]>()

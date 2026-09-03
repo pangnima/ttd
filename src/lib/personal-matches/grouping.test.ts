@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import type { PersonalMatch } from '@/types'
 import { groupByMonth } from './grouping'
 
-function pm(id: string, playedAt: string, winner: PersonalMatch['winner']): PersonalMatch {
+function pm(id: string, playedAt: string, winner: 'me' | 'opponent' | 'draw'): PersonalMatch {
     // 세트 1개 = 게임 1개 집계이므로 setScores를 winner와 일치시킨다.
     const setScores = winner === 'me'
         ? [{ me: 6, opp: 4 }]
         : winner === 'opponent'
             ? [{ me: 4, opp: 6 }]
             : [{ me: 6, opp: 6 }]
-    return { id, userId: 'me', opponentName: 'X', playedAt, matchType: 'singles', setScores, winner, createdAt: playedAt }
+    return { id, userId: 'me', opponentName: 'X', playedAt, matchType: 'singles', setScores, createdAt: playedAt }
 }
 
 const idsOf = (g: ReturnType<typeof groupByMonth>[number]) => g.groups.flatMap((x) => x.matches.map((m) => m.id))
@@ -35,11 +35,11 @@ describe('groupByMonth', () => {
         const a: PersonalMatch = {
             id: 'a', userId: 'me', opponentName: 'X', playedAt: '2026-06-10', matchType: 'singles',
             setScores: [{ me: 6, opp: 4 }, { me: 6, opp: 2 }, { me: 3, opp: 6 }, { me: 7, opp: 5 }],
-            winner: 'me', createdAt: '2026-06-10',
+            createdAt: '2026-06-10',
         }
         const b: PersonalMatch = {
             id: 'b', userId: 'me', opponentName: 'Y', playedAt: '2026-06-05', matchType: 'singles',
-            setScores: [{ me: 4, opp: 6 }], winner: 'opponent', createdAt: '2026-06-05',
+            setScores: [{ me: 4, opp: 6 }], createdAt: '2026-06-05',
         }
         const [june] = groupByMonth([a, b])
         expect(june).toMatchObject({ wins: 3, losses: 2, winRate: 60 })
@@ -48,10 +48,10 @@ describe('groupByMonth', () => {
         expect(idsOf(june)).toEqual(['a', 'b'])
     })
 
-    it('결과 미확정(winner null) 행은 월 전적에서 제외하되 카드에는 남긴다', () => {
+    it('결과 미확정(세트 없음) 행은 월 전적에서 제외하되 카드에는 남긴다', () => {
         const pending: PersonalMatch = {
             id: 'p', userId: 'me', opponentName: 'X', playedAt: '2026-06-20', matchType: 'singles',
-            setScores: [], winner: null, createdAt: '2026-06-20',
+            setScores: [], createdAt: '2026-06-20',
         }
         const [june] = groupByMonth([pending, pm('a', '2026-06-08', 'me')])
         expect(june).toMatchObject({ wins: 1, losses: 0, draws: 0 })
@@ -59,7 +59,7 @@ describe('groupByMonth', () => {
     })
 
     it('같은 로테이션 세션 게임은 한 그룹으로 묶인다', () => {
-        const rot = (id: string, seq: number, winner: PersonalMatch['winner']) => ({
+        const rot = (id: string, seq: number, winner: 'me' | 'opponent' | 'draw') => ({
             ...pm(id, '2026-06-12', winner), rotationSessionId: 's1', groupSeq: seq, matchType: 'men_doubles' as const,
         })
         const [june] = groupByMonth([rot('r2', 2, 'opponent'), pm('a', '2026-06-08', 'me'), rot('r1', 1, 'me')])

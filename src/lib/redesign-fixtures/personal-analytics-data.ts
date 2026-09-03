@@ -52,12 +52,6 @@ function parseSets(scores: string, doubles: boolean): PersonalMatchSetScore[] {
     })
 }
 
-function winnerOf(sets: PersonalMatchSetScore[]): PersonalMatch['winner'] {
-    const won = sets.filter((s) => s.me > s.opp).length
-    const lost = sets.filter((s) => s.me < s.opp).length
-    return won > lost ? 'me' : won < lost ? 'opponent' : 'draw'
-}
-
 type DataInput = {
     userId: string
     gender: Gender
@@ -115,7 +109,6 @@ export function buildDummyPersonalAnalyticsData({ userId, gender, today }: DataI
             matchType,
             surface: opts.surface,
             setScores: sets,
-            winner: winnerOf(sets),
             createdAt: `${playedAt}T${opts.time}:00Z`,
         }
     }
@@ -128,7 +121,7 @@ export function buildDummyPersonalAnalyticsData({ userId, gender, today }: DataI
         record(8, member(B), 'singles', '4-6 3-6', { surface: 'clay', time: '19:00' }),
         record(12, member(A), 'singles', '3-6 4-6', { surface: 'clay', time: '20:00' }),
         record(15, member(E), 'singles', '6-2 6-4', { surface: 'hard', time: '07:00' }),
-        // 헤더 최근 폼(aggregateRecentForm)은 레코드 단위 winner를 쓰므로 세트가 갈리는(무승부) 레코드는 피하고 1세트씩 나눈다
+        // 헤더 최근 폼(aggregateRecentForm)은 분해본 게임 단위로 집계하므로 1세트씩 나눠 둔다
         record(20, member(A), 'singles', '7-5', { surface: 'grass', time: '10:00' }),
         record(22, member(A), 'singles', '5-7', { surface: 'grass', time: '19:00' }),
         record(26, member(B), 'singles', '6-3 6-4', { surface: 'hard', time: '19:00' }),
@@ -153,13 +146,13 @@ export function buildDummyPersonalAnalyticsData({ userId, gender, today }: DataI
     personalMatches.push({
         id: 'pa-pending', userId, opponentName: A.name, opponentUserId: A.id, opponentNtrp: A.ntrp,
         playedAt: pendingAt, playedTime: '18:00', matchType: 'singles', surface: 'hard',
-        setScores: [], winner: null, createdAt: `${pendingAt}T18:00:00Z`,
+        setScores: [], createdAt: `${pendingAt}T18:00:00Z`,
     })
     const proposedAt = addDaysStr(today, -1)
     personalMatches.push({
         id: 'pa-proposed', userId, opponentName: B.name, opponentUserId: B.id, opponentNtrp: B.ntrp,
         playedAt: proposedAt, playedTime: '21:00', matchType: 'singles', surface: 'hard',
-        setScores: [], winner: null, sourceRequestId: 'fx-req-proposed',
+        setScores: [], sourceRequestId: 'fx-req-proposed',
         confirmation: {
             requestId: 'fx-req-proposed', status: 'proposed', proposedByMe: true,
             proposedSets: [{ me: 6, opp: 4 }, { me: 6, opp: 3 }],

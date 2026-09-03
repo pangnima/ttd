@@ -115,7 +115,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         ])
         const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
         const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
-        // 최근 폼은 통계 분해본(personalGames)으로 — 원본(personalMatches)을 넘기면 미확정(winner null) 레코드가 무승부로 섞인다
+        // 최근 폼은 통계 분해본(personalGames)으로 — 원본(personalMatches)을 넘기면 미확정(세트 없음) 레코드가 승패 없이 섞인다
         const form = aggregateRecentForm(
             { matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: bundle.personalGames },
             userId,
