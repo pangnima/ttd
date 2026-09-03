@@ -4,10 +4,9 @@ import { fetchMatchesByUser } from '@/lib/queries/match-games'
 import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { buildUserMap, extractUnifiedH2hIds } from '@/lib/queries/_shared'
-import { aggregateByMatchType } from '@/lib/analytics/match-type'
+import { aggregateByMatchType, toQuadStats, type QuadStats } from '@/lib/analytics/match-type'
 import { buildHeadToHeadList } from '@/lib/analytics/head-to-head'
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
-import type { PlayerStats } from '@/lib/stats'
 import type { Match, PersonalMatch, User } from '@/types'
 
 // ── scope 타입 ────────────────────────────────────────────────────────────
@@ -24,12 +23,7 @@ export type AnalyticsOptions = {
 // ── 번들 타입 ─────────────────────────────────────────────────────────────
 
 export type AnalyticsBundle = {
-    stats: {
-        singles: PlayerStats
-        menDoubles: PlayerStats
-        womenDoubles: PlayerStats
-        mixedDoubles: PlayerStats
-    }
+    stats: QuadStats
     h2hList: UnifiedHeadToHead[]
     // 카드 집계용 원본 (scope 적용 완료 상태)
     matches: Match[]
@@ -41,23 +35,6 @@ export type AnalyticsBundle = {
     // 통계용 분해본 (세트 1개 = 게임 1개). 집계·레이팅 경로 전용
     personalGames: PersonalMatch[]
     userMap: Map<string, User>
-}
-
-// ── 헬퍼: WinLoss → PlayerStats 변환 ────────────────────────────────────
-
-import type { WinLoss } from '@/lib/analytics/shared'
-
-function wlToPlayerStats(wl: WinLoss): PlayerStats {
-    return {
-        wins: wl.wins,
-        losses: wl.losses,
-        draws: wl.draws,
-        totalMatches: wl.total,
-        winRate: wl.winRate,
-        setsWon: 0,  // 본인 분석에서는 세트 숨김 처리 (showSets={false})
-        setsLost: 0,
-        byMatchType: [],
-    }
 }
 
 // ── 번들 fetch ────────────────────────────────────────────────────────────
@@ -94,12 +71,7 @@ export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOpt
         { matches, personalMatches: personalGames },
         userId,
     )
-    const stats = {
-        singles: wlToPlayerStats(matchTypeSummary.singles),
-        menDoubles: wlToPlayerStats(matchTypeSummary.men_doubles),
-        womenDoubles: wlToPlayerStats(matchTypeSummary.women_doubles),
-        mixedDoubles: wlToPlayerStats(matchTypeSummary.mixed_doubles),
-    }
+    const stats = toQuadStats(matchTypeSummary)
 
     // H2H 목록: 순수함수 집계
     const h2hList = buildHeadToHeadList(

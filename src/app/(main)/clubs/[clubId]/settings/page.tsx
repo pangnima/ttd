@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchClubById, fetchActiveInvite } from '@/lib/queries/clubs'
+import { getDummyClub, getDummyActiveInviteToken } from '@/lib/redesign-fixtures/clubs'
 import { ClubSettingsForm } from '@/components/clubs/club-settings-form'
 import { ClubInviteCard } from '@/components/clubs/club-invite-card'
 import { RecalculateRatingsButton } from '@/components/club-dashboard/recalculate-ratings-button'
@@ -10,17 +10,18 @@ type SettingsPageProps = {
     params: Promise<{ clubId: string }>
 }
 
+// DB 재설계 기간 임시: UI 작업은 더미데이터로, 실제 Supabase 연동은 이후 별도 진행.
+// owner 체크는 더미 ownerId('u-owner')와 실제 로그인 유저가 항상 달라 화면 확인이 불가해지므로 생략.
 export default async function ClubSettingsPage({ params }: SettingsPageProps) {
     const { clubId } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const club = await fetchClubById(clubId)
+    const club = getDummyClub(clubId)
     if (!club) notFound()
-    if (club.ownerId !== user.id) redirect(`/clubs/${clubId}`)
 
-    const activeToken = await fetchActiveInvite(clubId)
+    const activeToken = getDummyActiveInviteToken()
 
     return (
         <PageContainer>

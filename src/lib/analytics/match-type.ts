@@ -1,4 +1,5 @@
 import type { MatchType } from '@/types'
+import type { PlayerStats } from '@/lib/stats'
 import {
     type WinLoss, type BundleWithMatches, type BundleWithPersonal,
     calcWinRate, emptyWL, getMatchOutcome, addOutcome,
@@ -7,6 +8,38 @@ import {
 export type { WinLoss }
 
 export type MatchTypeSummary = Record<MatchType, WinLoss>
+
+/** 종목 4분기 PlayerStats — AnalyticsBundle.stats와 동일 형태 (순수 모듈에 두어 픽스처/테스트에서도 재사용). */
+export type QuadStats = {
+    singles: PlayerStats
+    menDoubles: PlayerStats
+    womenDoubles: PlayerStats
+    mixedDoubles: PlayerStats
+}
+
+/** WinLoss → PlayerStats. 본인 분석은 세트를 숨기므로(showSets={false}) setsWon/setsLost는 0. */
+export function toPlayerStats(wl: WinLoss): PlayerStats {
+    return {
+        wins: wl.wins,
+        losses: wl.losses,
+        draws: wl.draws,
+        totalMatches: wl.total,
+        winRate: wl.winRate,
+        setsWon: 0,
+        setsLost: 0,
+        byMatchType: [],
+    }
+}
+
+/** MatchTypeSummary → 종목 4분기 PlayerStats. */
+export function toQuadStats(summary: MatchTypeSummary): QuadStats {
+    return {
+        singles: toPlayerStats(summary.singles),
+        menDoubles: toPlayerStats(summary.men_doubles),
+        womenDoubles: toPlayerStats(summary.women_doubles),
+        mixedDoubles: toPlayerStats(summary.mixed_doubles),
+    }
+}
 
 export function aggregateByMatchType(
     bundle: BundleWithMatches & BundleWithPersonal,

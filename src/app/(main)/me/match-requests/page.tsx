@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+// 재설계 Step2c: DB 연동 대신 더미 픽스처 사용 (UI 작업 완료 후 실제 쿼리로 복원 예정)
 import {
-    fetchPendingResultConfirmations, fetchReceivedMatchRequests, fetchSentMatchRequests,
-} from '@/lib/queries/match-requests'
+    dummyPendingConfirmations, dummyReceivedRequests, dummySentRequests,
+} from '@/lib/redesign-fixtures/match-requests'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
 import { ResultConfirmCard } from '@/components/match-requests/result-confirm-card'
@@ -24,11 +25,9 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
     const { tab } = await searchParams
     const activeTab = tab === 'sent' ? 'sent' : 'received'
 
-    const [received, sent, confirmations] = await Promise.all([
-        fetchReceivedMatchRequests(user.id),
-        fetchSentMatchRequests(user.id),
-        fetchPendingResultConfirmations(user.id),
-    ])
+    const received = dummyReceivedRequests
+    const sent = dummySentRequests
+    const confirmations = dummyPendingConfirmations
     // 받은 탭 배지 = 대기 중 요청 + 내가 확인해야 할 결과 제안 (사이드바 뱃지와 동일 기준)
     const pendingCount = received.filter((r) => r.request.status === 'pending').length + confirmations.length
 

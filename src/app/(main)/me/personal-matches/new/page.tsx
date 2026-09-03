@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchOpponentCandidates } from '@/lib/queries/users'
-import { fetchPastOpponents } from '@/lib/queries/personal-matches'
+// 재설계 Step2c: DB 연동 대신 더미 픽스처 사용 (UI 작업 완료 후 실제 쿼리로 복원 예정)
+import { dummyOpponentCandidates, dummyPastOpponents } from '@/lib/redesign-fixtures/personal-matches'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { PageContainer } from '@/components/common/page-container'
 
@@ -12,10 +12,8 @@ export default async function NewPersonalMatchPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [opponentCandidates, pastOpponents] = await Promise.all([
-        fetchOpponentCandidates(user.id),
-        fetchPastOpponents(user.id),
-    ])
+    const opponentCandidates = dummyOpponentCandidates
+    const pastOpponents = dummyPastOpponents
 
     return (
         <PageContainer>

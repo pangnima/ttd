@@ -1,35 +1,22 @@
-import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { fetchMatchGameById, fetchClubMembersWithGuests } from '@/lib/queries/match-games'
+// DB 재설계(Step2b) 임시 더미 데이터 스캐폴드 — 실제 Supabase 연동은 재설계 완료 후 복원한다.
+import { notFound } from 'next/navigation'
 import { MatchGameCreateForm } from '@/components/match-games/match-game-create-form'
 import { PageContainer } from '@/components/common/page-container'
+import { FIXTURE_MEMBERS, FIXTURE_MEMBERSHIP, findFixtureMatchGame } from '@/lib/redesign-fixtures/match-games'
 
 type Props = { params: Promise<{ clubId: string; matchGameId: string }> }
 
 export default async function MatchGameEditPage({ params }: Props) {
     const { clubId, matchGameId } = await params
 
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
-
-    const { data: membership } = await supabase
-        .from('club_members')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('club_id', clubId)
-        .eq('status', 'approved')
-        .maybeSingle()
-
-    if (!membership) redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
-
-    const matchGame = await fetchMatchGameById(matchGameId)
+    const membership = FIXTURE_MEMBERSHIP
+    const matchGame = findFixtureMatchGame(matchGameId)
     if (!matchGame) notFound()
 
     const canEdit = !matchGame.isFixed || membership.role === 'owner'
-    if (!canEdit) redirect(`/clubs/${clubId}/match-games/${matchGameId}`)
+    void canEdit
 
-    const members = await fetchClubMembersWithGuests(clubId)
+    const members = FIXTURE_MEMBERS
 
     return (
         <PageContainer>

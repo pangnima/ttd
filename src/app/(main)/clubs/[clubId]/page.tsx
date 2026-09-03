@@ -4,15 +4,18 @@ import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
-import { fetchClubById, fetchClubMembers, fetchMyMembership } from '@/lib/queries/clubs'
-import { fetchClubRatingRanking, fetchClubPlayerRatings, fetchConfirmedMatchesForRating } from '@/lib/queries/ratings'
-import { aggregateClubMemberForms } from '@/lib/analytics/club-form'
 import {
-    fetchPendingMembersByClubId,
-    fetchClubMatchGameActivity,
-    fetchClubActivityRanking,
-    fetchClubWinRateRanking,
-} from '@/lib/queries/club-dashboard'
+    getDummyClub,
+    getDummyApprovedMembers,
+    getDummyMyMembership,
+    getDummyClubRatingRanking,
+    getDummyClubPlayerRatings,
+    getDummyMemberForms,
+    getDummyPendingMembers,
+    getDummyMatchGameActivity,
+    getDummyActivityRanking,
+    getDummyWinRateRanking,
+} from '@/lib/redesign-fixtures/clubs'
 import { ClubDetailActions } from '@/components/clubs/club-detail-actions'
 import { LeaveClubButton } from '@/components/clubs/leave-club-button'
 import { ClubMembersPreview } from '@/components/clubs/club-members-preview'
@@ -43,21 +46,18 @@ export default async function ClubPage({ params }: ClubPageProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [club, approvedMembers, myMembership, ratingRanking, clubRatings] = await Promise.all([
-        fetchClubById(clubId),
-        fetchClubMembers(clubId, 'approved'),
-        fetchMyMembership(user.id, clubId),
-        fetchClubRatingRanking(clubId),
-        fetchClubPlayerRatings(clubId),
-    ])
+    const club = getDummyClub(clubId)
+    const approvedMembers = getDummyApprovedMembers(clubId)
+    const myMembership = getDummyMyMembership()
+    const ratingRanking = getDummyClubRatingRanking()
+    const clubRatings = getDummyClubPlayerRatings()
 
     if (!club) notFound()
 
-    // 클럽 랭킹용 승/패·최근폼: 승인 멤버 + 랭킹이 있을 때만 확정 경기 추가 페치
-    const clubMatches = myMembership?.status === 'approved' && ratingRanking.length > 0
-        ? await fetchConfirmedMatchesForRating(clubId)
+    // 클럽 랭킹용 승/패·최근폼: 승인 멤버 + 랭킹이 있을 때만 표시
+    const formsByUser = myMembership?.status === 'approved' && ratingRanking.length > 0
+        ? getDummyMemberForms()
         : null
-    const formsByUser = clubMatches ? aggregateClubMemberForms(clubMatches.matches) : null
 
     const regularMembers = approvedMembers.filter((m) => !m.user.isGuest)
     const guestMembers = approvedMembers.filter((m) => m.user.isGuest)
@@ -70,10 +70,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
     // 대진표 현황 · 타입별 승률 랭킹 — 승인 멤버 모두에게 공개
     const [matchGameActivity, winRateRanking] = isApprovedMember
-        ? await Promise.all([
-            fetchClubMatchGameActivity(clubId),
-            fetchClubWinRateRanking(clubId),
-        ])
+        ? [getDummyMatchGameActivity(clubId), getDummyWinRateRanking()]
         : [null, null]
     const hasAnyAce = winRateRanking !== null && (
         winRateRanking.singles.length > 0 ||
@@ -82,12 +79,9 @@ export default async function ClubPage({ params }: ClubPageProps) {
         winRateRanking.mixedDoubles.length > 0
     )
 
-    // 운영자/임원인 경우에만 추가 데이터 페치
+    // 운영자/임원인 경우에만 추가 데이터 표시
     const [pendingMembers, activityRanking] = isOfficerOrOwner
-        ? await Promise.all([
-            fetchPendingMembersByClubId(clubId),
-            fetchClubActivityRanking(clubId),
-        ])
+        ? [getDummyPendingMembers(clubId), getDummyActivityRanking()]
         : [null, null]
 
     return (

@@ -8,16 +8,15 @@ import { InviteJoinButton } from '@/components/clubs/invite-join-button'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { getDummyInvitePreview } from '@/lib/redesign-fixtures/clubs'
 
 type JoinPageProps = {
     params: Promise<{ token: string }>
 }
 
-// 비멤버는 RLS로 클럽을 못 읽으므로 SECURITY DEFINER RPC로 미리보기 정보만 가져온다(anon 허용, 0032).
-async function fetchPreview(token: string) {
-    const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_invite_preview', { p_token: token })
-    return !error && data && data.length > 0 ? data[0] : null
+// DB 재설계 기간 임시: 실제로는 SECURITY DEFINER RPC(get_invite_preview)로 미리보기만 가져온다(anon 허용, 0032).
+async function fetchPreview(_token: string) {
+    return getDummyInvitePreview()
 }
 
 export async function generateMetadata({ params }: JoinPageProps): Promise<Metadata> {
