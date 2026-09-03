@@ -37,10 +37,10 @@ function StepRow({ step }: { step: OnboardingStep }) {
                 <Icon className="size-4" />
             </span>
             <span className="min-w-0 flex-1">
-                <span className={cn('block text-sm font-medium text-foreground', step.done && 'line-through')}>
+                <span className={cn('block text-body2 font-medium text-foreground', step.done && 'line-through')}>
                     {step.title}
                 </span>
-                <span className="block text-xs text-muted-foreground">{step.description}</span>
+                <span className="block text-caption text-muted-foreground">{step.description}</span>
             </span>
             {!step.done && <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
         </Link>
@@ -74,7 +74,7 @@ export function OnboardingChecklist({ steps }: { steps: OnboardingStep[] }) {
             <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                     <h2 className={TYPO.h4}>시작하기</h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-body2 text-muted-foreground">
                         {completed === steps.length
                             ? '모든 준비를 마쳤어요!'
                             : `${steps.length}단계 중 ${completed}단계 완료`}

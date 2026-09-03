@@ -26,7 +26,7 @@ function captionOf(scope: AnalyticsScope): string {
     return '클럽 + 개인 경기 통합 통계'
 }
 
-const TAB_BASE = 'rounded-sm px-3 py-1 text-sm font-medium transition-colors'
+const TAB_BASE = 'rounded-sm px-3 py-1 text-body2 font-medium transition-colors'
 
 export function ProfileScopeTabs({ scope, personalHref }: Props) {
     return (
@@ -68,7 +68,7 @@ export function ProfileScopeTabs({ scope, personalHref }: Props) {
                     )
                 })}
             </nav>
-            <p className="text-xs text-muted-foreground">{captionOf(scope)}</p>
+            <p className="text-caption text-muted-foreground">{captionOf(scope)}</p>
         </div>
     )
 }

@@ -23,8 +23,8 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/empty/empty-stats.svg" alt="" aria-hidden width={132} height={96} draggable={false} />
             <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">전적 데이터가 아직 없어요</p>
-                <p className="text-xs text-muted-foreground">단식·복식 경기를 기록하면 유형별 승-패-무 통계가 여기에 표시됩니다.</p>
+                <p className="text-body font-medium text-foreground">전적 데이터가 아직 없어요</p>
+                <p className="text-body2 text-muted-foreground">단식·복식 경기를 기록하면 유형별 승-패-무 통계가 여기에 표시됩니다.</p>
             </div>
 
             {/* 4분기 미리보기 칩 (비활성 장식) */}
@@ -41,7 +41,7 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
                     {recordHref && (
                         <Link
                             href={recordHref}
-                            className="inline-flex items-center gap-1.5 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                         >
                             <Plus className="w-3.5 h-3.5" />
                             {recordLabel ?? '첫 경기 기록하기'}
@@ -50,7 +50,7 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
                     {browseHref && (
                         <Link
                             href={browseHref}
-                            className="inline-flex items-center gap-1.5 text-sm rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
+                            className="inline-flex items-center gap-1.5 text-body2 rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
                         >
                             <Users className="w-3.5 h-3.5" />
                             {browseLabel ?? '클럽 찾아보기'}

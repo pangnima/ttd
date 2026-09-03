@@ -17,18 +17,18 @@ export function ProfileSummaryRow({ wins, losses, draws, topMatchType }: Profile
     const games = wins + losses + draws
 
     return (
-        <div className="flex items-center gap-4 text-sm flex-wrap">
+        <div className="flex items-center gap-4 text-body2 flex-wrap">
             <span className="flex items-baseline gap-1">
-                <span className="text-lg font-bold tabular-nums text-foreground">{games}</span>
-                <span className="text-xs text-muted-foreground">경기</span>
+                <span className="text-h4 font-bold tabular-nums text-foreground">{games}</span>
+                <span className="text-caption text-muted-foreground">경기</span>
             </span>
 
             {topMatchType && (
                 <>
                     <span className="h-4 w-px bg-border" aria-hidden />
                     <span className="flex items-center gap-1.5">
-                        <span className="text-xs text-muted-foreground">주력</span>
-                        <Badge variant="outline" className={cn('text-xs', getMatchTypeBadgeClass(topMatchType))}>
+                        <span className="text-caption text-muted-foreground">주력</span>
+                        <Badge variant="outline" className={cn('text-caption', getMatchTypeBadgeClass(topMatchType))}>
                             {MATCH_TYPE_LABELS[topMatchType]}
                         </Badge>
                     </span>

@@ -36,13 +36,13 @@ export function DeleteAccountButton() {
     return (
         <div className={`${CARD_BASE} p-5 sm:p-6 border-destructive/30`}>
             <h2 className="text-h4 font-semibold text-destructive">회원 탈퇴</h2>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-caption text-muted-foreground mt-1">
                 탈퇴 시 모든 클럽에서 나가지고 계정 정보가 삭제됩니다. 되돌릴 수 없습니다.
             </p>
             <Button
                 variant="outline"
                 size="sm"
-                className="mt-3 gap-1.5 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                className="mt-3 gap-1.5 text-caption text-destructive border-destructive/40 hover:bg-destructive/10"
                 onClick={() => {
                     setError(null)
                     setOpen(true)
@@ -62,7 +62,7 @@ export function DeleteAccountButton() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    {error && <p className="text-xs text-destructive">{error}</p>}
+                    {error && <p className="text-caption text-destructive">{error}</p>}
 
                     <DialogFooter showCloseButton>
                         <Button

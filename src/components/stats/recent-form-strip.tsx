@@ -30,14 +30,14 @@ export function RecentFormStrip({ last10, currentStreak }: Props) {
                 {last10.map((outcome, i) => (
                     <span
                         key={i}
-                        className={`w-6 h-6 rounded-sm text-xs font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
+                        className={`w-6 h-6 rounded-sm text-caption font-bold flex items-center justify-center ${FORM_BADGE_STYLE[outcome]}`}
                     >
                         {outcome}
                     </span>
                 ))}
             </div>
             {streakMeta && currentStreak && (
-                <span className={`text-xs font-medium ${streakMeta.cls}`}>
+                <span className={`text-caption font-medium ${streakMeta.cls}`}>
                     {streakMeta.emoji} 현재 {currentStreak.length}{streakMeta.label}
                 </span>
             )}

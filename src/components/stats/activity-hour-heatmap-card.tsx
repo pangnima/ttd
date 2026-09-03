@@ -52,7 +52,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             headerRight={<SegmentedToggle options={OPTIONS} value={mode} onValueChange={setMode} />}
         >
             {isEmpty ? (
-                <p className={`text-xs ${TEXT_MUTED}`}>이 기간에 시간 기록이 있는 경기가 없습니다.</p>
+                <p className={`text-body2 ${TEXT_MUTED}`}>이 기간에 시간 기록이 있는 경기가 없습니다.</p>
             ) : (
                 <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
                 <div
@@ -89,7 +89,7 @@ export function ActivityHourHeatmapCard({ weekly, monthly }: Props) {
             )}
             {/* 하단 행 — 좌: 가장 활발한 시간대, 우: 범례(진할수록 활발 · 기간 내 최다 대비) */}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-                <p className={`text-xs ${TEXT_MUTED}`}>
+                <p className={`text-caption ${TEXT_MUTED}`}>
                     {activeLabel && <>가장 활발한 시간대 <span className="text-foreground font-medium">{activeLabel}</span></>}
                     {data.untimed > 0 && <span className="ml-1.5">· 시간 미입력 {data.untimed}건 제외</span>}
                 </p>

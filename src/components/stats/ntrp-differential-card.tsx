@@ -30,16 +30,16 @@ export function NtrpDifferentialCard({ ntrpStats }: Props) {
                     const wl = ntrpStats[key]
                     return (
                         <div key={key} className="text-center space-y-1">
-                            <p className={`text-xs font-semibold ${color}`}>{label}</p>
+                            <p className={`text-caption font-semibold ${color}`}>{label}</p>
                             {wl.total > 0 ? (
                                 <>
-                                    <p className="text-2xl font-bold text-foreground tabular-nums">{wl.winRate}%</p>
-                                    <p className="text-xs text-muted-foreground tabular-nums">
+                                    <p className="text-h2 font-bold text-foreground tabular-nums">{wl.winRate}%</p>
+                                    <p className="text-caption text-muted-foreground tabular-nums">
                                         {formatRecord(wl.wins, wl.losses, wl.draws)}
                                     </p>
                                 </>
                             ) : (
-                                <p className="text-sm text-muted-foreground">기록 없음</p>
+                                <p className="text-body2 text-muted-foreground">기록 없음</p>
                             )}
                         </div>
                     )

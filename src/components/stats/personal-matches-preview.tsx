@@ -17,7 +17,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                 <h2 className={TYPO.h4}>개인 경기 기록</h2>
                 <Link
                     href="/me/personal-matches/new"
-                    className="inline-flex items-center gap-1 text-sm font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                    className="inline-flex items-center gap-1 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
                 >
                     + 경기 추가
                 </Link>

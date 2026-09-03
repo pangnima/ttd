@@ -35,7 +35,7 @@ function RatingChip({ label, value, provisional, matchesPlayed }: ChipProps) {
     return (
         <Badge
             variant="outline"
-            className={cn('gap-1 text-xs font-normal', provisional && 'opacity-70')}
+            className={cn('gap-1 text-caption font-normal', provisional && 'opacity-70')}
             title={hint}
             aria-label={hint ? `${label} ${value} — ${hint}` : undefined}
         >

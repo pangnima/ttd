@@ -76,7 +76,7 @@ export function WinRateRing({ wins, losses, draws = 0, size = 148 }: Props) {
                     {total > 0 && arcs}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold tabular-nums text-foreground leading-none">
+                    <span className="text-h1 font-bold tabular-nums text-foreground leading-none">
                         {rate === null ? '–' : `${pct}%`}
                     </span>
                     <span className="mt-1 text-caption font-medium tracking-wider text-muted-foreground">승률</span>
@@ -92,7 +92,7 @@ export function WinRateRing({ wins, losses, draws = 0, size = 148 }: Props) {
                             <span className={cn('h-1.5 w-1.5 rounded-full', l.dot)} />
                             {l.label}
                         </span>
-                        <span className={cn('text-xl font-bold tabular-nums', l.text)}>{l.value}</span>
+                        <span className={cn('text-h3 font-bold tabular-nums', l.text)}>{l.value}</span>
                     </div>
                 ))}
             </div>

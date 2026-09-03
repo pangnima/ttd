@@ -41,8 +41,8 @@ const HAND_LABEL: Record<'right' | 'left', string> = { right: '오른손', left:
 function StatBlock({ label, value }: { label: string; value: string | number }) {
     return (
         <div className="text-center">
-            <p className="text-xl font-bold text-foreground">{value}</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
+            <p className="text-h3 font-bold tabular-nums text-foreground">{value}</p>
+            <p className="text-body2 text-muted-foreground mt-0.5">{label}</p>
         </div>
     )
 }
@@ -59,7 +59,7 @@ function H2HOpponentHeader({
 }) {
     return (
         <div className="flex items-center flex-wrap gap-2 border-b border-border pb-3">
-            <span className="text-base font-semibold text-foreground truncate">{name}</span>
+            <span className="text-body font-semibold text-foreground truncate">{name}</span>
             {hand && <span className={`${PILL_BASE} border-border text-muted-foreground`}>{HAND_LABEL[hand]}</span>}
             {ntrp != null && <span className={`${PILL_BASE} border-border text-muted-foreground`}>NTRP {ntrp.toFixed(1)}</span>}
         </div>
@@ -72,9 +72,9 @@ function H2HAnalysisComment({ lines }: { lines: string[] }) {
     return (
         <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1">
             <p className={TYPO.caption}>분석</p>
-            <p className="text-sm text-foreground">{lines[0]}</p>
+            <p className="text-body2 text-foreground">{lines[0]}</p>
             {lines.slice(1).map((l, i) => (
-                <p key={i} className="text-sm text-muted-foreground">· {l}</p>
+                <p key={i} className="text-body2 text-muted-foreground">· {l}</p>
             ))}
         </div>
     )
@@ -94,7 +94,7 @@ function BreakdownGroup({
             <p className={TYPO.caption}>{title}</p>
             <div className="space-y-0.5">
                 {rows.map((r) => (
-                    <div key={r.key} className="grid grid-cols-[5rem_1fr] text-sm">
+                    <div key={r.key} className="grid grid-cols-[5rem_1fr] text-body2">
                         <span className="text-muted-foreground">{r.label}</span>
                         <span className="text-foreground">{formatRecord(r.wins, r.losses, r.draws)}</span>
                     </div>
@@ -144,7 +144,7 @@ function H2HMatchRow({
 
     return (
         <div className="py-1.5 border-b border-border last:border-0 space-y-1">
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-caption">
                 <span className="w-20 shrink-0 text-left text-muted-foreground">{m.date}</span>
                 <span className={`shrink-0 font-medium ${getMatchTypeStyle(m.matchType).textClass}`}>
                     {MATCH_TYPE_LABELS[m.matchType]}
@@ -152,7 +152,7 @@ function H2HMatchRow({
                 {m.surface && <span className="shrink-0 text-muted-foreground">{SURFACE_LABELS[m.surface]}</span>}
                 <span className="flex-1 min-w-0 text-left text-foreground truncate">{m.score || '—'}</span>
                 <span className="w-7 shrink-0 text-left text-muted-foreground">{SOURCE_LABEL[m.source]}</span>
-                <span className={`inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
+                <span className={`inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[4px] text-caption font-bold border ${H2H_OUTCOME_STYLE[m.outcome]}`}>
                     {H2H_OUTCOME_LABEL[m.outcome]}
                 </span>
             </div>
@@ -189,21 +189,21 @@ function H2HDetail({
 
             <div className="grid grid-cols-3 gap-2 text-center border-b border-border pb-4">
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2 truncate">{myName}</p>
+                    <p className="text-body2 font-medium text-muted-foreground mb-2 truncate">{myName}</p>
                     <p className="text-h2 font-bold tabular-nums text-foreground">{detail.myWins}</p>
-                    <p className="text-sm text-muted-foreground mt-1">승 ({detail.winRate}%)</p>
+                    <p className="text-body2 text-muted-foreground mt-1">승 ({detail.winRate}%)</p>
                 </div>
                 <div className="flex flex-col items-center justify-center">
-                    <p className="text-xs text-muted-foreground mb-1">총 {detail.totalMatches}경기</p>
-                    <p className="text-lg font-bold text-muted-foreground">vs</p>
+                    <p className="text-caption text-muted-foreground mb-1">총 {detail.totalMatches}경기</p>
+                    <p className="text-h4 font-bold text-muted-foreground">vs</p>
                     {detail.draws > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">무 {detail.draws}</p>
+                        <p className="text-caption text-muted-foreground mt-1">무 {detail.draws}</p>
                     )}
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2 truncate">{opponentDisplayName}</p>
+                    <p className="text-body2 font-medium text-muted-foreground mb-2 truncate">{opponentDisplayName}</p>
                     <p className="text-h2 font-bold tabular-nums text-foreground">{detail.myLosses}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-body2 text-muted-foreground mt-1">
                         승 ({calcWinRate(detail.myLosses, detail.myWins) ?? 0}%)
                     </p>
                 </div>
@@ -225,12 +225,12 @@ function H2HDetail({
 
             {detail.last5.length > 0 && (
                 <div className="border-t border-border pt-3 space-y-2">
-                    <p className="text-xs text-muted-foreground">최근 {detail.last5.length}경기</p>
+                    <p className="text-caption text-muted-foreground">최근 {detail.last5.length}경기</p>
                     <div className="flex gap-1.5">
                         {detail.last5.map((o, i) => (
                             <span
                                 key={i}
-                                className={`inline-flex items-center justify-center w-8 h-8 rounded-[4px] text-xs font-bold border ${H2H_OUTCOME_STYLE[o]}`}
+                                className={`inline-flex items-center justify-center w-8 h-8 rounded-[4px] text-caption font-bold border ${H2H_OUTCOME_STYLE[o]}`}
                             >
                                 {H2H_OUTCOME_LABEL[o]}
                             </span>
@@ -241,7 +241,7 @@ function H2HDetail({
 
             {detail.matches.length > 0 && (
                 <div className="border-t border-border pt-3 space-y-1.5">
-                    <p className="text-xs text-muted-foreground">전체 경기 내역</p>
+                    <p className="text-caption text-muted-foreground">전체 경기 내역</p>
                     <div className="space-y-1 max-h-56 overflow-y-auto">
                         {detail.matches.map((m) => (
                             <H2HMatchRow
@@ -317,7 +317,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
                     <SelectContent>
                         {memberOpponents.length > 0 && (
                             <SelectGroup>
-                                <SelectLabel className="text-xs text-muted-foreground">클럽 회원</SelectLabel>
+                                <SelectLabel className="text-caption text-muted-foreground">클럽 회원</SelectLabel>
                                 {memberOpponents.map((h) => {
                                     const key = h.opponentUserId!
                                     const u = userMap.get(key)
@@ -332,7 +332,7 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
                         )}
                         {externalOpponents.length > 0 && (
                             <SelectGroup>
-                                <SelectLabel className="text-xs text-muted-foreground">외부 상대</SelectLabel>
+                                <SelectLabel className="text-caption text-muted-foreground">외부 상대</SelectLabel>
                                 {externalOpponents.map((h) => {
                                     const key = `name:${h.opponentName}`
                                     return (
@@ -352,12 +352,12 @@ export function HeadToHeadCard({ h2hList, bundle, userId, userMap }: Props) {
                     detail.totalMatches > 0 ? (
                         <H2HDetail detail={detail} myName={myName} opponentDisplayName={opponentDisplayName} />
                     ) : (
-                        <p className="text-sm text-muted-foreground text-center py-4">
+                        <p className="text-body2 text-muted-foreground text-center py-4">
                             해당 상대와의 맞대결 기록이 없습니다
                         </p>
                     )
                 ) : (
-                    <p className="text-sm text-muted-foreground text-center py-6">
+                    <p className="text-body2 text-muted-foreground text-center py-6">
                         상대를 선택하면 1:1 대결 기록을 확인할 수 있습니다
                     </p>
                 )}

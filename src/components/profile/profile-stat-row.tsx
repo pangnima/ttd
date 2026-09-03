@@ -9,15 +9,15 @@ type Props = {
 // 카드 박스 없이 작은 인라인 형태로 노출한다.
 export function ProfileStatRow({ games, winStreak }: Props) {
     return (
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-4 text-body2">
             <span className="flex items-baseline gap-1">
-                <span className="text-lg font-bold tabular-nums text-foreground">{games}</span>
-                <span className="text-xs text-muted-foreground">경기</span>
+                <span className="text-h4 font-bold tabular-nums text-foreground">{games}</span>
+                <span className="text-caption text-muted-foreground">경기</span>
             </span>
             <span className="h-4 w-px bg-border" aria-hidden />
             <span className="flex items-baseline gap-1">
-                <span className="text-lg font-bold tabular-nums text-foreground">{winStreak}</span>
-                <span className="text-xs text-muted-foreground">현재 연승</span>
+                <span className="text-h4 font-bold tabular-nums text-foreground">{winStreak}</span>
+                <span className="text-caption text-muted-foreground">현재 연승</span>
             </span>
         </div>
     )

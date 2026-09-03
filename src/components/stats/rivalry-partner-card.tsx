@@ -35,13 +35,13 @@ function UserRow({
                 <ProfileLink
                     userId={userId}
                     isGuest={isGuest}
-                    className="text-base text-foreground/90 hover:text-foreground transition-colors truncate"
+                    className="text-body text-foreground/90 hover:text-foreground transition-colors truncate"
                 >
                     {name}
                 </ProfileLink>
                 {isGuest && <GuestBadge />}
             </div>
-            <span className="text-sm text-foreground/80 shrink-0">
+            <span className="text-body2 text-foreground/80 shrink-0">
                 {formatRecord(wins, losses, draws)}
                 <span className="ml-1.5 text-foreground/85">{calcWinRate(wins, losses) ?? 0}%</span>
             </span>
@@ -70,9 +70,9 @@ export function RivalryPartnerCard({ rivals, partners, userMap }: Props) {
             <h2 className={TYPO.h4}>라이벌 · 파트너</h2>
             <div className={`${CARD_BASE} p-4 grid grid-cols-1 sm:grid-cols-2 gap-6`}>
                 <div className="space-y-3">
-                    <p className="text-base font-semibold text-foreground/75">라이벌 TOP</p>
+                    <p className="text-body font-semibold text-foreground/75">라이벌 TOP</p>
                     {topRivals.length === 0 ? (
-                        <p className="text-sm text-foreground/70">경기 3회 이상 상대 없음</p>
+                        <p className="text-body2 text-foreground/70">경기 3회 이상 상대 없음</p>
                     ) : (
                         <div className="space-y-2">
                             {topRivals.map((r) => (
@@ -89,9 +89,9 @@ export function RivalryPartnerCard({ rivals, partners, userMap }: Props) {
                     )}
                 </div>
                 <div className="space-y-3 sm:border-l sm:border-foreground/8 sm:pl-6">
-                    <p className="text-base font-semibold text-foreground/75">베스트 파트너</p>
+                    <p className="text-body font-semibold text-foreground/75">베스트 파트너</p>
                     {topPartners.length === 0 ? (
-                        <p className="text-sm text-foreground/70">복식 2회 이상 파트너 없음</p>
+                        <p className="text-body2 text-foreground/70">복식 2회 이상 파트너 없음</p>
                     ) : (
                         <div className="space-y-2">
                             {topPartners.map((p) => (

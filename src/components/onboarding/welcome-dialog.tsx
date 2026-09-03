@@ -81,7 +81,7 @@ export function WelcomeDialog() {
                 <Link
                     href="/guide"
                     onClick={close}
-                    className="w-fit text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    className="w-fit text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 >
                     사용 가이드 보기 →
                 </Link>

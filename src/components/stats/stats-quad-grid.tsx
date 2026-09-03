@@ -119,7 +119,7 @@ export function StatsQuadGrid({
                 {isBlurred && (
                     <div className="absolute inset-0 flex items-center justify-center">
                         {isLocked ? (
-                            <div className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-background/80 border border-foreground/20 text-foreground/70 backdrop-blur-sm shadow-sm">
+                            <div className="flex items-center gap-1.5 text-caption px-3 py-2 rounded-lg bg-background/80 border border-foreground/20 text-foreground/70 backdrop-blur-sm shadow-sm">
                                 <EyeOff className="w-3.5 h-3.5" />
                                 승률을 공개하지 않은 유저입니다
                             </div>
@@ -127,7 +127,7 @@ export function StatsQuadGrid({
                             <button
                                 type="button"
                                 onClick={handleReveal}
-                                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-background/80 border border-foreground/20 text-foreground/70 hover:text-foreground hover:border-foreground/40 backdrop-blur-sm transition-all shadow-sm"
+                                className="flex items-center gap-1.5 text-caption px-3 py-2 rounded-lg bg-background/80 border border-foreground/20 text-foreground/70 hover:text-foreground hover:border-foreground/40 backdrop-blur-sm transition-all shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
                                 클릭해서 보기

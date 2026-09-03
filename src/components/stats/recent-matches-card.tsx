@@ -89,16 +89,16 @@ export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Pr
                                         {meta && (
                                             <Link
                                                 href={`/clubs/${meta.clubId}/match-games/${match.matchGameId}`}
-                                                className="text-sm text-foreground hover:text-foreground transition-colors truncate"
+                                                className="text-body2 text-foreground hover:text-foreground transition-colors truncate"
                                             >
                                                 {meta.name}
                                             </Link>
                                         )}
                                         {meta && (
-                                            <span className="text-xs text-muted-foreground">{meta.date}</span>
+                                            <span className="text-caption text-muted-foreground">{meta.date}</span>
                                         )}
                                     </div>
-                                    <div className="text-sm text-foreground flex flex-wrap items-center gap-x-0.5">
+                                    <div className="text-body2 text-foreground flex flex-wrap items-center gap-x-0.5">
                                         {/* 본인(+ 파트너) */}
                                         <PlayerName userId={userId} isMe={true} court={isSingles ? undefined : view.myCourt} userMap={userMap} />
                                         {view.partner && (
@@ -122,7 +122,7 @@ export function RecentMatchesCard({ matches, userId, userMap, gameMetaById }: Pr
                                         )}
                                     </div>
                                 </div>
-                                <div className="text-lg font-semibold text-foreground shrink-0 tabular-nums">
+                                <div className="text-h4 font-semibold text-foreground shrink-0 tabular-nums">
                                     {view.mySets} : {view.oppSets}
                                 </div>
                             </li>

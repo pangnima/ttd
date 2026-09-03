@@ -28,7 +28,7 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                 {recordHref && (
                     <Link
                         href={recordHref}
-                        className="inline-flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                        className="inline-flex items-center gap-1 text-caption font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
                         <Plus className="w-3 h-3" />
                         기록하기
@@ -40,7 +40,7 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                 {/* 정적 SVG 장식 (빈 상태 일러스트 관례) */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image} alt="" aria-hidden width={96} height={64} draggable={false} />
-                <p className="text-xs text-muted-foreground">아직 {MATCH_TYPE_LABELS[matchType]} 기록이 없어요</p>
+                <p className="text-body2 text-muted-foreground">아직 {MATCH_TYPE_LABELS[matchType]} 기록이 없어요</p>
             </div>
         </div>
     )

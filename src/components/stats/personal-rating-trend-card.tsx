@@ -20,7 +20,7 @@ export function PersonalRatingTrendCard({ points, provisional }: Props) {
             title="개인 레이팅 추세"
             isEmpty={isEmpty}
             emptyMessage="기록된 개인 경기가 없습니다"
-            headerRight={<span className={`text-xs ${TEXT_MUTED}`}>개인전 기준</span>}
+            headerRight={<span className={`text-caption ${TEXT_MUTED}`}>개인전 기준</span>}
         >
             {!isEmpty && <TrendBody points={points} provisional={provisional} />}
         </SectionCard>

@@ -26,20 +26,20 @@ export function RivalRow({ rival, userMap, today }: Props) {
         <div className="space-y-2 py-1">
             <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-7 h-7 rounded-full bg-muted text-foreground/80 text-xs font-semibold flex items-center justify-center shrink-0">
+                    <span className="w-7 h-7 rounded-full bg-muted text-foreground/80 text-caption font-semibold flex items-center justify-center shrink-0">
                         {initial}
                     </span>
                     {user ? (
-                        <ProfileLink userId={rival.opponentUserId!} isGuest={user.isGuest} className="text-sm font-medium text-foreground/90 hover:text-foreground transition-colors truncate">
+                        <ProfileLink userId={rival.opponentUserId!} isGuest={user.isGuest} className="text-body2 font-medium text-foreground/90 hover:text-foreground transition-colors truncate">
                             {name}
                         </ProfileLink>
                     ) : (
-                        <span className="text-sm font-medium text-foreground/90 truncate">{name}</span>
+                        <span className="text-body2 font-medium text-foreground/90 truncate">{name}</span>
                     )}
                     {user?.isGuest && <GuestBadge />}
                     {tier && <span className={`${PILL_BASE} ${TIER_STYLE[tier]} shrink-0`}>{TIER_LABELS[tier]}</span>}
                 </div>
-                <span className="text-sm text-foreground/80 shrink-0 tabular-nums">
+                <span className="text-body2 text-foreground/80 shrink-0 tabular-nums">
                     {rival.wins} · {rival.losses}
                     <span className="ml-1.5 text-foreground/90 font-semibold">{rival.winRate}%</span>
                 </span>

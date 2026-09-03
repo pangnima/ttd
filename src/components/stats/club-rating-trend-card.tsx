@@ -19,7 +19,7 @@ export function ClubRatingTrendCard({ points, clubName }: Props) {
             title="클럽 레이팅 추세"
             isEmpty={isEmpty}
             emptyMessage="확정된 클럽 경기가 없습니다"
-            headerRight={clubName ? <span className={`text-xs ${TEXT_MUTED}`}>{clubName}</span> : undefined}
+            headerRight={clubName ? <span className={`text-caption ${TEXT_MUTED}`}>{clubName}</span> : undefined}
         >
             {!isEmpty && <TrendBody points={points} />}
         </SectionCard>

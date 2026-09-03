@@ -21,10 +21,10 @@ export function ProfileTierProgress({ rating, matchesPlayed, provisional }: Prop
         <div className="space-y-1.5">
             <div className="flex items-baseline justify-between gap-2">
                 <span className="flex items-center gap-1.5">
-                    <span className={cn('text-base font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
+                    <span className={cn('text-body font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
                     {isProv && <span className="text-micro text-amber-600 dark:text-amber-400">잠정</span>}
                 </span>
-                <span className="text-sm font-mono tabular-nums text-muted-foreground">
+                <span className="text-body2 font-mono tabular-nums text-muted-foreground">
                     <span className={cn('font-semibold', TIER_TEXT[tier])}>{points}</span> / 100 P
                 </span>
             </div>
@@ -38,7 +38,7 @@ export function ProfileTierProgress({ rating, matchesPlayed, provisional }: Prop
             </div>
 
             {nextTier && (
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <p className="flex items-center gap-1 text-caption text-muted-foreground">
                     다음 등급
                     <TierIcon tier={nextTier} size={16} />
                     <span className="font-medium text-foreground">{TIER_LABELS[nextTier]}</span>

@@ -16,8 +16,8 @@ export function PasswordChangeForm() {
     return (
         <form ref={formRef} action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-4`}>
             <div>
-                <p className="text-sm font-semibold text-foreground">비밀번호 변경</p>
-                <p className="text-xs text-muted-foreground mt-0.5">현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.</p>
+                <p className="text-body2 font-semibold text-foreground">비밀번호 변경</p>
+                <p className="text-body2 text-muted-foreground mt-0.5">현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.</p>
             </div>
 
             <div className="h-px bg-border" />
@@ -63,12 +63,12 @@ export function PasswordChangeForm() {
             </div>
 
             {state?.error && (
-                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}
             {state?.success && (
-                <p className="text-sm text-win bg-win/10 border border-win/20 rounded-md px-3 py-2">
+                <p className="text-body2 text-win bg-win/10 border border-win/20 rounded-md px-3 py-2">
                     비밀번호가 변경되었습니다.
                 </p>
             )}

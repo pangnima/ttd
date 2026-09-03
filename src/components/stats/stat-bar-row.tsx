@@ -21,10 +21,10 @@ type Props = {
 export function StatBarRow({ label, total, wins, losses, draws, winRate, barClass }: Props) {
     return (
         <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2 text-sm">
+            <div className="flex items-center justify-between gap-2 text-body2">
                 <span className="flex items-baseline gap-1.5 min-w-0">
                     <span className="font-medium text-foreground truncate">{label}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">총 {total}경기</span>
+                    <span className="shrink-0 text-caption text-muted-foreground tabular-nums">총 {total}경기</span>
                 </span>
                 <span className="shrink-0 text-foreground/80 tabular-nums">
                     {formatRecord(wins, losses, draws)}

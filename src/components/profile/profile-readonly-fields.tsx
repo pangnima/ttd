@@ -4,11 +4,11 @@ import { FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 // 변경 불가 필드 표시용 (입력 불가, 회색 톤)
 const readonlyFieldCls = [
-    'w-full rounded-lg px-3 py-3 text-sm text-muted-foreground',
+    'w-full rounded-lg px-3 py-3 text-body2 text-muted-foreground',
     'bg-muted/50 border border-input',
 ].join(' ')
 
-const toggleBase = 'py-2 text-xs rounded-md border text-center cursor-default pointer-events-none'
+const toggleBase = 'py-2 text-caption rounded-md border text-center cursor-default pointer-events-none'
 const toggleActive = 'border-primary/40 bg-primary/5 text-primary/60 font-semibold'
 const toggleInactive = 'border-border text-muted-foreground'
 

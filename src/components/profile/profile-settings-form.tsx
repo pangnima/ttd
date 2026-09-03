@@ -14,11 +14,11 @@ import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } f
 
 // 변경 불가 필드 표시용 (입력 불가, 회색 톤)
 const readonlyFieldCls = [
-    'w-full rounded-lg px-3 py-3 text-sm text-muted-foreground',
+    'w-full rounded-lg px-3 py-3 text-body2 text-muted-foreground',
     'bg-muted/50 border border-input',
 ].join(' ')
 
-const pillBtnCls = 'inline-flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer'
+const pillBtnCls = 'inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer'
 
 type ProfileData = {
     name: string
@@ -79,7 +79,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                         {avatarSrc ? (
                             <Image src={avatarSrc} alt="프로필 사진" width={64} height={64} className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-xl text-muted-foreground font-medium">
+                            <span className="text-h3 text-muted-foreground font-medium">
                                 {initialProfile.nickname?.[0] ?? '?'}
                             </span>
                         )}
@@ -97,7 +97,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                                 기본 이미지로 변경
                             </button>
                         </div>
-                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
+                        <p className="text-caption text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
                         <input
                             id="avatar" name="avatar" type="file"
                             accept="image/png,image/jpeg,image/webp"
@@ -144,7 +144,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                 <p className={labelCls}>전적 통계 공개</p>
                 <input type="hidden" name="stats_hidden" value={String(statsHidden)} />
                 <div className="flex items-center justify-between rounded-md border border-border px-3 py-2.5">
-                    <label htmlFor="stats_public" className="text-sm text-foreground cursor-pointer">
+                    <label htmlFor="stats_public" className="text-body2 text-foreground cursor-pointer">
                         {statsHidden ? '비공개' : '공개'}
                     </label>
                     <Switch
@@ -159,7 +159,7 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
             </div>
 
             {state?.error && (
-                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>
             )}

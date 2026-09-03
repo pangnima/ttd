@@ -34,7 +34,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
             <div className="flex items-center justify-between">
                 <h2 className={TYPO.h4}>AI 코칭 분석</h2>
                 {generatedAt && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         마지막 분석: {formatRelativeTime(generatedAt)}
                     </span>
                 )}
@@ -43,10 +43,10 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                 {result ? (
                     <>
                         <div className="space-y-2">
-                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.strength}`}>💪 강점</p>
+                            <p className={`text-body2 font-semibold ${AI_COACHING_STYLE.strength}`}>💪 강점</p>
                             <ul className="space-y-1">
                                 {result.strengths.map((s, i) => (
-                                    <li key={i} className="text-sm text-foreground flex gap-2">
+                                    <li key={i} className="text-body2 text-foreground flex gap-2">
                                         <span className="text-muted-foreground mt-0.5">•</span>
                                         <span>{s}</span>
                                     </li>
@@ -54,10 +54,10 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             </ul>
                         </div>
                         <div className="space-y-2">
-                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.weakness}`}>⚠️ 개선 포인트</p>
+                            <p className={`text-body2 font-semibold ${AI_COACHING_STYLE.weakness}`}>⚠️ 개선 포인트</p>
                             <ul className="space-y-1">
                                 {result.weaknesses.map((w, i) => (
-                                    <li key={i} className="text-sm text-foreground flex gap-2">
+                                    <li key={i} className="text-body2 text-foreground flex gap-2">
                                         <span className="text-muted-foreground mt-0.5">•</span>
                                         <span>{w}</span>
                                     </li>
@@ -65,10 +65,10 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             </ul>
                         </div>
                         <div className="space-y-2">
-                            <p className={`text-sm font-semibold ${AI_COACHING_STYLE.tip}`}>🎯 코칭 팁</p>
+                            <p className={`text-body2 font-semibold ${AI_COACHING_STYLE.tip}`}>🎯 코칭 팁</p>
                             <ul className="space-y-1">
                                 {result.tips.map((t, i) => (
-                                    <li key={i} className="text-sm text-foreground flex gap-2">
+                                    <li key={i} className="text-body2 text-foreground flex gap-2">
                                         <span className="text-muted-foreground mt-0.5">•</span>
                                         <span>{t}</span>
                                     </li>
@@ -79,7 +79,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                             <button
                                 onClick={handleGenerate}
                                 disabled={isPending}
-                                className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                                className="text-caption text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
                             >
                                 {isPending ? '분석 중...' : '↻ 다시 분석'}
                             </button>
@@ -87,16 +87,16 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                     </>
                 ) : (
                     <div className="text-center space-y-3 py-2">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-body2 text-muted-foreground">
                             AI가 나의 경기 데이터를 분석해 강점·약점·코칭 팁을 제공합니다.
                         </p>
                         {error && (
-                            <p className={`text-sm ${AI_COACHING_STYLE.error}`}>{error}</p>
+                            <p className={`text-body2 ${AI_COACHING_STYLE.error}`}>{error}</p>
                         )}
                         <button
                             onClick={handleGenerate}
                             disabled={isPending}
-                            className="inline-flex items-center gap-2 text-sm border border-border rounded-[4px] px-4 py-2 hover:border-input transition-colors disabled:opacity-40"
+                            className="inline-flex items-center gap-2 text-body2 border border-border rounded-[4px] px-4 py-2 hover:border-input transition-colors disabled:opacity-40"
                         >
                             {isPending ? (
                                 <>
@@ -107,7 +107,7 @@ export function AICoachingCard({ initialResult, initialGeneratedAt }: Props) {
                                 '✨ AI 코칭 분석 시작'
                             )}
                         </button>
-                        <p className="text-xs text-muted-foreground">Claude AI가 분석합니다 · 결과는 24시간 캐시됩니다</p>
+                        <p className="text-caption text-muted-foreground">Claude AI가 분석합니다 · 결과는 24시간 캐시됩니다</p>
                     </div>
                 )}
             </div>

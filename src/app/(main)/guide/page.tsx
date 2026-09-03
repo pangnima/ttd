@@ -67,11 +67,11 @@ function GuideCard({ section }: { section: GuideSection }) {
                 </span>
                 <h2 className={TYPO.h3}>{section.title}</h2>
             </div>
-            <p className="text-sm text-muted-foreground">{section.lead}</p>
+            <p className="text-body text-muted-foreground">{section.lead}</p>
             <ol className="mt-4 space-y-2">
                 {section.steps.map((step, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-foreground">
-                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium text-muted-foreground tabular-nums">
+                    <li key={i} className="flex gap-3 text-body text-foreground">
+                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-caption font-medium text-muted-foreground tabular-nums">
                             {i + 1}
                         </span>
                         <span className="break-keep">{step}</span>
@@ -80,7 +80,7 @@ function GuideCard({ section }: { section: GuideSection }) {
             </ol>
             <Link
                 href={section.href}
-                className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline"
+                className="mt-5 inline-flex w-fit items-center gap-1 text-body2 font-medium text-primary hover:underline"
             >
                 {section.cta}
                 <ArrowRight className="size-4" />

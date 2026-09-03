@@ -58,7 +58,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                 {hasTier && tier && (
                     <div className="flex flex-col items-center gap-1 shrink-0 self-center sm:self-auto">
                         <TierIcon tier={tier} className="h-[100px] sm:h-[124px]" />
-                        <span className={cn('text-sm font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
+                        <span className={cn('text-body2 font-bold', TIER_TEXT[tier])}>{TIER_LABELS[tier]}</span>
                     </div>
                 )}
 
@@ -66,9 +66,9 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                 {hasPersonalTier && personalTier && (
                     <div className="flex flex-col items-center gap-1 shrink-0 self-center sm:self-auto">
                         <TierIcon tier={personalTier} className="h-[100px] sm:h-[124px]" />
-                        <span className={cn('text-sm font-bold', TIER_TEXT[personalTier])}>{TIER_LABELS[personalTier]}</span>
+                        <span className={cn('text-body2 font-bold', TIER_TEXT[personalTier])}>{TIER_LABELS[personalTier]}</span>
                         {summary && (
-                            <span className="text-xs tabular-nums">
+                            <span className="text-caption tabular-nums">
                                 <span className="text-win font-semibold">{summary.wins}승</span>{' '}
                                 <span className="text-loss font-semibold">{summary.losses}패</span>
                                 {summary.draws > 0 && <span className="text-muted-foreground"> {summary.draws}무</span>}
@@ -88,17 +88,17 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                         <div className="flex items-center gap-3 min-w-0">
                             <Avatar className="w-12 h-12 shrink-0">
                                 {user.profileImage && <AvatarImage src={user.profileImage} alt={user.nickname} />}
-                                <AvatarFallback className="bg-primary/20 text-primary text-lg font-bold">
+                                <AvatarFallback className="bg-primary/20 text-primary text-h4 font-bold">
                                     {user.nickname[0] ?? user.name[0] ?? '?'}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h1 className="text-h1 font-bold">{user.name}</h1>
-                                    <span className="text-sm text-muted-foreground">({user.nickname})</span>
+                                    <span className="text-body2 text-muted-foreground">({user.nickname})</span>
                                     {user.isGuest && <GuestBadge />}
                                 </div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-body2 text-muted-foreground">
                                     {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
                                     {clubRank !== undefined && (
                                         <span className="ml-1.5 font-medium text-foreground">· 클럽 {clubRank}위</span>
@@ -108,9 +108,9 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                         </div>
                         {/* 통합 scope는 우측 요약 행(RatingSummaryRow)이 NTRP를 포함하므로 단일 배지 생략 */}
                         {!ratingSummary && (user.isGuest ? (
-                            <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">NTRP -</Badge>
+                            <Badge variant="outline" className="text-caption text-muted-foreground shrink-0">NTRP -</Badge>
                         ) : (
-                            <Badge variant="outline" className="text-xs font-mono shrink-0">
+                            <Badge variant="outline" className="text-caption font-mono shrink-0">
                                 NTRP {ntrpDisplay}
                             </Badge>
                         ))}
@@ -126,7 +126,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                     {/* 개인 scope: 개인 경기 레이팅 진척바 */}
                     {!hasTier && personalRating && (
                         <div className="space-y-1">
-                            <p className="text-xs font-medium text-muted-foreground">개인 경기 레이팅</p>
+                            <p className="text-caption font-medium text-muted-foreground">개인 경기 레이팅</p>
                             <ProfileTierProgress rating={personalRating.rating} provisional={personalRating.provisional} />
                         </div>
                     )}
@@ -145,7 +145,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                         </>
                     )}
 
-                    {clubName && <p className="text-xs text-muted-foreground">{clubName} 기준 통계</p>}
+                    {clubName && <p className="text-caption text-muted-foreground">{clubName} 기준 통계</p>}
                 </div>
             </div>
         </div>
