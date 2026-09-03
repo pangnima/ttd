@@ -36,7 +36,7 @@ src/
 │   │   │       ├── match-games/  # 대진표 목록/생성/상세
 │   │   │       └── settings/
 │   │   ├── me/
-│   │   │   ├── analytics/        # /profile/[userId]?mode=total 리다이렉트
+│   │   │   ├── analytics/        # /profile/[userId]?scope=personal 리다이렉트
 │   │   │   ├── personal-matches/ # 개인 경기 기록 CRUD
 │   │   │   └── match-requests/   # 경기 확인 요청 허브 (받은/보낸 탭)
 │   │   ├── profile/
@@ -52,7 +52,7 @@ src/
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
 │   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchForm = use-personal-match-form-state + use-personal-match-submit 조립, PlayerPicker(필드별 전체 회원 검색 내장)+PlayerAutocomplete, PersonalMatchCard, MatchActions/MutualResultActions 카드 액션, MatchResultDialog 결과 입력·검토 팝업(복식 애드 포함) + use-set-scores/use-result-dialog 훅, RotationSessionCard/List + RotationGamesDialog 로테이션 게임 빌더 팝업, rotation/ 풀·게임 입력 등)
 │   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, ResultConfirmCard 결과 확인 대기, RequestTeamLine 복식 팀 표시, 상태 뱃지)
-│   ├── profile/                  # 프로필 헤더·통계 조합 (ProfileSettingsForm + ProfileReadonlyFields 변경 불가 필드, DeleteAccountButton 등)
+│   ├── profile/                  # 프로필 헤더·통계 조합 (ProfileScopeTabs 개인/클럽/통합 탭 스캐폴드, ProfileSettingsForm + ProfileReadonlyFields 변경 불가 필드, DeleteAccountButton 등)
 │   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
 │   ├── auth/                     # 인증 폼 (login/signup/forgot/reset, AvatarUploadField, SignupTennisSection 가입 테니스 정보)
@@ -88,7 +88,8 @@ src/
 │   │   ├── ratings.ts            # 클럽 레이팅 랭킹·이력·재계산 입력 쿼리
 │   │   ├── stats.ts              # RPC 호출 (get_user_match_stats, get_user_head_to_head)
 │   │   └── users.ts              # mapUserRow 공용 매퍼 (is_guest·personal_ntrp·deleted_at 포함)
-│   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수)
+│   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수). match-type.ts의 toQuadStats가 AnalyticsBundle.stats 형태 단일 출처
+│   ├── redesign-fixtures/        # [임시] 정적 UI/목업 단계 더미 데이터 — 실 쿼리 호출부 대체 (_scenario.ts `?fixture=empty` 스위치, personal-analytics*.ts 개인 통계 데이터있음 픽스처 등). 실 연동 복원 시 제거
 │   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼
 │   │   ├── tokens.ts             # CARD_BASE, SECTION_LABEL, EMPTY_BLOCK, calcWinRate 등
 │   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
@@ -127,7 +128,7 @@ src/
 │   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── onboarding.ts             # 신규 사용자 온보딩 단계 정의·완료 판정 (순수 함수)
-│   ├── nav-items.ts              # 사이드바 네비게이션 (topNavItems: 사용 가이드 / clubNavItems: 클럽 찾기)
+│   ├── nav-items.ts              # 사이드바 네비게이션 (topNavItems: 사용 가이드 / buildPersonalNavItem: '개인' 단일 메뉴 / myMatchNavItems / clubNavItems: 클럽 찾기)
 │   └── utils.ts                  # cn() 헬퍼
 ├── middleware.ts                  # 루트 미들웨어 (세션 갱신 + 보호 라우트 가드)
 └── types/
@@ -153,11 +154,11 @@ src/
 /clubs/[clubId]/match-games/new → 대진표 생성
 /clubs/[clubId]/match-games/[matchGameId] → 대진표 상세
 /clubs/[clubId]/settings → 클럽 설정 (owner 전용)
-/profile/[userId] → 개인 통계 허브 (로그인 후 기본 진입점: 본인 프로필 ?scope=personal)
-  ├── 본인: scope 탭(전체/개인) + 심층 분석 풀버전 + AI 코칭
+/profile/[userId] → 개인 통계 허브 (사이드바 '개인' 메뉴 = 로그인 후 기본 진입점, 본인 프로필 ?scope=personal)
+  ├── 본인: 개인/클럽/통합 3탭 스캐폴드(ProfileScopeTabs — 현재 개인만 동작, scope 미지정=personal) + 심층 분석 풀버전 + AI 코칭. [임시] ?fixture=empty로 빈 상태 검수
   └── 타인: 공개 통계 요약 (프라이버시 설정 반영)
 /profile/settings → 내 정보 수정
-/me/analytics → /profile/[내id]?mode=total 리다이렉트
+/me/analytics → /profile/[내id]?scope=personal 리다이렉트
 /me/personal-matches → 개인 경기 기록 목록
 /me/personal-matches/new → 개인 경기 추가 (세트 없이 결과 미확정으로 저장, 회원 상대 단식은 확인 요청 플로우로 전환)
 /me/personal-matches/[id]/edit → 개인 경기 수정 (상호 확인 경기는 진입 차단, 기존 세트는 보존)
@@ -193,7 +194,7 @@ src/
   - [x] 비밀번호 재설정·탈퇴(soft delete)·클럽 초대 링크·OG 메타데이터
 - [x] Week 16: 신규 사용자 온보딩 (개인 경기 중심, DB 변경 없음)
   - [x] 진입점 정비 — 사이드바·모바일 nav에 개인 경기 등록 링크, 사용 가이드 메뉴
-  - [x] 온보딩 체크리스트 (`lib/onboarding.ts`·`components/onboarding/`, 내 전적 통합 탭, localStorage 닫기)
+  - [x] 온보딩 체크리스트 (`lib/onboarding.ts`·`components/onboarding/`, 프로필 개인 탭, localStorage 닫기)
   - [x] 첫 로그인 환영 모달 + 정적 가이드 페이지 `/guide`
 - [x] Week 17: 개인 경기 등록 폼 개편 (0034 마이그레이션)
   - [x] 경기 타입·코트 표면 라디오형 선택 (FieldToggle), 세트 스코어 입력 제거 → 결과 미확정(winner NULL) 저장
@@ -203,6 +204,18 @@ src/
     - 카드 '결과 입력' → 레이어 팝업(`MatchResultDialog`)에서 세트 추가/삭제 + 결과 미리보기. 자유 기록은 즉시 확정(`updatePersonalMatchSetsAction`)
     - 상호 확인 경기는 제안 → 상대 확인/이의 플로우 (`match_requests.result_status`, RPC `propose/confirm/dispute_match_result`). 확정 시 양측 `personal_matches` 2행을 RPC가 동시 갱신
     - 상대 알림: 개인 경기 카드 '결과 확인' + 확인 요청 허브 받은 탭 '결과 확인 대기' 섹션 + 사이드바/모바일 뱃지 합산
+- [ ] Week 21: 정적 UI/목업 우선 진행 — 재설계 스키마(Week 20) 확정 후, 실 연동 복원 전까지 UI를 픽스처 데이터로 검증
+  - [x] `src/lib/redesign-fixtures/`(clubs/match-games/match-requests/personal-matches/ratings) — 신규 ERD 기준 더미 데이터로 클럽·대진표·개인경기·확인요청·레이팅 화면 전량 임시 대체
+  - [x] "내 전적" 메뉴 → 사이드바/모바일 **'개인' 단일 메뉴**로 통합(`buildPersonalNavItem`·`isPersonalNavActive`, 클럽 트리의 클럽별 '내 전적' 링크 제거) + 프로필 본인 화면 개인/클럽/통합 **3탭 스캐폴드**(`ProfileScopeTabs`, 개인만 동작·기본 scope personal, 온보딩 체크리스트도 개인 탭)
+  - [x] 개인 통계 **'데이터 있음' 픽스처** — `redesign-fixtures/personal-analytics(-data).ts`가 `fetchAnalyticsBundle` 호출부 대체(원본 PersonalMatch만 작성, stats/h2h는 순수 함수 파생), `?fixture=empty`로 빈 상태 전환, 임계값 회귀 테스트(`personal-analytics.test.ts`)
+  - [ ] 클럽/통합 탭 활성화 (클럽 `Match[]` 픽스처 + `ProfileScopeTabs` href 추가) · 타인 프로필 `fetchPlayerStatsBundle` 픽스처화(RPC 집계 결과 수작업)
+  - [ ] 실 Supabase 쿼리 복원 — `lib/queries/*.ts`를 신규 참가자 테이블(`match_game_participants` 등) 기반으로 재작성해 픽스처 제거 (스키마·RPC는 Week 20에서 이미 재작성 완료, 화면 재연동만 잔여). 이때 `revalidatePath('/me/analytics')` 9곳도 `/profile/${userId}`로 교체
+- [x] Week 20: DB 재설계 — 다형성-컬럼 정규화 (0039~0041 마이그레이션, `docs/redesign/*.md`)
+  - [x] 도메인/상태 모델링(Step1) → 정적 UI 재검증(Step2) → 신규 ERD(Step3) → users/club_player_ratings 구조 제외 전체 초기화+재구축(Step4) → TS 계약 회귀 수정(Step5)
+  - [x] `match_game_matches`/`personal_matches`/`match_requests`의 단식·복식 컬럼 → 참가자 테이블(`match_game_participants`/`personal_match_participants`/`match_request_participants`) 정규화
+  - [x] `match_requests`의 요청상태(status)·결과협상(result_status) 2축을 `match_result_negotiations`로 분리, 요청 생성은 `create_match_request` RPC로 일원화
+  - [x] `get_user_head_to_head`/`get_user_match_stats_v2`/`get_user_doubles_court_stats`/`get_user_partner_stats` 오버로드 2종 → `p_club_id` 선택 인자 단일 함수로 통합, 죽은 RPC 3종 제거
+  - [x] `npx tsc --noEmit`·`npm run lint`·`npm run build` 전부 통과 확인
 - [x] Week 19: 복식 등록을 단식과 동일 구성으로 개편 (0038 마이그레이션)
   - [x] 페어 고정 복식: 세트 없이 미확정 등록, 모든 선수 필드에 전체 회원 검색(PlayerPicker 내장) + 손잡이·NTRP 자동 채움
   - [x] 페어 고정 복식 상호 확인 — 상대팀 회원 1명이 대표 확인(`resolveConfirmRep`), `match_requests` 파트너/상대2 컬럼, 수락 시 요청자/대표 2행(슬롯 재배치·NTRP 파생)
@@ -238,31 +251,39 @@ Client Component (read-only)
 ```
 
 ## DB 스키마 현황
+
+> **2026-09 재설계**: `docs/redesign/` 참고(domain-model.md/erd.md). 다형성-컬럼 안티패턴(단식/복식, 요청원장+결과협상+팀구성 혼재)을 참가자 테이블로 정규화(0039~0041). `users`(계정/인증)·`club_player_ratings`/`club_rating_history`(구조)는 재설계 범위에서 구조 변경 없이 유지, 그 외 전 테이블 데이터 초기화 후 재구축.
+
 | 테이블 | 주요 RLS 정책 |
 |---|---|
 | `users` | 본인만 UPDATE (`is_guest`·`personal_ntrp`·`deleted_at`·`racket_brand`·`racket_model` 컬럼 포함). 행 생성은 `handle_new_user` 트리거(0035·0036에 정의 편입) |
 | `clubs` | is_public이면 전체 SELECT, owner만 UPDATE/DELETE (`court_schedule`·삭제 비밀번호 해시 포함) |
 | `club_members` | approved 멤버만 SELECT, owner/officer만 승인/거절 |
 | `match_games` | approved 멤버만 SELECT/INSERT, owner만 DELETE |
-| `match_game_courts/rounds/time_slots/matches` | 상위 match_game의 RLS를 따름 (courts.surface 포함) |
-| `personal_matches` | 본인(user_id)만 CRUD. `winner` NULL = 결과 미확정(세트 미등록, 집계 제외). 상호 확인 경기(`source_request_id` 보유)는 RESTRICTIVE 정책으로 수정/삭제 잠금 |
-| `match_requests` | 당사자 둘만 SELECT, requester만 INSERT/취소, opponent만 거절. 수락은 RPC로만. `set_scores`는 빈 배열 허용(미확정 요청). 결과 제안/확인 컬럼 `result_status`(none/proposed/confirmed/disputed)·`proposed_set_scores`(요청자 관점)·`proposed_by`·`proposed_at`·`dispute_reason`은 RPC로만 변경. 복식(0038): `match_type` 4종, `partner_*`/`opponent2_*` 8컬럼(복식이면 필수, 회원 중복 금지 CHECK), `opponent_user_id`는 상대팀 대표 확인자 |
-| `rotation_sessions` | 본인(user_id)만 SELECT/INSERT/DELETE. 로테이션 복식 선수 풀(`players` jsonb ≥3)만 보관, 게임은 `finalize_rotation_session` RPC(security invoker)가 `personal_matches`로 분해 후 세션 삭제. 통계 밖 |
+| `match_game_courts/rounds/time_slots` | 상위 match_game의 RLS를 따름 (courts.surface 포함) |
+| `match_game_matches` | approved 멤버만 SELECT/INSERT/UPDATE, owner만 DELETE. 단식/복식 참가자 컬럼(player1_id 등) 제거 → `match_game_participants`로 정규화. `winner_id`(team1/team2/draw 리터럴)·`result_sets`·`status`는 그대로 유지 |
+| `match_game_participants` | 상위 match와 동일 RLS. `{match_id, user_id, side, is_ad}` — 단식 2행/복식 4행, `unique(match_id, user_id)` |
+| `personal_matches` | 본인(user_id)만 CRUD. `winner` NULL = 결과 미확정(집계 제외). `source_type`(direct/confirmation/rotation)으로 출처 명시. 상호확인(`source_type='confirmation'`)은 RESTRICTIVE 정책으로 수정/삭제 잠금. 참가자(opponent/partner/opponent2)는 `personal_match_participants`로 정규화 |
+| `personal_match_participants` | 상위 경기(user_id)와 동일 RLS + 잠금. `{match_id, role, user_id, name, dominant_hand, ntrp_snapshot}` |
+| `match_requests` | 당사자 둘만 SELECT, requester만 취소, opponent만 거절. **생성은 `create_match_request` RPC 전용**(직접 INSERT 정책 폐지 — 복식 참가자 원자적 삽입을 위해). `set_scores`는 요청 시점 원본값(빈 배열 허용). 수락은 RPC로만. 복식 파트너/상대2는 `match_request_participants`로, 결과 협상(`result_status`/`proposed_set_scores`/`proposed_by`/`proposed_at`/`dispute_reason`)은 `match_result_negotiations`로 분리(요청 상태축과 결과협상축이 별개 테이블) |
+| `match_request_participants` | 당사자만 SELECT. `{request_id, role(partner/opponent2), user_id, name, dominant_hand, ntrp_snapshot}`. 쓰기는 `create_match_request` RPC 전용 |
+| `match_result_negotiations` | 당사자만 SELECT(request_id 1:1). 쓰기는 `accept/propose/confirm/dispute_match_result` RPC 전용 |
+| `rotation_sessions` | 본인(user_id)만 SELECT/INSERT/DELETE. 로테이션 복식 선수 풀(`players` jsonb ≥3)만 보관, 게임은 `finalize_rotation_session` RPC(security invoker)가 `personal_matches`+`personal_match_participants`로 분해 후 세션 삭제. 통계 밖 |
 | `ai_coaching_cache` | 본인 통계 묶음 해시 기반 캐시 (24h) |
-| `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만 |
+| `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만. `club_rating_history.match_id`는 재설계 후에도 `match_game_matches(id)` FK 유지 |
 | `club_invites` | owner만 관리, 미리보기·가입은 SECURITY DEFINER RPC로만 |
 
-헬퍼 함수: `is_club_owner(club_id)`, `is_club_approved_member(club_id)` (SECURITY DEFINER)
-RPC: `create_match_game`, `update_match_game`, `add_guest_player` (트랜잭션 단위 INSERT)
-RPC: `get_user_match_stats`, `get_user_head_to_head` (통계 집계)
-RPC: `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts` (클럽 대시보드 집계)
+헬퍼 함수: `is_club_owner(club_id)`, `is_club_approved_member(club_id)`, `is_club_owner_or_officer(club_id)` (SECURITY DEFINER)
+RPC: `create_match_game`, `update_match_game` (참가자 배열 `[{user_id,side,is_ad}]`로 단식/복식 통일 INSERT), `add_guest_player` (트랜잭션 단위)
+RPC: `get_user_match_stats_v2`, `get_user_head_to_head`, `get_user_doubles_court_stats`, `get_user_partner_stats` (각 단일 함수, `p_club_id` 선택 인자로 기존 오버로드 2종 통합 — `match_game_participants` 기반 재작성)
+RPC: `get_club_activity_ranking`, `get_club_win_rate_ranking`, `get_club_member_counts` (클럽 대시보드 집계, 참가자 테이블 기반)
 RPC: `apply_club_rating_snapshot` (레이팅 영속화), `get_invite_preview`·`join_club_via_invite` (초대 링크)
-RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 생성 + 상태 전이, 세트 없으면 양측 winner NULL)
-RPC: `propose_match_result`·`confirm_match_result`·`dispute_match_result` (상호 확인 경기 결과 제안/확인/이의 — confirm이 양측 personal_matches의 세트·winner를 동시 확정, 복식 애드 보존). helper `personal_match_winner`·`invert_set_scores`(애드 교차 반전)·`validate_set_scores`(애드 enum)·`normalize_set_scores`·`derive_public_ntrp`
-RPC: `finalize_rotation_session` (로테이션 세션 → 게임별 personal_matches 분해 + 세션 삭제, 한 트랜잭션)
-RPC: `get_user_match_stats_unified`, `get_user_head_to_head_unified` (클럽+개인 통합 집계, 미확정 제외 — 현재 src 미호출)
-View: `user_match_participations` (security_invoker=on)
-마이그레이션: 0001~0038 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력)
+RPC: `create_match_request` (요청 원장 + 복식 참가자 2행 원자적 생성 — 참가자 정규화로 직접 INSERT 폐지)
+RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 + participants + match_result_negotiations 1행 생성, 세트 없으면 양측 winner NULL)
+RPC: `propose_match_result`·`confirm_match_result`·`dispute_match_result` (match_result_negotiations에 대해 제안/확인/이의 — confirm이 양측 personal_matches의 세트·winner를 동시 확정, 복식 애드 보존). helper `personal_match_winner`·`invert_set_scores`(애드 교차 반전)·`validate_set_scores`(애드 enum)·`normalize_set_scores`·`derive_public_ntrp`
+RPC: `finalize_rotation_session` (로테이션 세션 → 게임별 personal_matches+participants 분해 + 세션 삭제, 한 트랜잭션)
+View: `user_match_participations` (security_invoker=on, `match_game_participants` 기반 재작성 — 4-way UNION 제거)
+마이그레이션: 0001~0041 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력, 0039~0041이 재설계)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -285,9 +306,9 @@ View: `user_match_participations` (security_invoker=on)
 | **탈퇴 회원** | `users.deleted_at` soft delete(익명화). 대진표 이름은 복원·'탈퇴' 배지, 레이팅 값 보존하되 랭킹 제외 |
 | **초대 토큰** | `club_invites.token` — 비공개 클럽 가입용. SECURITY DEFINER RPC로만 미리보기·가입 |
 | **로테이션 복식 / 로테이션 세션** | 4명 이상 파트너 교대(아메리칸) 복식. 등록 시 선수 풀만 `rotation_sessions`(세션)에 저장하고, 카드 '결과 입력' 게임 빌더에서 게임(파트너·상대1·상대2 + 세트)을 구성하면 게임별 개인 경기 레코드로 분해 저장. 상호 확인 없음(자유 기록) |
-| **확인 요청 / 상호 확인 경기** | 회원 간 단식·페어 고정 복식 대진 요청(`match_requests`, pending→accepted/rejected/canceled). 복식은 상대팀 회원 1명이 **대표 확인자**(`opponent_user_id`, 상대1→상대2 순 회원 자동 선택·슬롯 스왑). 수락 시 요청자/대표 관점 `personal_matches` 2행 생성(`source_request_id` 표식, 수정/삭제 잠금) — 파트너·상대2가 회원이어도 그들 기록에는 생성하지 않음 |
-| **결과 미확정** | `personal_matches.winner = NULL` — 세트 스코어 없이 등록된 개인 경기. 카드에 '미확정' 배지, 통계·레이팅·AI 코칭 집계에서 제외(`explodePersonalMatchSets`·통합 RPC). 카드 '결과 입력' 팝업에서 세트가 등록되면 `winner`가 파생되어 확정 |
-| **결과 제안 / 확인** | 상호 확인 경기의 사후 결과 등록. `match_requests.result_status`: none → proposed(한쪽이 세트 제안, 요청자 관점으로 정규화 저장) → confirmed(상대 확인 → 양측 `personal_matches` 확정) \| disputed(이의 제기 + 사유, 양측 누구든 재제안). 제안자 본인은 확인 불가, 제안 수정만 가능 |
+| **확인 요청 / 상호 확인 경기** | 회원 간 단식·페어 고정 복식 대진 요청(`match_requests`, pending→accepted/rejected/canceled — 생성은 `create_match_request` RPC 전용). 복식은 상대팀 회원 1명이 **대표 확인자**(`opponent_user_id`, 상대1→상대2 순 회원 자동 선택·슬롯 스왑), 파트너/상대2는 `match_request_participants`. 수락 시 요청자/대표 관점 `personal_matches` 2행 생성(`source_type='confirmation'`, `source_request_id` 표식, 수정/삭제 잠금) — 파트너·상대2가 회원이어도 그들 기록에는 생성하지 않음 |
+| **결과 미확정** | `personal_matches.winner = NULL` — 세트 스코어 없이 등록된 개인 경기. 카드에 '미확정' 배지, 통계·레이팅·AI 코칭 집계에서 제외(`explodePersonalMatchSets`). 카드 '결과 입력' 팝업에서 세트가 등록되면 `winner`가 파생되어 확정 |
+| **결과 제안 / 확인** | 상호 확인 경기의 사후 결과 등록. `match_result_negotiations.result_status`(request_id 1:1): none → proposed(한쪽이 세트 제안, 요청자 관점으로 정규화 저장) → confirmed(상대 확인 → 양측 `personal_matches` 확정) \| disputed(이의 제기 + 사유, 양측 누구든 재제안). 제안자 본인은 확인 불가, 제안 수정만 가능 |
 
 ## 코딩 규칙
 

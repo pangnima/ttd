@@ -35,7 +35,7 @@ export default function TiersPreviewPage() {
                     <h1 className="text-2xl font-bold">계급 아이콘 확인</h1>
                     <p className="text-sm text-muted-foreground">
                         클럽 레이팅 8계급 엠블럼과 배지. 아이콘 교체 시 <code className="font-mono">public/tiers/*.svg</code> 를
-                        갈아끼우고(또는 <code className="font-mono">node scripts/extract-tier-icons.mjs</code> 재실행) 이 페이지를 새로고침해 확인하세요.
+                        갈아끼우고 이 페이지를 새로고침해 확인하세요.
                     </p>
                 </div>
                 <div className="shrink-0"><ThemeToggle /></div>
