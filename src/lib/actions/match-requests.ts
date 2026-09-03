@@ -32,6 +32,7 @@ export type MatchRequestInput = {
     surface: CourtSurface
     setScores?: PersonalMatchSetScore[]  // 요청자 관점 (생략 = 미확정)
     notes?: string
+    courtName?: string  // 선택, ≤40자 — 수락 시 양측 기록에 복사
 }
 
 export async function createMatchRequestAction(
@@ -64,6 +65,7 @@ export async function createMatchRequestAction(
         p_match_type: input.matchType,
         p_surface: input.surface,
         p_notes: input.notes?.trim() || undefined,
+        p_court_name: input.courtName?.trim() || undefined,
         p_set_scores: setScores,
         p_partner: doubles ? {
             user_id: input.partnerUserId ?? null,

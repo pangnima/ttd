@@ -61,7 +61,7 @@ export function PlayersSection({
                     <span className="text-caption font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
                     <span className="text-caption text-muted-foreground">나 + 파트너</span>
                 </div>
-                {field('내 파트너 *', partner, 'partner', '파트너 이름 또는 닉네임', false)}
+                {field('내 파트너 *', partner, 'partner', '파트너 이름 또는 닉네임', true)}
             </div>
 
             {/* 상대팀 (상대1 + 상대2) */}

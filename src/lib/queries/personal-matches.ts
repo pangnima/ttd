@@ -98,3 +98,31 @@ export async function fetchPastOpponents(userId: string): Promise<PastOpponent[]
     }
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
+
+const RECENT_COURT_NAMES_LIMIT = 20
+
+/**
+ * 과거 개인 경기에 입력했던 코트명 목록 — 최근 경기 우선, 이름 기준 중복 제거.
+ * 개인 경기 등록 폼의 코트명 '최근 코트' 자동완성 후보에 사용한다.
+ */
+export async function fetchRecentCourtNames(userId: string): Promise<string[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('personal_matches')
+        .select('court_name, played_at')
+        .eq('user_id', userId)
+        .not('court_name', 'is', null)
+        .order('played_at', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(200)
+    if (error || !data) return []
+
+    const seen = new Set<string>()
+    for (const row of data) {
+        const name = row.court_name?.trim()
+        if (!name || seen.has(name)) continue
+        seen.add(name)
+        if (seen.size >= RECENT_COURT_NAMES_LIMIT) break
+    }
+    return [...seen]
+}

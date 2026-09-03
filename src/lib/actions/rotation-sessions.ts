@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { CourtSurface, MatchType, RotationPoolPlayer } from '@/types'
 import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
-import { isDoublesMatchType, validateSetScores } from '@/lib/personal-matches/validate-input'
+import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 
 /**
@@ -21,6 +21,7 @@ export type RotationSessionInput = {
     matchType: MatchType
     surface: CourtSurface
     notes?: string
+    courtName?: string  // 선택, ≤40자 — finalize 시 모든 게임에 상속
     players: RotationPoolPlayer[]  // 나 제외, 3명 이상
 }
 
@@ -30,7 +31,9 @@ function validatePlayer(p: RotationPoolPlayer): string | null {
     if (!p.name.trim()) return '참가자 이름을 입력해주세요.'
     if (!p.userId && !p.hand) return '비회원 참가자는 손잡이를 선택해주세요.'
     if (p.hand != null && !['right', 'left'].includes(p.hand)) return '손잡이 값이 올바르지 않습니다.'
-    if (p.ntrp != null && (!Number.isFinite(p.ntrp) || p.ntrp < 1 || p.ntrp > 7)) return 'NTRP는 1.0~7.0 범위로 입력해주세요.'
+    // 풀 전원 NTRP 필수 — 게임에서 파트너/상대 어느 역할이든 개인 레이팅 계산에 쓰인다 (페어 고정 폼과 동일 규칙)
+    if (p.ntrp == null) return '참가자 NTRP를 입력해주세요.'
+    if (!Number.isFinite(p.ntrp) || p.ntrp < 1 || p.ntrp > 7) return 'NTRP는 1.0~7.0 범위로 입력해주세요.'
     return null
 }
 
@@ -48,6 +51,8 @@ export async function createRotationSessionAction(input: RotationSessionInput): 
     if (!input.playedAt) return { error: '경기 날짜를 입력해주세요.' }
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return { error: '경기 시각을 입력해주세요.' }
     if (!input.surface) return { error: '코트 표면을 선택해주세요.' }
+    const courtNameError = validateCourtName(input.courtName)
+    if (courtNameError) return { error: courtNameError }
     if (input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
     for (const p of input.players) {
         const err = validatePlayer(p)
@@ -65,6 +70,7 @@ export async function createRotationSessionAction(input: RotationSessionInput): 
         match_type: input.matchType,
         surface: input.surface,
         notes: input.notes?.trim() || null,
+        court_name: input.courtName?.trim() || null,
         players: input.players.map(cleanPlayer),
     })
     if (error) return { error: '로테이션 세션 저장에 실패했습니다.' }

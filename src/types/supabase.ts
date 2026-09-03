@@ -565,6 +565,7 @@ export type Database = {
       match_requests: {
         Row: {
           created_at: string
+          court_name: string | null
           id: string
           match_type: string
           notes: string | null
@@ -579,6 +580,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
@@ -593,6 +595,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
@@ -715,6 +718,7 @@ export type Database = {
       personal_matches: {
         Row: {
           created_at: string
+          court_name: string | null
           id: string
           match_type: string
           notes: string | null
@@ -729,6 +733,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type: string
           notes?: string | null
@@ -743,6 +748,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
@@ -775,6 +781,7 @@ export type Database = {
       rotation_sessions: {
         Row: {
           created_at: string
+          court_name: string | null
           id: string
           match_type: string
           notes: string | null
@@ -786,6 +793,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type: string
           notes?: string | null
@@ -797,6 +805,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
@@ -939,6 +948,7 @@ export type Database = {
       }
       create_match_request: {
         Args: {
+          p_court_name?: string
           p_match_type: string
           p_notes?: string
           p_opponent_user_id: string

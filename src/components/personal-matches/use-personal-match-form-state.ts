@@ -10,6 +10,7 @@ import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
+import { toHourValue } from '@/lib/format'
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
@@ -48,12 +49,14 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     const partner = usePlayerSlot(d?.partnerUserId, d?.partnerName, d?.partnerDominantHand, d?.partnerNtrp)
     const opponent2 = usePlayerSlot(d?.opponent2UserId, d?.opponent2Name, d?.opponent2DominantHand, d?.opponent2Ntrp)
     const [playedAt, setPlayedAt] = useState(d?.playedAt ?? new Date().toISOString().slice(0, 10))
-    const [playedTime, setPlayedTime] = useState(d?.playedTime ?? '')
+    // 시각은 시 단위만 — 시 단위 도입 이전 'HH:30' 기록은 편집 진입 시 시로 절삭해 select와 맞추고, 저장하면 정규화된다
+    const [playedTime, setPlayedTime] = useState(toHourValue(d?.playedTime ?? ''))
     const [matchType, setMatchType] = useState<MatchType>(d?.matchType ?? 'singles')
     const [surface, setSurface] = useState<CourtSurface | ''>(d?.surface ?? '')
+    const [courtName, setCourtName] = useState(d?.courtName ?? '')
     const [notes, setNotes] = useState(d?.notes ?? '')
-    // 복식 입력 방식 — 페어 고정(기본) vs 로테이션(선수 풀만 등록). 로테이션은 신규 등록에서만 지원.
-    const [doublesMode, setDoublesMode] = useState<DoublesMode>('fixed')
+    // 복식 입력 방식 — 로테이션(기본, 선수 풀만 등록) vs 페어 고정. 로테이션은 신규 등록에서만 지원(수정 모드는 isRotation이 false).
+    const [doublesMode, setDoublesMode] = useState<DoublesMode>('rotation')
     const rotation = useRotationGames()
 
     const isEdit = !!initialData
@@ -79,12 +82,13 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     const ntrpOk = (key: NtrpField, s: PlayerSlot, required: boolean) =>
         hideNtrpFor.includes(key) || (required ? isNtrpValid(s.ntrp) : s.ntrp.trim() === '' || isNtrpValid(s.ntrp))
 
-    const meta: RotationSessionMeta = { playedAt, playedTime, matchType, surface, notes }
+    const meta: RotationSessionMeta = { playedAt, playedTime, matchType, surface, notes, courtName }
     const metaOk = !!playedAt && !!playedTime && !!surface
+    // 파트너 NTRP도 상대와 동일하게 필수 (회원 파트너는 확인 플로우에서 hideNtrpFor로 면제)
     const fixedValid =
         isPlayerFilled(opponent.player) && ntrpOk('opponent', opponent, true) &&
         (!isDoubles || (
-            isPlayerFilled(partner.player) && ntrpOk('partner', partner, false) &&
+            isPlayerFilled(partner.player) && ntrpOk('partner', partner, true) &&
             isPlayerFilled(opponent2.player) && ntrpOk('opponent2', opponent2, true)
         )) && metaOk
     const isValid = isRotation ? rotation.isPoolValid(meta) : fixedValid
@@ -109,12 +113,14 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
             playedAt, playedTime: playedTime || undefined, matchType, surface: surface || undefined,
             setScores: d?.setScores ?? [],
             notes: notes || undefined,
+            courtName: courtName.trim() || undefined,
         }
     }
 
     return {
         opponent, partner, opponent2,
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
+        courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
     }

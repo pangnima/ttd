@@ -30,6 +30,7 @@ function buildPersonalMatchBaseRow(input: PersonalMatchInput, userId: string) {
         // resolveMatchWinner([])는 'draw'를 돌려주므로 반드시 길이 가드를 거친다.
         winner: input.setScores.length > 0 ? resolveMatchWinner(input.setScores) : null,
         notes: input.notes?.trim() || null,
+        court_name: input.courtName?.trim() || null,
     }
 }
 

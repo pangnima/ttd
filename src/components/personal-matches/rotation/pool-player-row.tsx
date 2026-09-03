@@ -19,8 +19,8 @@ type PoolPlayerRowProps = {
 }
 
 /**
- * 선수 풀의 한 항목 — 이름 선택(PlayerNtrpField 재사용, 회원 선택 시 손잡이·NTRP 자동 채움) + NTRP. 삭제 버튼.
- * NTRP는 게임에서 상대 역할일 때 필수가 되므로 미리 입력을 권장한다.
+ * 선수 풀의 한 항목 — 이름 선택(PlayerNtrpField 재사용, 회원 선택 시 손잡이·NTRP 자동 채움) + NTRP(필수). 삭제 버튼.
+ * 풀 전원 NTRP 필수 — 게임에서 파트너/상대 어느 역할이든 개인 레이팅 계산에 쓰인다 (페어 고정 폼과 동일 규칙).
  */
 export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChange, onRemove, canRemove, searchSelfUserId }: PoolPlayerRowProps) {
     return (

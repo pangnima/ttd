@@ -61,6 +61,7 @@ export function ReceivedRequestCard({ item }: Props) {
                 playedAt={request.playedAt}
                 playedTime={request.playedTime}
                 surface={request.surface}
+                courtName={request.courtName}
                 sets={invertSetScores(request.setScores)}
             />
             {request.status === 'pending' && (

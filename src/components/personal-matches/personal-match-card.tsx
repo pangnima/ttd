@@ -1,20 +1,17 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
-import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
-import { SURFACE_LABELS, SURFACE_TEXT_CLASS } from '@/lib/dashboard/surface'
-import { PILL_BASE } from '@/lib/dashboard/tokens'
 import {
     formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
 } from '@/lib/dashboard/outcome'
 import { resolveSetWinner } from '@/lib/personal-matches/winner'
 import { formatOpponents } from '@/lib/personal-matches/labels'
+import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
+import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 
 type Props = {
     match: PersonalMatch
     actions?: ReactNode
 }
-
-const MONTHS_EN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
 const RESULT = {
     me: { bar: 'bg-win', badge: 'bg-win text-win-foreground', label: 'WIN' },
@@ -24,11 +21,10 @@ const RESULT = {
     pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
 } as const
 
-// 개인 경기 1건 카드. 코트·경기시간은 데이터가 없어 미표기.
+// 개인 경기 1건 카드. 선수 줄 아래에 시각·코트명·메모(있는 것만)를 표시한다.
 // 동호인 경기: 세트 1개 = 게임 1개. 단일 세트는 WIN/LOSS, 멀티 세트는 'N승 M패' 전적으로 표시.
 // 세트가 없는 미확정 경기는 '미확정' 배지만 표시한다.
 export function PersonalMatchCard({ match: m, actions }: Props) {
-    const [, mm, dd] = m.playedAt.split('-')
     const result = RESULT[m.winner ?? 'pending']
     const isDoubles = m.matchType !== 'singles'
     const opponentLabel = formatOpponents(m)
@@ -53,19 +49,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
             <span className={`w-1 self-stretch rounded-full ${result.bar}`} aria-hidden />
-            {/* 날짜 영역: 경기타입 배지 + 일/월 + 표면(색 텍스트) */}
-            <div className="w-12 shrink-0 self-center flex flex-col items-center gap-0.5">
-                <span className={`${PILL_BASE} mb-1 ${getMatchTypeBadgeClass(m.matchType)}`}>
-                    {MATCH_TYPE_LABELS[m.matchType]}
-                </span>
-                <div className="text-h4 font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
-                <div className="text-caption text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
-                {m.surface && (
-                    <div className={`text-caption font-medium ${SURFACE_TEXT_CLASS[m.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
-                        {SURFACE_LABELS[m.surface] ?? m.surface}
-                    </div>
-                )}
-            </div>
+            <MatchDateColumn playedAt={m.playedAt} matchType={m.matchType} surface={m.surface} />
 
             <div className="flex-1 min-w-0">
                 {/* 선수: 복식은 내 팀(나·파트너) / vs 상대팀 두 줄, 단식은 vs 상대 한 줄. 결과 배지는 우측. */}
@@ -82,6 +66,8 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                     </div>
                     <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${result.badge}`}>{resultLabel}</span>
                 </div>
+
+                <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
 
                 {/* 세트 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}
                 {(m.setScores.length > 0 || actions) && (

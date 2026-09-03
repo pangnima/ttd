@@ -39,6 +39,7 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         winner: (row.winner as PersonalMatchWinner | null) ?? null,  // null = 결과 미확정
         opponentNtrp: opponent?.ntrp_snapshot != null ? Number(opponent.ntrp_snapshot) : undefined,
         notes: row.notes ?? undefined,
+        courtName: row.court_name ?? undefined,
         sourceRequestId: row.source_request_id ?? undefined,
         createdAt: row.created_at,
     }

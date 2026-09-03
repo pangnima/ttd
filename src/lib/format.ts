@@ -24,19 +24,28 @@ export function formatYearMonth(dateStr: string): string {
     return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' }).format(new Date(dateStr))
 }
 
+// ── 경기 시각(시 단위) ──
+// 개인 경기 시각은 시(hour)만 받는다. 저장 포맷은 기존과 같은 'HH:MM'(분은 항상 00)이라 DB time 컬럼·검증 정규식은 그대로.
+
+/** 경기 시각 select 옵션 — 값 'HH:00', 라벨 'N시' (00시~23시) */
+export const HOUR_OPTIONS: ReadonlyArray<{ value: string; label: string }> = Array.from({ length: 24 }, (_, h) => ({
+    value: `${String(h).padStart(2, '0')}:00`,
+    label: `${h}시`,
+}))
+
 /**
- * "HH:MM" 시각을 30분 단위로 반올림한다. (예: "06:17" → "06:30", "06:44" → "06:30", "06:45" → "07:00")
- * 빈 문자열·형식 불일치는 그대로 반환. 24:00을 넘으면 23:30으로 고정(같은 날 유지).
+ * 'HH:MM' → 'HH:00' (분 절삭). 시 단위 도입 이전에 저장된 'HH:30' 값을 편집 폼 select에 맞추기 위한 정규화.
+ * 빈 문자열·형식 불일치는 그대로 반환.
  */
-export function roundToHalfHour(value: string): string {
-    const m = /^(\d{1,2}):(\d{2})$/.exec(value)
-    if (!m) return value
-    const h = Number(m[1])
-    const min = Number(m[2])
-    if (h > 23 || min > 59) return value
-    const total = Math.round((h * 60 + min) / 30) * 30
-    const clamped = Math.min(total, 23 * 60 + 30)
-    const hh = String(Math.floor(clamped / 60)).padStart(2, '0')
-    const mm = String(clamped % 60).padStart(2, '0')
-    return `${hh}:${mm}`
+export function toHourValue(value: string): string {
+    const m = /^(\d{2}):\d{2}$/.exec(value)
+    if (!m || Number(m[1]) > 23) return value
+    return `${m[1]}:00`
+}
+
+/** 'HH:MM' → 'N시' 표시 라벨 (예: '18:00' → '18시', '06:30' → '6시'). 형식 불일치는 그대로 반환. */
+export function formatHourLabel(value: string): string {
+    const m = /^(\d{2}):\d{2}$/.exec(value)
+    if (!m || Number(m[1]) > 23) return value
+    return `${Number(m[1])}시`
 }

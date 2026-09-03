@@ -21,6 +21,8 @@ type Props = {
     initialData?: PersonalMatch
     opponentCandidates?: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
+    // 코트명 '최근 코트' 자동완성 후보 (본인이 이전에 입력한 코트명)
+    recentCourtNames?: string[]
     // 로그인 유저 id — 전달 시 모든 선수 필드에 전체 회원 검색 + 상호 확인 요청 플로우 활성화
     selfUserId?: string
 }
@@ -29,7 +31,7 @@ type Props = {
  * 개인 경기 등록/수정 폼 — 단식·복식(페어 고정/로테이션) 동일 구성. 세트는 받지 않고(미확정 저장) 카드 '결과 입력'에서 등록한다.
  * 로테이션은 선수 풀만 세션으로 저장하고 게임(팀 구성+세트)도 '결과 입력'에서 만든다.
  */
-export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [], selfUserId }: Props) {
+export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOpponents = [], recentCourtNames = [], selfUserId }: Props) {
     const s = usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId })
     const submit = usePersonalMatchSubmit(s, initialData?.id)
     const slot = (x: typeof s.opponent) => ({ player: x.player, onPlayerChange: x.setPlayer, ntrp: x.ntrp, onNtrpChange: x.setNtrp })
@@ -85,6 +87,7 @@ export function PersonalMatchForm({ initialData, opponentCandidates = [], pastOp
                             playedAt={s.playedAt} onPlayedAtChange={s.setPlayedAt}
                             playedTime={s.playedTime} onPlayedTimeChange={s.setPlayedTime}
                             surface={s.surface} onSurfaceChange={s.setSurface}
+                            courtName={s.courtName} onCourtNameChange={s.setCourtName} recentCourtNames={recentCourtNames}
                         />
                         <PendingResultNotice existingSets={initialData?.setScores} variant={s.isRotation ? 'rotation' : 'default'} />
                     </FormSectionCard>

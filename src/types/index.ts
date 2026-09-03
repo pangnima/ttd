@@ -154,6 +154,7 @@ export type PersonalMatch = {
     winner: PersonalMatchWinner | null  // null = 결과 미확정 — 통계·레이팅 집계에서 제외 (explodePersonalMatchSets)
     opponentNtrp?: number   // 상대(단식)/상대1(복식) 추정 NTRP — 개인 레이팅 상대 레이팅. 미입력 시 undefined
     notes?: string
+    courtName?: string      // 코트명(선택, ≤40자) — 등록 폼 '최근 코트' 자동완성 후보로 재사용
     sourceRequestId?: string  // 상호 확인 대진(match_requests)에서 확정된 경기 — 있으면 수정/삭제 잠금
     // 상호 확인 경기의 결과 제안/확인 상태 (목록 조회 시 match_requests에서 부착, 그 외 경로는 undefined)
     confirmation?: PersonalMatchConfirmation
@@ -190,6 +191,7 @@ export type RotationSession = {
     matchType: MatchType    // 복식 3종
     surface: CourtSurface
     notes?: string
+    courtName?: string      // finalize 시 모든 게임 행에 상속
     players: RotationPoolPlayer[]  // 나 제외, 3명 이상
     createdAt: string
 }
@@ -211,6 +213,7 @@ export type MatchRequest = {
     surface: CourtSurface
     setScores: PersonalMatchSetScore[]  // 요청자 관점. 빈 배열 허용(결과 미확정 요청)
     notes?: string
+    courtName?: string      // 수락 시 요청자·수락자 양측 기록에 복사(notes와 달리 공유)
     status: MatchRequestStatus
     createdAt: string
     respondedAt?: string

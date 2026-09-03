@@ -50,6 +50,7 @@ export function SentRequestCard({ item }: Props) {
                 playedAt={request.playedAt}
                 playedTime={request.playedTime}
                 surface={request.surface}
+                courtName={request.courtName}
                 sets={request.setScores}
             />
             {request.status === 'pending' && (

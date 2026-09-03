@@ -4,6 +4,8 @@ import {
     buildRotationInputs,
     rotationGameToInput,
     validateRotation,
+    validateRotationGames,
+    validateRotationPool,
     type PoolPlayer,
     type RotationGame,
     type RotationSessionMeta,
@@ -24,6 +26,7 @@ const meta: RotationSessionMeta = {
     matchType: 'men_doubles',
     surface: 'hard',
     notes: '',
+    courtName: '',
 }
 
 // 4인 표준 로테이션: 나 + B,C,D
@@ -100,10 +103,23 @@ describe('validateRotation', () => {
         expect(validateRotation(noNtrp, games, meta)).toBe(false)
     })
 
-    it('파트너 NTRP는 선택 — 파트너만 비어도 true', () => {
+    it('파트너 NTRP도 필수 — 파트너만 비어도 false', () => {
         const partnerNoNtrp = [pool('b', 'B', ''), pool('c', 'C', '3.5'), pool('d', 'D', '4.0')]
-        // g1: partner=b(빈 NTRP), opp=c,d → 통과
-        expect(validateRotation(partnerNoNtrp, [game('g1', 'b', 'c', 'd')], meta)).toBe(true)
+        // g1: partner=b(빈 NTRP), opp=c,d → 풀 단계·게임 단계 모두 거부
+        expect(validateRotationPool(partnerNoNtrp, meta)).toBe(false)
+        expect(validateRotationGames(partnerNoNtrp, [game('g1', 'b', 'c', 'd')])).toBe(false)
+        expect(validateRotation(partnerNoNtrp, [game('g1', 'b', 'c', 'd')], meta)).toBe(false)
+    })
+
+    it('풀 전원 NTRP가 있으면 풀 단계 통과, 코트명은 선택', () => {
+        expect(validateRotationPool(P, meta)).toBe(true)
+        expect(validateRotationPool(P, { ...meta, courtName: '올림픽공원 3번' })).toBe(true)
+    })
+
+    it('코트명은 게임 입력으로 전파된다', () => {
+        const input = rotationGameToInput({ ...meta, courtName: '올림픽공원 3번' }, game('g1', 'b', 'c', 'd'), P)
+        expect(input.courtName).toBe('올림픽공원 3번')
+        expect(rotationGameToInput(meta, game('g1', 'b', 'c', 'd'), P).courtName).toBeUndefined()
     })
 
     it('공통 메타(표면) 누락이면 false', () => {

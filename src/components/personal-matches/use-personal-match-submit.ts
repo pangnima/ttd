@@ -36,9 +36,10 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         }
 
         if (s.isRotation && s.surface) {
-            const { playedAt, playedTime, matchType, surface, notes } = s
+            const { playedAt, playedTime, matchType, surface, notes, courtName } = s
             run(() => createRotationSessionAction({
                 playedAt, playedTime, matchType, surface, notes: notes || undefined,
+                courtName: courtName.trim() || undefined,
                 players: poolToPlayers(s.rotation.pool),
             }), '/me/personal-matches')
             return
@@ -49,7 +50,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             const rep = s.rep.opponent.slot
             const other = s.rep.opponent2.slot
             const num = (v: string) => (v.trim() ? Number(v) : undefined)
-            const { playedAt, playedTime, matchType, surface, notes } = s
+            const { playedAt, playedTime, matchType, surface, notes, courtName } = s
             run(() => createMatchRequestAction({
                 matchType,
                 opponentUserId: s.rep!.repUserId,
@@ -64,6 +65,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 opponent2DominantHand: s.isDoubles ? handOf(other.player) : undefined,
                 opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
                 playedAt, playedTime, surface, notes: notes || undefined,
+                courtName: courtName.trim() || undefined,
             }), '/me/match-requests?tab=sent')
             return
         }

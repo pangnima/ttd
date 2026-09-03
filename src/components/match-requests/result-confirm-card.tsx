@@ -46,6 +46,7 @@ export function ResultConfirmCard({ item, viewerId }: Props) {
                 playedAt={request.playedAt}
                 playedTime={request.playedTime}
                 surface={request.surface}
+                courtName={request.courtName}
                 sets={mySets}
             />
             <p className="text-caption text-muted-foreground break-keep">

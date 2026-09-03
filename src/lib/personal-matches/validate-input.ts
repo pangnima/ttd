@@ -27,6 +27,17 @@ export type PersonalMatchInput = {
     opponentNtrp?: number  // 상대(단식)/상대1(복식) 추정 NTRP (1.0~7.0, 필수) — 개인 레이팅 계산용
     // winner는 입력받지 않는다. 세트가 있으면 setScores로 자동 판정, 없으면 NULL(결과 미확정).
     notes?: string
+    courtName?: string  // 코트명(선택, ≤40자)
+}
+
+export const COURT_NAME_MAX_LENGTH = 40
+
+/** 코트명(선택) 검증 — 공백만이면 통과(저장 시 null), 길이 초과만 거부. 세 액션(자유 기록·세션·요청)이 공유한다. */
+export function validateCourtName(courtName: string | undefined): string | null {
+    if (courtName && courtName.trim().length > COURT_NAME_MAX_LENGTH) {
+        return `코트명은 ${COURT_NAME_MAX_LENGTH}자 이내로 입력해주세요.`
+    }
+    return null
 }
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
@@ -64,6 +75,8 @@ export function validatePersonalMatchInput(
     }
     // 코트 표면(필수)
     if (!input.surface) return '코트 표면을 선택해주세요.'
+    const courtNameError = validateCourtName(input.courtName)
+    if (courtNameError) return courtNameError
     const skip = new Set(options.skipNtrpFor ?? [])
     if (!skip.has('opponent')) {
         // 상대 NTRP(필수): 1.0~7.0 범위 (복식이면 상대1)
@@ -78,9 +91,10 @@ export function validatePersonalMatchInput(
             if (input.opponent2Ntrp == null) return '상대2 NTRP를 입력해주세요.'
             if (input.opponent2Ntrp < 1 || input.opponent2Ntrp > 7) return '상대2 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
-        // 파트너 NTRP(선택): 입력 시 범위 검증
-        if (!skip.has('partner') && input.partnerNtrp != null && (input.partnerNtrp < 1 || input.partnerNtrp > 7)) {
-            return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
+        // 파트너 NTRP(필수 — 상대와 동일 규칙): 회원 파트너는 skipNtrpFor로 건너뛴다(수락 시 서버 파생)
+        if (!skip.has('partner')) {
+            if (input.partnerNtrp == null) return '파트너 NTRP를 입력해주세요.'
+            if (input.partnerNtrp < 1 || input.partnerNtrp > 7) return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
     }
     // 세트 검증: 빈 배열은 결과 미확정으로 허용. 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.

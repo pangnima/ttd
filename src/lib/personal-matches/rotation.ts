@@ -31,6 +31,7 @@ export type RotationSessionMeta = {
     matchType: MatchType
     surface: CourtSurface | ''
     notes: string
+    courtName: string  // '' = 미입력
 }
 
 // finalize RPC 페이로드 (게임 1건): 풀 항목을 직렬화한 선수 3명 + 세트
@@ -119,6 +120,7 @@ export function rotationGameToInput(
         surface: meta.surface || undefined,
         setScores: cleanSets(game.sets),
         notes: meta.notes || undefined,
+        courtName: meta.courtName || undefined,
     }
 }
 
@@ -147,20 +149,20 @@ export function buildRotationGamePayloads(games: RotationGame[], pool: PoolPlaye
 }
 
 /**
- * 세션 등록 단계 검증 — 공통 메타(날짜·시각·표면) + 풀 3명 이상, 각 풀 항목 선수 입력 완료.
- * NTRP는 게임에서 상대 역할일 때만 필수이므로 등록 단계에서는 입력 시에만 범위를 본다.
+ * 세션 등록 단계 검증 — 공통 메타(날짜·시각·표면, 코트명은 선택) + 풀 3명 이상, 각 풀 항목 선수 입력 완료.
+ * 풀 전원 NTRP 필수 — 게임에서 파트너/상대 어느 역할이든 개인 레이팅 계산에 쓰인다 (페어 고정 폼과 동일 규칙).
  */
 export function validateRotationPool(pool: PoolPlayer[], meta: RotationSessionMeta): boolean {
     if (!meta.playedAt || !meta.playedTime || !meta.surface) return false
     if (pool.length < 3) return false
     if (!pool.every((p) => isPlayerFilled(p.player))) return false
-    if (!pool.every((p) => p.ntrp.trim() === '' || isNtrpValid(p.ntrp))) return false
+    if (!pool.every((p) => isNtrpValid(p.ntrp))) return false
     return true
 }
 
 /**
  * 게임 단계 검증 — 게임 1개 이상, 각 게임 파트너/상대 ref가 풀에 실존하고 서로 중복 없음,
- * 상대1·상대2 NTRP 필수, 파트너 NTRP 선택(입력 시 유효), 각 게임 세트 유효.
+ * 파트너·상대1·상대2 NTRP 모두 필수, 각 게임 세트 유효.
  */
 export function validateRotationGames(pool: PoolPlayer[], games: RotationGame[]): boolean {
     if (games.length < 1) return false
@@ -170,12 +172,10 @@ export function validateRotationGames(pool: PoolPlayer[], games: RotationGame[])
         if (!refs.every((r) => pool.some((p) => p.tempId === r))) return false
         if (new Set(refs).size !== refs.length) return false // 한 게임에 같은 사람 중복 금지
 
+        const partner = poolById(pool, g.partnerRef)!
         const opp1 = poolById(pool, g.opp1Ref)!
         const opp2 = poolById(pool, g.opp2Ref)!
-        if (!isNtrpValid(opp1.ntrp) || !isNtrpValid(opp2.ntrp)) return false
-
-        const partner = poolById(pool, g.partnerRef)!
-        if (partner.ntrp.trim() !== '' && !isNtrpValid(partner.ntrp)) return false
+        if (!isNtrpValid(partner.ntrp) || !isNtrpValid(opp1.ntrp) || !isNtrpValid(opp2.ntrp)) return false
 
         if (g.sets.length < 1 || !g.sets.every(isSetValid)) return false
     }

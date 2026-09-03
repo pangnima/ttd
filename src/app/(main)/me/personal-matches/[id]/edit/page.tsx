@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchPersonalMatchById, fetchPastOpponents } from '@/lib/queries/personal-matches'
+import { fetchPersonalMatchById, fetchPastOpponents, fetchRecentCourtNames } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { PageContainer } from '@/components/common/page-container'
@@ -16,10 +16,11 @@ export default async function EditPersonalMatchPage({ params }: Props) {
     if (!user) redirect('/login')
 
     const { id } = await params
-    const [match, opponentCandidates, pastOpponents] = await Promise.all([
+    const [match, opponentCandidates, pastOpponents, recentCourtNames] = await Promise.all([
         fetchPersonalMatchById(id),
         fetchOpponentCandidates(user.id),
         fetchPastOpponents(user.id),
+        fetchRecentCourtNames(user.id),
     ])
     if (!match || match.userId !== user.id) notFound()
     // 상호 확인으로 확정된 경기는 수정 불가 (액션·RLS와 삼중 방어)
@@ -32,7 +33,7 @@ export default async function EditPersonalMatchPage({ params }: Props) {
                 title="경기 기록 수정"
                 description={`vs ${match.opponentName}`}
             />
-            <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} />
+            <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} recentCourtNames={recentCourtNames} />
         </PageContainer>
     )
 }

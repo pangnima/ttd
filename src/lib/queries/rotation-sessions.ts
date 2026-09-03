@@ -21,6 +21,7 @@ export function mapRotationSessionRow(row: RotationSessionRow): RotationSession 
         matchType: row.match_type as MatchType,
         surface: row.surface as CourtSurface,
         notes: row.notes ?? undefined,
+        courtName: row.court_name ?? undefined,
         players: raw.filter(isPoolPlayer),
         createdAt: row.created_at,
     }

@@ -43,6 +43,7 @@ function mapMatchRequestRow(row: MatchRequestRowWithJoins): MatchRequest {
         surface: row.surface as CourtSurface,
         setScores: (row.set_scores as PersonalMatchSetScore[]) ?? [],
         notes: row.notes ?? undefined,
+        courtName: row.court_name ?? undefined,
         status: row.status as MatchRequestStatus,
         createdAt: row.created_at,
         respondedAt: row.responded_at ?? undefined,
