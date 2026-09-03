@@ -21,7 +21,7 @@ type SetScoreRowProps = {
     oppAdLabels?: { opponent: string; opponent2: string }
 }
 
-const scoreInputClass = 'w-14 h-10 rounded-lg border border-input bg-background px-2 text-base font-semibold text-center'
+const scoreInputClass = 'w-14 h-10 rounded-lg border border-input bg-background px-2 text-body font-semibold text-center'
 
 /**
  * 개인 경기기록의 세트 한 줄(번호 + 내/상대 점수 + 삭제 + 복식 애드/듀스).
@@ -38,7 +38,7 @@ export function SetScoreRow({
     return (
         <div className={isDoubles ? cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6') : ''}>
             <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground w-10">{index + 1}세트</span>
+                <span className="text-caption text-muted-foreground w-10">{index + 1}세트</span>
                 <input
                     type="number"
                     min={0} max={99}
@@ -55,7 +55,7 @@ export function SetScoreRow({
                     className={scoreInputClass}
                 />
                 {removable && (
-                    <button type="button" onClick={onRemove} className="text-xs text-destructive/80 hover:text-destructive">
+                    <button type="button" onClick={onRemove} className="text-caption text-destructive/80 hover:text-destructive">
                         삭제
                     </button>
                 )}

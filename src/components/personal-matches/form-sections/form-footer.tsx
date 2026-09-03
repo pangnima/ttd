@@ -17,7 +17,7 @@ type FormFooterProps = {
 export function FormFooter({ error, isPending, isValid, submitLabel, onCancel }: FormFooterProps) {
     return (
         <>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-body2 text-destructive">{error}</p>}
 
             <div className="flex gap-3 lg:justify-end">
                 <Button

@@ -35,7 +35,7 @@ function FreeMatchActions({ match }: Props) {
         <span className="flex items-center gap-2">
             {match.winner === null && (
                 <>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={d.openDialog}>
+                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>
                         결과 입력
                     </Button>
                     <MatchResultDialog
@@ -52,10 +52,10 @@ function FreeMatchActions({ match }: Props) {
                     />
                 </>
             )}
-            <Link href={`/me/personal-matches/${match.id}/edit`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={`/me/personal-matches/${match.id}/edit`} className="text-caption text-muted-foreground hover:text-foreground transition-colors">
                 수정
             </Link>
-            <button onClick={handleDelete} disabled={isDeleting} className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
+            <button onClick={handleDelete} disabled={isDeleting} className="text-caption text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
                 삭제
             </button>
         </span>

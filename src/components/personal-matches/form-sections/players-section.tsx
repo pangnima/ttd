@@ -58,8 +58,8 @@ export function PlayersSection({
             {/* 내 팀 (나 + 파트너) */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
-                    <span className="text-xs text-muted-foreground">나 + 파트너</span>
+                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
+                    <span className="text-caption text-muted-foreground">나 + 파트너</span>
                 </div>
                 {field('내 파트너 *', partner, 'partner', '파트너 이름 또는 닉네임', false)}
             </div>
@@ -67,8 +67,8 @@ export function PlayersSection({
             {/* 상대팀 (상대1 + 상대2) */}
             <div className="mt-6 border-t border-border pt-6 space-y-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
-                    <span className="text-xs text-muted-foreground">상대1 + 상대2 · 회원이 있으면 그 사람이 대표로 확인합니다</span>
+                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
+                    <span className="text-caption text-muted-foreground">상대1 + 상대2 · 회원이 있으면 그 사람이 대표로 확인합니다</span>
                 </div>
                 {field('상대팀 선수 1 *', opponent, 'opponent', '상대방 이름 또는 닉네임', true)}
             </div>

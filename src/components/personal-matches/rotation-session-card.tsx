@@ -33,7 +33,7 @@ export function RotationSessionCard({ session: s }: Props) {
                 <span className={`${PILL_BASE} mb-1 ${getMatchTypeBadgeClass(s.matchType)}`}>
                     {MATCH_TYPE_LABELS[s.matchType]}
                 </span>
-                <div className="text-lg font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
+                <div className="text-h4 font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
                 <div className="text-caption text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
                 <div className={`text-caption font-medium ${SURFACE_TEXT_CLASS[s.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
                     {SURFACE_LABELS[s.surface] ?? s.surface}
@@ -43,16 +43,16 @@ export function RotationSessionCard({ session: s }: Props) {
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
+                        <p className="text-body2 font-medium text-foreground truncate">
                             로테이션 · 참가자 {s.players.length}명
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">{s.players.map((p) => p.name).join(' · ')}</p>
+                        <p className="text-caption text-muted-foreground truncate">{s.players.map((p) => p.name).join(' · ')}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-xs font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>게임 미입력</span>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>게임 미입력</span>
                 </div>
                 <div className="flex items-center justify-end gap-2 mt-2">
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={d.openDialog}>결과 입력</Button>
-                    <button onClick={handleDelete} disabled={isDeleting} className="text-xs text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
+                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>결과 입력</Button>
+                    <button onClick={handleDelete} disabled={isDeleting} className="text-caption text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
                         삭제
                     </button>
                 </div>

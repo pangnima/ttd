@@ -17,11 +17,11 @@ export function PersonalMatchMonthGroup({ group, renderActions }: Props) {
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                     <h3 className="text-h4 font-semibold text-foreground">{group.label}</h3>
-                    <span className="text-xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
+                    <span className="text-caption px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
                         {formatRecord(group.wins, group.losses, group.draws)}
                     </span>
                 </div>
-                <span className="text-xs text-muted-foreground">승률 {group.winRate}%</span>
+                <span className="text-caption text-muted-foreground">승률 {group.winRate}%</span>
             </div>
             <div className={`${CARD_BASE} divide-y divide-border/60`}>
                 {group.matches.map((m) => (

@@ -29,7 +29,7 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, is
     return (
         <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-1.5">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     <span className="font-medium text-foreground">{opponentName}</span>님이 제안한 결과 (내 관점)
                 </p>
                 <SetScoreChips sets={sets} />
@@ -37,7 +37,7 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, is
 
             {disputing ? (
                 <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground" htmlFor="dispute-reason">
+                    <label className="text-caption text-muted-foreground" htmlFor="dispute-reason">
                         이의 사유 (선택, {reason.length}/{REASON_MAX})
                     </label>
                     <Textarea
@@ -50,12 +50,12 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, is
                     />
                 </div>
             ) : (
-                <p className="text-xs text-muted-foreground break-keep">
+                <p className="text-caption text-muted-foreground break-keep">
                     확인하면 양쪽 기록에 결과가 확정되며 이후 수정할 수 없습니다. 다르면 이의를 제기해 다시 입력받을 수 있습니다.
                 </p>
             )}
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-caption text-destructive">{error}</p>}
 
             <DialogFooter showCloseButton>
                 {disputing ? (

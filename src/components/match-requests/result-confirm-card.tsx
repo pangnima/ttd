@@ -29,16 +29,16 @@ export function ResultConfirmCard({ item, viewerId }: Props) {
         <div className="px-4 py-3 space-y-2">
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-body2 font-medium text-foreground truncate">
                         {counterpart.name}
-                        {counterpart.deleted && <span className="ml-1 text-xs text-muted-foreground">(탈퇴)</span>}
+                        {counterpart.deleted && <span className="ml-1 text-caption text-muted-foreground">(탈퇴)</span>}
                     </p>
                     {counterpart.nickname && (
-                        <p className="text-xs text-muted-foreground truncate">{counterpart.nickname}</p>
+                        <p className="text-caption text-muted-foreground truncate">{counterpart.nickname}</p>
                     )}
                     <RequestTeamLine request={request} counterpartName={counterpart.name} viewerIsRequester={request.requesterId === viewerId} />
                 </div>
-                <Button size="sm" className="h-7 text-xs shrink-0" onClick={d.openDialog}>
+                <Button size="sm" className="h-7 text-caption shrink-0" onClick={d.openDialog}>
                     결과 확인
                 </Button>
             </div>
@@ -48,7 +48,7 @@ export function ResultConfirmCard({ item, viewerId }: Props) {
                 surface={request.surface}
                 sets={mySets}
             />
-            <p className="text-xs text-muted-foreground break-keep">
+            <p className="text-caption text-muted-foreground break-keep">
                 상대가 제안한 결과입니다. 확인하면 양쪽 기록에 확정되고, 다르면 이의를 제기할 수 있습니다.
             </p>
 

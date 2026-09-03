@@ -45,16 +45,16 @@ export function ResultProposePanel({
                 onOppAd={adLabels ? s.setOppAd : undefined}
             />
             {!s.canAdd && (
-                <p className="text-xs text-muted-foreground">세트는 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>
+                <p className="text-caption text-muted-foreground">세트는 최대 {MAX_SETS}개까지 등록할 수 있습니다.</p>
             )}
 
             {/* 미리보기: 유효한 세트만으로 현재 결과 계산 */}
             <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-1">
-                <p className="text-xs text-muted-foreground">예상 결과</p>
+                <p className="text-caption text-muted-foreground">예상 결과</p>
                 <SetScoreChips sets={s.sets} />
             </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-caption text-destructive">{error}</p>}
 
             <DialogFooter showCloseButton>
                 <Button

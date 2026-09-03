@@ -13,7 +13,7 @@ type Props = {
 export function RequestMatchSummary({ playedAt, playedTime, surface, sets }: Props) {
     return (
         <div className="space-y-1.5">
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-caption text-muted-foreground tabular-nums">
                 {playedAt.replaceAll('-', '.')} {playedTime} ·{' '}
                 <span className={SURFACE_TEXT_CLASS[surface] ?? SURFACE_TEXT_CLASS.unknown}>
                     {SURFACE_LABELS[surface] ?? surface}

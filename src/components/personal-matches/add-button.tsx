@@ -18,7 +18,7 @@ export function AddButton({ label, onClick, disabled = false }: AddButtonProps) 
             type="button"
             onClick={onClick}
             disabled={disabled}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium rounded-md border border-input bg-muted text-foreground hover:bg-muted/70 hover:border-ring transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-muted disabled:hover:border-input"
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 text-body2 font-medium rounded-md border border-input bg-muted text-foreground hover:bg-muted/70 hover:border-ring transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-muted disabled:hover:border-input"
         >
             <Plus className="size-4" />
             {label}

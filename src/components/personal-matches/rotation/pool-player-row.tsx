@@ -26,9 +26,9 @@ export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChang
     return (
         <div className={cn('space-y-2', index > 0 && 'mt-6 border-t border-border pt-6')}>
             <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">참가자 {index + 1}</span>
+                <span className="text-caption font-semibold text-foreground">참가자 {index + 1}</span>
                 {canRemove && (
-                    <button type="button" onClick={onRemove} className="text-xs text-destructive/80 hover:text-destructive">
+                    <button type="button" onClick={onRemove} className="text-caption text-destructive/80 hover:text-destructive">
                         삭제
                     </button>
                 )}

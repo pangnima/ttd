@@ -10,11 +10,11 @@ export function PlayerSuggestionItem({ item }: { item: PlayerSuggestion }) {
             {item.ntrp != null && (
                 <span className="text-muted-foreground tabular-nums">({Number(item.ntrp.toFixed(2))})</span>
             )}
-            {item.hand && <span className="text-muted-foreground text-xs">{HAND_LABEL[item.hand]}</span>}
+            {item.hand && <span className="text-muted-foreground text-caption">{HAND_LABEL[item.hand]}</span>}
             {item.source !== 'past' && item.isGuest && (
-                <span className="text-muted-foreground text-xs">게스트</span>
+                <span className="text-muted-foreground text-caption">게스트</span>
             )}
-            {item.meta && <span className="ml-auto pl-2 text-muted-foreground text-xs truncate">{item.meta}</span>}
+            {item.meta && <span className="ml-auto pl-2 text-muted-foreground text-caption truncate">{item.meta}</span>}
         </>
     )
 }

@@ -17,7 +17,7 @@ export function PendingResultNotice({ existingSets = [], variant = 'default' }: 
     return (
         <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
             <Hourglass className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground break-keep">
+            <p className="text-caption text-muted-foreground break-keep">
                 {hasSets ? (
                     <>
                         등록된 세트 스코어는 그대로 유지됩니다:{' '}

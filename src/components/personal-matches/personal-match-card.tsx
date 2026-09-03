@@ -58,7 +58,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                 <span className={`${PILL_BASE} mb-1 ${getMatchTypeBadgeClass(m.matchType)}`}>
                     {MATCH_TYPE_LABELS[m.matchType]}
                 </span>
-                <div className="text-lg font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
+                <div className="text-h4 font-bold leading-none tabular-nums text-foreground">{Number(dd)}</div>
                 <div className="text-caption text-muted-foreground">{MONTHS_EN[Number(mm) - 1]}</div>
                 {m.surface && (
                     <div className={`text-caption font-medium ${SURFACE_TEXT_CLASS[m.surface] ?? SURFACE_TEXT_CLASS.unknown}`}>
@@ -72,15 +72,15 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                         {isDoubles && (
-                            <p className="text-sm font-medium text-foreground truncate">
+                            <p className="text-body2 font-medium text-foreground truncate">
                                 나{m.partnerName && <> · <span className="text-primary">{m.partnerName}</span></>}
                             </p>
                         )}
-                        <p className="text-sm font-medium text-foreground truncate">
+                        <p className="text-body2 font-medium text-foreground truncate">
                             <span className="text-muted-foreground">vs </span>{opponentLabel}
                         </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-xs font-bold shrink-0 ${result.badge}`}>{resultLabel}</span>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${result.badge}`}>{resultLabel}</span>
                 </div>
 
                 {/* 세트 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}
@@ -90,7 +90,7 @@ export function PersonalMatchCard({ match: m, actions }: Props) {
                             {m.setScores.map((s, i) => (
                                 <span
                                     key={i}
-                                    className={`px-1.5 py-1 rounded-[4px] text-xs font-semibold tabular-nums ${
+                                    className={`px-1.5 py-1 rounded-[4px] text-caption font-semibold tabular-nums ${
                                         s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
                                     }`}
                                 >

@@ -28,28 +28,28 @@ export function ReceivedRequestCard({ item }: Props) {
         <div className="px-4 py-3 space-y-2">
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-body2 font-medium text-foreground truncate">
                         {counterpart.name}
-                        {counterpart.deleted && <span className="ml-1 text-xs text-muted-foreground">(탈퇴)</span>}
+                        {counterpart.deleted && <span className="ml-1 text-caption text-muted-foreground">(탈퇴)</span>}
                     </p>
                     {counterpart.nickname && (
-                        <p className="text-xs text-muted-foreground truncate">{counterpart.nickname}</p>
+                        <p className="text-caption text-muted-foreground truncate">{counterpart.nickname}</p>
                     )}
                     <RequestTeamLine request={request} counterpartName={counterpart.name} viewerIsRequester={false} />
                 </div>
                 {request.status === 'pending' && !counterpart.deleted ? (
                     <div className="flex gap-1.5 shrink-0">
-                        <Button size="sm" className="h-7 text-xs" disabled={isPending}
+                        <Button size="sm" className="h-7 text-caption" disabled={isPending}
                             onClick={() => handle(acceptMatchRequestAction)}>
                             수락
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs" disabled={isPending}
+                        <Button size="sm" variant="outline" className="h-7 text-caption" disabled={isPending}
                             onClick={() => handle(rejectMatchRequestAction)}>
                             거절
                         </Button>
                     </div>
                 ) : request.status === 'pending' ? (
-                    <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" disabled={isPending}
+                    <Button size="sm" variant="outline" className="h-7 text-caption shrink-0" disabled={isPending}
                         onClick={() => handle(rejectMatchRequestAction)}>
                         거절
                     </Button>
@@ -64,11 +64,11 @@ export function ReceivedRequestCard({ item }: Props) {
                 sets={invertSetScores(request.setScores)}
             />
             {request.status === 'pending' && (
-                <p className="text-xs text-muted-foreground break-keep">
+                <p className="text-caption text-muted-foreground break-keep">
                     수락하면 양쪽 기록에 함께 추가되며 이후 수정할 수 없습니다. 결과는 세트 스코어 등록 시 확정됩니다.
                 </p>
             )}
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-caption text-destructive">{error}</p>}
         </div>
     )
 }

@@ -17,7 +17,7 @@ export function RequestTeamLine({ request, counterpartName, viewerIsRequester }:
     const myPartner = viewerIsRequester ? partner : opponent2
     const theirSecond = viewerIsRequester ? opponent2 : partner
     return (
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-caption text-muted-foreground truncate">
             나 · <span className="text-primary">{myPartner}</span>
             <span className="mx-1">vs</span>
             <span className="text-foreground">{counterpartName}</span> · {theirSecond}

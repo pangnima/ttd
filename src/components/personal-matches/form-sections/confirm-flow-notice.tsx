@@ -13,7 +13,7 @@ export function ConfirmFlowNotice({ opponentName, isDoubles = false }: Props) {
     return (
         <div className="flex items-start gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
             <UserCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground break-keep">
+            <p className="text-caption text-muted-foreground break-keep">
                 <span className="text-foreground font-medium">{opponentName}</span>님은 플랫폼 회원입니다.
                 {isDoubles
                     ? ' 저장하면 상대팀 대표로 확인 요청이 전송되고, 수락하면 나와 대표의 기록에 함께 추가됩니다. 파트너·상대2가 회원이어도 그들의 기록에는 추가되지 않습니다(각자 등록 필요).'

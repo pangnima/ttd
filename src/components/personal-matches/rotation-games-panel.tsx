@@ -23,7 +23,7 @@ export function RotationGamesPanel({ session, onSubmit, isPending, error }: Prop
 
     return (
         <div className="space-y-4">
-            <p className="text-xs text-muted-foreground break-keep">
+            <p className="text-caption text-muted-foreground break-keep">
                 참가자 {session.players.length}명: {session.players.map((p) => p.name).join(', ')}
             </p>
             <GameBuilderSection
@@ -39,7 +39,7 @@ export function RotationGamesPanel({ session, onSubmit, isPending, error }: Prop
                 onOppAd={r.setOppAd}
             />
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-caption text-destructive">{error}</p>}
 
             <DialogFooter showCloseButton>
                 <Button

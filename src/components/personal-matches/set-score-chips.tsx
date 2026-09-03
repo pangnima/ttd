@@ -22,14 +22,14 @@ export function SetScoreChips({ sets, showResult = true }: Props) {
     return (
         <div className="flex items-center gap-1.5 flex-wrap">
             {showResult && (
-                <span className={`px-2 py-0.5 rounded-[4px] text-xs font-bold ${result.className}`}>
+                <span className={`px-2 py-0.5 rounded-[4px] text-caption font-bold ${result.className}`}>
                     {result.label}
                 </span>
             )}
             {valid.map((s, i) => (
                 <span
                     key={i}
-                    className={`px-1.5 py-0.5 rounded-[4px] text-xs font-semibold tabular-nums ${
+                    className={`px-1.5 py-0.5 rounded-[4px] text-caption font-semibold tabular-nums ${
                         s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
                     }`}
                 >

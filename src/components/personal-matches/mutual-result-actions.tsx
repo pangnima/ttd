@@ -11,8 +11,8 @@ import { useResultDialog } from '@/components/personal-matches/use-result-dialog
 
 type Props = { match: PersonalMatch }
 
-const LOCKED_BADGE = 'text-xs px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary'
-const WAITING_BADGE = 'text-xs px-1.5 py-0.5 rounded-sm border border-dashed border-border text-muted-foreground'
+const LOCKED_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary'
+const WAITING_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-dashed border-border text-muted-foreground'
 
 /**
  * 상호 확인 경기(source_request_id 보유)의 카드 액션 — 결과 제안/확인 상태별 분기.
@@ -51,7 +51,7 @@ export function MutualResultActions({ match }: Props) {
             <Button
                 size="sm"
                 variant={reviewMode ? 'default' : 'outline'}
-                className="h-7 text-xs"
+                className="h-7 text-caption"
                 onClick={d.openDialog}
             >
                 {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}

@@ -48,12 +48,12 @@ export function PersonalMatchMonthBrowser({ groups }: Props) {
                         ))}
                     </SelectContent>
                 </Select>
-                <span className="ml-auto text-xs text-muted-foreground shrink-0">
+                <span className="ml-auto text-caption text-muted-foreground shrink-0">
                     승률 {selected.winRate}%
                 </span>
                 <Link
                     href="/me/personal-matches"
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    className="text-caption text-muted-foreground hover:text-foreground transition-colors shrink-0"
                 >
                     전체 보기 →
                 </Link>

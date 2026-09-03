@@ -17,7 +17,7 @@ type Props = {
 const POPUP_CLASS =
     'relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0'
 const ITEM_CLASS =
-    'relative flex w-full cursor-default items-center gap-1.5 rounded-md px-2 py-1.5 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground'
+    'relative flex w-full cursor-default items-center gap-1.5 rounded-md px-2 py-1.5 text-body2 outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground'
 
 /**
  * 자유 텍스트 + 후보 제안 입력 (base-ui Autocomplete).
@@ -57,13 +57,13 @@ export function PlayerAutocomplete({ value, groups, placeholder, onInputChange, 
             <Autocomplete.Portal>
                 <Autocomplete.Positioner className="isolate z-50" sideOffset={4}>
                     <Autocomplete.Popup className={POPUP_CLASS}>
-                        <Autocomplete.Empty className="px-3 py-2 text-xs text-muted-foreground break-keep">
+                        <Autocomplete.Empty className="px-3 py-2 text-caption text-muted-foreground break-keep">
                             일치하는 후보가 없습니다. 입력한 이름 그대로 저장됩니다.
                         </Autocomplete.Empty>
                         <Autocomplete.List className="outline-none">
                             {(group: PlayerSuggestionGroup) => (
                                 <Autocomplete.Group key={group.value} items={group.items} className="pb-1 last:pb-0">
-                                    <Autocomplete.GroupLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                                    <Autocomplete.GroupLabel className="px-2 py-1.5 text-caption font-medium text-muted-foreground">
                                         {group.value}
                                     </Autocomplete.GroupLabel>
                                     <Autocomplete.Collection>

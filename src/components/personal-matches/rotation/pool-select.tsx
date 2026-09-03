@@ -27,7 +27,7 @@ export function PoolSelect({ label, pool, value, exclude = [], onChange }: PoolS
         .map((p) => ({ value: p.tempId, label: poolLabel(p) }))
     return (
         <div>
-            <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+            <label className="text-caption text-muted-foreground block mb-1">{label}</label>
             <EnumSelect
                 value={value ?? ''}
                 onValueChange={onChange}

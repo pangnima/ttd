@@ -35,8 +35,8 @@ export function GameRow({ index, game, pool, onChange, onRemove, onAddSet, onUpd
     return (
         <div className={cn('space-y-3', index > 0 && 'mt-6 border-t border-border pt-6')}>
             <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">게임 {index + 1}</span>
-                <button type="button" onClick={onRemove} className="text-xs text-destructive/80 hover:text-destructive">
+                <span className="text-caption font-semibold text-foreground">게임 {index + 1}</span>
+                <button type="button" onClick={onRemove} className="text-caption text-destructive/80 hover:text-destructive">
                     삭제
                 </button>
             </div>

@@ -27,7 +27,7 @@ export default async function PersonalMatchesPage() {
                 actions={
                     <Link
                         href="/me/personal-matches/new"
-                        className="inline-flex items-center gap-1 text-sm border border-border rounded-[4px] px-3 py-2 hover:border-input transition-colors"
+                        className="inline-flex items-center gap-1 text-body2 border border-border rounded-[4px] px-3 py-2 hover:border-input transition-colors"
                     >
                         + 경기 추가
                     </Link>

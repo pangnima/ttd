@@ -25,7 +25,7 @@ export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUp
     return (
         <div className="space-y-4">
             {pool.length === 0 && (
-                <p className="text-xs text-muted-foreground">함께 친 선수를 추가하세요. (최소 3명)</p>
+                <p className="text-body2 text-muted-foreground">함께 친 선수를 추가하세요. (최소 3명)</p>
             )}
             {/* 행은 자체 mt/구분선으로 간격을 가지므로 래퍼에는 space-y를 두지 않는다 */}
             <div>

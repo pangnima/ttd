@@ -57,7 +57,7 @@ export function MatchMetaSection({
                     value={surface || undefined}
                     onChange={onSurfaceChange}
                 />
-                <p className="mt-2 text-xs text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
+                <p className="mt-2 text-caption text-muted-foreground">선수별 NTRP는 개인 레이팅(NTRP) 계산에 사용됩니다.</p>
             </div>
         </>
     )
