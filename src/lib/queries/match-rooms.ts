@@ -16,7 +16,7 @@ import type {
  */
 
 // 공개 메타 컬럼만 명시 (select('*') 금지 — 방 행에는 없지만 습관적으로 secrets를 조인하지 않기 위한 규약)
-const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, has_result'
+const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, is_settled'
 const HOST_JOIN = 'host:users!match_rooms_host_user_id_fkey(id, name, nickname, profile_image, deleted_at)'
 const MEMBERS_JOIN = 'members:match_room_members(user_id, role, status)'
 
@@ -31,7 +31,7 @@ type RoomListRow = {
     match_type: string
     surface: string | null
     court_name: string | null
-    has_result: boolean
+    is_settled: boolean
     host: HostRow
     members: MemberRow[]
 }
@@ -59,7 +59,7 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface | null) ?? undefined,
         courtName: row.court_name ?? undefined,
-        hasResult: row.has_result,
+        isSettled: row.is_settled,
         joinedCount: countJoined(members.map((m) => ({ role: m.role as MatchRoomMemberRole, status: m.status as MatchRoomMemberStatus }))),
         host: mapHost(row.host, row.host_user_id),
         viewer: mine ? { role: mine.role as MatchRoomMemberRole, status: mine.status as MatchRoomMemberStatus } : undefined,

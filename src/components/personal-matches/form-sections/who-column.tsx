@@ -46,7 +46,9 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                 )}
                 {s.isRoomGame && (
                     <p className="text-caption text-muted-foreground break-keep">
-                        방에 참가한 회원이 자동완성 맨 위에 뜹니다. 방 밖의 상대도 입력할 수 있습니다.
+                        {s.viewerIsHost
+                            ? '방에 참가한 회원이 자동완성 맨 위에 뜹니다. 방 밖의 상대도 입력할 수 있습니다.'
+                            : '방에 참가한 회원 중에서 함께 친 상대를 고르세요.'}
                     </p>
                 )}
                 {s.isRotation ? (
@@ -90,6 +92,7 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                     <ConfirmFlowNotice
                         opponentName={s.rep.opponent.slot.player.name.trim() || '상대'}
                         isDoubles={s.isDoubles}
+                        isRoomGame={!!s.roomId}
                     />
                 )}
             </FormSectionCard>

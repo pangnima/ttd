@@ -4,16 +4,18 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPersonalMatchesAction, updatePersonalMatchAction } from '@/lib/actions/personal-matches'
 import { createMatchRequestAction } from '@/lib/actions/match-requests'
+import { createRoomGameAction } from '@/lib/actions/match-rooms'
 import { createRotationSessionAction } from '@/lib/actions/rotation-sessions'
 import { compactPool, poolToPlayers } from '@/lib/personal-matches/rotation'
 import { handOf, type PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 /**
- * 개인 경기 등록/수정 폼 제출 — 3갈래.
+ * 개인 경기 등록/수정 폼 제출 — 4갈래.
  *  ① 로테이션: 선수 풀만 세션으로 저장 (게임은 카드 '결과 입력'에서)
- *  ② 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
- *  ③ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
- * 신규 등록 3갈래 모두 s.listing('리스트에 노출')을 넘기면 액션이 기록 저장 후 경기 리스트의 방을 만든다.
+ *  ② 방 게임(0049): 방 참가자끼리의 게임 — 수락 없이 참가자 전원 기록 생성, 결과는 제안·확인으로 확정
+ *  ③ 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
+ *  ④ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
+ * 신규 등록은 s.listing('리스트에 노출')을 넘기면 액션이 기록 저장 후 경기 리스트의 방을 만든다.
  */
 export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: string) {
     const router = useRouter()
@@ -47,6 +49,39 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             return
         }
 
+        // 방 게임(0049) — 회원 상대면 상호 확인 게임으로 등록해 참가자 전원 기록에 남긴다.
+        // 방 입장이 곧 참여 동의라 수락 단계 없이 바로 양측 기록이 생기고, 결과는 카드에서 제안·확인한다.
+        if (s.rep && s.roomId) {
+            const num = (v: string) => (v.trim() ? Number(v) : undefined)
+            // 대표가 상대2 칸에 있었다면 슬롯이 스왑돼 있다 — 상대2로 보낼 쪽은 나머지 한 명
+            const other = s.rep.opponent2.slot
+            const roomId = s.roomId
+            run(() => createRoomGameAction({
+                roomId,
+                opponentUserId: s.rep!.repUserId,
+                partner: s.isDoubles ? {
+                    name: s.partner.player.name.trim(),
+                    userId: s.partner.player.userId,
+                    dominantHand: handOf(s.partner.player),
+                    ntrp: num(s.partner.ntrp),
+                } : undefined,
+                opponent2: s.isDoubles ? {
+                    name: other.player.name.trim(),
+                    userId: other.player.userId,
+                    dominantHand: handOf(other.player),
+                    ntrp: num(other.ntrp),
+                } : undefined,
+                replaceMatchId: s.replaceMatchId,
+            }), `/match-rooms/${roomId}`)
+            return
+        }
+
+        // 방 게임의 상대가 비회원이면 자유 기록이 되는데, 그 행은 방장만 만들 수 있다(RLS)
+        if (s.roomId && !s.rep && !s.viewerIsHost) {
+            setError('방 게임의 상대는 방에 참가한 회원 중에서 선택해주세요.')
+            return
+        }
+
         if (s.rep && s.surface) {
             // 대표가 상대2 칸에 있었다면 슬롯을 스왑해 opponent = 대표로 보낸다
             const rep = s.rep.opponent.slot
@@ -73,13 +108,13 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         }
 
         const input = s.buildInput()
-        // 방 게임(0048)은 room_id를 붙여 저장하고 방 상세로 돌아간다
-        const roomId = s.roomContext?.roomId
+        // 방 게임(0048)은 room_id를 붙여 저장하고 방 상세로 돌아간다 (신규 등록만 — 수정은 room_id를 옮기지 않는다)
+        const newRoomId = s.roomContext?.roomId
         run(
             () => (initialId
                 ? updatePersonalMatchAction(initialId, input)
-                : createPersonalMatchesAction([input], s.listing, roomId ? { roomId } : undefined)),
-            roomId ? `/match-rooms/${roomId}` : '/me/personal-matches',
+                : createPersonalMatchesAction([input], s.listing, newRoomId ? { roomId: newRoomId } : undefined)),
+            s.roomId ? `/match-rooms/${s.roomId}` : '/me/personal-matches',
         )
     }
 

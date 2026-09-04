@@ -3,7 +3,7 @@ import type { MatchRoomDetail } from '@/types'
 import { buildMemberRows } from './members-view'
 
 const base: MatchRoomDetail = {
-    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', hasResult: false, createdAt: '' },
+    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', isSettled: false, createdAt: '' },
     host: { id: 'h', name: '호스트', nickname: 'host', deleted: false },
     viewer: { role: 'host', status: 'joined' },
     members: [
@@ -39,8 +39,8 @@ describe('buildMemberRows', () => {
             ...base,
             source: { kind: 'direct' },
             games: [
-                { id: 'g1', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }] },
-                { id: 'g2', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }] },
+                { id: 'g1', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }], ownerUserId: 'h', ownerName: '호스트', sourceType: 'direct' as const },
+                { id: 'g2', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }], ownerUserId: 'p', ownerName: '참가자', sourceType: 'direct' as const },
             ],
         })
         expect(rows.filter((r) => r.name === '외부상대')).toHaveLength(1)

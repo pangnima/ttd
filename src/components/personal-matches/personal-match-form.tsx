@@ -35,7 +35,11 @@ export function PersonalMatchForm({
 }: Props) {
     const s = usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId, roomContext })
     const submit = usePersonalMatchSubmit(s, initialData?.id)
-    const submitLabel = s.isConfirmFlow ? '확인 요청 보내기' : s.isEdit ? '수정 완료' : s.isRoomGame ? '게임 저장' : '경기 저장'
+    // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049)
+    const submitLabel = s.roomId && s.isConfirmFlow ? '게임 저장'
+        : s.isConfirmFlow ? '확인 요청 보내기'
+            : s.isEdit ? '수정 완료'
+                : s.isRoomGame ? '게임 저장' : '경기 저장'
 
     return (
         <form onSubmit={submit.handleSubmit} className="mx-auto w-full max-w-2xl space-y-5 lg:max-w-5xl">

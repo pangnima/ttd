@@ -30,6 +30,16 @@ export function MutualResultActions({ match }: Props) {
     const opponentName = formatOpponents(match)
     const teams = formatTeams(match)
 
+    // 방 게임의 파트너·상대2 관점 행(0049)은 요청 당사자가 아니라 협상 상태를 읽을 수 없다.
+    // 결과 입력·확인은 작성자와 대표가 하므로 여기서는 대기 상태만 알린다.
+    if (!hasResult(match) && requestId && !c) {
+        return (
+            <span className={WAITING_BADGE} title="이 경기의 결과는 작성자와 상대 대표가 확인하면 확정됩니다">
+                대표 확인 대기
+            </span>
+        )
+    }
+
     if (hasResult(match) || !c || !requestId || c.status === 'confirmed') {
         return (
             <span className={LOCKED_BADGE} title="상대 확인으로 확정된 경기는 수정·삭제할 수 없습니다">

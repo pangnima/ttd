@@ -755,7 +755,7 @@ export type Database = {
         Row: {
           court_name: string | null
           created_at: string
-          has_result: boolean
+          is_settled: boolean
           host_user_id: string
           id: string
           match_type: string
@@ -768,7 +768,7 @@ export type Database = {
         Insert: {
           court_name?: string | null
           created_at?: string
-          has_result?: boolean
+          is_settled?: boolean
           host_user_id: string
           id?: string
           match_type: string
@@ -781,7 +781,7 @@ export type Database = {
         Update: {
           court_name?: string | null
           created_at?: string
-          has_result?: boolean
+          is_settled?: boolean
           host_user_id?: string
           id?: string
           match_type?: string
@@ -1118,6 +1118,24 @@ export type Database = {
       create_match_room: {
         Args: { p_password: string; p_source_id: string; p_source_kind: string }
         Returns: string
+      }
+      create_room_game: {
+        Args: {
+          p_opponent_user_id: string
+          p_opponent2?: Json
+          p_partner?: Json
+          p_replace_match_id?: string
+          p_room_id: string
+        }
+        Returns: string
+      }
+      is_room_participant: {
+        Args: { p_room_id: string }
+        Returns: boolean
+      }
+      swap_partner_perspective: {
+        Args: { p_sets: Json }
+        Returns: Json
       }
       derive_public_ntrp: {
         Args: { p_user: Database["public"]["Tables"]["users"]["Row"] }

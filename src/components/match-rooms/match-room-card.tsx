@@ -35,7 +35,7 @@ export function MatchRoomCard({ room }: Props) {
                     ) : (
                         <span className={`${PILL_BASE} border-border text-muted-foreground`}>비밀번호 입장</span>
                     )}
-                    {room.hasResult && <span className={`${PILL_BASE} border-border text-muted-foreground`}>결과 등록</span>}
+                    {room.isSettled && <span className={`${PILL_BASE} border-border text-muted-foreground`}>결과 확정</span>}
                 </div>
             </div>
         </Link>

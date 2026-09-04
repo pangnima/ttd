@@ -55,13 +55,19 @@ function toMember(v: unknown): MatchRoomMember | null {
 function toGame(v: unknown): MatchRoomGame | null {
     if (!isRec(v)) return null
     const id = str(v.id)
-    if (!id) return null
+    const ownerUserId = str(v.ownerUserId)
+    if (!id || !ownerUserId) return null
     return {
         id,
         groupSeq: num(v.groupSeq),
         matchType: (str(v.matchType) ?? 'singles') as MatchType,
         setScores: arr(v.setScores).map(toSetScore).filter((s): s is PersonalMatchSetScore => !!s),
         participants: arr(v.participants).map(toParticipant).filter((p): p is MatchRoomParticipantRef => !!p),
+        ownerUserId,
+        ownerName: str(v.ownerName) ?? '(알 수 없음)',
+        sourceType: (str(v.sourceType) ?? 'direct') as MatchRoomGame['sourceType'],
+        sourceRequestId: str(v.sourceRequestId),
+        resultStatus: str(v.resultStatus) as MatchResultStatus | undefined,
     }
 }
 
@@ -129,7 +135,7 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
             surface: str(r.surface) as CourtSurface | undefined,
             courtName: str(r.courtName),
             notes: str(r.notes),
-            hasResult: r.hasResult === true,
+            isSettled: r.isSettled === true,
             createdAt: str(r.createdAt) ?? '',
         },
         host,

@@ -49,7 +49,7 @@ export default async function MatchRoomPage({ params }: Props) {
             <RoomDetailHeader detail={detail} actions={isHost ? <RoomHostActions roomId={roomId} /> : undefined} />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
             <RoomMembersSection detail={detail} />
-            <RoomGamesSection detail={detail} isHost={isHost} />
+            <RoomGamesSection detail={detail} viewerId={user.id} />
         </PageContainer>
     )
 }

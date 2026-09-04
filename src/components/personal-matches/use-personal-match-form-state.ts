@@ -108,9 +108,14 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     const allFilled = isPlayerFilled(opponent.player)
         && (!isDoubles || (isPlayerFilled(partner.player) && isPlayerFilled(opponent2.player)))
 
-    // 상호 확인 요청 대표 — 신규 등록 + 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
-    // 게스트·직접 입력·로테이션·수정 모드·모집 중(빈 슬롯)·방 게임(방장 기록만)은 자유 기록으로 저장한다.
-    const rep = !isEdit && !isRotation && !isRoomGame && selfUserId && allFilled
+    // 모집 중이던 노출 기록의 빈 자리를 채우는 수정 — 이때도 회원 상대면 상호 확인 게임으로 승격한다(0049)
+    const seedFill = isEdit && !!d?.roomId && !d?.sourceRequestId && (d?.setScores.length ?? 0) === 0
+    // 방 게임(신규·seed 채우기)이면 방 id — 회원 상대일 때 createRoomGameAction으로 보낸다
+    const roomId = ctx?.roomId ?? (seedFill ? d?.roomId : undefined)
+
+    // 상호 확인 요청 대표 — 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
+    // 게스트·직접 입력·로테이션·일반 수정 모드·모집 중(빈 슬롯)은 자유 기록으로 저장한다.
+    const rep = (!isEdit || seedFill) && !isRotation && selfUserId && allFilled
         ? resolveConfirmRep(
             { userId: opponent.player.userId, slot: opponent },
             { userId: opponent2.player.userId, slot: opponent2 },
@@ -168,6 +173,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         listed, setListed, roomPassword, setRoomPassword, listing, allowEmptyPlayers,
         openSlots, openSlot, closeSlot,
         roomContext: ctx, isRoomGame,
+        roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined, viewerIsHost: ctx?.viewerIsHost ?? true,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
     }
 }

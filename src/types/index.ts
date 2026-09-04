@@ -233,7 +233,8 @@ export type MatchRoomMeta = {
     matchType: MatchType
     surface?: CourtSurface
     courtName?: string
-    hasResult: boolean      // 방장 기록에 게임 스코어가 있음
+    // 방의 대표 게임이 1건 이상이고 전부 확정 — 경기 리스트에서 '지난 경기'로 내려간다 (0049)
+    isSettled: boolean
 }
 
 // 목록 카드용 — 참가 인원(방장 + joined 참가자)·방장·내 멤버 상태 포함
@@ -256,13 +257,22 @@ export type MatchRoomMember = {
 
 export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }
 
-// 방장 관점 게임 (personal_matches where room_id) — 로테이션은 게임별, 자유 기록은 '게임 추가'로 여러 건. 세트 없는 행(모집 중·결과 미입력) 포함
+/**
+ * 방의 대표 게임 한 벌 (0049) — 작성자가 방장이 아니어도 방 전원에게 보인다.
+ * 참가자 각자의 관점 복사본은 같은 게임이므로 목록에서 제외되고, 여기 나오는 행은 작성자(owner) 관점이다.
+ * 세트 없는 행(모집 중·결과 미입력·결과 확인 대기) 포함.
+ */
 export type MatchRoomGame = {
     id: string
     groupSeq?: number
     matchType: MatchType
     setScores: PersonalMatchSetScore[]
     participants: MatchRoomParticipantRef[]
+    ownerUserId: string
+    ownerName: string
+    sourceType: 'direct' | 'confirmation' | 'rotation'
+    sourceRequestId?: string          // 상호 확인 게임이면 협상 id (결과 제안·확인은 개인 경기 카드에서)
+    resultStatus?: MatchResultStatus  // 상호 확인 게임의 결과 협상 상태
 }
 
 export type MatchRoomSource =
