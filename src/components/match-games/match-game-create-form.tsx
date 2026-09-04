@@ -23,7 +23,7 @@ import { AttendanceSummary } from '@/components/match-games/attendance-summary'
 import { restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
 import type { GenerateResult } from '@/lib/match-games/auto-generate'
 import { cn } from '@/lib/utils'
-import { MATCH_TYPE_LABELS, MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
+import { MATCH_TYPE_LABELS, MATCH_TYPE_OPTIONS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import {
@@ -42,13 +42,6 @@ import {
 import { createMatchGameAction, updateMatchGameAction, addGuestPlayerAction } from '@/lib/actions/match-games'
 import { Plus, Trash2 } from 'lucide-react'
 import type { CourtSurface, MatchGame, MatchType, User } from '@/types'
-
-const MATCH_TYPE_VARIANTS: Record<MatchType, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-    singles: 'default',
-    men_doubles: 'secondary',
-    women_doubles: 'outline',
-    mixed_doubles: 'destructive',
-}
 
 // @base-ui Select.Value는 기본적으로 선택된 raw value를 그대로 표시한다.
 // 라벨로 매핑하려면 Select.Root에 items({value,label})를 넘겨야 한다.
@@ -417,7 +410,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                         onApply={handleAutoApply}
                     />
                     {warnings.length > 0 && (
-                        <ul className="space-y-0.5 text-caption text-amber-600">
+                        <ul className="space-y-0.5 text-caption text-spot">
                             {warnings.map((w, i) => (
                                 <li key={i}>⚠ {w}</li>
                             ))}
@@ -550,7 +543,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
                                                 onValueChange={(v) => updateEntry(entry.id, { matchType: v as MatchType })}
                                             >
                                                 <SelectTrigger className="h-8 text-body2 w-20">
-                                                    <Badge variant={MATCH_TYPE_VARIANTS[entry.matchType]} className="text-caption px-1.5">
+                                                    <Badge variant="outline" className={`text-caption px-1.5 ${getMatchTypeBadgeClass(entry.matchType)}`}>
                                                         {MATCH_TYPE_LABELS[entry.matchType]}
                                                     </Badge>
                                                 </SelectTrigger>

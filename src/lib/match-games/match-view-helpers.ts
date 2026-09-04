@@ -42,10 +42,10 @@ export type MatchViewProps = {
 }
 
 // ── 공유 스타일 상수 ────────────────────────────────
-// 시간 텍스트 = info(블루 데이터) / "내 경기" 강조 = accent-lime(시그니처)
+// 시간 텍스트 = info(블루 데이터) / "내 경기" 강조 = spot(옐로우 시그니처)
 export const SLOT_TIME_CLASS = 'text-info'
-export const SELF_ROW_CLASS = 'bg-accent-lime/10 border-l-4 border-l-accent-lime'
-export const SELF_CARD_CLASS = 'border-accent-lime/50 bg-accent-lime/10'
+export const SELF_ROW_CLASS = 'bg-spot-solid/10 border-l-4 border-l-spot-solid'
+export const SELF_CARD_CLASS = 'border-spot-solid/50 bg-spot-solid/10'
 
 // ── 순수 함수 ────────────────────────────────
 

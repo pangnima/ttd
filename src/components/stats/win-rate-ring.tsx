@@ -26,8 +26,8 @@ export function WinRateRing({ wins, losses, draws = 0, size = 148 }: Props) {
 
     // 값이 있는 세그먼트만 승→패→무 순으로 12시부터 시계방향 배치
     const segs = [
-        { value: wins, color: 'stroke-win' },
-        { value: losses, color: 'stroke-loss' },
+        { value: wins, color: 'stroke-win-solid' },
+        { value: losses, color: 'stroke-loss-solid' },
         { value: draws, color: 'stroke-muted-foreground' },
     ].filter((s) => s.value > 0)
 

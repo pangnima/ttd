@@ -18,8 +18,8 @@ type Props = {
 }
 
 const RESULT = {
-    me: { bar: 'bg-win', badge: 'bg-win text-win-foreground', label: 'WIN' },
-    opponent: { bar: 'bg-loss', badge: 'bg-loss text-loss-foreground', label: 'LOSS' },
+    me: { bar: 'bg-win-solid', badge: 'bg-win text-win-foreground', label: 'WIN' },
+    opponent: { bar: 'bg-loss-solid', badge: 'bg-loss text-loss-foreground', label: 'LOSS' },
     draw: { bar: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground', label: '무' },
     // 결과 미확정 — 게임 스코어 미등록. 통계에는 반영되지 않는다.
     pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },

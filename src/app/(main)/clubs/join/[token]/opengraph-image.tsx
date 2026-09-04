@@ -37,8 +37,8 @@ export default async function InviteOgImage({ params }: ImageProps) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    background: OG.paper,
-                    color: OG.ink,
+                    background: OG.background,
+                    color: OG.foreground,
                     padding: '88px',
                     fontFamily: 'Pretendard',
                 }}
@@ -47,8 +47,8 @@ export default async function InviteOgImage({ params }: ImageProps) {
                     style={{
                         display: 'flex',
                         alignSelf: 'flex-start',
-                        background: OG.lime,
-                        color: OG.ink,
+                        background: OG.spot,
+                        color: OG.foreground,
                         fontSize: 30,
                         letterSpacing: 4,
                         padding: '10px 22px',
@@ -88,14 +88,14 @@ export default async function InviteOgImage({ params }: ImageProps) {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: 84, letterSpacing: -2 }}>{name}</div>
                         {region ? (
-                            <div style={{ display: 'flex', marginTop: 12, fontSize: 38, color: OG.muted }}>
+                            <div style={{ display: 'flex', marginTop: 12, fontSize: 38, color: OG.mutedForeground }}>
                                 {region}
                             </div>
                         ) : null}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', fontSize: 34, color: OG.muted }}>
+                <div style={{ display: 'flex', fontSize: 34, color: OG.mutedForeground }}>
                     가입하고 함께 경기를 기록해요 · BASELINE
                 </div>
             </div>

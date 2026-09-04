@@ -11,9 +11,9 @@ export default function NewClubPage() {
 
                     {/* 장식용 3분할 진행 바 */}
                     <div className="flex gap-1.5" aria-hidden="true">
-                        <span className="h-1.5 flex-1 rounded-full bg-accent-lime" />
-                        <span className="h-1.5 flex-1 rounded-full bg-accent-lime" />
-                        <span className="h-1.5 flex-1 rounded-full bg-accent-lime" />
+                        <span className="h-1.5 flex-1 rounded-full bg-spot-solid" />
+                        <span className="h-1.5 flex-1 rounded-full bg-spot-solid" />
+                        <span className="h-1.5 flex-1 rounded-full bg-spot-solid" />
                     </div>
                 </div>
 

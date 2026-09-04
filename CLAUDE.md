@@ -94,7 +94,7 @@ src/
 │   │   └── users.ts              # mapUserRow 공용 매퍼 (is_guest·personal_ntrp·deleted_at 포함)
 │   ├── analytics/                # 순수 함수 집계 모듈 (DB 접근 없음, vitest 테스트 다수). match-type.ts의 toQuadStats가 AnalyticsBundle.stats 형태 단일 출처
 │   ├── redesign-fixtures/        # [임시] 정적 UI/목업 단계 더미 데이터 — 실 쿼리 호출부 대체 (clubs/match-games/match-requests/ratings, _scenario.ts `?fixture=empty` 스위치, personal-analytics*.ts 개인 통계 데이터있음 픽스처). 개인 경기 화면은 실 쿼리로 복원 완료(personal-matches 픽스처 제거). 나머지도 실 연동 복원 시 제거
-│   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼
+│   ├── dashboard/                # UI 토큰·스타일·outcome/surface/표시 헬퍼 (colors.test.ts = 컬러 회귀 가드)
 │   │   ├── tokens.ts             # TYPO(시맨틱 타이포 조합: display/h1~h4/body/body2/caption/eyebrow/micro), CARD_BASE, EMPTY_BLOCK, FORM_* 폼 토큰, calcWinRate 등
 │   │   ├── outcome.ts            # OUTCOME_STYLE/LABEL·formatRecord (승/패/무 통일)
 │   │   ├── surface.ts            # SURFACE_LABELS (코트 표면 라벨 통일)
@@ -139,7 +139,7 @@ src/
 │   ├── og/                       # brand.ts (OG 이미지 브랜딩 + 폰트)
 │   ├── club-password.ts          # 클럽 삭제 비밀번호 scrypt 해시·검증
 │   ├── default-images.ts         # 기본 아바타·클럽 로고 셔플
-│   ├── avatar-color.ts           # 아바타 색상 생성
+│   ├── avatar-color.ts           # 아바타 색상 생성 (cat-1~8 팔레트, 길이 8 고정)
 │   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분) + 경기 시각 시 단위(HOUR_OPTIONS·toHourValue·formatHourLabel)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── onboarding.ts             # 신규 사용자 온보딩 단계 정의·완료 판정 (순수 함수)
@@ -270,6 +270,14 @@ src/
   - [x] 참가자 게임 등록 + 참가자 전원 기록 + 정산 시 지난 경기 (0049): 방에 참가한 회원 누구나 '게임 추가'(`canViewerAddRoomGame`), 회원 상대는 `create_room_game` RPC가 요청을 `accepted`로 만들고(방 입장 = 참여 동의, 수락 단계 없음) `materialize_accepted_request`가 회원 참가자 전원(복식 4명)에게 관점 행을 만든다. 결과는 기존 제안→확인 플로우로 확정되며 `confirm_match_result`가 4행을 동시 갱신. 로테이션 방 `finalize`도 회원 전원에게 관점 복사본(security definer 전환). `has_result`→`is_settled`(대표 게임 전부 확정 + 대기 요청·미확정 세션 없음)로 재정의하고 `splitRooms`가 '정산 완료 또는 날짜 경과 = 지난 경기'로 분리. 방 상세 게임 목록은 작성자 무관 대표 게임 한 벌 + 작성자 이름·상태 칩(`game-status.ts`)
   - [x] 미확정 로테이션 방 = 참가자 공유 자원 (0050): 방에 입장(joined)한 회원 전원의 개인 경기 기록에 '결과 입력 대기 로테이션' 카드가 뜨고(`rotation_sessions_select` 방 참가자 개방 + `fetchPendingRotationSessions` 2단 조회), **누구나 자기 기준으로 결과를 입력**한다. 빌더 앵커가 세션 소유자 → 입력자로 바뀌면서 풀도 `buildBuilderPool`(세션 풀 ∪ 방 참가자 − 나)로 파생. 입력한 세트는 즉시 확정이 아니라 게임마다 `match_requests`(accepted) + `propose_match_result`로 **제안 → 상대 대표 확인**(상대팀 전원 비회원인 게임만 즉시 확정). 부수로 primary 게임 술어를 `is_perspective` 컬럼으로 통일(방장 가정 제거), finalize가 방 세션을 지우지 않도록 바꾸고 종료를 방장 '게임 입력 종료'(`close_rotation_room`)로 분리, `group_seq`를 `max`에서 이어붙이며, 세션 삭제 시 게임이 있으면 방을 남긴다. 초대 수락도 `join_match_room_as_player`를 재사용해 풀에 자동 추가되고, NTRP가 없어도 입장이 롤백되지 않는다
   - [ ] 2차: 파트너·상대2의 결과 협상 상태 열람(`match_requests`/`negotiations` SELECT를 참가자까지 확장 — 지금은 '대표 확인 대기' 배지만), 확인 요청 허브 실 연동 시 방 게임(생성 즉시 accepted) 표시 규칙, 방 게임 카드의 목록 그룹핑(`room_id` 기준), 자유 기록 수정 폼의 노출 on/off, 방장 '닫기', 경기 타입·표면 필터, 비밀번호 시도 제한, 로테이션 빌더 풀 편집의 세션 영속 저장, 슬롯에서 빠진 회원의 stale 초대 정리, 확정 시 참가자 `personal_ntrp` 캐시 lazy 갱신
+- [x] Week 26: 컬러 시스템 전면 교체 — 쿨 블루/민트 (`docs/color-system.md`, DB 변경 없음)
+  - [x] `globals.css` 3계층 재작성 — L1 원시 브랜드 팔레트(`--brand-*`) → L2 시맨틱(`:root`/`.dark`) → L3 `@theme inline`. 웜 페이퍼(#f3f2ec)+라임(#c8f24e) → 쿨 그레이(#f4f7f9)/다크 네이비(#0b1319) + 블루(라이트 primary)/민트(다크 primary) 스위칭. 데드 토큰 `--chart-1~5`·`--sidebar-*` 13개 제거
+  - [x] 악센트 3역할 분리 — `--X`(표면 위 텍스트, WCAG AA 4.5:1) / `--X-solid`(브랜드 비비드 채움) / `--X-foreground`. 사양 hex는 solid에 그대로, 텍스트용은 같은 hue의 대비 확보 변형
+  - [x] 라임 시그니처 → 스팟 옐로우(`--spot`, #ffd166) 승계. `--accent-lime`은 `components/ui`(수정 금지) 전용 별칭으로만 잔존. 오렌지/앰버 상태 칩 21곳이 `spot`으로 흡수
+  - [x] `--destructive` = `--loss` 코랄 통합 — warm 대역을 코랄(부정·위험·패배)/옐로우(주의·대기)로 정리
+  - [x] 카테고리 팔레트 `--cat-1~8` 신설 — 경기 타입·코트 표면·손잡이·듀스/애드·아바타·메달을 승패 시맨틱에서 분리(`surface.ts`·`match-type-style.ts`·`avatar-color.ts`·`rank-badge`). Tailwind 팔레트 하드코딩 72건 → 0건, `dark:` 색상 분기 소멸
+  - [x] `colors.test.ts` 회귀 가드 — 금지 클래스·임의값·hex 리터럴 0건 + 라이트/다크 대비율 단언 + `og/brand.ts`·`layout.tsx themeColor` 미러 드리프트 검출. `public/logo.svg`·`empty/*.svg` 브랜드 색 동기화
+  - [ ] 2차: 티어 8계급 색상(`lib/rating/tier.ts`·`public/tiers/*.svg`) 리마스터 — 챌린저 `red-600`이 새 destructive 코랄과 인접
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
@@ -374,6 +382,7 @@ View: `user_match_participations` (security_invoker=on, `match_game_participants
 - 컴포넌트명은 PascalCase (예: `ClubCard`)
 - 함수명은 camelCase (예: `getClubById`)
 - 폰트 사이즈는 시맨틱 토큰만 사용: `text-display` `text-h1`~`text-h4` `text-body` `text-body2` `text-caption` (+ 배지·카운트 전용 예외 `text-micro`). `text-sm`·`text-xs`·`text-[13px]` 같은 Tailwind 기본 사이즈·임의값 금지. 굵기·색상은 `lib/dashboard/tokens.ts`의 `TYPO`로 조합 (규칙·판정 기준: `docs/typography.md`)
+- 색상은 시맨틱 토큰만 사용: 베이스(`background`/`foreground`/`card`/`muted`/`border`/`input`/`ring`), 액션·상태(`primary`/`info`/`win`/`loss`/`destructive`/`spot` + 각 `-solid`·`-foreground` 변형), 분류(`cat-1`~`cat-8`). `bg-emerald-500`·`text-orange-600` 같은 Tailwind 기본 팔레트, `bg-[#118AB2]` 임의값, 새 `dark:` 색상 분기 금지 (규칙·판정 기준: `docs/color-system.md`)
 - 헤딩은 태그=문서 아웃라인, 클래스=시각 레벨. 페이지 h1은 `common/PageHeader` 사용, 카드 제목은 `<p>`가 아닌 헤딩 태그 + `TYPO.h4`
 - input/textarea/select는 전 뷰포트 16px(`globals.css` 레이어 밖 규칙이 강제, iOS 줌 방지). 폼 요소에 작은 사이즈 클래스를 주지 말고 폭·높이로 조정
 
@@ -465,6 +474,7 @@ admin@admin.com / 123123
 - 환경변수를 코드에 하드코딩 금지
 - `console.log`를 커밋에 포함 금지
 - 시맨틱 타이포 토큰 외 폰트 사이즈 클래스(`text-sm`/`text-xs`/`text-[Npx]`/`sm:text-*`) 사용 금지 (components/ui 내부 제외)
+- 시맨틱 컬러 토큰 외 색상 클래스(`bg-sky-500`/`text-amber-600`/`bg-[#hex]`) 및 `globals.css` 밖 hex 정의 금지 (components/ui·`lib/rating/tier.ts`·`lib/og/brand.ts`·`app/layout.tsx` 미러 제외)
 
 ## 작업 완료 후 체크리스트
 - [ ] TypeScript 에러 없음 (`npx tsc --noEmit`)

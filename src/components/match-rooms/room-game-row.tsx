@@ -31,7 +31,7 @@ export function RoomGameRow({ game, index, detail, viewerId }: Props) {
                     {teamLine(game)}
                 </p>
                 {status && (
-                    <span className={`${PILL_BASE} shrink-0 border-orange-400/50 text-orange-600 dark:text-orange-400`}>
+                    <span className={`${PILL_BASE} shrink-0 border-spot/50 text-spot`}>
                         {status}
                     </span>
                 )}

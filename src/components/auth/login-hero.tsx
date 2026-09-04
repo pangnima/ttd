@@ -25,7 +25,7 @@ export function LoginHero() {
                         <line x1="80" y1="60" x2="80" y2="170" className="stroke-border" strokeDasharray="4 6" />
                         <line x1="240" y1="60" x2="240" y2="170" className="stroke-border" strokeDasharray="4 6" />
                         {/* 라임 베이스라인 */}
-                        <line x1="80" y1="115" x2="319" y2="115" className="stroke-accent-lime" strokeWidth="2" />
+                        <line x1="80" y1="115" x2="319" y2="115" className="stroke-spot-solid" strokeWidth="2" />
                     </svg>
 
                     <h2 className="text-h1 font-bold text-foreground">
@@ -39,7 +39,7 @@ export function LoginHero() {
                 </div>
 
                 <div className="flex items-center gap-2" aria-hidden="true">
-                    <span className="h-1.5 w-6 rounded-full bg-accent-lime" />
+                    <span className="h-1.5 w-6 rounded-full bg-spot-solid" />
                     <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                     <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                 </div>

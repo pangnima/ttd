@@ -57,7 +57,7 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
                 <Link href="/me/match-requests" className={tabClass(activeTab === 'received')}>
                     받은 요청
                     {pendingCount > 0 && (
-                        <Badge variant="outline" className="text-caption text-orange-600 dark:text-orange-400 border-orange-400/50">
+                        <Badge variant="outline" className="text-caption text-spot border-spot/50">
                             {pendingCount}
                         </Badge>
                     )}

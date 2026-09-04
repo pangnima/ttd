@@ -50,7 +50,7 @@ export function HeroPreviewCard() {
                     className="grid size-11 place-items-center rounded-full text-caption font-bold text-foreground"
                     style={{
                         background:
-                            'conic-gradient(var(--accent-lime) 0% 98%, var(--muted) 98% 100%)',
+                            'conic-gradient(var(--spot-solid) 0% 98%, var(--muted) 98% 100%)',
                     }}
                 >
                     <span className="grid size-8 place-items-center rounded-full bg-card">98%</span>

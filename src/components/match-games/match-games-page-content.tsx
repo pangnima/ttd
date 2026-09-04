@@ -207,7 +207,7 @@ export function MatchGamesPageContent({
                                     취소
                                 </AlertDialogCancel>
                                 <AlertDialogAction
-                                    className="bg-destructive hover:bg-destructive/90 text-white border-0"
+                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0"
                                     onClick={handleDelete}
                                     disabled={isPending}
                                 >

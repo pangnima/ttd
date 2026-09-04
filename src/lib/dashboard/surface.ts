@@ -14,22 +14,23 @@ export const SURFACE_LABELS: Record<string, string> = {
 
 /**
  * 코트 표면별 막대 그래프 색상 (실제 코트 색 직관 반영).
- * 하드=블루, 클레이=주황(적갈), 인조잔디=초록, 기타=슬레이트, 미지정=뮤트.
+ * 하드=블루(cat-1), 클레이=적갈(cat-3), 인조잔디=그린(cat-2), 기타=슬레이트(cat-6), 미지정=뮤트.
+ * 카테고리 팔레트라 win/loss 결과 시맨틱과 겹치지 않는다 (docs/color-system.md).
  */
 export const SURFACE_BAR_CLASS: Record<string, string> = {
-    hard: 'bg-sky-500 dark:bg-sky-400',
-    clay: 'bg-orange-500 dark:bg-orange-400',
-    grass: 'bg-emerald-500 dark:bg-emerald-400',
-    other: 'bg-slate-400 dark:bg-slate-500',
+    hard: 'bg-cat-1',
+    clay: 'bg-cat-3',
+    grass: 'bg-cat-2',
+    other: 'bg-cat-6',
     unknown: 'bg-muted-foreground/40',
 }
 
-/** 코트 표면별 텍스트 색상 (SURFACE_BAR_CLASS와 색 계열 일치, 가독성 위해 한 톤 진하게). */
+/** 코트 표면별 텍스트 색상 (SURFACE_BAR_CLASS와 동일 슬롯 — 카테고리 토큰은 텍스트·채움 겸용). */
 export const SURFACE_TEXT_CLASS: Record<string, string> = {
-    hard: 'text-sky-600 dark:text-sky-400',
-    clay: 'text-orange-600 dark:text-orange-400',
-    grass: 'text-emerald-600 dark:text-emerald-400',
-    other: 'text-slate-600 dark:text-slate-400',
+    hard: 'text-cat-1',
+    clay: 'text-cat-3',
+    grass: 'text-cat-2',
+    other: 'text-cat-6',
     unknown: 'text-muted-foreground',
 }
 

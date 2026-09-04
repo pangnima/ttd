@@ -1,15 +1,16 @@
 // userId(또는 임의 seed) 해시로 고정 컬러를 부여하는 이니셜 아바타 팔레트.
 // 같은 사람은 항상 같은 색 → 리스트에서 시각적 식별을 돕는다.
-// 결과(승=win/패=loss) 시맨틱과 혼동되지 않도록 무채-성격 강한 색 위주로 구성.
+// 결과(승=win/패=loss) 시맨틱과 혼동되지 않도록 카테고리 팔레트(cat-*)를 쓴다.
+// 해시가 `% 길이`라 배열 길이 8을 바꾸면 기존 사용자의 아바타 색이 전부 재배정된다 — 길이 고정.
 const AVATAR_PALETTE = [
-    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-    'bg-sky-500/20 text-sky-600 dark:text-sky-400',
-    'bg-violet-500/20 text-violet-600 dark:text-violet-400',
-    'bg-amber-500/20 text-amber-600 dark:text-amber-400',
-    'bg-rose-500/20 text-rose-600 dark:text-rose-400',
-    'bg-teal-500/20 text-teal-600 dark:text-teal-400',
-    'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400',
-    'bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400',
+    'bg-cat-2/20 text-cat-2',
+    'bg-cat-1/20 text-cat-1',
+    'bg-cat-5/20 text-cat-5',
+    'bg-cat-4/20 text-cat-4',
+    'bg-cat-7/20 text-cat-7',
+    'bg-cat-3/20 text-cat-3',
+    'bg-cat-8/20 text-cat-8',
+    'bg-cat-6/20 text-cat-6',
 ]
 
 export function avatarColorClass(seed: string): string {

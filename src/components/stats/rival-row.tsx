@@ -47,8 +47,8 @@ export function RivalRow({ rival, userMap, today }: Props) {
 
             {/* 승률 분할 바 */}
             <div className="flex h-1.5 rounded-full overflow-hidden bg-muted">
-                <div className="bg-win" style={{ width: `${rival.winRate}%` }} />
-                <div className="bg-loss flex-1" />
+                <div className="bg-win-solid" style={{ width: `${rival.winRate}%` }} />
+                <div className="bg-loss-solid flex-1" />
             </div>
 
             <div className="flex items-center justify-between gap-2">

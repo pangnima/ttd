@@ -87,12 +87,12 @@ export function ClubCreateForm() {
                             className={cn(
                                 'rounded-lg border p-4 text-left transition-colors',
                                 isPublic
-                                    ? 'border-accent-lime bg-accent-lime'
+                                    ? 'border-spot-solid bg-spot-solid'
                                     : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className={cn('text-body2 font-semibold', isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>공개</p>
-                            <p className={cn('mt-1 text-caption', isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
+                            <p className={cn('text-body2 font-semibold', isPublic ? 'text-spot-foreground' : 'text-foreground')}>공개</p>
+                            <p className={cn('mt-1 text-caption', isPublic ? 'text-spot-foreground/70' : 'text-muted-foreground')}>
                                 누구나 검색하고 둘러볼 수 있어요
                             </p>
                         </button>
@@ -103,12 +103,12 @@ export function ClubCreateForm() {
                             className={cn(
                                 'rounded-lg border p-4 text-left transition-colors',
                                 !isPublic
-                                    ? 'border-accent-lime bg-accent-lime'
+                                    ? 'border-spot-solid bg-spot-solid'
                                     : 'border-border bg-background hover:border-input'
                             )}
                         >
-                            <p className={cn('text-body2 font-semibold', !isPublic ? 'text-accent-lime-foreground' : 'text-foreground')}>비공개</p>
-                            <p className={cn('mt-1 text-caption', !isPublic ? 'text-accent-lime-foreground/70' : 'text-muted-foreground')}>
+                            <p className={cn('text-body2 font-semibold', !isPublic ? 'text-spot-foreground' : 'text-foreground')}>비공개</p>
+                            <p className={cn('mt-1 text-caption', !isPublic ? 'text-spot-foreground/70' : 'text-muted-foreground')}>
                                 초대 링크로만 가입할 수 있어요
                             </p>
                         </button>

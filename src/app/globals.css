@@ -11,32 +11,34 @@
   --font-sans: var(--font-pretendard), var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-pretendard), var(--font-geist-mono), monospace;
   --font-heading: var(--font-sans);
-  /* 시그니처/시맨틱 컬러 */
+  /* 시그니처/시맨틱 컬러 (docs/color-system.md) */
+  --color-spot: var(--spot);
+  --color-spot-solid: var(--spot-solid);
+  --color-spot-foreground: var(--spot-foreground);
   --color-accent-lime: var(--accent-lime);
   --color-accent-lime-foreground: var(--accent-lime-foreground);
   --color-win: var(--win);
+  --color-win-solid: var(--win-solid);
   --color-win-foreground: var(--win-foreground);
   --color-loss: var(--loss);
+  --color-loss-solid: var(--loss-solid);
   --color-loss-foreground: var(--loss-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
+  /* 카테고리 데이터 팔레트 — 경기 타입·코트 표면·손잡이·아바타 등 '결과가 아닌 분류' 전용 */
+  --color-cat-1: var(--cat-1);
+  --color-cat-2: var(--cat-2);
+  --color-cat-3: var(--cat-3);
+  --color-cat-4: var(--cat-4);
+  --color-cat-5: var(--cat-5);
+  --color-cat-6: var(--cat-6);
+  --color-cat-7: var(--cat-7);
+  --color-cat-8: var(--cat-8);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -100,93 +102,114 @@
   }
 }
 
+/* ── 원시 브랜드 팔레트 (L1) — 모드 무관 사양 원본 ────────────────────
+   시맨틱 토큰(L2)이 이 값을 참조하거나, WCAG AA 확보를 위해 조정한 값을 쓰고
+   주석에 원본 대비를 남긴다. 사양서 ↔ 코드 추적용이며 유틸리티로 노출하지 않는다. */
 :root {
-  /* 라이트 — 따뜻한 페이퍼 톤: background < surface-2(secondary/muted) < card/popover */
-  /* 깊이는 1px 보더 우선, 그림자 없이 영역을 구분한다 */
-  --background: #f3f2ec; /* 페이퍼 배경 */
-  --foreground: #1a1a16; /* ink — 본문 */
-  --card: #ffffff;       /* surface — 카드·패널 */
-  --card-foreground: #1a1a16;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a16;
-  --primary: #1a1a16;    /* charcoal — 프라이머리 액션 */
-  --primary-foreground: #f4f4ee;
-  --secondary: #ecebe3;  /* surface-2 — 인셋·헤더 */
-  --secondary-foreground: #1a1a16;
-  --muted: #ecebe3;
-  --muted-foreground: #6e6e64; /* 보조 텍스트 — 배경 대비 ≈4.6:1 (WCAG AA 본문) */
-  --accent: #ecebe3;
-  --accent-foreground: #1a1a16;
-  --destructive: oklch(0.577 0.245 27.325); /* 위험 액션(삭제)만 빨강 유지 */
-  --border: #e4e3d9;     /* 1px 에어라인 */
-  --input: #8a8a7e;      /* 입력 경계 — 흰 카드 대비 ≈3.4:1 (WCAG 1.4.11, bg-transparent 인풋) */
-  --ring: #c8f24e;       /* lime 포커스 링 */
-  /* 시그니처/시맨틱 */
-  --accent-lime: #c8f24e;
-  --accent-lime-foreground: #1a1a16;
-  --win: #1f8a52;        /* 코트그린 — 승·긍정 */
-  --win-foreground: #ffffff;
-  --loss: #c8623a;       /* 클레이 — 패·부정 (빨강 아님) */
-  --loss-foreground: #ffffff;
-  --info: #2f60fb;       /* 일렉트릭블루 — 리그·보조 데이터 */
-  --info-foreground: #ffffff;
-  --chart-1: #1f8a52;
-  --chart-2: #2f60fb;
-  --chart-3: #c8623a;
-  --chart-4: #c8f24e;
-  --chart-5: #6e6e64;
-  --radius: 0.5rem; /* 8px — 카드 기준 */
-  --sidebar: #ecebe3;
-  --sidebar-foreground: #1a1a16;
-  --sidebar-primary: #1a1a16;
-  --sidebar-primary-foreground: #f4f4ee;
-  --sidebar-accent: #e4e3d9;
-  --sidebar-accent-foreground: #1a1a16;
-  --sidebar-border: #e4e3d9;
-  --sidebar-ring: #c8f24e;
+  --brand-blue: #118ab2;       /* 라이트 메인 액션 */
+  --brand-blue-light: #2cb1db; /* 다크 보조 액션 */
+  --brand-mint: #06d6a0;       /* 성공 / 다크 메인 액션 */
+  --brand-coral: #ff7f50;      /* 알림·취소·패배 */
+  --brand-yellow: #ffd166;     /* 스팟 — 별점·대기·강조 (구 라임 시그니처 승계) */
 }
 
+/* ── 시맨틱 토큰 (L2) — 라이트 ────────────────────────────────────────
+   푸른빛 쿨 그레이 베이스: background < secondary/muted(surface-2) < card/popover
+   깊이는 1px 보더 우선, 그림자 없이 영역을 구분한다.
+   악센트는 3역할 — `--X`(표면 위 텍스트·테두리, AA 확보) / `--X-solid`(브랜드 비비드 채움)
+   / `--X-foreground`(solid 위 텍스트). 대비율은 흰 카드 기준. */
+:root {
+  --background: #f4f7f9; /* 쿨 그레이 배경 */
+  --foreground: #1d2d35; /* ink — 본문 (배경 대비 ≈13.2:1) */
+  --card: #ffffff;       /* surface — 카드·패널 */
+  --card-foreground: #1d2d35;
+  --popover: #ffffff;
+  --popover-foreground: #1d2d35;
+  --primary: #0e7695;    /* 브랜드 블루 — 사양 #118AB2를 AA로 조정 (흰 글씨 ≈5.2:1) */
+  --primary-foreground: #ffffff;
+  --secondary: #e6edf2;  /* surface-2 — 인셋·헤더 */
+  --secondary-foreground: #1d2d35;
+  --muted: #e6edf2;
+  --muted-foreground: #5e7383; /* 보조 텍스트 — 배경 대비 ≈4.6:1 (WCAG AA 본문) */
+  --accent: #e6edf2;
+  --accent-foreground: #1d2d35;
+  --border: #d3dde4;     /* 1px 에어라인 */
+  --input: #7c8f9c;      /* 입력 경계 — 흰 카드 대비 ≈3.4:1 (WCAG 1.4.11, bg-transparent 인풋) */
+  --ring: var(--primary); /* 포커스 링 = 브랜드 액션 색 */
+  /* 시그니처/시맨틱 */
+  --spot: #8a6a0f;         /* 스팟 텍스트 톤 — 옐로우 계열 딥 골드 (≈5.1:1) */
+  --spot-solid: #ffd166;   /* 사양 원본 — 별점·아이콘·채움 */
+  --spot-foreground: #1d2d35;
+  --win: #07805f;          /* 승·긍정 텍스트 톤 — 민트 계열 (≈4.9:1) */
+  --win-solid: #06d6a0;    /* 사양 민트 원본 */
+  --win-foreground: #ffffff;  /* solid 배지는 --win(진한 민트) 채움 — 비비드 --win-solid는 텍스트를 얹지 않는 바·링 전용 */
+  --loss: #b85335;         /* 패·부정 텍스트 톤 — 코랄 계열 (≈4.9:1) */
+  --loss-solid: #ff7f50;   /* 사양 코랄 원본 */
+  --loss-foreground: #ffffff;
+  --info: #0e7a9c;         /* 보조 정보 — primary와 같은 블루 계열 한 톤 밝게 (≈4.8:1) */
+  --info-foreground: #ffffff;
+  /* 위험 액션·에러 = 알림 코랄로 통합 (패배와 같은 대역, 구분은 컨텍스트·형태가 담당) */
+  --destructive: var(--loss);
+  --destructive-foreground: #ffffff;
+  /* 하위호환 별칭 — components/ui 의 button·badge 전용(수정 금지 규칙). 앱 코드는 spot을 쓴다 */
+  --accent-lime: var(--spot-solid);
+  --accent-lime-foreground: var(--spot-foreground);
+  /* 카테고리 데이터 팔레트 — 결과가 아닌 분류 태그 전용. 텍스트·채움 겸용 단일 값 */
+  --cat-1: #0e7a9c; /* 단식·하드코트·오른손·듀스코트 */
+  --cat-2: #2e7d32; /* 인조잔디 — 순수 그린(win 민트와 분리) */
+  --cat-3: #9c5a18; /* 클레이코트 — 흙빛 브라운(loss 코랄과 분리) */
+  --cat-4: #916400; /* 혼복 */
+  --cat-5: #6e4fc4; /* 여복·애드코트·왼손 */
+  --cat-6: #5a6e7a; /* 기타·미지정 */
+  --cat-7: #a8386b; /* 특별매치·아바타 */
+  --cat-8: #2f6fa8; /* 남복·아바타 */
+  --radius: 0.5rem; /* 8px — 카드 기준 */
+}
+
+/* ── 시맨틱 토큰 (L2) — 다크 ──────────────────────────────────────────
+   야간 코트 조명 톤. 메인 액션이 블루가 아닌 민트로 스위칭된다(사양).
+   민트는 다크 카드 위 ≈8.6:1이라 비비드 원본을 텍스트로도 쓸 수 있어 -solid와 값이 같다. */
 .dark {
-  /* 다크 — 잉크 톤 */
-  --background: #0f0f11;
-  --foreground: #f4f4ee; /* light ink */
-  --card: #17171a;
-  --card-foreground: #f4f4ee;
-  --popover: #17171a;
-  --popover-foreground: #f4f4ee;
-  --primary: #f4f4ee;    /* light ink — 프라이머리 액션 */
-  --primary-foreground: #1a1a16;
-  --secondary: #1e1e22;  /* surface-2 */
-  --secondary-foreground: #f4f4ee;
-  --muted: #1e1e22;
-  --muted-foreground: #8d8d84;
-  --accent: #1e1e22;
-  --accent-foreground: #f4f4ee;
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: #3f3f45;     /* 카드/배경 대비 ~1.7:1 — 시인성 확보(구 #28282c는 ~1.2:1) */
-  --input: #66666c;      /* 입력 경계 — 카드 대비 ≈3.1:1 (WCAG 1.4.11) */
-  --ring: #d2f24e;
-  --accent-lime: #d2f24e;
-  --accent-lime-foreground: #1a1a16;
-  --win: #3ac983;
-  --win-foreground: #0f0f11;
-  --loss: #e1875a;
-  --loss-foreground: #0f0f11;
-  --info: #5b8def;
-  --info-foreground: #0f0f11;
-  --chart-1: #3ac983;
-  --chart-2: #5b8def;
-  --chart-3: #e1875a;
-  --chart-4: #d2f24e;
-  --chart-5: #8d8d84;
-  --sidebar: #17171a;
-  --sidebar-foreground: #f4f4ee;
-  --sidebar-primary: #f4f4ee;
-  --sidebar-primary-foreground: #1a1a16;
-  --sidebar-accent: #1e1e22;
-  --sidebar-accent-foreground: #f4f4ee;
-  --sidebar-border: #3f3f45;
-  --sidebar-ring: #d2f24e;
+  --background: #0b1319; /* 다크 네이비 */
+  --foreground: #e6edf0; /* light ink — 배경 대비 ≈15.8:1 */
+  --card: #15222b;       /* 다크 차콜 */
+  --card-foreground: #e6edf0;
+  --popover: #15222b;
+  --popover-foreground: #e6edf0;
+  --primary: #06d6a0;    /* 브랜드 민트 — 사양 원본 (다크에서 블루보다 시인성 우위) */
+  --primary-foreground: #0b1319;
+  --secondary: #1e2e38;  /* surface-2 */
+  --secondary-foreground: #e6edf0;
+  --muted: #1e2e38;
+  --muted-foreground: #8d9fa8; /* 카드 대비 ≈5.9:1 */
+  --accent: #1e2e38;
+  --accent-foreground: #e6edf0;
+  --border: #344854;     /* 카드 대비 ~1.7:1 — 시인성 확보 */
+  --input: #647985;      /* 입력 경계 — 카드 대비 ≈3.6:1 (WCAG 1.4.11) */
+  --ring: var(--primary);
+  --spot: #ffd166;
+  --spot-solid: #ffd166;
+  --spot-foreground: #0b1319;
+  --win: #06d6a0;
+  --win-solid: #06d6a0;
+  --win-foreground: #0b1319;
+  --loss: #ff9470;       /* 카드 대비 ≈7.5:1 */
+  --loss-solid: #ff7f50;
+  --loss-foreground: #0b1319;
+  --info: #2cb1db;       /* 사양 보조 액션 블루 */
+  --info-foreground: #0b1319;
+  --destructive: var(--loss);
+  --destructive-foreground: var(--loss-foreground);
+  --accent-lime: var(--spot-solid);
+  --accent-lime-foreground: var(--spot-foreground);
+  --cat-1: #2cb1db;
+  --cat-2: #4ade80;
+  --cat-3: #cf7a52;
+  --cat-4: #ffd166;
+  --cat-5: #a78bfa;
+  --cat-6: #8d9fa8;
+  --cat-7: #f472a5;
+  --cat-8: #7fb3e8;
 }
 
 @layer base {

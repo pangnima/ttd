@@ -71,7 +71,7 @@ export function PlayersSection({
             {/* 상대팀 (상대1 + 상대2) */}
             <div className="mt-6 border-t border-border pt-6 space-y-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-destructive/10 text-destructive">상대팀</span>
+                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-secondary text-foreground">상대팀</span>
                     <span className="text-caption text-muted-foreground">
                         상대1 + 상대2 · 참가자를 모두 채우면 상대팀 회원이 대표로 확인합니다
                     </span>

@@ -28,7 +28,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
         <section className="space-y-3">
             <div className="flex items-center gap-2">
                 <h2 className={TYPO.h4}>가입 대기</h2>
-                <Badge variant="outline" className="text-caption text-orange-600 dark:text-orange-400 border-orange-400/50">
+                <Badge variant="outline" className="text-caption text-spot border-spot/50">
                     {pendingMembers.length}명
                 </Badge>
             </div>
@@ -36,7 +36,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
                 {pendingMembers.map((m) => (
                     <div key={m.userId} className="flex items-center justify-between px-4 py-3 gap-3">
                         <div className="flex items-center gap-2 min-w-0">
-                            <Clock className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                            <Clock className="w-3.5 h-3.5 text-spot shrink-0" />
                             <div className="min-w-0">
                                 <p className="text-body2 text-foreground truncate">{m.user.name}</p>
                                 <p className="text-caption text-muted-foreground truncate">{m.user.nickname}</p>

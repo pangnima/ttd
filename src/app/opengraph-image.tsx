@@ -18,8 +18,8 @@ export default async function OpengraphImage() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    background: OG.paper,
-                    color: OG.ink,
+                    background: OG.background,
+                    color: OG.foreground,
                     padding: '96px',
                     fontFamily: 'Pretendard',
                 }}
@@ -29,8 +29,8 @@ export default async function OpengraphImage() {
                     style={{
                         display: 'flex',
                         alignSelf: 'flex-start',
-                        background: OG.lime,
-                        color: OG.ink,
+                        background: OG.spot,
+                        color: OG.foreground,
                         fontSize: 30,
                         letterSpacing: 4,
                         padding: '10px 22px',
@@ -46,7 +46,7 @@ export default async function OpengraphImage() {
                 </div>
 
                 {/* 태그라인 */}
-                <div style={{ display: 'flex', marginTop: 24, fontSize: 46, color: OG.muted }}>
+                <div style={{ display: 'flex', marginTop: 24, fontSize: 46, color: OG.mutedForeground }}>
                     코트 위 모든 경기를 기록하고 분석하다
                 </div>
             </div>

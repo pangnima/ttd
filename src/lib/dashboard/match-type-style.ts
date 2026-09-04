@@ -7,32 +7,32 @@ type MatchTypeStyle = {
     bgClass: string
 }
 
-// 경기 타입은 '결과'가 아닌 '카테고리' 태그 — win(코트그린)/loss(클레이) 시맨틱과
-// 충돌하지 않도록 그린·클레이 계열을 피한다. 단식은 브랜드 info(블루)에 앵커.
+// 경기 타입은 '결과'가 아닌 '카테고리' 태그 — win(민트)/loss(코랄) 결과 시맨틱과 겹치지 않도록
+// 카테고리 팔레트(cat-*)에 앵커한다. 네 타입 모두 같은 방식으로 통일 (docs/color-system.md).
 const STYLES: Record<MatchType, MatchTypeStyle> = {
     singles: {
         label: '단식',
-        textClass: 'text-info',
-        borderClass: 'border-info/40',
-        bgClass: 'bg-info/10',
+        textClass: 'text-cat-1',
+        borderClass: 'border-cat-1/40',
+        bgClass: 'bg-cat-1/10',
     },
     men_doubles: {
         label: '남복',
-        textClass: 'text-sky-600 dark:text-sky-400',
-        borderClass: 'border-sky-600/40 dark:border-sky-400/40',
-        bgClass: 'bg-sky-600/10 dark:bg-sky-400/10',
+        textClass: 'text-cat-8',
+        borderClass: 'border-cat-8/40',
+        bgClass: 'bg-cat-8/10',
     },
     women_doubles: {
         label: '여복',
-        textClass: 'text-violet-600 dark:text-violet-400',
-        borderClass: 'border-violet-600/40 dark:border-violet-400/40',
-        bgClass: 'bg-violet-600/10 dark:bg-violet-400/10',
+        textClass: 'text-cat-5',
+        borderClass: 'border-cat-5/40',
+        bgClass: 'bg-cat-5/10',
     },
     mixed_doubles: {
         label: '혼복',
-        textClass: 'text-amber-600 dark:text-amber-400',
-        borderClass: 'border-amber-600/40 dark:border-amber-400/40',
-        bgClass: 'bg-amber-600/10 dark:bg-amber-400/10',
+        textClass: 'text-cat-4',
+        borderClass: 'border-cat-4/40',
+        bgClass: 'bg-cat-4/10',
     },
 }
 

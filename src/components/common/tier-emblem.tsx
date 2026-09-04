@@ -34,7 +34,7 @@ export function TierEmblem({
             {showPoints && (
                 <span className={cn('text-caption font-mono tabular-nums font-semibold', TIER_TEXT[tier])}>{points}p</span>
             )}
-            {isProv && <span className="text-micro text-amber-600 dark:text-amber-400">잠정</span>}
+            {isProv && <span className="text-micro text-spot">잠정</span>}
         </span>
     )
 }

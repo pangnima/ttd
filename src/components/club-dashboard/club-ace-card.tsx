@@ -39,7 +39,7 @@ function AceColumn({ type, entries, clubId }: { type: MatchType; entries: WinRat
                     {/* 1위 — 에이스 강조 */}
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                            <Crown className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                            <Crown className="w-4 h-4 shrink-0 text-spot" />
                             {aceHref ? (
                                 <Link href={aceHref} className="text-body font-semibold text-foreground hover:text-foreground truncate">
                                     {entryName(ace)}

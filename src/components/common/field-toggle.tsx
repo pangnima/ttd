@@ -63,7 +63,7 @@ export function FieldToggle<T extends string>({
                             onClick={() => onChange(o.value)}
                             className={`px-2.5 py-2 text-body2 rounded-md border transition-colors ${
                                 active
-                                    ? 'border-accent-lime bg-accent-lime text-accent-lime-foreground font-semibold'
+                                    ? 'border-spot-solid bg-spot-solid text-spot-foreground font-semibold'
                                     : 'border-input text-foreground hover:bg-muted/40'
                             }`}
                         >

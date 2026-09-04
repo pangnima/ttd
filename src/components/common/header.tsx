@@ -81,7 +81,7 @@ export function Header({ clubs = [], userDisplay = null, userId = null, pendingR
                             {userDisplay.role === 'admin' && (
                                 <Badge
                                     variant="outline"
-                                    className="text-caption px-1.5 py-0 h-5 border-amber-500/50 text-amber-600 dark:text-amber-400 gap-1"
+                                    className="text-caption px-1.5 py-0 h-5 border-spot/50 text-spot gap-1"
                                 >
                                     <Shield className="w-2.5 h-2.5" />
                                     관리자

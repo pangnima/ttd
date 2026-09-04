@@ -19,7 +19,7 @@ export function HeroSection() {
     return (
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-24">
             <div>
-                <Chip variant="soft" tone="lime" className="text-caption font-medium tracking-eyebrow uppercase">
+                <Chip variant="soft" tone="spot" className="text-caption font-medium tracking-eyebrow uppercase">
                     TENNIS CLUB OS
                 </Chip>
                 <h1 className="mt-5 text-display font-extrabold text-foreground">

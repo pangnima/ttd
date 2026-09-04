@@ -8,8 +8,8 @@ type Props = { row: MemberRowView }
 const STATUS_CLASS: Record<string, string> = {
     '방장': 'border-primary/40 text-primary',
     '참가': 'border-win/40 text-win',
-    '초대 대기': 'border-orange-400/50 text-orange-600 dark:text-orange-400',
-    '확인 대기': 'border-orange-400/50 text-orange-600 dark:text-orange-400',
+    '초대 대기': 'border-spot/50 text-spot',
+    '확인 대기': 'border-spot/50 text-spot',
 }
 
 /** 명단 1행 — 아바타·이름(회원이면 프로필 링크)·상태 칩 */

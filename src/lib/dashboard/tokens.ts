@@ -70,10 +70,10 @@ export const MATCH_FORM_LABEL = 'text-body font-medium text-foreground block mb-
 
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
-    strength: 'text-win', // 강점 → 코트그린
-    weakness: 'text-loss', // 개선 → 클레이
-    tip: 'text-info', // 팁 → 일렉트릭블루
-    error: 'text-destructive', // 에러 → 위험(빨강)
+    strength: 'text-win', // 강점 → 민트
+    weakness: 'text-loss', // 개선 → 코랄
+    tip: 'text-info', // 팁 → 블루
+    error: 'text-destructive', // 에러 → 위험(코랄)
 } as const
 
 /** 승률 계산 (무승부 제외 분모). 경기 없으면 null. */

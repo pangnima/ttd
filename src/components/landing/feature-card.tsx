@@ -5,7 +5,7 @@ import { Chip } from '@/components/common/chip'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
-type ChipTone = 'win' | 'info' | 'lime'
+type ChipTone = 'win' | 'info' | 'spot'
 
 type FeatureCardProps = {
     icon: LucideIcon

@@ -10,7 +10,7 @@ type Props = {
     draws: number
     /** 승률(%) — 무승부 제외 분모. 경기 없으면 null */
     winRate: number | null
-    /** 막대 색상 클래스 (예: "bg-sky-500 dark:bg-sky-400") */
+    /** 막대 색상 클래스 (예: "bg-cat-1") */
     barClass: string
 }
 

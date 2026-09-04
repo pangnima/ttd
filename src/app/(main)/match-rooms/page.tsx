@@ -9,7 +9,7 @@ import { PageContainer } from '@/components/common/page-container'
 import { CARD_BASE, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
-export const metadata = { title: '경기 리스트' }
+export const metadata = { title: '매칭 리스트' }
 
 type Props = { searchParams: Promise<{ tab?: string }> }
 
@@ -34,7 +34,7 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
     return (
         <PageContainer>
             <PageHeader
-                title="경기 리스트"
+                title="매칭 리스트"
                 description="리스트에 노출된 경기입니다. 비밀번호를 입력하면 참가자·결과를 볼 수 있습니다"
                 actions={
                     <Link href="/me/personal-matches/new" className="text-body2 font-medium text-primary hover:underline whitespace-nowrap">

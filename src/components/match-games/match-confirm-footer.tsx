@@ -55,9 +55,9 @@ export function MatchConfirmFooter({
     const remainder = pending.length - previews.length
 
     return (
-        <div className="flex flex-col gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/8 px-4 py-3">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-spot/40 bg-spot/8 px-4 py-3">
             <div className="flex items-center gap-2 text-body2 font-semibold text-foreground">
-                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-spot shrink-0" />
                 경기 입력 현황 {total - pending.length}/{total}
             </div>
             <p className="text-caption text-muted-foreground leading-relaxed">

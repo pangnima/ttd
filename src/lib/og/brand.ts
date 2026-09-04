@@ -5,15 +5,17 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-// 브랜드 색 (globals.css 라이트 토큰과 동일 — 따뜻한 페이퍼 톤)
+// 브랜드 색 — globals.css `:root`(라이트) 토큰의 수동 미러.
+// Satori는 CSS 변수를 해석하지 못해 값을 복제해야 한다. 드리프트는
+// src/lib/dashboard/colors.test.ts가 globals.css와 대조해 잡는다 (docs/color-system.md §6).
 export const OG = {
     size: { width: 1200, height: 630 },
-    paper: '#f3f2ec',
-    ink: '#1a1a16',
-    lime: '#c8f24e',
-    muted: '#6e6e64',
-    card: '#ffffff',
-    border: '#e4e3d9',
+    background: '#f4f7f9',      // --background
+    foreground: '#1d2d35',      // --foreground
+    spot: '#ffd166',            // --spot-solid
+    mutedForeground: '#5e7383', // --muted-foreground
+    card: '#ffffff',            // --card
+    border: '#d3dde4',          // --border
 } as const
 
 let cachedFont: Buffer | null = null

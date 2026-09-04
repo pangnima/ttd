@@ -35,7 +35,7 @@ export function MemberAvatarGroup({
                 <Avatar
                     key={m.id}
                     size={size}
-                    className={cn(m.id === highlightId && 'ring-2 ring-accent-lime')}
+                    className={cn(m.id === highlightId && 'ring-2 ring-spot-solid')}
                 >
                     {m.imageUrl ? <AvatarImage src={m.imageUrl} alt={m.name} /> : null}
                     <AvatarFallback>{m.name.slice(0, 1)}</AvatarFallback>

@@ -63,7 +63,7 @@ export function LoginForm({ next }: { next?: string }) {
                 <label className="flex items-center gap-2 text-body2 text-muted-foreground">
                     <input
                         type="checkbox" name="remember" defaultChecked
-                        className="size-4 rounded-sm border-input accent-accent-lime"
+                        className="size-4 rounded-sm border-input accent-spot-solid"
                     />
                     로그인 상태 유지
                 </label>

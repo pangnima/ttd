@@ -97,7 +97,7 @@ export function MobileNav({ clubs = [], userId = null, pendingRequestCount = 0 }
                                         <Icon className="w-4 h-4" />
                                         {label}
                                         {showBadge && (
-                                            <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 tabular-nums">
+                                            <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-spot/15 text-spot tabular-nums">
                                                 {pendingRequestCount}
                                             </span>
                                         )}

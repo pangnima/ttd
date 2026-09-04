@@ -14,7 +14,7 @@ const FEATURES = [
     {
         icon: LayoutGrid,
         chipLabel: '매칭',
-        chipTone: 'lime' as const,
+        chipTone: 'spot' as const,
         title: '대진표 · 매칭',
         description: '실력 기반 대진을 자동 생성. 라운드별 코트와 시간슬롯까지 깔끔하게 정리됩니다.',
     },

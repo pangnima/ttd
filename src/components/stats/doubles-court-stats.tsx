@@ -7,8 +7,8 @@ type Props = { court: DoublesCourtStats }
 
 // 코트 사이드별 막대 색상 (애드/백핸드=바이올렛, 듀스/포핸드=블루)
 const COURT_BAR_CLASS: Record<'ad' | 'deuce', string> = {
-    ad: 'bg-violet-500 dark:bg-violet-400',
-    deuce: 'bg-sky-500 dark:bg-sky-400',
+    ad: 'bg-cat-5',
+    deuce: 'bg-cat-1',
 }
 
 export function DoublesCourtStatsCard({ court }: Props) {

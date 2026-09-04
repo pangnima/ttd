@@ -39,7 +39,7 @@ export function ClubListRow({ club, membershipStatus, isOwner, memberCount }: Cl
                 멤버
             </span>
         ) : membershipStatus === 'pending' ? (
-            <span className={`${PILL_BASE} border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10`}>
+            <span className={`${PILL_BASE} border-spot/40 text-spot bg-spot/10`}>
                 대기중
             </span>
         ) : null
