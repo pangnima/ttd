@@ -851,6 +851,7 @@ export type Database = {
           court_name: string | null
           created_at: string
           group_seq: number | null
+          has_result: boolean | null
           id: string
           is_perspective: boolean
           match_type: string
@@ -869,6 +870,7 @@ export type Database = {
           court_name?: string | null
           created_at?: string
           group_seq?: number | null
+          has_result?: boolean | null
           id?: string
           is_perspective?: boolean
           match_type: string
@@ -887,6 +889,7 @@ export type Database = {
           court_name?: string | null
           created_at?: string
           group_seq?: number | null
+          has_result?: boolean | null
           id?: string
           is_perspective?: boolean
           match_type?: string

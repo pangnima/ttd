@@ -14,6 +14,7 @@ import {
 } from '@/lib/personal-matches/validate-input'
 import type { PersonalMatchSetScore } from '@/types'
 import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
+import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
@@ -228,13 +229,14 @@ export async function deletePersonalMatchAction(
     if (!user) return { error: '로그인이 필요합니다.' }
 
     // 상호 확인 경기(source_request_id 보유)는 삭제 불가 — RESTRICTIVE RLS와 이중 방어
+    // DELETE ... RETURNING으로 room_id를 함께 받는다 — 삭제 후에는 방 소속을 알 방법이 없다
     const { data: deleted, error } = await supabase
         .from('personal_matches')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id)
         .is('source_request_id', null)
-        .select('id')
+        .select('id, room_id')
 
     if (error) return { error: '경기 삭제에 실패했습니다.' }
     if (!deleted?.length) return { error: '상호 확인된 경기는 수정·삭제할 수 없습니다.' }
@@ -242,6 +244,8 @@ export async function deletePersonalMatchAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
     revalidatePath('/me/personal-matches')
+    // cleanup 트리거가 방을 지우거나 정산을 재계산하므로 방 목록·상세도 무효화한다
+    revalidateRoomPaths(deleted[0].room_id)
     return { error: null }
 }
 
@@ -286,5 +290,8 @@ export async function updatePersonalMatchSetsAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
     revalidatePath('/me/personal-matches')
+    revalidatePath('/me/match-requests')
+    // 확정으로 방의 is_settled가 재계산되므로(recompute_match_room_settled) 방 화면도 갱신한다
+    revalidateRoomPaths(match.roomId)
     return { error: null }
 }

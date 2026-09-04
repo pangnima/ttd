@@ -7,6 +7,7 @@ import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * 로테이션(파트너 교체) 복식 세션 — 등록 시 선수 풀만 저장(rotation_sessions),
@@ -83,7 +84,7 @@ export async function createRotationSessionAction(input: RotationSessionInput, l
     if (listing) {
         const room = await listRecordAsRoom('rotation', inserted.id, listing.password)
         if (room.error) return { error: room.error }
-        revalidatePath('/match-rooms')
+        revalidateRoomList()
     }
     return { error: null }
 }
@@ -111,11 +112,11 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
             .select('id', { count: 'exact', head: true })
             .eq('room_id', roomId)
         if (!count) await supabase.from('match_rooms').delete().eq('id', roomId).eq('host_user_id', user.id)
-        revalidatePath('/match-rooms')
-        revalidatePath(`/match-rooms/${roomId}`)
+        revalidateRoomPaths(roomId)
     }
 
     revalidatePath('/me/personal-matches')
+    revalidatePath('/me/match-requests')
     return { error: null }
 }
 
@@ -181,10 +182,7 @@ export async function finalizeRotationSessionAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/analytics')
-    if (session?.room_id) {
-        revalidatePath('/match-rooms')
-        revalidatePath(`/match-rooms/${session.room_id}`)
-        revalidatePath('/me/match-requests')
-    }
+    revalidatePath('/me/match-requests')
+    revalidateRoomPaths(session?.room_id)
     return { error: null }
 }

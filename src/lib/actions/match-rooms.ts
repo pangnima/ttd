@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { validateRoomPassword } from '@/lib/match-rooms/password'
+import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * 경기 리스트(경기 방) 쓰기 — 입장·초대 응답·방장 관리·방 게임 등록.
@@ -40,11 +41,6 @@ function translate(message: string, fallback: string): string {
     return known ? known[1] : fallback
 }
 
-function revalidateRoom(roomId: string) {
-    revalidatePath('/match-rooms')
-    revalidatePath(`/match-rooms/${roomId}`)
-}
-
 async function requireUser() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -63,7 +59,7 @@ export async function enterMatchRoomAction(roomId: string, password: string): Pr
 
     const { error } = await supabase.rpc('enter_match_room', { p_room_id: roomId, p_password: password })
     if (error) return { error: translate(error.message, '입장에 실패했습니다.') }
-    revalidateRoom(roomId)
+    revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
     return { error: null }
 }
@@ -75,7 +71,7 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
 
     const { error } = await supabase.rpc('respond_room_invite', { p_room_id: roomId, p_accept: accept })
     if (error) return { error: translate(error.message, '초대 응답에 실패했습니다.') }
-    revalidateRoom(roomId)
+    revalidateRoomPaths(roomId)
     revalidatePath('/me/match-requests')
     return { error: null }
 }
@@ -88,6 +84,8 @@ export async function updateRoomPasswordAction(roomId: string, password: string)
 
     const { error } = await supabase.rpc('update_match_room_password', { p_room_id: roomId, p_password: password })
     if (error) return { error: translate(error.message, '비밀번호 변경에 실패했습니다.') }
+    // 비밀번호 자체는 렌더되지 않지만, "방 상태를 바꾼 액션은 방 경로를 무효화한다"는 불변식을 지킨다
+    revalidateRoomPaths(roomId)
     return { error: null }
 }
 
@@ -142,7 +140,7 @@ export async function createRoomGameAction(input: RoomGameInput): Promise<Action
     })
     if (error) return { error: translate(error.message, '게임 등록에 실패했습니다.') }
 
-    revalidateRoom(input.roomId)
+    revalidateRoomPaths(input.roomId)
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
     return { error: null }
@@ -160,7 +158,7 @@ export async function closeRotationRoomAction(roomId: string): Promise<ActionRes
     const { error } = await supabase.rpc('close_rotation_room', { p_room_id: roomId })
     if (error) return { error: translate(error.message, '게임 입력 종료에 실패했습니다.') }
 
-    revalidateRoom(roomId)
+    revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
     return { error: null }
 }
@@ -179,7 +177,7 @@ export async function deleteMatchRoomAction(roomId: string): Promise<ActionResul
     if (error) return { error: '리스트에서 내리기에 실패했습니다.' }
     if (!data?.length) return { error: '이미 내려갔거나 방장이 아닙니다.' }
 
-    revalidateRoom(roomId)
+    revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
     return { error: null }
 }

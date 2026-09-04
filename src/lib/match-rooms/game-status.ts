@@ -1,4 +1,4 @@
-import type { MatchRoomGame } from '@/types'
+import type { MatchRoomDetail, MatchRoomGame } from '@/types'
 import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
 
 /**
@@ -24,4 +24,17 @@ export function canEditRoomGame(game: MatchRoomGame, viewerId: string): boolean 
 /** 이 게임의 당사자(작성자 또는 라인업에 든 회원) — 개인 경기 목록에서 결과를 입력·확인할 수 있다 */
 export function isRoomGameParty(game: MatchRoomGame, viewerId: string): boolean {
     return game.ownerUserId === viewerId || game.participants.some((p) => p.userId === viewerId)
+}
+
+/** 게임이 하나도 없을 때의 안내 — 출처별로 다음에 할 일이 다르다 */
+export function roomGamesEmptyMessage(detail: MatchRoomDetail): string {
+    const s = detail.source
+    if (s.kind === 'rotation' && !s.isFinalized) {
+        // 0050: 방에 참가한 사람 누구나 자기 기준으로 게임을 넣을 수 있다
+        return '게임이 아직 없습니다. 개인 경기 기록의 "결과 입력 대기 로테이션" 카드에서 게임을 구성하세요.'
+    }
+    if (s.kind === 'confirmation' && s.requestStatus === 'pending') {
+        return '상대 대표가 확인 요청을 수락하면 결과를 등록할 수 있습니다.'
+    }
+    return '게임이 없습니다. 함께 친 참가자로 게임을 추가하세요.'
 }

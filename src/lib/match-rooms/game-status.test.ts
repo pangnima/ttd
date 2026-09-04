@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchRoomGame } from '@/types'
-import { canEditRoomGame, isRoomGameParty, roomGameStatusLabel } from './game-status'
+import type { MatchRoomDetail, MatchRoomGame, MatchRoomSource } from '@/types'
+import { canEditRoomGame, isRoomGameParty, roomGameStatusLabel, roomGamesEmptyMessage } from './game-status'
 
 const base: MatchRoomGame = {
     id: 'g1',
@@ -41,5 +41,37 @@ describe('canEditRoomGame · isRoomGameParty', () => {
         expect(isRoomGameParty(base, 'u1')).toBe(true)
         expect(isRoomGameParty(base, 'u2')).toBe(true)
         expect(isRoomGameParty(base, 'u3')).toBe(false)
+    })
+})
+
+describe('roomGamesEmptyMessage', () => {
+    const detailWith = (source: MatchRoomSource): MatchRoomDetail => ({
+        room: {
+            id: 'r1', hostUserId: 'u1', sourceKind: source.kind, playedAt: '2026-09-12',
+            matchType: 'singles', isSettled: false, createdAt: '2026-09-01T00:00:00Z',
+        },
+        host: { id: 'u1', name: '방장', nickname: '', deleted: false },
+        members: [],
+        source,
+        games: [],
+    })
+
+    it('미확정 로테이션은 게임 빌더로 안내', () => {
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: false })))
+            .toContain('결과 입력 대기 로테이션')
+    })
+
+    it('확정된 로테이션은 게임 추가 안내', () => {
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: true })))
+            .toContain('게임을 추가하세요')
+    })
+
+    it('수락 전 확인 요청은 대표 수락을 기다린다', () => {
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'confirmation', requestStatus: 'pending', participants: [] })))
+            .toContain('상대 대표가 확인 요청을 수락하면')
+    })
+
+    it('자유 기록은 게임 추가 안내', () => {
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'direct' }))).toContain('게임을 추가하세요')
     })
 })

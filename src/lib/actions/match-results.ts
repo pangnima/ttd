@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import type { PersonalMatchSetScore } from '@/types'
 import { validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
+import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 /**
  * 상호 확인 경기(match_requests 수락 → personal_matches 2행)의 사후 결과(세트) 등록 플로우.
@@ -37,10 +40,28 @@ function mapRpcError(message: string, fallback: string): string {
     return known ? known[1] : fallback
 }
 
-function revalidateResultPaths() {
+function revalidateResultPaths(roomId?: string | null) {
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
     revalidatePath('/me/analytics')
+    // 방 게임·로테이션 게임의 요청에는 room_id가 채워져 있다(0049·0050) — 결과가 바뀌면 방 정산도 재계산된다
+    revalidateRoomPaths(roomId)
+}
+
+/**
+ * 이 요청이 매칭 룸에 속하는지 — 무효화 경로를 알기 위한 조회.
+ * match_requests SELECT는 당사자에게만 열려 있어(0040) 남의 방을 들여다볼 수 없다.
+ */
+async function resolveRequestRoomId(
+    supabase: SupabaseClient<Database>,
+    requestId: string,
+): Promise<string | null> {
+    const { data } = await supabase
+        .from('match_requests')
+        .select('room_id')
+        .eq('id', requestId)
+        .maybeSingle()
+    return data?.room_id ?? null
 }
 
 /** 세트 결과 제안 (신규 제안 · 이의 후 재제안 · 본인 제안 수정). sets는 호출자 관점. */
@@ -68,7 +89,7 @@ export async function proposeMatchResultAction(
     })
     if (error) return { error: mapRpcError(error.message, '결과 제안에 실패했습니다.') }
 
-    revalidateResultPaths()
+    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }
 
@@ -83,7 +104,7 @@ export async function confirmMatchResultAction(requestId: string): Promise<Actio
 
     // 확정된 경기가 통계·레이팅에 반영되므로 본인 캐시 재계산 (accept와 동일하게 상대는 다음 CUD에서 갱신)
     await recomputePersonalNtrp(user.id)
-    revalidateResultPaths()
+    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }
 
@@ -102,6 +123,6 @@ export async function disputeMatchResultAction(requestId: string, reason?: strin
     })
     if (error) return { error: mapRpcError(error.message, '이의 제기에 실패했습니다.') }
 
-    revalidateResultPaths()
+    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }

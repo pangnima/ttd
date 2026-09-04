@@ -29,8 +29,8 @@ export function isPersonalNavActive(pathname: string, userId: string): boolean {
 // 개인 경기 메뉴 ('개인' 메뉴와 같은 섹션, 로그인 시 노출)
 // '경기 확인 요청'에는 받은 pending 건수 뱃지가 붙는다 (Sidebar/MobileNav에서 렌더).
 export const myMatchNavItems: NavItem[] = [
-    { href: '/me/personal-matches', label: '개인 경기 등록', icon: ClipboardList },
-    { href: '/match-rooms', label: '경기 리스트', icon: CalendarDays },
+    { href: '/me/personal-matches', label: '개인 경기 기록', icon: ClipboardList },
+    { href: '/match-rooms', label: '매칭 리스트', icon: CalendarDays },
     { href: '/me/match-requests', label: '경기 확인 요청', icon: Inbox },
 ]
 
