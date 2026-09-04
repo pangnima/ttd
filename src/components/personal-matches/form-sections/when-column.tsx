@@ -6,6 +6,7 @@ import { PendingResultNotice } from '@/components/personal-matches/form-sections
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
 import { ListingSection } from '@/components/personal-matches/form-sections/listing-section'
+import { RoomMetaSummaryCard } from '@/components/personal-matches/form-sections/room-meta-summary-card'
 import type { PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 type Props = {
@@ -14,8 +15,9 @@ type Props = {
     existingSets?: PersonalMatchSetScore[]
 }
 
-/** 등록 폼 우측 열 — "언제·어디서": 경기 정보 · 메모 · 경기 리스트 노출(신규 등록만) */
+/** 등록 폼 우측 열 — "언제·어디서": 경기 정보 · 메모 · 경기 리스트 노출(신규 등록만). 방 게임은 방 값 요약만 */
 export function WhenColumn({ s, recentCourtNames, existingSets }: Props) {
+    if (s.roomContext) return <RoomMetaSummaryCard ctx={s.roomContext} step="02" />
     return (
         <div className="space-y-5">
             <FormSectionCard title="경기 정보" step="03" contentClassName="space-y-4">

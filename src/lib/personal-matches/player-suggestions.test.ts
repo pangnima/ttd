@@ -61,4 +61,25 @@ describe('buildPlayerSuggestionGroups', () => {
     it('일치 항목이 없으면 빈 배열', () => {
         expect(buildPlayerSuggestionGroups('zzz', { pastOpponents, candidates, searchResults })).toEqual([])
     })
+
+    describe('방 참가자 그룹 (0048)', () => {
+        const roomParticipants: OpponentCandidate[] = [
+            { id: 'u1', name: '김철수', nickname: 'cheol', ntrp: 3, personalNtrp: 3.214, dominantHand: 'left', isGuest: false, clubNames: [] },
+            { id: 'u7', name: '방참가자', nickname: 'roomie', ntrp: 2, isGuest: false, clubNames: [] },
+        ]
+
+        it('빈 입력에도 최상단에 전체 노출되고, 같은 회원은 클럽 그룹에서 빠진다', () => {
+            const groups = buildPlayerSuggestionGroups('', { pastOpponents, candidates, searchResults, roomParticipants })
+            expect(groups.map((g) => g.value)).toEqual(['방 참가자', '만나본 사람', '클럽 회원'])
+            expect(groups[0].items.map((i) => i.value)).toEqual(['room:u1', 'room:u7'])
+            expect(groups[2].items.map((i) => i.value)).toEqual(['club:u2'])
+        })
+
+        it('전체 회원 검색 결과에서도 방 참가자는 제외, 항목은 닉네임을 meta로', () => {
+            const groups = buildPlayerSuggestionGroups('김철', { pastOpponents, candidates, searchResults, roomParticipants })
+            expect(groups.map((g) => g.value)).toEqual(['방 참가자', '전체 회원'])
+            expect(groups[0].items[0]).toMatchObject({ source: 'room', userId: 'u1', meta: 'cheol', ntrp: 3.214, hand: 'left' })
+            expect(groups[1].items.map((i) => i.value)).toEqual(['search:u9'])
+        })
+    })
 })

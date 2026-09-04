@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { parseRoomDetail } from '@/lib/match-rooms/parse-detail'
 import { countJoined } from '@/lib/match-rooms/headcount'
+import { toDominantHand, type OpponentCandidate } from '@/lib/queries/users'
 import type {
     CourtSurface, MatchRoomDetail, MatchRoomHost, MatchRoomInvite, MatchRoomMemberRole, MatchRoomMemberStatus,
     MatchRoomSourceKind, MatchRoomSourceRole, MatchRoomSummary, MatchType,
@@ -15,7 +16,7 @@ import type {
  */
 
 // 공개 메타 컬럼만 명시 (select('*') 금지 — 방 행에는 없지만 습관적으로 secrets를 조인하지 않기 위한 규약)
-const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, capacity, has_result'
+const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, has_result'
 const HOST_JOIN = 'host:users!match_rooms_host_user_id_fkey(id, name, nickname, profile_image, deleted_at)'
 const MEMBERS_JOIN = 'members:match_room_members(user_id, role, status)'
 
@@ -30,7 +31,6 @@ type RoomListRow = {
     match_type: string
     surface: string | null
     court_name: string | null
-    capacity: number
     has_result: boolean
     host: HostRow
     members: MemberRow[]
@@ -59,7 +59,6 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
         matchType: row.match_type as MatchType,
         surface: (row.surface as CourtSurface | null) ?? undefined,
         courtName: row.court_name ?? undefined,
-        capacity: row.capacity,
         hasResult: row.has_result,
         joinedCount: countJoined(members.map((m) => ({ role: m.role as MatchRoomMemberRole, status: m.status as MatchRoomMemberStatus }))),
         host: mapHost(row.host, row.host_user_id),
@@ -97,6 +96,42 @@ export async function fetchMatchRoomDetail(roomId: string): Promise<MatchRoomDet
     const { data, error } = await supabase.rpc('get_match_room_detail', { p_room_id: roomId })
     if (error) return null
     return parseRoomDetail(data)
+}
+
+type ParticipantRow = {
+    users: {
+        id: string; name: string; nickname: string; ntrp: number | null; personal_ntrp: number | null
+        dominant_hand: string | null; is_guest: boolean; deleted_at: string | null
+    } | null
+}
+
+/**
+ * 방에 참가(joined)한 회원 — 방장이 게임을 구성할 때 자동완성 '방 참가자' 그룹(0048).
+ * 방장 본인·탈퇴 회원은 제외. 멤버 행은 전원 SELECT, users 프로필 컬럼은 전체 회원 검색과 같은 공개 컬럼이다.
+ */
+export async function fetchRoomParticipantCandidates(roomId: string, excludeUserId: string): Promise<OpponentCandidate[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_room_members')
+        .select('users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, dominant_hand, is_guest, deleted_at)')
+        .eq('room_id', roomId)
+        .eq('status', 'joined')
+        .neq('user_id', excludeUserId)
+    if (error || !data) return []
+    return (data as ParticipantRow[])
+        .map((row) => row.users)
+        .filter((u): u is NonNullable<ParticipantRow['users']> => !!u && !u.deleted_at)
+        .map((u) => ({
+            id: u.id,
+            name: u.name,
+            nickname: u.nickname || undefined,
+            ntrp: u.ntrp ?? undefined,
+            personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+            dominantHand: toDominantHand(u.dominant_hand),
+            isGuest: u.is_guest ?? false,
+            clubNames: [],
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 type InviteRow = {

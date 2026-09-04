@@ -26,6 +26,8 @@ type Props = {
     label: string
     candidates: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
+    // 경기 리스트 방 참가자 — 최상단 '방 참가자' 그룹 (방 게임 구성·모집형 채우기에서만 전달)
+    roomParticipants?: OpponentCandidate[]
     value: PlayerPickerValue
     // picked: 후보를 골랐을 때 그 항목 (NTRP 프리필용). 타이핑이면 undefined
     onChange: (value: PlayerPickerValue, picked?: PlayerSuggestion) => void
@@ -43,16 +45,18 @@ type Props = {
  * 손잡이는 항상 노출 — 게스트는 필수, 회원은 프로필 값이 자동 채워지며 수정 가능.
  */
 export function PlayerPicker({
-    label, candidates, pastOpponents = [], value, onChange, placeholder, showHand = true, searchSelfUserId,
+    label, candidates, pastOpponents = [], roomParticipants, value, onChange, placeholder, showHand = true, searchSelfUserId,
 }: Props) {
     const search = useUserSearch(searchSelfUserId)
     const searchResults = searchSelfUserId ? search.results : undefined
     const groups = useMemo(
-        () => buildPlayerSuggestionGroups(value.name, { pastOpponents, candidates, searchResults }),
-        [value.name, pastOpponents, candidates, searchResults],
+        () => buildPlayerSuggestionGroups(value.name, { pastOpponents, candidates, searchResults, roomParticipants }),
+        [value.name, pastOpponents, candidates, searchResults, roomParticipants],
     )
     const linked = value.userId
-        ? candidates.find((c) => c.id === value.userId) ?? searchResults?.find((c) => c.id === value.userId)
+        ? roomParticipants?.find((c) => c.id === value.userId)
+            ?? candidates.find((c) => c.id === value.userId)
+            ?? searchResults?.find((c) => c.id === value.userId)
         : undefined
 
     function handleInputChange(name: string) {

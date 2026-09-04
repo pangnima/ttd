@@ -5,6 +5,7 @@ import type { PersonalMatchSetScore } from '@/types'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import {
     buildRotationGamePayloads,
+    isPoolRowEmpty,
     validateRotationGames,
     validateRotationPool,
     type PoolPlayer,
@@ -41,6 +42,14 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
     }
     function updatePoolPlayer(tempId: string, patch: Partial<Omit<PoolPlayer, 'tempId'>>) {
         setPool((prev) => prev.map((p) => (p.tempId === tempId ? { ...p, ...patch } : p)))
+    }
+    // 모집형(리스트에 노출)으로 전환할 때 입력되지 않은 행을 전부 제거 — 남은 행은 NTRP까지 필수
+    function compactEmptyRows() {
+        setPool((prev) => prev.filter((p) => !isPoolRowEmpty(p)))
+    }
+    // 노출을 끄면 최소 인원(3명) 입력칸을 다시 채워 둔다
+    function ensureMinRows(min: number) {
+        setPool((prev) => (prev.length >= min ? prev : [...prev, ...Array.from({ length: min - prev.length }, emptyPoolPlayer)]))
     }
     function removePoolPlayer(tempId: string) {
         setPool((prev) => prev.filter((p) => p.tempId !== tempId))
@@ -105,7 +114,7 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
 
     return {
         pool, games,
-        addPoolPlayer, updatePoolPlayer, removePoolPlayer,
+        addPoolPlayer, updatePoolPlayer, removePoolPlayer, compactEmptyRows, ensureMinRows,
         addGame, updateGame, removeGame,
         updateSet, setMyAd, setOppAd,
         isPoolValid, isGamesValid, buildPayloads,

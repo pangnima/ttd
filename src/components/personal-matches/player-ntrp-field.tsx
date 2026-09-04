@@ -10,6 +10,8 @@ type Props = {
     label: string
     candidates: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
+    // 경기 리스트 방 참가자 — 자동완성 최상단 그룹 (방 게임 구성·모집형 채우기)
+    roomParticipants?: OpponentCandidate[]
     player: PlayerPickerValue
     onPlayerChange: (v: PlayerPickerValue) => void
     ntrp: string
@@ -31,6 +33,7 @@ export function PlayerNtrpField({
     label,
     candidates,
     pastOpponents = [],
+    roomParticipants,
     player,
     onPlayerChange,
     ntrp,
@@ -51,6 +54,7 @@ export function PlayerNtrpField({
                 label={label}
                 candidates={candidates}
                 pastOpponents={pastOpponents}
+                roomParticipants={roomParticipants}
                 value={player}
                 onChange={handlePlayerChange}
                 placeholder={placeholder}

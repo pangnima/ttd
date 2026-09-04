@@ -29,7 +29,7 @@ export function PoolEditorBlock({ pool, picker, onAdd, onUpdate, onRemove }: Pro
             <summary className="text-body2 font-medium cursor-pointer">참가자 추가·편집</summary>
             <p className="mt-2 text-caption text-muted-foreground break-keep">
                 여기서 추가한 선수는 이 게임 구성에만 쓰이고 방 참가자·초대에는 반영되지 않습니다.
-                회원을 정식 참가자로 넣으려면 방 상세에서 합류 신청을 승인하세요.
+                회원은 방 상세에서 비밀번호로 입장하면 자동으로 참가자 풀에 추가됩니다.
             </p>
             <div className="mt-3">
                 <PlayerPoolSection

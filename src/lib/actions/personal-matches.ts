@@ -111,17 +111,25 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
     }
 }
 
+type CreateOptions = {
+    // 방 게임 추가(0048) — 방장이 자기 방에 게임을 붙인다. RLS(personal_matches_insert)가 방장 소유 방만 허용한다.
+    roomId?: string
+}
+
 /**
  * 여러 개인 경기를 일괄 INSERT하는 범용 액션.
  * 신규 등록은 세트 없이 단일 경기 1건(1요소 배열, 결과 미확정)으로, 로테이션은 게임별 다건으로 호출한다.
  * 세트가 없으면 결과 미확정으로 저장되고, 있으면 게임마다 승패가 세트 스코어로 판정된다(행 단위 winner 없음).
  * listing(리스트에 노출)이 있으면 첫 기록을 경기 리스트의 방으로 등록한다(단일 등록 전제, 기록 저장 후 별도 RPC).
+ * options.roomId가 있으면 기존 방의 게임으로 저장한다(listing과 동시 사용 불가 — 새 방을 만들 이유가 없다).
  */
 export async function createPersonalMatchesAction(
     inputs: PersonalMatchInput[],
     listing?: RoomListingInput,
+    options: CreateOptions = {},
 ): Promise<{ error: string | null }> {
     if (!inputs.length) return { error: '저장할 경기가 없습니다.' }
+    if (listing && options.roomId) return { error: '이미 경기 리스트에 있는 방의 게임입니다.' }
     for (const input of inputs) {
         // 리스트에 노출(모집형)이면 참가자를 비운 채 저장할 수 있다 (세트가 없을 때만 — validate-input이 함께 본다)
         const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!listing })
@@ -132,9 +140,9 @@ export async function createPersonalMatchesAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    const baseRows = inputs.map((input) => buildPersonalMatchBaseRow(input, user.id))
+    const baseRows = inputs.map((input) => ({ ...buildPersonalMatchBaseRow(input, user.id), room_id: options.roomId ?? null }))
     const { data: inserted, error } = await supabase.from('personal_matches').insert(baseRows).select('id')
-    if (error || !inserted) return { error: '경기 저장에 실패했습니다.' }
+    if (error || !inserted) return { error: options.roomId ? '방의 게임 저장에 실패했습니다. 방장만 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }
 
     const participantRows = inputs.flatMap((input, i) => buildParticipantRows(input, inserted[i].id))
     if (participantRows.length > 0) {
@@ -150,6 +158,10 @@ export async function createPersonalMatchesAction(
         const room = await listRecordAsRoom('direct', inserted[0].id, listing.password)
         if (room.error) return { error: room.error }
         revalidatePath('/match-rooms')
+    }
+    if (options.roomId) {
+        revalidatePath('/match-rooms')
+        revalidatePath(`/match-rooms/${options.roomId}`)
     }
     return { error: null }
 }

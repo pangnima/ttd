@@ -3,7 +3,6 @@
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { NtrpField } from '@/lib/personal-matches/validate-input'
-import { isSlotEmpty } from '@/lib/personal-matches/lineup'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 
@@ -19,6 +18,8 @@ type PlayersSectionProps = {
     isDoubles: boolean
     candidates: OpponentCandidate[]
     pastOpponents: PastOpponent[]
+    // 경기 리스트 방 참가자 — 방 게임 구성·모집형 채우기에서 자동완성 최상단 그룹
+    roomParticipants?: OpponentCandidate[]
     opponent: PlayerFieldState
     partner: PlayerFieldState
     opponent2: PlayerFieldState
@@ -26,27 +27,27 @@ type PlayersSectionProps = {
     searchSelfUserId?: string
     // 상호 확인 플로우 — 회원 참가자의 NTRP는 수락 시 서버 파생이므로 해당 필드 입력란 숨김
     hideNtrpFor?: NtrpField[]
-    // 모집형(리스트에 노출) — 슬롯을 비워둘 수 있다. 빈 슬롯은 NTRP required도 해제한다(브라우저가 제출을 막지 않도록)
-    allowEmpty?: boolean
 }
 
 /**
- * 경기 타입(단식/복식)에 따라 선수 입력란을 분기 렌더링.
+ * 경기 타입(단식/복식)에 따라 선수 입력란을 분기 렌더링 — 모든 슬롯이 항상 보이고 NTRP까지 필수.
  * 단식은 상대 1명, 복식은 내 팀(파트너) + 상대팀(상대1·상대2) 박스로 구성한다.
+ * (모집형은 RecruitingPlayersSection이 열린 슬롯만 그린다)
  */
 export function PlayersSection({
-    isDoubles, candidates, pastOpponents, opponent, partner, opponent2, searchSelfUserId, hideNtrpFor = [], allowEmpty = false,
+    isDoubles, candidates, pastOpponents, roomParticipants, opponent, partner, opponent2, searchSelfUserId, hideNtrpFor = [],
 }: PlayersSectionProps) {
     const field = (label: string, s: PlayerFieldState, key: NtrpField, placeholder: string) => (
         <PlayerNtrpField
-            label={`${label}${allowEmpty ? ' (선택)' : ' *'}`}
+            label={`${label} *`}
             candidates={candidates}
             pastOpponents={pastOpponents}
+            roomParticipants={roomParticipants}
             player={s.player}
             onPlayerChange={s.onPlayerChange}
             ntrp={s.ntrp}
             onNtrpChange={s.onNtrpChange}
-            ntrpRequired={!allowEmpty || !isSlotEmpty(s.player)}
+            ntrpRequired
             placeholder={placeholder}
             searchSelfUserId={searchSelfUserId}
             hideNtrp={hideNtrpFor.includes(key)}

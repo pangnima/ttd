@@ -145,18 +145,17 @@ describe('validateRotation', () => {
 describe('모집형(리스트에 노출) — 풀 비우기 허용', () => {
     const empty = (id: string): PoolPlayer => ({ tempId: id, player: { name: '', hand: '' }, ntrp: '' })
 
-    it('allowEmpty면 빈 행 3개(등록 폼 기본 상태)도 통과', () => {
-        expect(validateRotationPool([empty('a'), empty('b'), empty('c')], meta, { allowEmpty: true })).toBe(true)
+    it('allowEmpty면 풀 0명도 통과 (모집)', () => {
         expect(validateRotationPool([], meta, { allowEmpty: true })).toBe(true)
     })
 
-    it('allowEmpty여도 부분 입력 행이 있으면 거부', () => {
-        const partial = [empty('a'), pool('b', 'B', '')]
-        expect(validateRotationPool(partial, meta, { allowEmpty: true })).toBe(false)
+    it('allowEmpty여도 화면에 남은 빈 행·부분 입력 행이 있으면 거부 (NTRP 필수)', () => {
+        expect(validateRotationPool([empty('a')], meta, { allowEmpty: true })).toBe(false)
+        expect(validateRotationPool([pool('b', 'B', '')], meta, { allowEmpty: true })).toBe(false)
     })
 
     it('allowEmpty + 완성된 행 1개는 통과(최소 인원 요구 없음)', () => {
-        expect(validateRotationPool([empty('a'), pool('b', 'B', '3.0')], meta, { allowEmpty: true })).toBe(true)
+        expect(validateRotationPool([pool('b', 'B', '3.0')], meta, { allowEmpty: true })).toBe(true)
     })
 
     it('옵션이 없으면 기존대로 3명 미만 거부', () => {

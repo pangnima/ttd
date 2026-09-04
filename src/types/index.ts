@@ -202,14 +202,15 @@ export type RotationSession = {
     roomId?: string         // 경기 리스트에 노출된 세션이면 방 id (0046)
 }
 
-// ── 경기 리스트(경기 방) (0046) ────────────────────────────────
-// 등록 폼에서 '리스트에 노출'을 켠 기록 1건 = 방 1개. 공개 메타는 로그인 회원 전원이 보고,
-// 상세(참가자·메모·결과)는 방장·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
+// ── 경기 리스트(경기 방) (0046·0048) ────────────────────────────────
+// 등록 폼에서 '리스트에 노출'을 켠 기록이 방 1개가 된다. 공개 메타는 로그인 회원 전원이 보고,
+// 상세(참가자·메모·게임)는 방장·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
+// 정원은 없다 — 비밀번호를 알고 들어오면 곧 참가자이고, 방장은 들어온 참가자로 게임을 여러 건 구성한다(0048).
 
 export type MatchRoomSourceKind = 'direct' | 'confirmation' | 'rotation'
-export type MatchRoomMemberRole = 'host' | 'player' | 'viewer'
-// invited → joined|declined (초대 응답) / 비밀번호 입장 = viewer·joined / 풀 합류 신청 = viewer·requested → 승인 player·joined
-export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined' | 'requested'
+export type MatchRoomMemberRole = 'host' | 'player'
+// invited → joined|declined (초대 응답) / 비밀번호 입장 = player·joined (거절했던 사람도 다시 들어오면 joined)
+export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined'
 export type MatchRoomSourceRole = 'opponent' | 'partner' | 'opponent2' | 'pool'
 
 export type MatchRoomHost = {
@@ -232,11 +233,10 @@ export type MatchRoomMeta = {
     matchType: MatchType
     surface?: CourtSurface
     courtName?: string
-    capacity: number        // 단식 2 / 페어 복식 4 / 로테이션 1+풀 인원
     hasResult: boolean      // 방장 기록에 게임 스코어가 있음
 }
 
-// 목록 카드용 — 인원(joined 참가자 수)·방장·내 멤버 상태 포함
+// 목록 카드용 — 참가 인원(방장 + joined 참가자)·방장·내 멤버 상태 포함
 export type MatchRoomSummary = MatchRoomMeta & {
     joinedCount: number
     host: MatchRoomHost
@@ -256,7 +256,7 @@ export type MatchRoomMember = {
 
 export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }
 
-// 방장 관점 게임 (personal_matches where room_id) — 로테이션은 게임별 여러 건
+// 방장 관점 게임 (personal_matches where room_id) — 로테이션은 게임별, 자유 기록은 '게임 추가'로 여러 건. 세트 없는 행(모집 중·결과 미입력) 포함
 export type MatchRoomGame = {
     id: string
     groupSeq?: number

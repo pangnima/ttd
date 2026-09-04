@@ -2,7 +2,8 @@ import type { MatchRoomDetail, MatchRoomMember } from '@/types'
 
 /**
  * 방 상세 참가자 명단 행 — 멤버 테이블(회원) + 출처 기록의 비회원 참가자 + 수락 전 대표 확인자를 한 목록으로 합친다.
- * 순수 함수(테스트 대상). 표시 순서: 방장 → 참가 → 초대 대기 → 합류 신청 → 열람 → 비회원/확인 대기.
+ * 순수 함수(테스트 대상). 표시 순서: 방장 → 참가 → 초대 대기 → 비회원/확인 대기.
+ * (열람·합류 신청 상태는 0048에서 폐지 — 비밀번호 입장이 곧 참가)
  */
 export type MemberRowView = {
     key: string
@@ -12,20 +13,17 @@ export type MemberRowView = {
     userId?: string
     deleted?: boolean
     statusLabel: string
-    // 방장이 승인/거절할 수 있는 합류 신청 행
-    joinRequest?: boolean
 }
 
 const ORDER: Record<string, number> = {
-    '방장': 0, '참가': 1, '초대 대기': 2, '합류 신청': 3, '열람': 4, '확인 대기': 5, '비회원': 6,
+    '방장': 0, '참가': 1, '초대 대기': 2, '확인 대기': 3, '비회원': 4,
 }
 
 function memberStatusLabel(m: MatchRoomMember): string | null {
     if (m.role === 'host') return '방장'
     if (m.status === 'declined') return null
     if (m.status === 'invited') return '초대 대기'
-    if (m.status === 'requested') return '합류 신청'
-    return m.role === 'player' ? '참가' : '열람'
+    return '참가'
 }
 
 function memberRow(m: MatchRoomMember): MemberRowView | null {
@@ -39,7 +37,6 @@ function memberRow(m: MatchRoomMember): MemberRowView | null {
         userId: m.userId,
         deleted: m.deleted,
         statusLabel,
-        joinRequest: m.status === 'requested',
     }
 }
 

@@ -753,7 +753,6 @@ export type Database = {
       }
       match_rooms: {
         Row: {
-          capacity: number
           court_name: string | null
           created_at: string
           has_result: boolean
@@ -767,7 +766,6 @@ export type Database = {
           surface: string | null
         }
         Insert: {
-          capacity: number
           court_name?: string | null
           created_at?: string
           has_result?: boolean
@@ -781,7 +779,6 @@ export type Database = {
           surface?: string | null
         }
         Update: {
-          capacity?: number
           court_name?: string | null
           created_at?: string
           has_result?: boolean
@@ -1088,10 +1085,6 @@ export type Database = {
         Args: { p_club_id: string; p_snapshot: Json }
         Returns: undefined
       }
-      approve_room_join: {
-        Args: { p_room_id: string; p_user_id: string }
-        Returns: undefined
-      }
       confirm_match_result: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -1230,11 +1223,6 @@ export type Database = {
         Args: { p_request_id: string; p_set_scores: Json }
         Returns: undefined
       }
-      reject_room_join: {
-        Args: { p_room_id: string; p_user_id: string }
-        Returns: undefined
-      }
-      request_room_join: { Args: { p_room_id: string }; Returns: undefined }
       respond_room_invite: {
         Args: { p_accept: boolean; p_room_id: string }
         Returns: undefined

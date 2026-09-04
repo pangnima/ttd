@@ -2,20 +2,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
-import { RoomJoinRequestActions } from '@/components/match-rooms/room-join-request-actions'
 
-type Props = { row: MemberRowView; roomId: string; canModerate: boolean }
+type Props = { row: MemberRowView }
 
 const STATUS_CLASS: Record<string, string> = {
     '방장': 'border-primary/40 text-primary',
     '참가': 'border-win/40 text-win',
     '초대 대기': 'border-orange-400/50 text-orange-600 dark:text-orange-400',
-    '합류 신청': 'border-orange-400/50 text-orange-600 dark:text-orange-400',
     '확인 대기': 'border-orange-400/50 text-orange-600 dark:text-orange-400',
 }
 
-/** 명단 1행 — 아바타·이름(회원이면 프로필 링크)·상태 칩. 합류 신청 행은 방장에게 승인/거절 버튼 */
-export function RoomMemberRow({ row, roomId, canModerate }: Props) {
+/** 명단 1행 — 아바타·이름(회원이면 프로필 링크)·상태 칩 */
+export function RoomMemberRow({ row }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
             {row.name}
@@ -34,13 +32,9 @@ export function RoomMemberRow({ row, roomId, canModerate }: Props) {
                 ) : name}
                 {row.nickname && <p className="text-caption text-muted-foreground truncate">{row.nickname}</p>}
             </div>
-            {row.joinRequest && canModerate && row.userId ? (
-                <RoomJoinRequestActions roomId={roomId} userId={row.userId} />
-            ) : (
-                <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
-                    {row.statusLabel}
-                </span>
-            )}
+            <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
+                {row.statusLabel}
+            </span>
         </div>
     )
 }

@@ -3,14 +3,13 @@ import type { MatchRoomDetail } from '@/types'
 import { buildMemberRows } from './members-view'
 
 const base: MatchRoomDetail = {
-    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', capacity: 5, hasResult: false, createdAt: '' },
+    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', hasResult: false, createdAt: '' },
     host: { id: 'h', name: '호스트', nickname: 'host', deleted: false },
     viewer: { role: 'host', status: 'joined' },
     members: [
-        { userId: 'v', name: '열람자', nickname: '', deleted: false, role: 'viewer', status: 'joined' },
+        { userId: 'p2', name: '입장자', nickname: '', deleted: false, role: 'player', status: 'joined', sourceRole: 'pool' },
         { userId: 'h', name: '호스트', nickname: 'host', deleted: false, role: 'host', status: 'joined' },
         { userId: 'd', name: '거절자', nickname: '', deleted: false, role: 'player', status: 'declined' },
-        { userId: 'q', name: '신청자', nickname: '', deleted: false, role: 'viewer', status: 'requested' },
         { userId: 'p', name: '참가자', nickname: '', deleted: false, role: 'player', status: 'joined' },
         { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player', status: 'invited', sourceRole: 'pool' },
     ],
@@ -19,12 +18,11 @@ const base: MatchRoomDetail = {
 }
 
 describe('buildMemberRows', () => {
-    it('방장→참가→초대→신청→열람→비회원 순, 거절자는 제외', () => {
+    it('방장→참가→초대→비회원 순, 거절자는 제외', () => {
         const rows = buildMemberRows(base)
         expect(rows.map((r) => `${r.name}:${r.statusLabel}`)).toEqual([
-            '호스트:방장', '참가자:참가', '초대자:초대 대기', '신청자:합류 신청', '열람자:열람', '비회원A:비회원',
+            '호스트:방장', '입장자:참가', '참가자:참가', '초대자:초대 대기', '비회원A:비회원',
         ])
-        expect(rows.find((r) => r.name === '신청자')?.joinRequest).toBe(true)
     })
 
     it('확인 요청 방은 수락 전 대표를 확인 대기로, 비회원 파트너는 비회원으로', () => {

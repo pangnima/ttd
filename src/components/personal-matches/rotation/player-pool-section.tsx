@@ -2,7 +2,7 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
-import { isPoolRowEmpty, type PoolPlayer } from '@/lib/personal-matches/rotation'
+import type { PoolPlayer } from '@/lib/personal-matches/rotation'
 import { PoolPlayerRow } from '@/components/personal-matches/rotation/pool-player-row'
 import { AddButton } from '@/components/personal-matches/add-button'
 
@@ -15,13 +15,14 @@ type PlayerPoolSectionProps = {
     onRemove: (tempId: string) => void
     // 전체 회원 검색 활성화 (로그인 유저 id)
     searchSelfUserId?: string
-    // 모집형(리스트에 노출) — 참가자 없이 저장할 수 있다. 빈 행은 NTRP required 해제
+    // 모집형(리스트에 노출) — 참가자 없이 저장할 수 있다(안내 문구만 다르고, 화면에 있는 행은 NTRP까지 필수)
     allowEmpty?: boolean
 }
 
 /**
  * 로테이션 참가자 풀 입력 — 나를 제외한 함께 친 선수들을 한 번씩 등록한다.
  * 게임(팀 구성·스코어)은 저장 후 카드의 '결과 입력'에서 이 풀을 참조해 만든다.
+ * 행마다 NTRP 필수 — 모집형이라도 입력한 참가자는 완전해야 한다(빈 행은 노출 전환 시 폼이 제거).
  */
 export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUpdate, onRemove, searchSelfUserId, allowEmpty = false }: PlayerPoolSectionProps) {
     return (
@@ -44,7 +45,6 @@ export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUp
                         onRemove={() => onRemove(p.tempId)}
                         canRemove
                         searchSelfUserId={searchSelfUserId}
-                        ntrpRequired={!allowEmpty || !isPoolRowEmpty(p)}
                     />
                 ))}
             </div>

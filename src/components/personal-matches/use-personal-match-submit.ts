@@ -73,9 +73,13 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         }
 
         const input = s.buildInput()
+        // 방 게임(0048)은 room_id를 붙여 저장하고 방 상세로 돌아간다
+        const roomId = s.roomContext?.roomId
         run(
-            () => (initialId ? updatePersonalMatchAction(initialId, input) : createPersonalMatchesAction([input], s.listing)),
-            '/me/personal-matches',
+            () => (initialId
+                ? updatePersonalMatchAction(initialId, input)
+                : createPersonalMatchesAction([input], s.listing, roomId ? { roomId } : undefined)),
+            roomId ? `/match-rooms/${roomId}` : '/me/personal-matches',
         )
     }
 

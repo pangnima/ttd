@@ -46,7 +46,7 @@ function toMember(v: unknown): MatchRoomMember | null {
         nickname: str(v.nickname) ?? '',
         profileImage: str(v.profileImage),
         deleted: v.deleted === true,
-        role: (str(v.role) ?? 'viewer') as MatchRoomMemberRole,
+        role: (str(v.role) ?? 'player') as MatchRoomMemberRole,
         status: (str(v.status) ?? 'joined') as MatchRoomMemberStatus,
         sourceRole: str(v.sourceRole) as MatchRoomSourceRole | undefined,
     }
@@ -129,7 +129,6 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
             surface: str(r.surface) as CourtSurface | undefined,
             courtName: str(r.courtName),
             notes: str(r.notes),
-            capacity: num(r.capacity) ?? 0,
             hasResult: r.hasResult === true,
             createdAt: str(r.createdAt) ?? '',
         },

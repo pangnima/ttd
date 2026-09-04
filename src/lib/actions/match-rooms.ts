@@ -5,9 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import { validateRoomPassword } from '@/lib/match-rooms/password'
 
 /**
- * 경기 리스트(경기 방) 쓰기 — 입장·초대 응답·로테이션 풀 합류·방장 관리.
- * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046) 안에서 하고, 여기서는 사용자 문구로 번역만 한다.
- * 방 생성은 세 등록 액션이 lib/match-rooms/create-room.ts를 통해 한다.
+ * 경기 리스트(경기 방) 쓰기 — 입장·초대 응답·방장 관리.
+ * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046·0048) 안에서 하고, 여기서는 사용자 문구로 번역만 한다.
+ * 방 생성은 세 등록 액션이 lib/match-rooms/create-room.ts를 통해, 방 게임 추가는 createPersonalMatchesAction(roomId)이 한다.
  */
 
 type ActionResult = { error: string | null }
@@ -19,14 +19,8 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
-    ['not_rotation_room', '로테이션 경기에서만 합류를 신청할 수 있습니다.'],
-    ['room_finalized', '게임이 이미 확정된 경기라 합류할 수 없습니다.'],
-    ['not_viewer', '비밀번호로 입장한 뒤 신청할 수 있습니다.'],
-    ['already_in_pool', '이미 참가자 풀에 있습니다.'],
+    ['ntrp_missing', 'NTRP 정보가 없어 참가자 풀에 추가할 수 없습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],
-    ['request_not_found', '처리할 합류 신청이 없습니다.'],
-    ['user_not_found', '신청자를 찾을 수 없습니다.'],
-    ['ntrp_missing', '신청자의 NTRP 정보가 없어 승인할 수 없습니다.'],
 ]
 
 function translate(message: string, fallback: string): string {
@@ -45,7 +39,10 @@ async function requireUser() {
     return { supabase, user }
 }
 
-/** 비밀번호 입장 — 성공 시 viewer·joined 멤버로 기록되어 재입장 때는 비밀번호를 묻지 않는다 */
+/**
+ * 비밀번호 입장 — 성공 시 곧바로 참가자(player·joined)가 되고 재입장 때는 비밀번호를 묻지 않는다.
+ * 미확정 로테이션 방이면 세션 참가자 풀에도 추가되므로 방장의 결과 입력 카드도 갱신한다.
+ */
 export async function enterMatchRoomAction(roomId: string, password: string): Promise<ActionResult> {
     const validationError = validateRoomPassword(password)
     if (validationError) return { error: validationError }
@@ -55,6 +52,7 @@ export async function enterMatchRoomAction(roomId: string, password: string): Pr
     const { error } = await supabase.rpc('enter_match_room', { p_room_id: roomId, p_password: password })
     if (error) return { error: translate(error.message, '입장에 실패했습니다.') }
     revalidateRoom(roomId)
+    revalidatePath('/me/personal-matches')
     return { error: null }
 }
 
@@ -67,40 +65,6 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
     if (error) return { error: translate(error.message, '초대 응답에 실패했습니다.') }
     revalidateRoom(roomId)
     revalidatePath('/me/match-requests')
-    return { error: null }
-}
-
-/** 로테이션 풀 합류 신청 (비밀번호로 입장한 viewer만) */
-export async function requestRoomJoinAction(roomId: string): Promise<ActionResult> {
-    const { supabase, user } = await requireUser()
-    if (!user) return { error: '로그인이 필요합니다.' }
-
-    const { error } = await supabase.rpc('request_room_join', { p_room_id: roomId })
-    if (error) return { error: translate(error.message, '합류 신청에 실패했습니다.') }
-    revalidateRoom(roomId)
-    return { error: null }
-}
-
-/** 방장 승인 — rotation_sessions.players에 추가되고 정원 +1 */
-export async function approveRoomJoinAction(roomId: string, userId: string): Promise<ActionResult> {
-    const { supabase, user } = await requireUser()
-    if (!user) return { error: '로그인이 필요합니다.' }
-
-    const { error } = await supabase.rpc('approve_room_join', { p_room_id: roomId, p_user_id: userId })
-    if (error) return { error: translate(error.message, '합류 승인에 실패했습니다.') }
-    revalidateRoom(roomId)
-    revalidatePath('/me/personal-matches')
-    return { error: null }
-}
-
-/** 방장 거절 — 신청자는 열람 멤버로 남는다 */
-export async function rejectRoomJoinAction(roomId: string, userId: string): Promise<ActionResult> {
-    const { supabase, user } = await requireUser()
-    if (!user) return { error: '로그인이 필요합니다.' }
-
-    const { error } = await supabase.rpc('reject_room_join', { p_room_id: roomId, p_user_id: userId })
-    if (error) return { error: translate(error.message, '합류 거절에 실패했습니다.') }
-    revalidateRoom(roomId)
     return { error: null }
 }
 

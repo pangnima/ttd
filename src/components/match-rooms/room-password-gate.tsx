@@ -9,7 +9,7 @@ import { enterMatchRoomAction } from '@/lib/actions/match-rooms'
 
 type Props = { roomId: string }
 
-/** 미입장 게이트 — 비밀번호를 맞히면 viewer·joined 멤버로 기록되고 페이지가 상세로 다시 렌더된다 */
+/** 미입장 게이트 — 비밀번호를 맞히면 참가자(player·joined)로 등록되고 페이지가 상세로 다시 렌더된다 */
 export function RoomPasswordGate({ roomId }: Props) {
     const router = useRouter()
     const [password, setPassword] = useState('')
@@ -29,9 +29,9 @@ export function RoomPasswordGate({ roomId }: Props) {
     return (
         <form onSubmit={handleSubmit} className={`${CARD_BASE} p-5 space-y-4 max-w-md`}>
             <div>
-                <h2 className={TYPO.h4}>비밀번호를 입력하면 입장할 수 있습니다</h2>
+                <h2 className={TYPO.h4}>비밀번호를 입력하면 참가자로 등록됩니다</h2>
                 <p className="text-caption text-muted-foreground break-keep mt-1">
-                    참가자 명단·메모·결과는 입장 후에 볼 수 있습니다. 한 번 입장하면 다음부터는 바로 열립니다.
+                    입장하면 바로 이 경기의 참가자가 되고, 방장이 참가자로 게임을 구성합니다. 명단·메모·게임은 입장 후에 볼 수 있습니다.
                 </p>
             </div>
             <div>
