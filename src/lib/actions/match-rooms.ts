@@ -19,8 +19,9 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
-    ['ntrp_missing', 'NTRP 정보가 없어 참가자 풀에 추가할 수 없습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],
+    ['not_room_host', '방장만 할 수 있습니다.'],
+    ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
     ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
     ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
     ['cannot_request_self', '자기 자신과의 게임은 등록할 수 없습니다.'],
@@ -144,6 +145,23 @@ export async function createRoomGameAction(input: RoomGameInput): Promise<Action
     revalidateRoom(input.roomId)
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
+/**
+ * '게임 입력 종료' — 미확정 로테이션 세션을 닫는다(방장 전용, 0050).
+ * finalize는 세션을 남겨 두므로(참가자 여러 명이 각자 입력할 수 있어야 한다) 종료는 방장이 명시적으로 한다.
+ * 닫으면 방이 정산 대상이 되고, 이후 게임은 '게임 추가'(create_room_game) 경로로 붙는다.
+ */
+export async function closeRotationRoomAction(roomId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('close_rotation_room', { p_room_id: roomId })
+    if (error) return { error: translate(error.message, '게임 입력 종료에 실패했습니다.') }
+
+    revalidateRoom(roomId)
+    revalidatePath('/me/personal-matches')
     return { error: null }
 }
 

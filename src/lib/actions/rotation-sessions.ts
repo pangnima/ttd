@@ -102,11 +102,17 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
     if (error) return { error: '세션 삭제에 실패했습니다.' }
     if (!data?.length) return { error: '이미 삭제되었거나 존재하지 않는 세션입니다.' }
 
-    // 미확정 세션이 리스트에 올라가 있었다면 방도 내린다 (finalize도 세션을 삭제하므로 트리거 대신 여기서 처리)
+    // 미확정 세션이 리스트에 올라가 있었다면 방도 내린다. 단 참가자가 이미 올린 게임이 있으면 방을 남긴다 —
+    // room_id는 on delete set null이라 방을 지우면 남의 기록에서 방 링크가 조용히 끊긴다(0050).
     const roomId = data[0].room_id
     if (roomId) {
-        await supabase.from('match_rooms').delete().eq('id', roomId).eq('host_user_id', user.id)
+        const { count } = await supabase
+            .from('personal_matches')
+            .select('id', { count: 'exact', head: true })
+            .eq('room_id', roomId)
+        if (!count) await supabase.from('match_rooms').delete().eq('id', roomId).eq('host_user_id', user.id)
         revalidatePath('/match-rooms')
+        revalidatePath(`/match-rooms/${roomId}`)
     }
 
     revalidatePath('/me/personal-matches')
@@ -115,12 +121,19 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
 
 /** RPC가 raise하는 식별자 → 사용자 안내 문구 */
 const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
-    ['session_not_found', '이미 처리되었거나 존재하지 않는 세션입니다.'],
+    ['not_session_participant', '이 방에 참가한 사람만 결과를 입력할 수 있습니다.'],
+    ['participant_not_in_room', '이 방의 참가자만 게임에 넣을 수 있습니다.'],
+    ['duplicate_players', '한 게임에 같은 사람을 두 번 넣을 수 없습니다.'],
+    ['session_not_found', '게임 입력이 종료되었거나 삭제된 경기입니다.'],
     ['invalid_games', '게임 구성을 확인해주세요. (파트너·상대1·상대2 필수)'],
     ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요. (게임당 스코어 1줄)'],
 ]
 
-/** 게임별 personal_matches 행으로 분해 저장 + 세션 삭제 (RPC 한 트랜잭션) */
+/**
+ * 게임별 기록으로 분해 저장 (RPC 한 트랜잭션).
+ * 방 세션이면 방에 참가한 회원 누구나 자기 기준으로 입력할 수 있고, 상대팀에 회원이 있으면
+ * 상호 확인 경기로 만들어져 상대 대표 확인 후 확정된다. 세션 행은 방장이 닫을 때까지 남는다(0050).
+ */
 export async function finalizeRotationSessionAction(
     sessionId: string,
     games: RotationGamePayload[],
@@ -152,6 +165,10 @@ export async function finalizeRotationSessionAction(
             ...(s.oppAd ? { oppAd: s.oppAd } : {}),
         })),
     }))
+    // 방 재검증에 쓸 room_id — 세션은 방 참가자도 읽을 수 있다(0050 RLS)
+    const { data: session } = await supabase
+        .from('rotation_sessions').select('room_id').eq('id', sessionId).maybeSingle()
+
     const { error } = await supabase.rpc('finalize_rotation_session', {
         p_session_id: sessionId,
         p_games: payload,
@@ -164,5 +181,10 @@ export async function finalizeRotationSessionAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/analytics')
+    if (session?.room_id) {
+        revalidatePath('/match-rooms')
+        revalidatePath(`/match-rooms/${session.room_id}`)
+        revalidatePath('/me/match-requests')
+    }
     return { error: null }
 }

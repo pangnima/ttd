@@ -74,3 +74,24 @@ describe('buildMatchGroups — 레코드 그룹', () => {
         expect(buildMatchGroups([early, older, late]).map((g) => g.matches[0].id)).toEqual(['l', 'e', 'o'])
     })
 })
+
+describe('buildMatchGroups — 방 로테이션(0050)', () => {
+    const s = 'sess-room'
+    // 방 세션의 게임은 상대팀에 회원이 있으면 상호 확인(confirmation), 없으면 즉시 확정(rotation)으로 저장된다
+    const mutual = pm({ id: 'm1', rotationSessionId: s, groupSeq: 1, sourceType: 'confirmation', sourceRequestId: 'r1', setScores: [] })
+    const immediate = pm({ id: 'i1', rotationSessionId: s, groupSeq: 2, sourceType: 'rotation' })
+    // 다른 참가자가 이어붙인 게임 (group_seq가 max에서 이어진다)
+    const later = pm({ id: 'm2', rotationSessionId: s, groupSeq: 3, sourceType: 'confirmation', sourceRequestId: 'r2', setScores: [] })
+
+    it('sourceType이 섞여도 rotationSessionId 하나면 1그룹으로 묶인다', () => {
+        const groups = buildMatchGroups([later, immediate, mutual])
+        expect(groups).toHaveLength(1)
+        expect(groups[0].kind).toBe('rotation')
+        expect(groups[0].matches.map((m) => m.id)).toEqual(['m1', 'i1', 'm2'])
+    })
+
+    it('결과 확인 대기(세트 없음) 게임은 게임 수에는 들어가고 전적에는 빠진다', () => {
+        const [g] = buildMatchGroups([mutual, immediate, later])
+        expect(g).toMatchObject({ gameCount: 3, wins: 1, losses: 0, draws: 0 })
+    })
+})

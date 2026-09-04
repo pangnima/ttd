@@ -43,10 +43,15 @@ export default async function MatchRoomPage({ params }: Props) {
     }
 
     const isHost = detail.room.hostUserId === user.id
+    // 미확정 로테이션 방은 참가자 전원이 각자 게임을 넣는 중 — 세션을 닫는 건 방장만 한다(0050)
+    const canCloseRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
 
     return (
         <PageContainer>
-            <RoomDetailHeader detail={detail} actions={isHost ? <RoomHostActions roomId={roomId} /> : undefined} />
+            <RoomDetailHeader
+                detail={detail}
+                actions={isHost ? <RoomHostActions roomId={roomId} canCloseRotation={canCloseRotation} /> : undefined}
+            />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
             <RoomMembersSection detail={detail} />
             <RoomGamesSection detail={detail} viewerId={user.id} />

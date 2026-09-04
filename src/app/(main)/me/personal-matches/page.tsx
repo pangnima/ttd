@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPastOpponents, fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
-import { fetchRotationSessionsByUser } from '@/lib/queries/rotation-sessions'
+import { fetchPendingRotationSessions } from '@/lib/queries/rotation-sessions'
+import { fetchRoomParticipantCandidates } from '@/lib/queries/match-rooms'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { RotationSessionList } from '@/components/personal-matches/rotation-session-list'
 import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
@@ -20,10 +21,19 @@ export default async function PersonalMatchesPage() {
     // 자동완성 후보는 로테이션 결과 입력 팝업의 참가자 편집(모집형 세션에서 선수를 채울 때)에 쓴다
     const [matches, sessions, opponentCandidates, pastOpponents] = await Promise.all([
         fetchPersonalMatchesWithConfirmation(user.id),
-        fetchRotationSessionsByUser(user.id),
+        fetchPendingRotationSessions(user.id),
         fetchOpponentCandidates(user.id),
         fetchPastOpponents(user.id),
     ])
+
+    // 방 세션의 빌더 풀은 "세션 풀 ∪ 방 참가자 − 나"라 방 명단이 함께 필요하다 (0050)
+    const roomSessions = sessions.filter((s) => s.roomId)
+    const participantLists = await Promise.all(
+        roomSessions.map((s) => fetchRoomParticipantCandidates(s.roomId as string, user.id)),
+    )
+    const roomParticipants = Object.fromEntries(
+        roomSessions.map((s, i) => [s.id, participantLists[i]]),
+    )
 
     return (
         <PageContainer>
@@ -43,6 +53,8 @@ export default async function PersonalMatchesPage() {
             {/* 로테이션 세션(게임 미입력)은 통계 밖이므로 목록 위 별도 섹션 */}
             <RotationSessionList
                 sessions={sessions}
+                viewerId={user.id}
+                roomParticipants={roomParticipants}
                 picker={{ candidates: opponentCandidates, pastOpponents, selfUserId: user.id }}
             />
 

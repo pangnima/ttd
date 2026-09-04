@@ -852,6 +852,7 @@ export type Database = {
           created_at: string
           group_seq: number | null
           id: string
+          is_perspective: boolean
           match_type: string
           notes: string | null
           played_at: string
@@ -869,6 +870,7 @@ export type Database = {
           created_at?: string
           group_seq?: number | null
           id?: string
+          is_perspective?: boolean
           match_type: string
           notes?: string | null
           played_at: string
@@ -886,6 +888,7 @@ export type Database = {
           created_at?: string
           group_seq?: number | null
           id?: string
+          is_perspective?: boolean
           match_type?: string
           notes?: string | null
           played_at?: string
@@ -1129,6 +1132,17 @@ export type Database = {
         }
         Returns: string
       }
+      close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
+      materialize_accepted_request: {
+        Args: {
+          p_group_seq?: number
+          p_request_id: string
+          p_rotation_session_id?: string
+        }
+        Returns: undefined
+      }
+      resolve_rotation_player: { Args: { p_player: Json }; Returns: Json }
+      swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
       is_room_participant: {
         Args: { p_room_id: string }
         Returns: boolean
