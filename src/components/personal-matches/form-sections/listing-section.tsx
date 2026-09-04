@@ -27,6 +27,7 @@ export function ListingSection({ listed, onListedChange, password, onPasswordCha
                     <p className="text-body font-medium">리스트에 노출</p>
                     <p className="text-caption text-muted-foreground break-keep">
                         회원 누구나 경기 리스트에서 볼 수 있습니다. 입력한 회원은 자동 초대되고, 그 외 회원은 비밀번호로 입장합니다. 메모도 방에 공개됩니다.
+                        참가자를 비워 두고 저장하면 모집 중인 경기로 노출되고, 나중에 수정에서 채울 수 있습니다.
                     </p>
                 </div>
                 <Switch checked={listed} onCheckedChange={onListedChange} aria-label="리스트에 노출" className="mt-1 shrink-0" />

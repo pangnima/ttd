@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { PersonalMatchSetScore } from '@/types'
 import {
     buildRotationInputs,
+    compactPool,
     rotationGameToInput,
     validateRotation,
     validateRotationGames,
@@ -138,5 +139,36 @@ describe('validateRotation', () => {
 
     it('미선택 ref(null)이면 false', () => {
         expect(validateRotation(P, [{ tempId: 'g1', partnerRef: 'b', opp1Ref: null, opp2Ref: 'd', sets: [{ me: 6, opp: 4 }] }], meta)).toBe(false)
+    })
+})
+
+describe('모집형(리스트에 노출) — 풀 비우기 허용', () => {
+    const empty = (id: string): PoolPlayer => ({ tempId: id, player: { name: '', hand: '' }, ntrp: '' })
+
+    it('allowEmpty면 빈 행 3개(등록 폼 기본 상태)도 통과', () => {
+        expect(validateRotationPool([empty('a'), empty('b'), empty('c')], meta, { allowEmpty: true })).toBe(true)
+        expect(validateRotationPool([], meta, { allowEmpty: true })).toBe(true)
+    })
+
+    it('allowEmpty여도 부분 입력 행이 있으면 거부', () => {
+        const partial = [empty('a'), pool('b', 'B', '')]
+        expect(validateRotationPool(partial, meta, { allowEmpty: true })).toBe(false)
+    })
+
+    it('allowEmpty + 완성된 행 1개는 통과(최소 인원 요구 없음)', () => {
+        expect(validateRotationPool([empty('a'), pool('b', 'B', '3.0')], meta, { allowEmpty: true })).toBe(true)
+    })
+
+    it('옵션이 없으면 기존대로 3명 미만 거부', () => {
+        expect(validateRotationPool([pool('b', 'B', '3.0')], meta)).toBe(false)
+        expect(validateRotationPool([empty('a'), empty('b'), empty('c')], meta)).toBe(false)
+    })
+
+    it('compactPool은 빈 행만 제거한다', () => {
+        expect(compactPool([empty('a'), pool('b', 'B', '3.0'), empty('c')]).map((p) => p.tempId)).toEqual(['b'])
+    })
+
+    it('메타가 비면 allowEmpty여도 거부', () => {
+        expect(validateRotationPool([], { ...meta, surface: '' }, { allowEmpty: true })).toBe(false)
     })
 })

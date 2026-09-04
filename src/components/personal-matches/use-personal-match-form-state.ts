@@ -4,7 +4,8 @@ import { useState } from 'react'
 import type { PersonalMatch, MatchType, CourtSurface } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PersonalMatchInput, NtrpField } from '@/lib/personal-matches/validate-input'
-import { isNtrpValid, isPlayerFilled } from '@/lib/personal-matches/validators'
+import { isPlayerFilled } from '@/lib/personal-matches/validators'
+import { isSlotOk } from '@/lib/personal-matches/lineup'
 import { isPlatformMember, resolveConfirmRep } from '@/lib/personal-matches/confirm-flow'
 import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
@@ -67,9 +68,16 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     const isDoubles = DOUBLES_TYPES.includes(matchType)
     const isRotation = isDoubles && doublesMode === 'rotation' && !isEdit
 
+    // 모집형(리스트에 노출)은 참가자를 비운 채 저장할 수 있다.
+    // 수정 모드는 이미 리스트에 올라간 기록이면서 결과가 없을 때만 — 결과가 있으면 라인업을 비울 수 없다.
+    const allowEmptyPlayers = (!isEdit && listed) || (isEdit && !!d?.roomId && (d?.setScores.length ?? 0) === 0)
+    // 라인업이 다 찼을 때만 상호 확인 요청 — 빈 슬롯이 있으면 요청 RPC가 거부하므로 자유 기록으로 저장한다
+    const allFilled = isPlayerFilled(opponent.player)
+        && (!isDoubles || (isPlayerFilled(partner.player) && isPlayerFilled(opponent2.player)))
+
     // 상호 확인 요청 대표 — 신규 등록 + 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
-    // 게스트·직접 입력·로테이션·수정 모드는 자유 기록으로 저장한다.
-    const rep = !isEdit && !isRotation && selfUserId
+    // 게스트·직접 입력·로테이션·수정 모드·모집 중(빈 슬롯)은 자유 기록으로 저장한다.
+    const rep = !isEdit && !isRotation && selfUserId && allFilled
         ? resolveConfirmRep(
             { userId: opponent.player.userId, slot: opponent },
             { userId: opponent2.player.userId, slot: opponent2 },
@@ -83,20 +91,18 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
             [['opponent', opponent], ['partner', partner], ['opponent2', opponent2]] as const
         ).filter(([, s]) => isPlatformMember(s.player, opponentCandidates)).map(([k]) => k)
         : []
-    const ntrpOk = (key: NtrpField, s: PlayerSlot, required: boolean) =>
-        hideNtrpFor.includes(key) || (required ? isNtrpValid(s.ntrp) : s.ntrp.trim() === '' || isNtrpValid(s.ntrp))
+    // 슬롯 1개 판정 — 모집형이면 완전히 빈 슬롯 통과, 그 외에는 선수 입력 + NTRP 필수(확인 플로우 회원은 면제)
+    const slotOk = (key: NtrpField, s: PlayerSlot) =>
+        isSlotOk(s.player, s.ntrp, allowEmptyPlayers, hideNtrpFor.includes(key))
 
     const meta: RotationSessionMeta = { playedAt, playedTime, matchType, surface, notes, courtName }
     const metaOk = !!playedAt && !!playedTime && !!surface
     // 파트너 NTRP도 상대와 동일하게 필수 (회원 파트너는 확인 플로우에서 hideNtrpFor로 면제)
     const fixedValid =
-        isPlayerFilled(opponent.player) && ntrpOk('opponent', opponent, true) &&
-        (!isDoubles || (
-            isPlayerFilled(partner.player) && ntrpOk('partner', partner, true) &&
-            isPlayerFilled(opponent2.player) && ntrpOk('opponent2', opponent2, true)
-        )) && metaOk
+        slotOk('opponent', opponent) &&
+        (!isDoubles || (slotOk('partner', partner) && slotOk('opponent2', opponent2))) && metaOk
     const listingOk = isEdit || !listed || validateRoomPassword(roomPassword) === null
-    const isValid = (isRotation ? rotation.isPoolValid(meta) : fixedValid) && listingOk
+    const isValid = (isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid) && listingOk
     const listing: RoomListingInput | undefined = listed && !isEdit ? { password: roomPassword } : undefined
 
     const num = (s: string) => (s.trim() ? Number(s) : undefined)
@@ -128,7 +134,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
         courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
-        listed, setListed, roomPassword, setRoomPassword, listing,
+        listed, setListed, roomPassword, setRoomPassword, listing, allowEmptyPlayers,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
     }
 }

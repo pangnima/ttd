@@ -6,15 +6,16 @@ import { Button } from '@/components/ui/button'
 import { PENDING_RESULT_BADGE, PENDING_RESULT_BAR } from '@/lib/dashboard/outcome'
 import { deleteRotationSessionAction, finalizeRotationSessionAction } from '@/lib/actions/rotation-sessions'
 import { RotationGamesDialog } from '@/components/personal-matches/rotation-games-dialog'
+import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
 
-type Props = { session: RotationSession }
+type Props = { session: RotationSession; picker: PoolPickerProps }
 
 /** 결과 입력 대기 로테이션 세션 카드 — 참가자 요약 + 시각·코트명·메모 + [결과 입력](게임 빌더 Dialog) + 삭제 */
-export function RotationSessionCard({ session: s }: Props) {
+export function RotationSessionCard({ session: s, picker }: Props) {
     const d = useResultDialog()
     const [isDeleting, startDelete] = useTransition()
 
@@ -32,9 +33,11 @@ export function RotationSessionCard({ session: s }: Props) {
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                         <p className="text-body2 font-medium text-foreground truncate">
-                            로테이션 · 참가자 {s.players.length}명
+                            {s.players.length === 0 ? '로테이션 · 참가자 모집 중' : `로테이션 · 참가자 ${s.players.length}명`}
                         </p>
-                        <p className="text-caption text-muted-foreground truncate">{s.players.map((p) => p.name).join(' · ')}</p>
+                        {s.players.length > 0 && (
+                            <p className="text-caption text-muted-foreground truncate">{s.players.map((p) => p.name).join(' · ')}</p>
+                        )}
                     </div>
                     <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>게임 미입력</span>
                 </div>
@@ -52,6 +55,7 @@ export function RotationSessionCard({ session: s }: Props) {
                 open={d.open}
                 onOpenChange={d.setOpen}
                 session={s}
+                picker={picker}
                 onSubmit={(games) => d.run(() => finalizeRotationSessionAction(s.id, games))}
                 isPending={d.isPending}
                 error={d.error}

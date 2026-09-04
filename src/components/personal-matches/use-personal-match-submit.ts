@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createPersonalMatchesAction, updatePersonalMatchAction } from '@/lib/actions/personal-matches'
 import { createMatchRequestAction } from '@/lib/actions/match-requests'
 import { createRotationSessionAction } from '@/lib/actions/rotation-sessions'
-import { poolToPlayers } from '@/lib/personal-matches/rotation'
+import { compactPool, poolToPlayers } from '@/lib/personal-matches/rotation'
 import { handOf, type PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 /**
@@ -41,7 +41,8 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             run(() => createRotationSessionAction({
                 playedAt, playedTime, matchType, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-                players: poolToPlayers(s.rotation.pool),
+                // 빈 행은 제거하고 보낸다 (모집형은 0명도 허용)
+                players: poolToPlayers(compactPool(s.rotation.pool)),
             }, s.listing), '/me/personal-matches')
             return
         }

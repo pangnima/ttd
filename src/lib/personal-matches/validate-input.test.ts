@@ -62,3 +62,43 @@ describe('validateCourtName', () => {
         expect(validateCourtName('a'.repeat(41))).not.toBeNull()
     })
 })
+
+describe('validatePersonalMatchInput — 모집형(allowMissingPlayers)', () => {
+    const opts = { allowMissingPlayers: true } as const
+    const emptySingles: PersonalMatchInput = { ...singles, opponentName: '', opponentNtrp: undefined }
+
+    it('참가자를 전부 비워도 통과 (세트 없음)', () => {
+        expect(validatePersonalMatchInput(emptySingles, opts)).toBeNull()
+        expect(validatePersonalMatchInput({
+            ...doubles, opponentName: '', opponentNtrp: undefined,
+            partnerName: undefined, partnerNtrp: undefined, opponent2Name: undefined, opponent2Ntrp: undefined,
+        }, opts)).toBeNull()
+    })
+
+    it('세트가 있으면 옵션이 있어도 거부 — 결과가 있는 기록은 라인업이 완성돼야 한다', () => {
+        expect(validatePersonalMatchInput({ ...emptySingles, setScores: [{ me: 6, opp: 3 }] }, opts))
+            .toBe('상대 이름을 입력해주세요.')
+    })
+
+    it('이름을 넣은 슬롯은 NTRP가 여전히 필수', () => {
+        expect(validatePersonalMatchInput({ ...emptySingles, opponentName: '상대' }, opts)).toBe('상대 NTRP를 입력해주세요.')
+    })
+
+    it('복식에서 파트너만 채워도 통과, 채운 슬롯 범위는 검사', () => {
+        expect(validatePersonalMatchInput({
+            ...doubles, opponentName: '', opponentNtrp: undefined, opponent2Name: undefined, opponent2Ntrp: undefined,
+        }, opts)).toBeNull()
+        expect(validatePersonalMatchInput({
+            ...doubles, opponentName: '', opponentNtrp: undefined, opponent2Name: undefined, opponent2Ntrp: undefined,
+            partnerNtrp: 9,
+        }, opts)).toBe('파트너 NTRP는 1.0~7.0 범위로 입력해주세요.')
+    })
+
+    it('옵션이 없으면 기존 문구로 거부', () => {
+        expect(validatePersonalMatchInput(emptySingles)).toBe('상대 이름을 입력해주세요.')
+    })
+
+    it('회원 연결만 있고 이름이 없어도 슬롯으로 인정한다', () => {
+        expect(validatePersonalMatchInput({ ...emptySingles, opponentUserId: 'u1' }, opts)).toBe('상대 NTRP를 입력해주세요.')
+    })
+})

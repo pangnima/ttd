@@ -55,7 +55,8 @@ export async function createRotationSessionAction(input: RotationSessionInput, l
     if (!input.surface) return { error: '코트 표면을 선택해주세요.' }
     const courtNameError = validateCourtName(input.courtName)
     if (courtNameError) return { error: courtNameError }
-    if (input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
+    // 리스트에 노출(모집형)이면 참가자 없이도 세션을 열 수 있다 — 방에서 모으고 결과 입력 때 게임을 구성한다
+    if (!listing && input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
     for (const p of input.players) {
         const err = validatePlayer(p)
         if (err) return { error: err }

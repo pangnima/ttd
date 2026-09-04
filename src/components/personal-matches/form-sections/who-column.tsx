@@ -32,6 +32,11 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, selfUserId }: 
             </FormSectionCard>
 
             <FormSectionCard title={participantsTitle} step="02" contentClassName="space-y-4">
+                {s.allowEmptyPlayers && (
+                    <p className="text-caption text-muted-foreground break-keep">
+                        경기 리스트에 노출되므로 참가자를 비워 두고 모집할 수 있습니다. 채운 회원은 방에 자동 초대됩니다.
+                    </p>
+                )}
                 {s.isRotation ? (
                     <PlayerPoolSection
                         pool={s.rotation.pool}
@@ -41,6 +46,7 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, selfUserId }: 
                         onUpdate={s.rotation.updatePoolPlayer}
                         onRemove={s.rotation.removePoolPlayer}
                         searchSelfUserId={selfUserId}
+                        allowEmpty={s.allowEmptyPlayers}
                     />
                 ) : (
                     <PlayersSection
@@ -50,8 +56,10 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, selfUserId }: 
                         opponent={slot(s.opponent)}
                         partner={slot(s.partner)}
                         opponent2={slot(s.opponent2)}
-                        searchSelfUserId={!s.isEdit ? selfUserId : undefined}
+                        // 모집형 수정(빈 자리 채우기)에서는 수정 모드여도 전체 회원 검색을 연다
+                        searchSelfUserId={!s.isEdit || s.allowEmptyPlayers ? selfUserId : undefined}
                         hideNtrpFor={s.hideNtrpFor}
+                        allowEmpty={s.allowEmptyPlayers}
                     />
                 )}
                 {s.rep && (

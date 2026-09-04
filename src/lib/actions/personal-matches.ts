@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { fetchPersonalMatchById, fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { isLineupComplete } from '@/lib/personal-matches/lineup'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import {
@@ -32,46 +33,46 @@ function buildPersonalMatchBaseRow(input: PersonalMatchInput, userId: string) {
     }
 }
 
+type ParticipantRow = {
+    match_id: string
+    role: 'opponent' | 'partner' | 'opponent2'
+    user_id: string | null
+    name: string
+    dominant_hand: 'right' | 'left' | null
+    ntrp_snapshot: number | null
+}
+
 /**
  * personal_match_participants 행 생성 — 단식은 opponent 1행, 복식은 partner/opponent2까지 최대 3행.
- * role별 name은 NOT NULL이므로 폼에서 항상 채워진다는 전제(회원 선택 시 자동 채움, 기존 opponent_name과 동일 전제).
+ * 모집형 방(리스트에 노출)은 참가자를 비운 채 저장할 수 있으므로 **이름 또는 회원 연결이 있는 슬롯만** 행을 만든다
+ * (빈 name 행을 남기지 않는다 — 목록·라벨·초대가 모두 이름을 전제로 한다).
  */
 function buildParticipantRows(input: PersonalMatchInput, matchId: string) {
     const doubles = isDoublesMatchType(input.matchType)
-    const rows: Array<{
-        match_id: string
-        role: 'opponent' | 'partner' | 'opponent2'
-        user_id: string | null
-        name: string
-        dominant_hand: 'right' | 'left' | null
-        ntrp_snapshot: number | null
-    }> = [
-        {
+    const rows: ParticipantRow[] = []
+    const pushIf = (
+        role: ParticipantRow['role'],
+        name: string | undefined,
+        userId: string | undefined,
+        hand: 'right' | 'left' | undefined,
+        ntrp: number | undefined,
+    ) => {
+        const trimmed = name?.trim() ?? ''
+        if (!trimmed && !userId) return
+        rows.push({
             match_id: matchId,
-            role: 'opponent',
-            user_id: input.opponentUserId ?? null,
-            name: input.opponentName.trim(),
-            dominant_hand: input.opponentDominantHand ?? null,
-            ntrp_snapshot: input.opponentNtrp ?? null,
-        },
-    ]
+            role,
+            user_id: userId ?? null,
+            name: trimmed,
+            dominant_hand: hand ?? null,
+            ntrp_snapshot: ntrp ?? null,
+        })
+    }
+
+    pushIf('opponent', input.opponentName, input.opponentUserId, input.opponentDominantHand, input.opponentNtrp)
     if (doubles) {
-        rows.push({
-            match_id: matchId,
-            role: 'partner',
-            user_id: input.partnerUserId ?? null,
-            name: input.partnerName?.trim() || '',
-            dominant_hand: input.partnerDominantHand ?? null,
-            ntrp_snapshot: input.partnerNtrp ?? null,
-        })
-        rows.push({
-            match_id: matchId,
-            role: 'opponent2',
-            user_id: input.opponent2UserId ?? null,
-            name: input.opponent2Name?.trim() || '',
-            dominant_hand: input.opponent2DominantHand ?? null,
-            ntrp_snapshot: input.opponent2Ntrp ?? null,
-        })
+        pushIf('partner', input.partnerName, input.partnerUserId, input.partnerDominantHand, input.partnerNtrp)
+        pushIf('opponent2', input.opponent2Name, input.opponent2UserId, input.opponent2DominantHand, input.opponent2Ntrp)
     }
     return rows
 }
@@ -122,7 +123,8 @@ export async function createPersonalMatchesAction(
 ): Promise<{ error: string | null }> {
     if (!inputs.length) return { error: '저장할 경기가 없습니다.' }
     for (const input of inputs) {
-        const validationError = validatePersonalMatchInput(input)
+        // 리스트에 노출(모집형)이면 참가자를 비운 채 저장할 수 있다 (세트가 없을 때만 — validate-input이 함께 본다)
+        const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!listing })
         if (validationError) return { error: validationError }
     }
 
@@ -135,8 +137,10 @@ export async function createPersonalMatchesAction(
     if (error || !inserted) return { error: '경기 저장에 실패했습니다.' }
 
     const participantRows = inputs.flatMap((input, i) => buildParticipantRows(input, inserted[i].id))
-    const { error: participantsError } = await supabase.from('personal_match_participants').insert(participantRows)
-    if (participantsError) return { error: '경기 저장에 실패했습니다.' }
+    if (participantRows.length > 0) {
+        const { error: participantsError } = await supabase.from('personal_match_participants').insert(participantRows)
+        if (participantsError) return { error: '경기 저장에 실패했습니다.' }
+    }
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
@@ -154,12 +158,21 @@ export async function updatePersonalMatchAction(
     id: string,
     input: PersonalMatchInput,
 ): Promise<{ error: string | null }> {
-    const validationError = validatePersonalMatchInput(input)
-    if (validationError) return { error: validationError }
-
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
+
+    // 리스트에 노출된 기록(모집형)은 참가자를 비운 채 수정할 수 있다. 세트가 있으면 validate-input이 거부한다.
+    const { data: existing } = await supabase
+        .from('personal_matches')
+        .select('room_id')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+    const roomId = existing?.room_id ?? null
+
+    const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!roomId })
+    if (validationError) return { error: validationError }
 
     // 상호 확인 경기(source_type='confirmation')는 수정 불가 — RESTRICTIVE RLS와 이중 방어
     const { user_id: _omit, source_type: _omit2, ...baseRow } = buildPersonalMatchBaseRow(input, user.id)
@@ -177,15 +190,21 @@ export async function updatePersonalMatchAction(
     if (!updated?.length) return { error: '상호 확인된 경기는 수정·삭제할 수 없습니다.' }
 
     // 참가자 재작성: 기존 역할별 행을 삭제 후 새로 삽입(부분 upsert보다 단순하고, 카디널리티 변경도 처리됨)
+    // 방에 노출된 기록이면 새로 채운 회원이 INSERT 트리거(0047)로 방에 초대된다.
     await supabase.from('personal_match_participants').delete().eq('match_id', id)
-    const { error: participantsError } = await supabase
-        .from('personal_match_participants')
-        .insert(buildParticipantRows(input, id))
-    if (participantsError) return { error: '경기 수정에 실패했습니다.' }
+    const participantRows = buildParticipantRows(input, id)
+    if (participantRows.length > 0) {
+        const { error: participantsError } = await supabase.from('personal_match_participants').insert(participantRows)
+        if (participantsError) return { error: '경기 수정에 실패했습니다.' }
+    }
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
     revalidatePath('/me/personal-matches')
+    if (roomId) {
+        revalidatePath('/match-rooms')
+        revalidatePath(`/match-rooms/${roomId}`)
+    }
     return { error: null }
 }
 
@@ -228,6 +247,11 @@ export async function updatePersonalMatchSetsAction(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
+
+    // 모집 중(참가자 미정)인 기록에는 결과를 넣을 수 없다 — 통계·레이팅은 상대가 정해진 경기만 집계한다
+    const match = await fetchPersonalMatchById(id)
+    if (!match || match.userId !== user.id) return { error: '경기를 찾을 수 없습니다.' }
+    if (!isLineupComplete(match)) return { error: '참가자를 모두 입력한 뒤 결과를 등록할 수 있습니다.' }
 
     // me/opp + (복식) 세트별 애드/듀스만 저장 — doubles-court 통계가 setScores[].myAd를 읽는다
     const cleanSets = sets.map((s) => ({

@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPersonalMatchById, fetchPastOpponents, fetchRecentCourtNames } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
+import { formatTeams } from '@/lib/personal-matches/labels'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { PageContainer } from '@/components/common/page-container'
 import { PageHeader } from '@/components/common/page-header'
@@ -31,9 +32,10 @@ export default async function EditPersonalMatchPage({ params }: Props) {
             <PageHeader
                 className="mx-auto w-full max-w-2xl lg:max-w-5xl"
                 title="경기 기록 수정"
-                description={`vs ${match.opponentName}`}
+                description={formatTeams(match)}
             />
-            <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} recentCourtNames={recentCourtNames} />
+            {/* selfUserId — 모집형(리스트에 노출·결과 없음) 기록의 빈 자리를 전체 회원 검색으로 채울 수 있게 한다 */}
+            <PersonalMatchForm initialData={match} opponentCandidates={opponentCandidates} pastOpponents={pastOpponents} recentCourtNames={recentCourtNames} selfUserId={user.id} />
         </PageContainer>
     )
 }

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
+import { fetchPastOpponents, fetchPersonalMatchesWithConfirmation } from '@/lib/queries/personal-matches'
+import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchRotationSessionsByUser } from '@/lib/queries/rotation-sessions'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { RotationSessionList } from '@/components/personal-matches/rotation-session-list'
@@ -16,9 +17,12 @@ export default async function PersonalMatchesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [matches, sessions] = await Promise.all([
+    // 자동완성 후보는 로테이션 결과 입력 팝업의 참가자 편집(모집형 세션에서 선수를 채울 때)에 쓴다
+    const [matches, sessions, opponentCandidates, pastOpponents] = await Promise.all([
         fetchPersonalMatchesWithConfirmation(user.id),
         fetchRotationSessionsByUser(user.id),
+        fetchOpponentCandidates(user.id),
+        fetchPastOpponents(user.id),
     ])
 
     return (
@@ -37,7 +41,10 @@ export default async function PersonalMatchesPage() {
             />
 
             {/* 로테이션 세션(게임 미입력)은 통계 밖이므로 목록 위 별도 섹션 */}
-            <RotationSessionList sessions={sessions} />
+            <RotationSessionList
+                sessions={sessions}
+                picker={{ candidates: opponentCandidates, pastOpponents, selfUserId: user.id }}
+            />
 
             {matches.length === 0 && sessions.length === 0 ? (
                 <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>

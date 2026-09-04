@@ -55,13 +55,22 @@ export type NtrpField = 'opponent' | 'partner' | 'opponent2'
 type ValidateOptions = {
     // 상호 확인 요청은 회원 참가자의 NTRP를 수락 시 서버(RPC)가 파생하므로 해당 필드 검증을 건너뛴다.
     skipNtrpFor?: NtrpField[]
+    // 모집형 방(리스트에 노출)은 참가자를 비운 채 저장할 수 있다. 단, 세트가 있으면(결과 확정) 허용하지 않는다 —
+    // "세트가 있는 기록은 라인업이 완성돼 있다"가 통계·레이팅 집계(explode)의 불변식이기 때문.
+    allowMissingPlayers?: boolean
+}
+
+/** 슬롯 존재 여부 — 이름 또는 회원 연결 중 하나라도 있으면 그 자리에 선수가 있다 */
+function hasSlot(name: string | undefined, userId: string | undefined): boolean {
+    return !!name?.trim() || !!userId
 }
 
 export function validatePersonalMatchInput(
     input: PersonalMatchInput,
     options: ValidateOptions = {},
 ): string | null {
-    if (!input.opponentName.trim()) return '상대 이름을 입력해주세요.'
+    const missingOk = !!options.allowMissingPlayers && input.setScores.length === 0
+    if (!hasSlot(input.opponentName, input.opponentUserId) && !missingOk) return '상대 이름을 입력해주세요.'
     if (!input.playedAt) return '경기 날짜를 입력해주세요.'
     if (!input.playedTime) return '경기 시각을 입력해주세요.'
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return '경기 시각 형식이 올바르지 않습니다.'
@@ -69,32 +78,34 @@ export function validatePersonalMatchInput(
         return '올바른 경기 타입을 선택해주세요.'
     }
     const doubles = isDoublesMatchType(input.matchType)
-    if (doubles) {
-        if (!input.partnerName?.trim() && !input.partnerUserId) return '복식은 내 파트너를 입력해주세요.'
-        if (!input.opponent2Name?.trim() && !input.opponent2UserId) return '복식은 상대팀 2번째 선수를 입력해주세요.'
+    if (doubles && !missingOk) {
+        if (!hasSlot(input.partnerName, input.partnerUserId)) return '복식은 내 파트너를 입력해주세요.'
+        if (!hasSlot(input.opponent2Name, input.opponent2UserId)) return '복식은 상대팀 2번째 선수를 입력해주세요.'
     }
     // 코트 표면(필수)
     if (!input.surface) return '코트 표면을 선택해주세요.'
     const courtNameError = validateCourtName(input.courtName)
     if (courtNameError) return courtNameError
+    // NTRP는 그 자리에 선수가 있을 때만 필수 (모집형은 빈 슬롯이 있을 수 있다). 값이 오면 범위는 항상 검사한다.
     const skip = new Set(options.skipNtrpFor ?? [])
+    const opponentFilled = hasSlot(input.opponentName, input.opponentUserId)
     if (!skip.has('opponent')) {
         // 상대 NTRP(필수): 1.0~7.0 범위 (복식이면 상대1)
-        if (input.opponentNtrp == null) return doubles ? '상대1 NTRP를 입력해주세요.' : '상대 NTRP를 입력해주세요.'
-        if (input.opponentNtrp < 1 || input.opponentNtrp > 7) {
+        if (input.opponentNtrp == null && opponentFilled) return doubles ? '상대1 NTRP를 입력해주세요.' : '상대 NTRP를 입력해주세요.'
+        if (input.opponentNtrp != null && (input.opponentNtrp < 1 || input.opponentNtrp > 7)) {
             return doubles ? '상대1 NTRP는 1.0~7.0 범위로 입력해주세요.' : '상대 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
     }
     if (doubles) {
         if (!skip.has('opponent2')) {
             // 상대2 NTRP(필수)
-            if (input.opponent2Ntrp == null) return '상대2 NTRP를 입력해주세요.'
-            if (input.opponent2Ntrp < 1 || input.opponent2Ntrp > 7) return '상대2 NTRP는 1.0~7.0 범위로 입력해주세요.'
+            if (input.opponent2Ntrp == null && hasSlot(input.opponent2Name, input.opponent2UserId)) return '상대2 NTRP를 입력해주세요.'
+            if (input.opponent2Ntrp != null && (input.opponent2Ntrp < 1 || input.opponent2Ntrp > 7)) return '상대2 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
         // 파트너 NTRP(필수 — 상대와 동일 규칙): 회원 파트너는 skipNtrpFor로 건너뛴다(수락 시 서버 파생)
         if (!skip.has('partner')) {
-            if (input.partnerNtrp == null) return '파트너 NTRP를 입력해주세요.'
-            if (input.partnerNtrp < 1 || input.partnerNtrp > 7) return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
+            if (input.partnerNtrp == null && hasSlot(input.partnerName, input.partnerUserId)) return '파트너 NTRP를 입력해주세요.'
+            if (input.partnerNtrp != null && (input.partnerNtrp < 1 || input.partnerNtrp > 7)) return '파트너 NTRP는 1.0~7.0 범위로 입력해주세요.'
         }
     }
     // 세트 검증: 빈 배열은 결과 미확정으로 허용. 로테이션은 클라(validateRotation)가 세트 필수를 보장한다.

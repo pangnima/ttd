@@ -2,6 +2,7 @@ import type { PersonalMatchSetScore, MatchType, CourtSurface, RotationPoolPlayer
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import type { PersonalMatchInput } from '@/lib/personal-matches/validate-input'
 import { isNtrpValid, isPlayerFilled, isSetValid } from './validators'
+import { isSlotEmpty } from './lineup'
 
 /**
  * 로테이션(아메리칸) 복식: 4명 이상이 파트너를 바꿔가며 여러 게임을 치는 경기.
@@ -148,15 +149,31 @@ export function buildRotationGamePayloads(games: RotationGame[], pool: PoolPlaye
     })
 }
 
+/** 아무것도 입력하지 않은 풀 행 (모집형에서 무시·제거 대상) */
+export function isPoolRowEmpty(p: PoolPlayer): boolean {
+    return isSlotEmpty(p.player) && !p.ntrp.trim()
+}
+
+/** 빈 행을 제거한 풀 — 모집형 저장·검증에서 쓴다 */
+export function compactPool(pool: PoolPlayer[]): PoolPlayer[] {
+    return pool.filter((p) => !isPoolRowEmpty(p))
+}
+
 /**
  * 세션 등록 단계 검증 — 공통 메타(날짜·시각·표면, 코트명은 선택) + 풀 3명 이상, 각 풀 항목 선수 입력 완료.
  * 풀 전원 NTRP 필수 — 게임에서 파트너/상대 어느 역할이든 개인 레이팅 계산에 쓰인다 (페어 고정 폼과 동일 규칙).
+ * allowEmpty(리스트에 노출 = 모집형)면 빈 행을 무시하고 최소 인원을 요구하지 않는다. 남은 행은 같은 규칙을 지켜야 한다.
  */
-export function validateRotationPool(pool: PoolPlayer[], meta: RotationSessionMeta): boolean {
+export function validateRotationPool(
+    pool: PoolPlayer[],
+    meta: RotationSessionMeta,
+    options: { allowEmpty?: boolean } = {},
+): boolean {
     if (!meta.playedAt || !meta.playedTime || !meta.surface) return false
-    if (pool.length < 3) return false
-    if (!pool.every((p) => isPlayerFilled(p.player))) return false
-    if (!pool.every((p) => isNtrpValid(p.ntrp))) return false
+    const rows = options.allowEmpty ? compactPool(pool) : pool
+    if (!options.allowEmpty && rows.length < 3) return false
+    if (!rows.every((p) => isPlayerFilled(p.player))) return false
+    if (!rows.every((p) => isNtrpValid(p.ntrp))) return false
     return true
 }
 
