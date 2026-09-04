@@ -233,7 +233,7 @@ src/
   - [x] 로테이션 게임 = 스코어 1줄 고정(세트 추가 제거, 클라·액션·RPC 3중 방어), `personal_matches.rotation_session_id`·`group_seq`로 세션 게임 카드들을 목록에서 헤더 행(일시·코트명·참여 멤버·전적, `RotationGroupHeader`)으로 묶어 노출 + 레거시 로테이션 행 백필
   - [x] 멀티세트 레코드는 DB·카드 구성 그대로 두되 다수결 색 바 제거(게임 1개 WIN/LOSS, 2개 이상 중립 바 + 'N승 M패', `tallySets` 단일 규칙), 결과 입력 UI 용어 '세트'→'게임'
   - [x] 경기 시각 셀렉트를 `EnumSelect`(base-ui)로 교체해 날짜 input과 높이(48px) 정렬
-  - [x] 세트 다수결 승패 로직 폐기(0045): `personal_matches.winner`·`personal_match_winner`·`resolveMatchWinner` 제거, 미확정 = `set_scores` 빈 배열(`hasResult`) 단일 규칙, RPC 3종은 세트만 기록. 로테이션 그룹 앞뒤 여백(`my-4`)
+  - [x] 세트 다수결 승패 로직 폐기(0045): `personal_matches.winner`·`personal_match_winner`·`resolveMatchWinner` 제거, 미확정 = `set_scores` 빈 배열(`hasResult`) 단일 규칙, RPC 3종은 세트만 기록. 로테이션 그룹 헤더는 일시를 앞세워 여백 없이 경계 구분
   - [ ] 2차: 로테이션 그룹 단위 삭제 액션(현재는 게임별 삭제만)
 - [x] Week 23: 개인 경기 등록 폼 사용성 개선 (0043 마이그레이션)
   - [x] 코트명(선택, ≤40자) — `personal_matches`·`rotation_sessions`·`match_requests` `court_name` + RPC 3종 스레딩(수락 시 양측 복사, finalize 시 게임에 상속), 본인 과거 코트명을 '최근 코트'로 재선택(`CourtNameAutocomplete`·`fetchRecentCourtNames`)
