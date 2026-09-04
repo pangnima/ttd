@@ -7,6 +7,7 @@ import { hasResult, resolveSetWinner, tallySets } from '@/lib/personal-matches/w
 import { formatOpponents } from '@/lib/personal-matches/labels'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
+import { RoomLink } from '@/components/match-rooms/room-link'
 
 type Props = {
     match: PersonalMatch
@@ -60,7 +61,10 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
                 </div>
 
                 {!hideMeta && (
-                    <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
+                    <>
+                        <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
+                        {m.roomId && <RoomLink roomId={m.roomId} className="mt-1 inline-block" />}
+                    </>
                 )}
 
                 {/* 게임 스코어(왼쪽) ↔ 수정/삭제 액션(오른쪽) */}

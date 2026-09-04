@@ -12,6 +12,7 @@ import {
     type PersonalMatchInput,
 } from '@/lib/personal-matches/validate-input'
 import type { PersonalMatchSetScore } from '@/types'
+import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
 
 /**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
@@ -113,9 +114,11 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
  * 여러 개인 경기를 일괄 INSERT하는 범용 액션.
  * 신규 등록은 세트 없이 단일 경기 1건(1요소 배열, 결과 미확정)으로, 로테이션은 게임별 다건으로 호출한다.
  * 세트가 없으면 결과 미확정으로 저장되고, 있으면 게임마다 승패가 세트 스코어로 판정된다(행 단위 winner 없음).
+ * listing(리스트에 노출)이 있으면 첫 기록을 경기 리스트의 방으로 등록한다(단일 등록 전제, 기록 저장 후 별도 RPC).
  */
 export async function createPersonalMatchesAction(
     inputs: PersonalMatchInput[],
+    listing?: RoomListingInput,
 ): Promise<{ error: string | null }> {
     if (!inputs.length) return { error: '저장할 경기가 없습니다.' }
     for (const input of inputs) {
@@ -138,6 +141,12 @@ export async function createPersonalMatchesAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/analytics')
     revalidatePath('/me/personal-matches')
+
+    if (listing) {
+        const room = await listRecordAsRoom('direct', inserted[0].id, listing.password)
+        if (room.error) return { error: room.error }
+        revalidatePath('/match-rooms')
+    }
     return { error: null }
 }
 

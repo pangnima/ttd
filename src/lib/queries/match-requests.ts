@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { fetchPendingRoomInviteCount } from '@/lib/queries/match-rooms'
 import type { Database } from '@/types/supabase'
 import type {
     CourtSurface, MatchRequest, MatchRequestStatus, MatchResultStatus, MatchType, PersonalMatchSetScore,
@@ -144,12 +145,12 @@ export async function fetchPendingResultConfirmations(userId: string): Promise<M
 }
 
 /**
- * 사이드바/모바일 nav 뱃지 건수 — 받은 pending 요청 + 내가 확인해야 할 결과 제안.
- * (모바일 nav는 브라우저 클라이언트로 같은 두 조건을 직접 질의한다 — common/mobile-nav.tsx)
+ * 사이드바/모바일 nav 뱃지 건수 — 받은 pending 요청 + 내가 확인해야 할 결과 제안 + 경기 리스트 방 초대.
+ * (main)/layout.tsx가 한 번 조회해 Sidebar·Header→MobileNav에 props로 내린다 (클라이언트 중복 질의 없음).
  */
 export async function fetchPendingReceivedCount(userId: string): Promise<number> {
     const supabase = await createClient()
-    const [pending, proposals] = await Promise.all([
+    const [pending, proposals, invites] = await Promise.all([
         supabase
             .from('match_requests')
             .select('id', { count: 'exact', head: true })
@@ -162,6 +163,7 @@ export async function fetchPendingReceivedCount(userId: string): Promise<number>
             .eq('negotiation.result_status', 'proposed')
             .neq('negotiation.proposed_by', userId)
             .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`),
+        fetchPendingRoomInviteCount(userId),
     ])
-    return (pending.error ? 0 : pending.count ?? 0) + (proposals.error ? 0 : proposals.count ?? 0)
+    return (pending.error ? 0 : pending.count ?? 0) + (proposals.error ? 0 : proposals.count ?? 0) + invites
 }

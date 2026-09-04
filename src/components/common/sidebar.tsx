@@ -17,7 +17,7 @@ type SidebarProps = {
     clubs?: { id: string; name: string }[]
     /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
-    /** 받은 경기 확인 요청 중 pending 건수 (경기 확인 요청 메뉴 뱃지) */
+    /** 받은 확인 요청 pending + 결과 제안 + 경기 리스트 방 초대 건수 (경기 확인 요청 메뉴 뱃지) */
     pendingRequestCount?: number
 }
 
@@ -26,10 +26,11 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
 
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록(목록·생성·수정) + 경기 확인 요청
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록(목록·생성·수정) + 경기 리스트(목록·상세) + 경기 확인 요청
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
     const myNavActive = (href: string) => {
         if (href.startsWith('/me/personal-matches')) return activePath.startsWith('/me/personal-matches')
+        if (href.startsWith('/match-rooms')) return activePath.startsWith('/match-rooms')
         if (href.startsWith('/me/match-requests')) return activePath.startsWith('/me/match-requests')
         return userId ? isPersonalNavActive(activePath, userId) : false
     }

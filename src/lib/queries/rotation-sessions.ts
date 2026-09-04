@@ -24,6 +24,7 @@ export function mapRotationSessionRow(row: RotationSessionRow): RotationSession 
         courtName: row.court_name ?? undefined,
         players: raw.filter(isPoolPlayer),
         createdAt: row.created_at,
+        roomId: row.room_id ?? undefined,
     }
 }
 

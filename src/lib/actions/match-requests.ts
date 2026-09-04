@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { CourtSurface, MatchType, PersonalMatchSetScore } from '@/types'
 import { isDoublesMatchType, validatePersonalMatchInput, type NtrpField } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
+import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
 
 /**
  * 상호 확인 대진 요청 입력 (단식 + 페어 고정 복식).
@@ -35,8 +36,10 @@ export type MatchRequestInput = {
     courtName?: string  // 선택, ≤40자 — 수락 시 양측 기록에 복사
 }
 
+/** 확인 요청 생성. listing(리스트에 노출)이 있으면 요청을 경기 리스트의 방으로 등록한다(회원 파트너/상대2 초대, 대표는 수락 시 참가). */
 export async function createMatchRequestAction(
     input: MatchRequestInput,
+    listing?: RoomListingInput,
 ): Promise<{ error: string | null }> {
     const doubles = isDoublesMatchType(input.matchType)
     const setScores = input.setScores ?? []
@@ -58,7 +61,7 @@ export async function createMatchRequestAction(
     if (new Set(memberIds).size !== memberIds.length) return { error: '같은 회원을 두 번 지정할 수 없습니다.' }
 
     // 요청 원장 INSERT + (복식이면) 참가자 2행을 원자적으로 생성해야 하므로 RPC 경유(직접 INSERT 정책 폐지).
-    const { error } = await supabase.rpc('create_match_request', {
+    const { data: requestId, error } = await supabase.rpc('create_match_request', {
         p_opponent_user_id: input.opponentUserId,
         p_played_at: input.playedAt,
         p_played_time: input.playedTime,
@@ -90,6 +93,12 @@ export async function createMatchRequestAction(
     }
 
     revalidatePath('/me/match-requests')
+
+    if (listing && requestId) {
+        const room = await listRecordAsRoom('confirmation', requestId, listing.password)
+        if (room.error) return { error: room.error }
+        revalidatePath('/match-rooms')
+    }
     return { error: null }
 }
 

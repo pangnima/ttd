@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -9,56 +9,27 @@ import { cn } from '@/lib/utils'
 import {
     topNavItems, myMatchNavItems, clubNavItems, buildPersonalNavItem, isPersonalNavActive,
 } from '@/lib/nav-items'
-import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { ClubNavTree } from '@/components/common/club-nav-tree'
 import { BrandLogo } from '@/components/common/brand-logo'
 
 type MobileNavProps = {
     clubs?: { id: string; name: string }[]
+    /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인' href) */
+    userId?: string | null
+    /** 확인 요청 pending + 결과 제안 + 방 초대 건수 — 서버 fetchPendingReceivedCount 1곳에서 계산해 props로 전달 */
+    pendingRequestCount?: number
 }
 
-export function MobileNav({ clubs = [] }: MobileNavProps) {
+export function MobileNav({ clubs = [], userId = null, pendingRequestCount = 0 }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
-    const [userId, setUserId] = useState<string | null>(null)
-    const [pendingRequestCount, setPendingRequestCount] = useState(0)
 
-    useEffect(() => {
-        let isMounted = true
-        const supabase = createClient()
-
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
-            if (!isMounted || !user) return
-            setUserId(user.id)
-            // 받은 확인 요청 pending + 내가 확인해야 할 결과 제안 건수 (RLS로 당사자만 조회됨)
-            // — 서버 fetchPendingReceivedCount(queries/match-requests.ts)와 동일 기준
-            const [pending, proposals] = await Promise.all([
-                supabase
-                    .from('match_requests')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('opponent_user_id', user.id)
-                    .eq('status', 'pending'),
-                supabase
-                    .from('match_requests')
-                    .select('id, negotiation:match_result_negotiations!inner(result_status, proposed_by)', { count: 'exact', head: true })
-                    .eq('status', 'accepted')
-                    .eq('negotiation.result_status', 'proposed')
-                    .neq('negotiation.proposed_by', user.id)
-                    .or(`requester_id.eq.${user.id},opponent_user_id.eq.${user.id}`),
-            ])
-            if (isMounted) setPendingRequestCount((pending.count ?? 0) + (proposals.count ?? 0))
-        })
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
-
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록(목록·생성·수정) + 경기 확인 요청
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록 + 경기 리스트 + 경기 확인 요청
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
     const myNavActive = (href: string) => {
         if (href.startsWith('/me/personal-matches')) return pathname.startsWith('/me/personal-matches')
+        if (href.startsWith('/match-rooms')) return pathname.startsWith('/match-rooms')
         if (href.startsWith('/me/match-requests')) return pathname.startsWith('/me/match-requests')
         return userId ? isPersonalNavActive(pathname, userId) : false
     }
@@ -110,7 +81,7 @@ export function MobileNav({ clubs = [] }: MobileNavProps) {
                         </Link>
                     ))}
 
-                    {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 개인 경기 등록 + 경기 확인 요청 (로그인 시) */}
+                    {/* 개인 섹션 (로그인 시) */}
                     {myNavItems.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10 space-y-1">
                             {myNavItems.map(({ href, label, icon: Icon }) => {

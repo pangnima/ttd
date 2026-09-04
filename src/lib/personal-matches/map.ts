@@ -43,6 +43,7 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         sourceType: row.source_type as PersonalMatch['sourceType'],
         rotationSessionId: row.rotation_session_id ?? undefined,
         groupSeq: row.group_seq ?? undefined,
+        roomId: row.room_id ?? undefined,
         createdAt: row.created_at,
     }
 }

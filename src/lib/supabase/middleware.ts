@@ -48,7 +48,8 @@ export async function updateSession(request: NextRequest) {
     const isMainRoute =
         (path.startsWith('/clubs') && !path.startsWith('/clubs/join')) ||
         path.startsWith('/profile') ||
-        path.startsWith('/me')
+        path.startsWith('/me') ||
+        path.startsWith('/match-rooms')
     if (isMainRoute && !user) {
         // 원래 가려던 경로(+쿼리)를 next로 넘겨 로그인 후 복귀시킨다 (예: 초대 링크).
         const intended = path + request.nextUrl.search

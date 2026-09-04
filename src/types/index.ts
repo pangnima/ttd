@@ -160,6 +160,7 @@ export type PersonalMatch = {
     sourceType?: 'direct' | 'confirmation' | 'rotation'  // 출처 (0040). 픽스처·테스트 리터럴은 생략 가능
     rotationSessionId?: string  // 로테이션 세션 tombstone id (0044) — 같은 값이면 같은 로테이션에서 분해된 게임(목록 그룹 키)
     groupSeq?: number           // 로테이션 세션 내 게임 순번 (0044). finalize 루프 순서 = 실제 입력 순서
+    roomId?: string             // 경기 리스트에 노출된 기록이면 방 id (0046) — 카드 '경기 리스트에서 보기' 링크
     // 상호 확인 경기의 결과 제안/확인 상태 (목록 조회 시 match_requests에서 부착, 그 외 경로는 undefined)
     confirmation?: PersonalMatchConfirmation
     createdAt: string
@@ -198,6 +199,103 @@ export type RotationSession = {
     courtName?: string      // finalize 시 모든 게임 행에 상속
     players: RotationPoolPlayer[]  // 나 제외, 3명 이상
     createdAt: string
+    roomId?: string         // 경기 리스트에 노출된 세션이면 방 id (0046)
+}
+
+// ── 경기 리스트(경기 방) (0046) ────────────────────────────────
+// 등록 폼에서 '리스트에 노출'을 켠 기록 1건 = 방 1개. 공개 메타는 로그인 회원 전원이 보고,
+// 상세(참가자·메모·결과)는 방장·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
+
+export type MatchRoomSourceKind = 'direct' | 'confirmation' | 'rotation'
+export type MatchRoomMemberRole = 'host' | 'player' | 'viewer'
+// invited → joined|declined (초대 응답) / 비밀번호 입장 = viewer·joined / 풀 합류 신청 = viewer·requested → 승인 player·joined
+export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined' | 'requested'
+export type MatchRoomSourceRole = 'opponent' | 'partner' | 'opponent2' | 'pool'
+
+export type MatchRoomHost = {
+    id: string
+    name: string
+    nickname: string
+    profileImage?: string
+    deleted: boolean
+}
+
+export type MatchRoomViewer = { role: MatchRoomMemberRole; status: MatchRoomMemberStatus }
+
+// 방 공개 메타 (match_rooms 행) — 출처 기록에서 복사되며 자유 기록 수정 시 트리거가 동기화
+export type MatchRoomMeta = {
+    id: string
+    hostUserId: string
+    sourceKind: MatchRoomSourceKind
+    playedAt: string        // "2025-04-12"
+    playedTime?: string     // "18:00"
+    matchType: MatchType
+    surface?: CourtSurface
+    courtName?: string
+    capacity: number        // 단식 2 / 페어 복식 4 / 로테이션 1+풀 인원
+    hasResult: boolean      // 방장 기록에 게임 스코어가 있음
+}
+
+// 목록 카드용 — 인원(joined 참가자 수)·방장·내 멤버 상태 포함
+export type MatchRoomSummary = MatchRoomMeta & {
+    joinedCount: number
+    host: MatchRoomHost
+    viewer?: MatchRoomViewer
+}
+
+export type MatchRoomMember = {
+    userId: string
+    name: string
+    nickname: string
+    profileImage?: string
+    deleted: boolean
+    role: MatchRoomMemberRole
+    status: MatchRoomMemberStatus
+    sourceRole?: MatchRoomSourceRole
+}
+
+export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }
+
+// 방장 관점 게임 (personal_matches where room_id) — 로테이션은 게임별 여러 건
+export type MatchRoomGame = {
+    id: string
+    groupSeq?: number
+    matchType: MatchType
+    setScores: PersonalMatchSetScore[]
+    participants: MatchRoomParticipantRef[]
+}
+
+export type MatchRoomSource =
+    | { kind: 'direct' }
+    | {
+        kind: 'confirmation'
+        requestStatus?: MatchRequestStatus
+        resultStatus?: MatchResultStatus
+        repName?: string        // 대표 확인자 — 수락 전에는 멤버 행이 없어 이름만 표시
+        repUserId?: string
+        participants: MatchRoomParticipantRef[]  // 요청 파트너/상대2
+    }
+    | { kind: 'rotation'; isFinalized: boolean; pool?: RotationPoolPlayer[] }
+
+export type MatchRoomDetail = {
+    room: MatchRoomMeta & { notes?: string; createdAt: string }
+    host: MatchRoomHost
+    viewer?: MatchRoomViewer
+    members: MatchRoomMember[]
+    source: MatchRoomSource
+    games: MatchRoomGame[]
+}
+
+// 확인 요청 허브 '경기 리스트 초대' 카드용
+export type MatchRoomInvite = {
+    roomId: string
+    hostName: string
+    hostNickname: string
+    playedAt: string
+    playedTime?: string
+    matchType: MatchType
+    courtName?: string
+    sourceRole?: MatchRoomSourceRole
 }
 
 // ── 상호 확인 대진 요청 (회원 간 단식) ────────────────────────────────

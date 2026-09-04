@@ -6,6 +6,7 @@ import type { CourtSurface, MatchType, RotationPoolPlayer } from '@/types'
 import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
+import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
 
 /**
  * 로테이션(파트너 교체) 복식 세션 — 등록 시 선수 풀만 저장(rotation_sessions),
@@ -46,7 +47,8 @@ function cleanPlayer(p: RotationPoolPlayer): RotationPoolPlayer {
     }
 }
 
-export async function createRotationSessionAction(input: RotationSessionInput): Promise<ActionResult> {
+/** 세션 저장. listing(리스트에 노출)이 있으면 세션을 경기 리스트의 방으로 등록한다(풀 회원 자동 초대). */
+export async function createRotationSessionAction(input: RotationSessionInput, listing?: RoomListingInput): Promise<ActionResult> {
     if (!isDoublesMatchType(input.matchType)) return { error: '로테이션은 복식에서만 등록할 수 있습니다.' }
     if (!input.playedAt) return { error: '경기 날짜를 입력해주세요.' }
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return { error: '경기 시각을 입력해주세요.' }
@@ -63,7 +65,7 @@ export async function createRotationSessionAction(input: RotationSessionInput): 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    const { error } = await supabase.from('rotation_sessions').insert({
+    const { data: inserted, error } = await supabase.from('rotation_sessions').insert({
         user_id: user.id,
         played_at: input.playedAt,
         played_time: input.playedTime,
@@ -72,10 +74,16 @@ export async function createRotationSessionAction(input: RotationSessionInput): 
         notes: input.notes?.trim() || null,
         court_name: input.courtName?.trim() || null,
         players: input.players.map(cleanPlayer),
-    })
-    if (error) return { error: '로테이션 세션 저장에 실패했습니다.' }
+    }).select('id').single()
+    if (error || !inserted) return { error: '로테이션 세션 저장에 실패했습니다.' }
 
     revalidatePath('/me/personal-matches')
+
+    if (listing) {
+        const room = await listRecordAsRoom('rotation', inserted.id, listing.password)
+        if (room.error) return { error: room.error }
+        revalidatePath('/match-rooms')
+    }
     return { error: null }
 }
 
@@ -89,9 +97,16 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
         .delete()
         .eq('id', id)
         .eq('user_id', user.id)
-        .select('id')
+        .select('id, room_id')
     if (error) return { error: '세션 삭제에 실패했습니다.' }
     if (!data?.length) return { error: '이미 삭제되었거나 존재하지 않는 세션입니다.' }
+
+    // 미확정 세션이 리스트에 올라가 있었다면 방도 내린다 (finalize도 세션을 삭제하므로 트리거 대신 여기서 처리)
+    const roomId = data[0].room_id
+    if (roomId) {
+        await supabase.from('match_rooms').delete().eq('id', roomId).eq('host_user_id', user.id)
+        revalidatePath('/match-rooms')
+    }
 
     revalidatePath('/me/personal-matches')
     return { error: null }

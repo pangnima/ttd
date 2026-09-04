@@ -8,6 +8,8 @@ import {
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
 import { ResultConfirmCard } from '@/components/match-requests/result-confirm-card'
+import { RoomInviteCard } from '@/components/match-requests/room-invite-card'
+import { fetchPendingRoomInvites } from '@/lib/queries/match-rooms'
 import { Badge } from '@/components/ui/badge'
 import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
@@ -29,8 +31,10 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
     const received = dummyReceivedRequests
     const sent = dummySentRequests
     const confirmations = dummyPendingConfirmations
-    // 받은 탭 배지 = 대기 중 요청 + 내가 확인해야 할 결과 제안 (사이드바 뱃지와 동일 기준)
-    const pendingCount = received.filter((r) => r.request.status === 'pending').length + confirmations.length
+    // 경기 리스트 방 초대는 실 쿼리 (0046) — 요청/결과 탭의 픽스처 복원과 별개
+    const invites = await fetchPendingRoomInvites(user.id)
+    // 받은 탭 배지 = 대기 중 요청 + 내가 확인해야 할 결과 제안 + 방 초대 (사이드바 뱃지와 동일 기준)
+    const pendingCount = received.filter((r) => r.request.status === 'pending').length + confirmations.length + invites.length
 
     const tabClass = (active: boolean) =>
         cn(
@@ -62,6 +66,18 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
                     보낸 요청
                 </Link>
             </div>
+
+            {/* 경기 리스트 초대 — 방장이 기록에 나를 입력해 자동 초대된 방 (받은 탭 최상단) */}
+            {activeTab === 'received' && invites.length > 0 && (
+                <section className="space-y-2">
+                    <h2 className={TYPO.h3}>경기 리스트 초대</h2>
+                    <div className={`${CARD_BASE} divide-y divide-border`}>
+                        {invites.map((invite) => (
+                            <RoomInviteCard key={invite.roomId} invite={invite} />
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* 결과 확인 대기 — 수락된 경기에서 상대가 세트를 제안한 것 (받은 탭 상단) */}
             {activeTab === 'received' && confirmations.length > 0 && (

@@ -564,8 +564,8 @@ export type Database = {
       }
       match_requests: {
         Row: {
-          created_at: string
           court_name: string | null
+          created_at: string
           id: string
           match_type: string
           notes: string | null
@@ -574,13 +574,14 @@ export type Database = {
           played_time: string
           requester_id: string
           responded_at: string | null
+          room_id: string | null
           set_scores: Json
           status: string
           surface: string
         }
         Insert: {
-          created_at?: string
           court_name?: string | null
+          created_at?: string
           id?: string
           match_type?: string
           notes?: string | null
@@ -589,13 +590,14 @@ export type Database = {
           played_time: string
           requester_id: string
           responded_at?: string | null
+          room_id?: string | null
           set_scores?: Json
           status?: string
           surface: string
         }
         Update: {
-          created_at?: string
           court_name?: string | null
+          created_at?: string
           id?: string
           match_type?: string
           notes?: string | null
@@ -604,6 +606,7 @@ export type Database = {
           played_time?: string
           requester_id?: string
           responded_at?: string | null
+          room_id?: string | null
           set_scores?: Json
           status?: string
           surface?: string
@@ -621,6 +624,13 @@ export type Database = {
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_requests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -666,6 +676,130 @@ export type Database = {
             columns: ["request_id"]
             isOneToOne: true
             referencedRelation: "match_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_room_members: {
+        Row: {
+          created_at: string
+          id: string
+          responded_at: string | null
+          role: string
+          room_id: string
+          source_role: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          role: string
+          room_id: string
+          source_role?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          role?: string
+          room_id?: string
+          source_role?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_room_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_room_secrets: {
+        Row: {
+          password_hash: string
+          room_id: string
+        }
+        Insert: {
+          password_hash: string
+          room_id: string
+        }
+        Update: {
+          password_hash?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_room_secrets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_rooms: {
+        Row: {
+          capacity: number
+          court_name: string | null
+          created_at: string
+          has_result: boolean
+          host_user_id: string
+          id: string
+          match_type: string
+          notes: string | null
+          played_at: string
+          played_time: string | null
+          source_kind: string
+          surface: string | null
+        }
+        Insert: {
+          capacity: number
+          court_name?: string | null
+          created_at?: string
+          has_result?: boolean
+          host_user_id: string
+          id?: string
+          match_type: string
+          notes?: string | null
+          played_at: string
+          played_time?: string | null
+          source_kind: string
+          surface?: string | null
+        }
+        Update: {
+          capacity?: number
+          court_name?: string | null
+          created_at?: string
+          has_result?: boolean
+          host_user_id?: string
+          id?: string
+          match_type?: string
+          notes?: string | null
+          played_at?: string
+          played_time?: string | null
+          source_kind?: string
+          surface?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_rooms_host_user_id_fkey"
+            columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -717,14 +851,15 @@ export type Database = {
       }
       personal_matches: {
         Row: {
+          court_name: string | null
           created_at: string
           group_seq: number | null
-          court_name: string | null
           id: string
           match_type: string
           notes: string | null
           played_at: string
           played_time: string | null
+          room_id: string | null
           rotation_session_id: string | null
           set_scores: Json
           source_request_id: string | null
@@ -733,14 +868,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          court_name?: string | null
           created_at?: string
           group_seq?: number | null
-          court_name?: string | null
           id?: string
           match_type: string
           notes?: string | null
           played_at: string
           played_time?: string | null
+          room_id?: string | null
           rotation_session_id?: string | null
           set_scores?: Json
           source_request_id?: string | null
@@ -749,14 +885,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          court_name?: string | null
           created_at?: string
           group_seq?: number | null
-          court_name?: string | null
           id?: string
           match_type?: string
           notes?: string | null
           played_at?: string
           played_time?: string | null
+          room_id?: string | null
           rotation_session_id?: string | null
           set_scores?: Json
           source_request_id?: string | null
@@ -765,6 +902,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "personal_matches_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "personal_matches_source_request_id_fkey"
             columns: ["source_request_id"]
@@ -783,42 +927,52 @@ export type Database = {
       }
       rotation_sessions: {
         Row: {
-          created_at: string
           court_name: string | null
+          created_at: string
           id: string
           match_type: string
           notes: string | null
           played_at: string
           played_time: string
           players: Json
+          room_id: string | null
           surface: string
           user_id: string
         }
         Insert: {
-          created_at?: string
           court_name?: string | null
+          created_at?: string
           id?: string
           match_type: string
           notes?: string | null
           played_at: string
           played_time: string
           players: Json
+          room_id?: string | null
           surface: string
           user_id: string
         }
         Update: {
-          created_at?: string
           court_name?: string | null
+          created_at?: string
           id?: string
           match_type?: string
           notes?: string | null
           played_at?: string
           played_time?: string
           players?: Json
+          room_id?: string | null
           surface?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rotation_sessions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rotation_sessions_user_id_fkey"
             columns: ["user_id"]
@@ -934,6 +1088,10 @@ export type Database = {
         Args: { p_club_id: string; p_snapshot: Json }
         Returns: undefined
       }
+      approve_room_join: {
+        Args: { p_room_id: string; p_user_id: string }
+        Returns: undefined
+      }
       confirm_match_result: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -964,12 +1122,20 @@ export type Database = {
         }
         Returns: string
       }
+      create_match_room: {
+        Args: { p_password: string; p_source_id: string; p_source_kind: string }
+        Returns: string
+      }
       derive_public_ntrp: {
         Args: { p_user: Database["public"]["Tables"]["users"]["Row"] }
         Returns: number
       }
       dispute_match_result: {
         Args: { p_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      enter_match_room: {
+        Args: { p_password: string; p_room_id: string }
         Returns: undefined
       }
       finalize_rotation_session: {
@@ -1013,6 +1179,7 @@ export type Database = {
           region: string
         }[]
       }
+      get_match_room_detail: { Args: { p_room_id: string }; Returns: Json }
       get_user_doubles_court_stats: {
         Args: { p_club_id?: string; p_user_id: string }
         Returns: Json
@@ -1063,6 +1230,15 @@ export type Database = {
         Args: { p_request_id: string; p_set_scores: Json }
         Returns: undefined
       }
+      reject_room_join: {
+        Args: { p_room_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      request_room_join: { Args: { p_room_id: string }; Returns: undefined }
+      respond_room_invite: {
+        Args: { p_accept: boolean; p_room_id: string }
+        Returns: undefined
+      }
       update_match_game: {
         Args: {
           p_courts: Json
@@ -1073,6 +1249,10 @@ export type Database = {
           p_rounds: Json
         }
         Returns: string
+      }
+      update_match_room_password: {
+        Args: { p_password: string; p_room_id: string }
+        Returns: undefined
       }
       validate_set_scores: { Args: { p_sets: Json }; Returns: boolean }
     }
@@ -1093,12 +1273,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1122,11 +1302,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1147,11 +1327,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1172,11 +1352,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1189,11 +1369,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1201,3 +1381,9 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

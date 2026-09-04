@@ -13,6 +13,7 @@ import { handOf, type PersonalMatchFormState } from '@/components/personal-match
  *  ① 로테이션: 선수 풀만 세션으로 저장 (게임은 카드 '결과 입력'에서)
  *  ② 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
  *  ③ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
+ * 신규 등록 3갈래 모두 s.listing('리스트에 노출')을 넘기면 액션이 기록 저장 후 경기 리스트의 방을 만든다.
  */
 export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: string) {
     const router = useRouter()
@@ -41,7 +42,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 playedAt, playedTime, matchType, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
                 players: poolToPlayers(s.rotation.pool),
-            }), '/me/personal-matches')
+            }, s.listing), '/me/personal-matches')
             return
         }
 
@@ -66,13 +67,13 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
                 playedAt, playedTime, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-            }), '/me/match-requests?tab=sent')
+            }, s.listing), '/me/match-requests?tab=sent')
             return
         }
 
         const input = s.buildInput()
         run(
-            () => (initialId ? updatePersonalMatchAction(initialId, input) : createPersonalMatchesAction([input])),
+            () => (initialId ? updatePersonalMatchAction(initialId, input) : createPersonalMatchesAction([input], s.listing)),
             '/me/personal-matches',
         )
     }

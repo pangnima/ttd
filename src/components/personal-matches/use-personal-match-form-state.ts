@@ -11,6 +11,7 @@ import type { PlayerPickerValue } from '@/components/personal-matches/player-pic
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
 import { toHourValue } from '@/lib/format'
+import { validateRoomPassword, type RoomListingInput } from '@/lib/match-rooms/password'
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
 
@@ -58,6 +59,9 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     // 복식 입력 방식 — 로테이션(기본, 선수 풀만 등록) vs 페어 고정. 로테이션은 신규 등록에서만 지원(수정 모드는 isRotation이 false).
     const [doublesMode, setDoublesMode] = useState<DoublesMode>('rotation')
     const rotation = useRotationGames()
+    // 경기 리스트 노출 — 신규 등록에서만. 켜면 비밀번호(4~20자) 필수. 기록 저장 후 액션이 create_match_room RPC로 방을 만든다.
+    const [listed, setListed] = useState(false)
+    const [roomPassword, setRoomPassword] = useState('')
 
     const isEdit = !!initialData
     const isDoubles = DOUBLES_TYPES.includes(matchType)
@@ -91,7 +95,9 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
             isPlayerFilled(partner.player) && ntrpOk('partner', partner, true) &&
             isPlayerFilled(opponent2.player) && ntrpOk('opponent2', opponent2, true)
         )) && metaOk
-    const isValid = isRotation ? rotation.isPoolValid(meta) : fixedValid
+    const listingOk = isEdit || !listed || validateRoomPassword(roomPassword) === null
+    const isValid = (isRotation ? rotation.isPoolValid(meta) : fixedValid) && listingOk
+    const listing: RoomListingInput | undefined = listed && !isEdit ? { password: roomPassword } : undefined
 
     const num = (s: string) => (s.trim() ? Number(s) : undefined)
     // 자유 기록 페이로드. 세트는 신규면 빈 배열(미확정), 수정이면 기존 세트를 그대로 보존한다.
@@ -122,6 +128,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
         courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
+        listed, setListed, roomPassword, setRoomPassword, listing,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
     }
 }

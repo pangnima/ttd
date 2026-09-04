@@ -9,6 +9,7 @@ import { RotationGamesDialog } from '@/components/personal-matches/rotation-game
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
+import { RoomLink } from '@/components/match-rooms/room-link'
 
 type Props = { session: RotationSession }
 
@@ -38,6 +39,7 @@ export function RotationSessionCard({ session: s }: Props) {
                     <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>게임 미입력</span>
                 </div>
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="mt-1 space-y-0.5" />
+                {s.roomId && <RoomLink roomId={s.roomId} className="mt-1 inline-block" />}
                 <div className="flex items-center justify-end gap-2 mt-2">
                     <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>결과 입력</Button>
                     <button onClick={handleDelete} disabled={isDeleting} className="text-caption text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">

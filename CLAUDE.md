@@ -38,7 +38,8 @@ src/
 │   │   ├── me/
 │   │   │   ├── analytics/        # /profile/[userId]?scope=personal 리다이렉트
 │   │   │   ├── personal-matches/ # 개인 경기 기록 CRUD
-│   │   │   └── match-requests/   # 경기 확인 요청 허브 (받은/보낸 탭)
+│   │   │   └── match-requests/   # 경기 확인 요청 허브 (받은/보낸 탭, 받은 탭 상단 '경기 리스트 초대')
+│   │   ├── match-rooms/          # 경기 리스트 (리스트에 노출된 경기 방 목록 예정/지난 탭, [roomId] 상세 = 비밀번호 게이트 → 참가자·결과)
 │   │   ├── profile/
 │   │   │   ├── [userId]/         # 개인 프로필 (본인=분석 풀버전, 타인=공개 요약)
 │   │   │   └── settings/
@@ -51,7 +52,8 @@ src/
 │   ├── club-dashboard/           # 클럽 운영 전용 카드 (PendingMembers, Ranking, ClubAceCard 등)
 │   ├── match-games/              # 대진표 (매트릭스/리스트 뷰, PlayerName, SpecialMatchBadge 등)
 │   ├── personal-matches/         # 개인 경기 입력·목록 (PersonalMatchForm = use-personal-match-form-state + use-personal-match-submit 조립, PlayerPicker(필드별 전체 회원 검색 내장)+PlayerAutocomplete, CourtNameAutocomplete 코트명 '최근 코트' 재선택, PersonalMatchCard(경기 1건 카드, 게임 1개 WIN/LOSS·2개 이상 'N승 M패') + MatchGroupList/RotationGroupHeader(같은 로테이션 세션 카드들을 일시·코트명·참여 멤버·전적 헤더 행으로 묶음) + MatchDateColumn/MatchMetaLine(시각·코트명·메모) 카드 공용 조각, MatchActions/MutualResultActions 카드 액션, MatchResultDialog 결과 입력·검토 팝업(복식 애드 포함) + use-set-scores/use-result-dialog 훅, RotationSessionCard/List + RotationGamesDialog 로테이션 게임 빌더 팝업(게임당 스코어 1줄), rotation/ 풀·게임 입력 등)
-│   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, ResultConfirmCard 결과 확인 대기, RequestTeamLine 복식 팀 표시, 상태 뱃지)
+│   ├── match-requests/           # 경기 확인 요청 허브 (받은/보낸 카드, ResultConfirmCard 결과 확인 대기, RoomInviteCard 경기 리스트 초대 수락/거절, RequestTeamLine 복식 팀 표시, 상태 뱃지)
+│   ├── match-rooms/              # 경기 리스트(경기 방): MatchRoomCard 목록 행, RoomPasswordGate 비밀번호 입장, RoomDetailHeader, RoomMembersSection+RoomMemberRow 참가자 명단(방장이면 RoomJoinRequestActions 승인/거절), RoomJoinButton 로테이션 풀 합류 신청, RoomResultsSection 방장 관점 결과, RoomHostActions 비밀번호 변경·리스트에서 내리기, RoomInviteBanner 초대 응답, RoomLink 카드→방 링크
 │   ├── profile/                  # 프로필 헤더·통계 조합 (ProfileScopeTabs 개인/클럽/통합 탭 스캐폴드, ProfileSettingsForm + ProfileReadonlyFields 변경 불가 필드, DeleteAccountButton 등)
 │   ├── onboarding/               # 신규 사용자 온보딩 (OnboardingChecklist, WelcomeDialog)
 │   ├── stats/                    # 개인 통계 시각화 컴포넌트 (구 dashboard/ + analytics/ 통합)
@@ -72,6 +74,7 @@ src/
 │   │   ├── match-requests.ts     # 확인 요청 생성/취소/거절/수락(RPC)
 │   │   ├── match-results.ts      # 상호 확인 경기 결과 제안/확인/이의 (RPC 3종)
 │   │   ├── rotation-sessions.ts  # 로테이션 복식 세션 생성/삭제/확정(finalize RPC → 게임별 분해)
+│   │   ├── match-rooms.ts        # 경기 방 입장(비밀번호)·초대 응답·풀 합류 신청/승인/거절·비밀번호 변경·리스트에서 내리기 (RPC 7종 + RLS delete)
 │   │   ├── profile.ts
 │   │   ├── ratings.ts            # 클럽 레이팅 재계산 트리거
 │   │   └── ai-coaching.ts
@@ -82,6 +85,7 @@ src/
 │   │   ├── personal-matches.ts
 │   │   ├── match-requests.ts     # 받은/보낸 요청·결과 확인 대기·뱃지 카운트(pending + 결과 제안)
 │   │   ├── rotation-sessions.ts  # 결과 입력 대기 로테이션 세션 조회
+│   │   ├── match-rooms.ts        # 경기 리스트 목록(공개 메타+인원+내 상태)·게이트용 요약·상세(get_match_room_detail RPC → parse-detail)·방 초대 목록/건수
 │   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
 │   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
 │   │   ├── club-dashboard.ts     # 클럽 운영 쿼리 (에이스·활동/승률 랭킹 등)
@@ -114,6 +118,11 @@ src/
 │   │   ├── validate-input.ts     # PersonalMatchInput 검증(skipNtrpFor 필드별, 파트너 NTRP도 필수) + validateCourtName(≤40자) + validateSetScores (DB validate_set_scores와 동일 규칙)
 │   │   ├── rotation.ts           # 로테이션 복식 — 풀/게임 검증 분리(validateRotationPool/Games), 세션 players 직렬화, finalize 페이로드
 │   │   └── validators.ts
+│   ├── match-rooms/              # 경기 리스트(경기 방) 순수 함수 + server-only 헬퍼 (0046)
+│   │   ├── password.ts           # validateRoomPassword(4~20자·공백 금지) + RoomListingInput 타입 (클라·액션 공용, RPC와 3중 방어)
+│   │   ├── title.ts / split.ts / headcount.ts / members-view.ts   # 자동 제목(일시·코트명·타입) / 예정·지난 분리(todayIsoKst) / 인원·상태 칩 / 상세 명단 행 빌더 (vitest)
+│   │   ├── parse-detail.ts       # get_match_room_detail jsonb → MatchRoomDetail 런타임 가드 파서
+│   │   └── create-room.ts        # listRecordAsRoom — 출처 저장 후 create_match_room RPC 호출 (세 등록 액션 공용, server-only)
 │   ├── rating/                   # 레이팅 순수 엔진 (docs/rating-system.md)
 │   │   ├── elo.ts / constants.ts # 클럽 ELO 엔진 (replayClubRatings)
 │   │   ├── personal-rating.ts    # 개인 경기 기반 동적 개인 NTRP (온더플라이)
@@ -129,7 +138,7 @@ src/
 │   ├── format.ts                 # 날짜 등 포맷 헬퍼 (date-utils와 역할 구분) + 경기 시각 시 단위(HOUR_OPTIONS·toHourValue·formatHourLabel)
 │   ├── stats.ts                  # PlayerStats, HeadToHead, CourtStat 등 타입 전용
 │   ├── onboarding.ts             # 신규 사용자 온보딩 단계 정의·완료 판정 (순수 함수)
-│   ├── nav-items.ts              # 사이드바 네비게이션 (topNavItems: 사용 가이드 / buildPersonalNavItem: '개인' 단일 메뉴 / myMatchNavItems / clubNavItems: 클럽 찾기)
+│   ├── nav-items.ts              # 사이드바 네비게이션 (topNavItems: 사용 가이드 / buildPersonalNavItem: '개인' 단일 메뉴 / myMatchNavItems: 개인 경기 등록·경기 리스트(/match-rooms)·경기 확인 요청 / clubNavItems: 클럽 찾기)
 │   └── utils.ts                  # cn() 헬퍼
 ├── middleware.ts                  # 루트 미들웨어 (세션 갱신 + 보호 라우트 가드)
 └── types/
@@ -163,7 +172,9 @@ src/
 /me/personal-matches → 개인 경기 기록 목록
 /me/personal-matches/new → 개인 경기 추가 (세트 없이 결과 미확정으로 저장, 회원 상대 단식은 확인 요청 플로우로 전환)
 /me/personal-matches/[id]/edit → 개인 경기 수정 (상호 확인 경기는 진입 차단, 기존 세트는 보존)
-/me/match-requests → 경기 확인 요청 허브 (받은/보낸 탭, 수락·거절·취소)
+/me/match-requests → 경기 확인 요청 허브 (받은/보낸 탭, 수락·거절·취소, 받은 탭 상단 경기 리스트 초대)
+/match-rooms → 경기 리스트 (리스트에 노출된 경기 방 전체, 예정 기본 + ?tab=past 지난 경기)
+/match-rooms/[roomId] → 경기 방 상세 (방장·초대 수락자·비밀번호 입장자 = 참가자·메모·결과, 그 외 = 공개 메타 + 비밀번호 게이트)
 /guide → 신규 사용자 사용 가이드 (정적, 개인 경기 기록 1순위)
 /tiers → 클럽 레이팅 8계급 아이콘 미리보기 (noindex, 개발용)
 ```
@@ -243,6 +254,12 @@ src/
   - [x] `globals.css` @theme `text-display/h1~h4(clamp 유동)/body/body2/caption/micro` + 본문 줄간격 변수 스왑(모바일 1.65 → md 1.55) + 본문·폼 요소 16px(전 뷰포트, iOS 줌 방지)
   - [x] 구 `.type-*`/`TYPO` 하드코딩·`SECTION_LABEL` 폐기 → `TYPO` 신규 키, `PageHeader` 신설, 헤딩 41곳 태그/클래스 재배치(카드 제목 `<p>`→헤딩), 텍스트 사이즈 약 600곳 용도별 재분류(components/ui 제외 기본 `text-*` 사이즈 0건)
   - [x] `cn()` tailwind-merge 확장(`text-h1`이 색상으로 오인돼 삭제되던 문제) + `utils.test.ts`·`tokens.test.ts` 가드
+- [x] Week 25: 경기 리스트(경기 방) — 사이드바 메뉴 신설 (0046 마이그레이션)
+  - [x] 개인 경기 등록 폼 '리스트에 노출' 토글 + 비밀번호(4~20자) — 신규 등록 3갈래(자유 기록/확인 요청/로테이션) 모두 출처 저장 후 `create_match_room` RPC로 방 생성(`lib/match-rooms/create-room.ts`), 폼 좌/우 열을 `who-column`/`when-column`으로 분리
+  - [x] `match_rooms`(공개 메타 전원 SELECT) + `match_room_secrets`(정책 0개, pgcrypto 해시) + `match_room_members`(host/player/viewer × invited/joined/declined/requested), 출처 3테이블 `room_id` FK, 트리거로 메타·`has_result` 동기화 및 거절/삭제 시 방 정리
+  - [x] 기록에 입력된 회원 전원 자동 초대(확인 요청 대표는 `accept_match_request`가 곧바로 참가), 확인 요청 허브 받은 탭 '경기 리스트 초대' 섹션 + 사이드바/모바일 뱃지 합산(모바일 nav 중복 클라이언트 쿼리 제거 → props)
+  - [x] `/match-rooms` 목록(예정/지난 탭) + `/match-rooms/[roomId]` 상세(비밀번호 게이트 → 참가자 명단·방장 관점 결과, 로테이션 풀 합류 신청/승인, 방장 비밀번호 변경·리스트에서 내리기)
+  - [ ] 2차: 자유 기록 수정 폼의 노출 on/off, 참가자 변경 시 초대 재동기화, 방장 '닫기', 경기 타입·표면 필터, 비밀번호 시도 제한
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
   - [ ] leaked password protection 활성화 + URL 화이트리스트 (`/auth/confirm` 포함)
@@ -284,7 +301,10 @@ Client Component (read-only)
 | `match_requests` | 당사자 둘만 SELECT, requester만 취소, opponent만 거절. **생성은 `create_match_request` RPC 전용**(직접 INSERT 정책 폐지 — 복식 참가자 원자적 삽입을 위해). `set_scores`는 요청 시점 원본값(빈 배열 허용). 수락은 RPC로만. 복식 파트너/상대2는 `match_request_participants`로, 결과 협상(`result_status`/`proposed_set_scores`/`proposed_by`/`proposed_at`/`dispute_reason`)은 `match_result_negotiations`로 분리(요청 상태축과 결과협상축이 별개 테이블). `court_name`은 수락 시 양측 기록에 복사(notes는 요청자만) |
 | `match_request_participants` | 당사자만 SELECT. `{request_id, role(partner/opponent2), user_id, name, dominant_hand, ntrp_snapshot}`. 쓰기는 `create_match_request` RPC 전용 |
 | `match_result_negotiations` | 당사자만 SELECT(request_id 1:1). 쓰기는 `accept/propose/confirm/dispute_match_result` RPC 전용 |
-| `rotation_sessions` | 본인(user_id)만 SELECT/INSERT/DELETE. 로테이션 복식 선수 풀(`players` jsonb ≥3)만 보관, 게임은 `finalize_rotation_session` RPC(security invoker)가 `personal_matches`+`personal_match_participants`로 분해 후 세션 삭제(`notes`·`court_name`은 모든 게임에 상속). 통계 밖 |
+| `rotation_sessions` | 본인(user_id)만 SELECT/INSERT/DELETE. 로테이션 복식 선수 풀(`players` jsonb ≥3)만 보관, 게임은 `finalize_rotation_session` RPC(security invoker)가 `personal_matches`+`personal_match_participants`로 분해 후 세션 삭제(`notes`·`court_name`·`room_id`는 모든 게임에 상속). 통계 밖. `room_id`(0046)가 있으면 경기 리스트 방 — 세션 행이 남아 있는 동안만 풀 합류 신청 가능(`approve_room_join`이 `players` append) |
+| `match_rooms` | 경기 리스트의 방(0046). 로그인 회원 전원 SELECT(공개 메타: 일시·타입·표면·코트명·메모·`capacity`·`has_result`), DELETE는 `host_user_id` 본인. INSERT/UPDATE 정책 없음 — 생성은 `create_match_room` RPC, 메타·`has_result`는 `personal_matches` 트리거(direct만 메타 복사)가 동기화. 출처 3테이블(`personal_matches`/`match_requests`/`rotation_sessions`)의 `room_id` FK(on delete set null)가 역참조하며, 그 insert/update 정책은 본인이 방장인 방만 허용 |
+| `match_room_secrets` | `room_id` 1:1 + bcrypt(pgcrypto) `password_hash`. RLS on·정책 0개 — SECURITY DEFINER RPC(`create_match_room`/`enter_match_room`/`update_match_room_password`)만 접근 |
+| `match_room_members` | `{room_id, user_id, role(host/player/viewer), status(invited/joined/declined/requested), source_role}` unique(room_id,user_id). 전원 SELECT(id·상태만, 이름은 `get_match_room_detail` 게이트), 쓰기는 RPC·트리거 전용. 확인 요청 대표는 초대 행 없이 `accept_match_request`가 `player/joined` insert, 거절/취소·자유 기록 삭제는 트리거가 방 삭제 |
 | `ai_coaching_cache` | 본인 통계 묶음 해시 기반 캐시 (24h) |
 | `club_player_ratings` / `club_rating_history` | approved 멤버만 SELECT, 쓰기는 RPC로만. `club_rating_history.match_id`는 재설계 후에도 `match_game_matches(id)` FK 유지 |
 | `club_invites` | owner만 관리, 미리보기·가입은 SECURITY DEFINER RPC로만 |
@@ -298,8 +318,9 @@ RPC: `create_match_request` (요청 원장 + 복식 참가자 2행 원자적 생
 RPC: `accept_match_request` (상호 확인 대진 수락 — 양측 관점 personal_matches 2행 + participants + match_result_negotiations 1행 생성, 세트 없으면 양측 결과 미확정)
 RPC: `propose_match_result`·`confirm_match_result`·`dispute_match_result` (match_result_negotiations에 대해 제안/확인/이의 — confirm이 양측 personal_matches의 세트를 동시 확정, 상대 행은 `invert_set_scores`로 관점 반전, 복식 애드 보존). helper `invert_set_scores`(애드 교차 반전)·`validate_set_scores`(애드 enum)·`normalize_set_scores`·`derive_public_ntrp` (`personal_match_winner` 세트 다수결은 0045에서 제거)
 RPC: `finalize_rotation_session` (로테이션 세션 → 게임별 personal_matches+participants 분해 + 세션 삭제, 한 트랜잭션. security invoker라 `for update`가 UPDATE 정책 부재로 행을 못 찾던 결함을 0042에서 `delete … returning` 선소비로 수정. 0044부터 게임당 세트 배열 길이 1만 허용하고 `rotation_session_id`·`group_seq` 기록)
+RPC: `create_match_room(kind, source_id, password)` (출처 행에서 메타·초대 대상·정원 파생, secrets 해시, host+invited 멤버, 출처 `room_id` set — `search_path = public, extensions`), `enter_match_room` (bcrypt 비교 → viewer·joined upsert), `respond_room_invite`, `request_room_join`·`approve_room_join`(세션 `players` jsonb append + capacity+1)·`reject_room_join`, `update_match_room_password`, `get_match_room_detail` (멤버 게이트 후 방·방장·멤버·출처·방장 관점 게임 jsonb). 트리거 `sync_match_room_from_personal_match`·`cleanup_match_room_on_personal_match_delete`·`cleanup_match_room_on_request_close`. `accept_match_request`·`finalize_rotation_session`은 0046에서 `room_id` 상속 추가 재정의. 새 RPC는 anon EXECUTE를 명시 회수(Supabase 기본 권한이 자동 부여)
 View: `user_match_participations` (security_invoker=on, `match_game_participants` 기반 재작성 — 4-way UNION 제거)
-마이그레이션: 0001~0044 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력, 0039~0041이 재설계, 0042는 finalize_rotation_session RLS 잠금 결함 수정, 0043은 코트명 `court_name` 3테이블 + RPC 3종 스레딩, 0044는 로테이션 그룹 키 `rotation_session_id`·`group_seq` + 레거시 백필, 0045는 세트 다수결 `winner` 컬럼·`personal_match_winner` 제거 + RPC 3종 재정의)
+마이그레이션: 0001~0046 (0016부터 로컬 `supabase/migrations/*.sql`로 버전관리, 0001~0015는 MCP `apply_migration` 이력, 0039~0041이 재설계, 0042는 finalize_rotation_session RLS 잠금 결함 수정, 0043은 코트명 `court_name` 3테이블 + RPC 3종 스레딩, 0044는 로테이션 그룹 키 `rotation_session_id`·`group_seq` + 레거시 백필, 0045는 세트 다수결 `winner` 컬럼·`personal_match_winner` 제거 + RPC 3종 재정의, 0046은 경기 리스트 `match_rooms`/`match_room_secrets`/`match_room_members` + 출처 `room_id` + RPC 8종·트리거 3종)
 
 ## 도메인 어휘 (코드·주석 일관성 기준)
 
@@ -326,6 +347,8 @@ View: `user_match_participations` (security_invoker=on, `match_game_participants
 | **확인 요청 / 상호 확인 경기** | 회원 간 단식·페어 고정 복식 대진 요청(`match_requests`, pending→accepted/rejected/canceled — 생성은 `create_match_request` RPC 전용). 복식은 상대팀 회원 1명이 **대표 확인자**(`opponent_user_id`, 상대1→상대2 순 회원 자동 선택·슬롯 스왑), 파트너/상대2는 `match_request_participants`. 수락 시 요청자/대표 관점 `personal_matches` 2행 생성(`source_type='confirmation'`, `source_request_id` 표식, 수정/삭제 잠금) — 파트너·상대2가 회원이어도 그들 기록에는 생성하지 않음 |
 | **코트명 / 경기 시각** | `court_name`(선택, ≤40자, 자유 텍스트) — 대진표 `match_game_courts.label`과 별개. 등록 폼에서 본인 과거 코트명을 '최근 코트'로 재선택. 경기 시각(`played_time`)은 시 단위만 입력(`HH:00` 저장, 카드에 'N시' 표시) |
 | **결과 미확정** | `personal_matches.set_scores`가 빈 배열(`hasResult` false) — 게임 스코어 없이 등록된 개인 경기. 카드에 '미확정' 배지, 통계·레이팅·AI 코칭 집계에서 제외(`explodePersonalMatchSets`). 카드 '결과 입력' 팝업에서 게임 스코어가 등록되면 확정 |
+| **경기 리스트 / 경기 방** | 개인 경기 등록 폼에서 '리스트에 노출'을 켠 기록 1건 = 방(`match_rooms`) 1개. 로그인 회원 전원이 목록(자동 제목 = 일시·코트명·경기 타입, 방장, 인원 N/정원)을 보고, **비밀번호**(4~20자, `match_room_secrets`에 bcrypt)를 아는 회원만 상세(참가자·메모·결과)에 **입장**(viewer·joined, 재입장 시 생략). 방 제목 필드 없음. 방 삭제('리스트에서 내리기')는 기록을 남기고 `room_id`만 푼다 |
+| **방 초대 / 참가** | 기록에 입력된 회원(단식 상대·복식 파트너/상대2·로테이션 풀)은 방 생성 시 `player/invited`로 자동 초대되고, 확인 요청 허브 '경기 리스트 초대'에서 수락하면 `joined`(참가). 확인 요청 대표는 초대 행 없이 요청 수락(`accept_match_request`)이 곧 참가. 비밀번호 입장자는 로테이션 방(세션 미확정)에서만 **풀 합류 신청**(`requested`) → 방장 승인 시 `rotation_sessions.players` 추가 + 정원 +1 |
 | **결과 제안 / 확인** | 상호 확인 경기의 사후 결과 등록. `match_result_negotiations.result_status`(request_id 1:1): none → proposed(한쪽이 세트 제안, 요청자 관점으로 정규화 저장) → confirmed(상대 확인 → 양측 `personal_matches` 확정) \| disputed(이의 제기 + 사유, 양측 누구든 재제안). 제안자 본인은 확인 불가, 제안 수정만 가능 |
 
 ## 코딩 규칙

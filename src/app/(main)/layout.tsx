@@ -49,7 +49,7 @@ export default async function MainLayout({
             <div className="flex h-dvh bg-background">
                 <Sidebar clubs={clubs} userId={user?.id ?? null} pendingRequestCount={pendingRequestCount} />
                 <div className="flex flex-col flex-1 min-w-0">
-                    <Header clubs={clubs} userDisplay={userDisplay} />
+                    <Header clubs={clubs} userDisplay={userDisplay} userId={user?.id ?? null} pendingRequestCount={pendingRequestCount} />
                     <main className="flex-1 overflow-y-auto p-4 md:p-6">
                         {children}
                     </main>
