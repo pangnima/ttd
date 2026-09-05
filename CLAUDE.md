@@ -129,7 +129,7 @@ src/
 │   │   ├── parse-detail.ts       # get_match_room_detail jsonb → MatchRoomDetail 런타임 가드 파서
 │   │   ├── room-context.ts       # RoomGameContext(방 게임 추가 폼 컨텍스트: 방 메타 고정 + 참가자 후보 + viewerIsHost) + canAddRoomGame(출처만 판정 — 단독 사용 금지) + canViewerAddRoomGame(방 참가자면 추가 가능) + buildRoomGameContext
 │   │   ├── game-status.ts        # 방 상세 게임 행 표시 규칙 (roomGameStatusLabel 상태 칩·canEditRoomGame 작성자 수정·isRoomGameParty 배지 표시·roomGamesEmptyMessage, vitest)
-│   │   ├── game-labels.ts        # buildRoomGameLabels — 방 게임 참가자 → 뷰어 관점 팀 라벨(작성자/상대팀/작성자 파트너 3관점, vitest)
+│   │   ├── game-labels.ts        # buildRoomGameLabels — 방 게임 참가자 → 뷰어 관점 팀 라벨(작성자/상대팀/작성자 파트너 3관점) + buildRoomGameLine·buildRoomGameSets(행의 팀 라인·스코어를 같은 관점으로 — '나'는 당사자에게만, 상대팀이면 스코어도 반전, vitest)
 │   │   ├── tabs.ts               # 매칭 리스트 3탭 메타 + resolveRoomListTab(레거시 upcoming·미지의 값 → open 폴백, vitest)
 │   │   ├── revalidate.ts         # revalidateRoomPaths — 방을 건드린 액션의 캐시 무효화 단일 출처 (server-only)
 │   │   └── create-room.ts        # listRecordAsRoom — 출처 저장 후 create_match_room RPC 호출 (세 등록 액션 공용, server-only)
