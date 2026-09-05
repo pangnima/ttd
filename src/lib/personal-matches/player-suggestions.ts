@@ -4,7 +4,7 @@ import type { PastOpponent } from '@/lib/queries/personal-matches'
 /**
  * 상대 자동완성 후보 (순수 모듈 — DB 접근 없음).
  * 입력창에 타이핑한 이름으로 [방 참가자 / 만나본 사람 / 클럽 회원 / 전체 회원] 그룹을 만든다.
- * 방 참가자(0048)는 경기 리스트 방에 들어온 회원 — 방장이 방 게임을 구성할 때 최상단에 뜬다.
+ * 방 참가자(0048)는 매칭 리스트 방에 들어온 회원 — 방장이 방 게임을 구성할 때 최상단에 뜬다.
  * 항목을 고르면 userId·손잡이·NTRP가 폼에 자동 채워지고, 고르지 않으면 입력한 이름 그대로 게스트로 저장된다.
  */
 
@@ -32,7 +32,7 @@ export type PlayerSuggestionSources = {
     candidates: OpponentCandidate[]
     // 플랫폼 전체 회원 서버 검색 결과 (단식 상대에서만 전달)
     searchResults?: OpponentCandidate[]
-    // 경기 리스트 방의 참가자 (방 게임 구성·모집형 채우기에서만 전달)
+    // 매칭 리스트 방의 참가자 (방 게임 구성·모집형 채우기에서만 전달)
     roomParticipants?: OpponentCandidate[]
 }
 

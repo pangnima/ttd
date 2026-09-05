@@ -23,7 +23,7 @@ const RESULT = {
     draw: { bar: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground', label: '무' },
     // 결과 미확정 — 게임 스코어 미등록. 통계에는 반영되지 않는다.
     pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
-    // 경기 리스트에 노출했지만 참가자가 아직 미정 — 방에서 모으는 중
+    // 매칭 리스트에 노출했지만 참가자가 아직 미정 — 방에서 모으는 중
     recruiting: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: '모집 중' },
 } as const
 // 게임(세트) 2개 이상 — 게임마다 승패가 다르므로 다수결 색을 쓰지 않고 중립 바 + 'N승 M패' 전적

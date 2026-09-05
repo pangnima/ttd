@@ -13,7 +13,7 @@ type Props = {
 }
 
 /**
- * '리스트에 노출' 토글 + 비밀번호 — 켜면 이 기록이 경기 리스트의 방이 되고, 비밀번호를 아는 회원만 상세에 입장한다.
+ * '리스트에 노출' 토글 + 비밀번호 — 켜면 이 기록이 매칭 리스트의 방이 되고, 비밀번호를 아는 회원만 상세에 입장한다.
  * 기록에 입력된 회원은 자동 초대되므로 비밀번호 없이 수락만으로 참가한다.
  */
 export function ListingSection({ listed, onListedChange, password, onPasswordChange }: Props) {
@@ -24,13 +24,13 @@ export function ListingSection({ listed, onListedChange, password, onPasswordCha
         <div className="space-y-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-body font-medium">리스트에 노출</p>
+                    <p className="text-body font-medium">매칭 리스트에 노출</p>
                     <p className="text-caption text-muted-foreground break-keep">
-                        회원 누구나 경기 리스트에서 볼 수 있습니다. 입력한 회원은 자동 초대되고, 그 외 회원은 비밀번호로 입장합니다. 메모도 방에 공개됩니다.
+                        회원 누구나 매칭 리스트에서 볼 수 있습니다. 입력한 회원은 자동 초대되고, 그 외 회원은 비밀번호로 입장합니다. 메모도 방에 공개됩니다.
                         참가자를 비워 두고 저장하면 모집 중인 경기로 노출되고, 나중에 수정에서 채울 수 있습니다.
                     </p>
                 </div>
-                <Switch checked={listed} onCheckedChange={onListedChange} aria-label="리스트에 노출" className="mt-1 shrink-0" />
+                <Switch checked={listed} onCheckedChange={onListedChange} aria-label="매칭 리스트에 노출" className="mt-1 shrink-0" />
             </div>
 
             {listed && (

@@ -26,7 +26,7 @@ type Props = {
     label: string
     candidates: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
-    // 경기 리스트 방 참가자 — 최상단 '방 참가자' 그룹 (방 게임 구성·모집형 채우기에서만 전달)
+    // 매칭 리스트 방 참가자 — 최상단 '방 참가자' 그룹 (방 게임 구성·모집형 채우기에서만 전달)
     roomParticipants?: OpponentCandidate[]
     value: PlayerPickerValue
     // picked: 후보를 골랐을 때 그 항목 (NTRP 프리필용). 타이핑이면 undefined

@@ -1,5 +1,5 @@
 /**
- * 경기 방 비밀번호 규칙 — 4~20자, 공백 금지.
+ * 매칭 룸 비밀번호 규칙 — 4~20자, 공백 금지.
  * 클라(폼 isValid)·액션·RPC(create_match_room / update_match_room_password) 3중 방어의 클라·액션 몫.
  */
 export const ROOM_PASSWORD_MIN = 4

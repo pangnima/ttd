@@ -31,7 +31,7 @@ export function RoomPasswordGate({ roomId }: Props) {
             <div>
                 <h2 className={TYPO.h4}>비밀번호를 입력하면 참가자로 등록됩니다</h2>
                 <p className="text-caption text-muted-foreground break-keep mt-1">
-                    입장하면 바로 이 경기의 참가자가 되고, 방장이 참가자로 게임을 구성합니다. 명단·메모·게임은 입장 후에 볼 수 있습니다.
+                    입장하면 바로 이 경기의 참가자가 되고, 참가자 누구나 게임을 등록할 수 있습니다. 명단·메모·게임은 입장 후에 볼 수 있습니다.
                 </p>
             </div>
             <div>

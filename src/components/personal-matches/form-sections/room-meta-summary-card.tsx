@@ -14,7 +14,7 @@ export function RoomMetaSummaryCard({ ctx, step }: Props) {
             {ctx.surface && <p className="text-caption text-muted-foreground">{SURFACE_LABELS[ctx.surface]}</p>}
             <MatchMetaLine playedTime={ctx.playedTime} courtName={ctx.courtName} notes={ctx.notes} className="mt-1 space-y-0.5" />
             <p className="mt-3 text-caption text-muted-foreground break-keep">
-                경기 리스트 방의 값으로 고정됩니다. 바꾸려면 방의 원래 기록을 수정하세요.
+                매칭 리스트 방의 값으로 고정됩니다. 바꾸려면 방의 원래 기록을 수정하세요.
             </p>
         </FormSectionCard>
     )

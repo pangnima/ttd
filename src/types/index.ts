@@ -160,7 +160,7 @@ export type PersonalMatch = {
     sourceType?: 'direct' | 'confirmation' | 'rotation'  // 출처 (0040). 픽스처·테스트 리터럴은 생략 가능
     rotationSessionId?: string  // 로테이션 세션 tombstone id (0044) — 같은 값이면 같은 로테이션에서 분해된 게임(목록 그룹 키)
     groupSeq?: number           // 로테이션 세션 내 게임 순번 (0044). finalize 루프 순서 = 실제 입력 순서
-    roomId?: string             // 경기 리스트에 노출된 기록이면 방 id (0046) — 카드 '경기 리스트에서 보기' 링크
+    roomId?: string             // 매칭 리스트에 노출된 기록이면 방 id (0046) — 카드 '매칭 리스트에서 보기' 링크
     // 다른 참가자의 기록에서 파생된 관점 복사본 (0050). 방의 '대표 게임' 판정 술어(is_perspective=false)이며,
     // ⚠ 수락자(대표) 행도 true다 — '액션 불가'의 근거로 쓰면 안 된다(그 판정은 confirmation.viewerIsParty).
     isPerspective?: boolean
@@ -205,10 +205,10 @@ export type RotationSession = {
     courtName?: string      // finalize 시 모든 게임 행에 상속
     players: RotationPoolPlayer[]  // 나 제외, 3명 이상
     createdAt: string
-    roomId?: string         // 경기 리스트에 노출된 세션이면 방 id (0046)
+    roomId?: string         // 매칭 리스트에 노출된 세션이면 방 id (0046)
 }
 
-// ── 경기 리스트(경기 방) (0046·0048) ────────────────────────────────
+// ── 매칭 리스트(매칭 룸) (0046·0048) ────────────────────────────────
 // 등록 폼에서 '리스트에 노출'을 켠 기록이 방 1개가 된다. 공개 메타는 로그인 회원 전원이 보고,
 // 상세(참가자·메모·게임)는 방장·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
 // 정원은 없다 — 비밀번호를 알고 들어오면 곧 참가자이고, 방장은 들어온 참가자로 게임을 여러 건 구성한다(0048).
@@ -239,7 +239,7 @@ export type MatchRoomMeta = {
     matchType: MatchType
     surface?: CourtSurface
     courtName?: string
-    // 방의 대표 게임이 1건 이상이고 전부 확정 — 경기 리스트에서 '지난 경기'로 내려간다 (0049)
+    // 방의 대표 게임이 1건 이상이고 전부 확정 — 매칭 리스트에서 '지난 경기'로 내려간다 (0049)
     isSettled: boolean
 }
 
@@ -302,7 +302,7 @@ export type MatchRoomDetail = {
     games: MatchRoomGame[]
 }
 
-// 확인 요청 허브 '경기 리스트 초대' 카드용
+// 확인 요청 허브 '매칭 리스트 초대' 카드용
 export type MatchRoomInvite = {
     roomId: string
     hostName: string

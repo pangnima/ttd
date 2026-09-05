@@ -48,3 +48,17 @@ export async function fetchQueueRotationSessions(userId: string, joinedRoomIds: 
     if (error || !data) return []
     return data.map(mapRotationSessionRow)
 }
+
+/**
+ * 방의 미확정 로테이션 세션 1건 — RLS(rotation_sessions_select, 0050)가 방 참가자에게만 허용한다.
+ * 0050 이후 방 세션은 finalize 후에도 남고(참가자 여러 명이 각자 입력한다),
+ * 방장의 close_rotation_room이 지운다 — 즉 행이 있으면 아직 입력을 받는 중이다.
+ */
+export async function fetchRoomRotationSession(roomId: string): Promise<RotationSession | null> {
+    const supabase = await createClient()
+    const { data, error } = await rotationSelect(supabase)
+        .eq('room_id', roomId)
+        .maybeSingle()
+    if (error || !data) return null
+    return mapRotationSessionRow(data)
+}

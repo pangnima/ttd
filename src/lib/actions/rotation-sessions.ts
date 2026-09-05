@@ -48,7 +48,7 @@ function cleanPlayer(p: RotationPoolPlayer): RotationPoolPlayer {
     }
 }
 
-/** 세션 저장. listing(리스트에 노출)이 있으면 세션을 경기 리스트의 방으로 등록한다(풀 회원 자동 초대). */
+/** 세션 저장. listing(리스트에 노출)이 있으면 세션을 매칭 리스트의 방으로 등록한다(풀 회원 자동 초대). */
 export async function createRotationSessionAction(input: RotationSessionInput, listing?: RoomListingInput): Promise<ActionResult> {
     if (!isDoublesMatchType(input.matchType)) return { error: '로테이션은 복식에서만 등록할 수 있습니다.' }
     if (!input.playedAt) return { error: '경기 날짜를 입력해주세요.' }

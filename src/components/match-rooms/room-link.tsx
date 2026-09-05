@@ -6,7 +6,7 @@ type Props = { roomId: string; className?: string }
 export function RoomLink({ roomId, className }: Props) {
     return (
         <Link href={`/match-rooms/${roomId}`} className={`text-caption text-primary hover:underline ${className ?? ''}`}>
-            경기 리스트에서 보기
+            매칭 룸 보기
         </Link>
     )
 }

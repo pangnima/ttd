@@ -16,7 +16,7 @@ const ROLE_LABEL: Record<string, string> = {
     pool: '참가자 풀에',
 }
 
-/** 확인 요청 허브 '경기 리스트 초대' 카드 — 방장이 기록에 나를 입력해 자동 초대된 것. 수락하면 방 참가자가 된다 */
+/** 확인 요청 허브 '매칭 리스트 초대' 카드 — 방장이 기록에 나를 입력해 자동 초대된 것. 수락하면 방 참가자가 된다 */
 export function RoomInviteCard({ invite }: Props) {
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)

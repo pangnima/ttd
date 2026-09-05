@@ -14,7 +14,7 @@ type Props = {
     canCloseRotation?: boolean
 }
 
-/** 방장 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 리스트에서 내리기(방 삭제, 기록은 유지) */
+/** 방장 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 매칭 리스트에서 내리기(방 삭제, 기록은 유지) */
 export function RoomHostActions({ roomId, canCloseRotation = false }: Props) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
@@ -35,7 +35,7 @@ export function RoomHostActions({ roomId, canCloseRotation = false }: Props) {
     }
 
     function unlist() {
-        if (!confirm('경기 리스트에서 내릴까요? 경기 기록은 그대로 남고, 방의 참가자 목록만 사라집니다.')) return
+        if (!confirm('매칭 리스트에서 내릴까요? 경기 기록은 그대로 남고, 방의 참가자 목록만 사라집니다.')) return
         setError(null)
         startTransition(async () => {
             const res = await deleteMatchRoomAction(roomId)
@@ -61,7 +61,7 @@ export function RoomHostActions({ roomId, canCloseRotation = false }: Props) {
                 <Button size="sm" variant="outline" disabled={isPending} onClick={closeRotation}>게임 입력 종료</Button>
             )}
             <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={isPending} onClick={unlist}>
-                리스트에서 내리기
+                매칭 리스트에서 내리기
             </Button>
             {error && !open && <p className="w-full text-caption text-destructive">{error}</p>}
 

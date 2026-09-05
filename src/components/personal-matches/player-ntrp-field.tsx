@@ -10,7 +10,7 @@ type Props = {
     label: string
     candidates: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
-    // 경기 리스트 방 참가자 — 자동완성 최상단 그룹 (방 게임 구성·모집형 채우기)
+    // 매칭 리스트 방 참가자 — 자동완성 최상단 그룹 (방 게임 구성·모집형 채우기)
     roomParticipants?: OpponentCandidate[]
     player: PlayerPickerValue
     onPlayerChange: (v: PlayerPickerValue) => void

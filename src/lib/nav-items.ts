@@ -28,10 +28,12 @@ export function isPersonalNavActive(pathname: string, userId: string): boolean {
 
 // 개인 경기 메뉴 ('개인' 메뉴와 같은 섹션, 로그인 시 노출)
 // '경기 확인 요청'에는 받은 pending 건수 뱃지가 붙는다 (Sidebar/MobileNav에서 렌더).
+// 생애 순서로 배열한다: 경기를 잡고(매칭 리스트) → 결과를 처리하고(확인 요청) → 확정 전적을 본다(개인 경기 결과).
+// Sidebar의 활성 판정은 href prefix 기반이라 순서와 무관하다.
 export const myMatchNavItems: NavItem[] = [
-    { href: '/me/personal-matches', label: '개인 경기 기록', icon: ClipboardList },
     { href: '/match-rooms', label: '매칭 리스트', icon: CalendarDays },
     { href: '/me/match-requests', label: '경기 확인 요청', icon: Inbox },
+    { href: '/me/personal-matches', label: '개인 경기 결과', icon: ClipboardList },
 ]
 
 // 클럽 메뉴 (개인 경기 아래, 가입 클럽 트리 위에 노출)

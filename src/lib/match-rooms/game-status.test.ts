@@ -58,7 +58,7 @@ describe('roomGamesEmptyMessage', () => {
 
     it('미확정 로테이션은 게임 빌더로 안내', () => {
         expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: false })))
-            .toContain('결과 입력 대기 로테이션')
+            .toContain('게임 입력')
     })
 
     it('확정된 로테이션은 게임 추가 안내', () => {

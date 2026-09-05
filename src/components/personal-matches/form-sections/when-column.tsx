@@ -16,7 +16,7 @@ type Props = {
     variant?: 'page' | 'dialog'
 }
 
-/** 등록 폼 우측 열 — "언제·어디서": 경기 정보 · 메모 · 경기 리스트 노출(신규 등록만). 방 게임은 방 값 요약만 */
+/** 등록 폼 우측 열 — "언제·어디서": 경기 정보 · 메모 · 매칭 리스트 노출(신규 등록만). 방 게임은 방 값 요약만 */
 export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page' }: Props) {
     // 룸 안 다이얼로그에서는 RoomDetailHeader가 이미 일시·코트·표면을 보여주므로 요약 카드를 중복하지 않는다
     if (s.roomContext) return variant === 'dialog' ? null : <RoomMetaSummaryCard ctx={s.roomContext} step="02" />
@@ -36,7 +36,7 @@ export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page'
             </FormSectionCard>
             {/* 수정 모드는 방 관리(비밀번호 변경·내리기)를 방 상세의 방장 액션으로 하므로 토글을 두지 않는다 */}
             {!s.isEdit && (
-                <FormSectionCard title="경기 리스트" step="선택">
+                <FormSectionCard title="매칭 리스트" step="선택">
                     <ListingSection
                         listed={s.listed} onListedChange={s.setListed}
                         password={s.roomPassword} onPasswordChange={s.setRoomPassword}

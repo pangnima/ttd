@@ -29,7 +29,7 @@ export function PlayerPoolSection({ pool, candidates, pastOpponents, onAdd, onUp
         <div className="space-y-4">
             {pool.length === 0 && (
                 <p className="text-body2 text-muted-foreground">
-                    {allowEmpty ? '비워 두면 경기 리스트에서 참가자를 모집합니다.' : '함께 친 선수를 추가하세요. (최소 3명)'}
+                    {allowEmpty ? '비워 두면 매칭 리스트에서 참가자를 모집합니다.' : '함께 친 선수를 추가하세요. (최소 3명)'}
                 </p>
             )}
             {/* 행은 자체 mt/구분선으로 간격을 가지므로 래퍼에는 space-y를 두지 않는다 */}

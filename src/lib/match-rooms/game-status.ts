@@ -30,8 +30,8 @@ export function isRoomGameParty(game: MatchRoomGame, viewerId: string): boolean 
 export function roomGamesEmptyMessage(detail: MatchRoomDetail): string {
     const s = detail.source
     if (s.kind === 'rotation' && !s.isFinalized) {
-        // 0050: 방에 참가한 사람 누구나 자기 기준으로 게임을 넣을 수 있다
-        return '게임이 아직 없습니다. 개인 경기 기록의 "결과 입력 대기 로테이션" 카드에서 게임을 구성하세요.'
+        // 0050: 방에 참가한 사람 누구나 이 화면의 '게임 입력'에서 자기 기준으로 게임을 넣는다
+        return '게임이 아직 없습니다. 위 [게임 입력]에서 파트너·상대와 스코어를 구성하세요.'
     }
     if (s.kind === 'confirmation' && s.requestStatus === 'pending') {
         return '상대 대표가 확인 요청을 수락하면 결과를 등록할 수 있습니다.'

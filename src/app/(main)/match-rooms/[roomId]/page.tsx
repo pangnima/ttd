@@ -1,6 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchMatchRoomDetail, fetchMatchRoomSummary, fetchRoomParticipantCandidates } from '@/lib/queries/match-rooms'
+import {
+    fetchMatchRoomDetail, fetchMatchRoomSummary, fetchRoomGameConfirmations, fetchRoomParticipantCandidates,
+} from '@/lib/queries/match-rooms'
+import { fetchRoomRotationSession } from '@/lib/queries/rotation-sessions'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchPastOpponents } from '@/lib/queries/personal-matches'
 import { buildRoomGameContext, canViewerAddRoomGame } from '@/lib/match-rooms/room-context'
@@ -15,12 +18,12 @@ import { RoomMembersSection } from '@/components/match-rooms/room-members-sectio
 import { RoomGamesSection } from '@/components/match-rooms/room-games-section'
 import { RoomHostActions } from '@/components/match-rooms/room-host-actions'
 
-export const metadata = { title: '경기 상세' }
+export const metadata = { title: '매칭 룸' }
 
 type Props = { params: Promise<{ roomId: string }> }
 
 /**
- * 경기 방 상세 — 멤버(방장·초대 수락자·비밀번호 입장자)면 참가자·게임, 아니면 공개 메타 + 비밀번호 게이트.
+ * 매칭 룸 상세 — 멤버(방장·초대 수락자·비밀번호 입장자)면 참가자·게임, 아니면 공개 메타 + 비밀번호 게이트.
  * 멤버십 판정은 get_match_room_detail RPC가 하고, 게이트 통과(enter_match_room = 참가) 후 router.refresh로 다시 그린다.
  */
 export default async function MatchRoomPage({ params }: Props) {
@@ -45,19 +48,25 @@ export default async function MatchRoomPage({ params }: Props) {
         )
     }
 
-    // 룸 안에서 게임을 추가하려면 폼 컨텍스트가 필요하다 — RPC 재호출 없이 detail + 참가자 명단으로 만든다.
-    // 참가자 명단은 로테이션 빌더 풀에도 쓰이므로 한 번만 조회한다.
-    const canAdd = canViewerAddRoomGame(detail, user.id)
-    const [participants, opponentCandidates, pastOpponents] = canAdd
-        ? await Promise.all([
-            fetchRoomParticipantCandidates(roomId, user.id),
-            fetchOpponentCandidates(user.id),
-            fetchPastOpponents(user.id),
-        ])
-        : [[], [], []]
-    const gameCtx = canAdd ? buildRoomGameContext(detail, participants, user.id) : undefined
-
     const isHost = detail.room.hostUserId === user.id
+    const isMember = isHost || detail.viewer?.status === 'joined'
+    const canAdd = canViewerAddRoomGame(detail, user.id)
+    const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
+    // 게임 추가 폼과 로테이션 빌더가 같은 참가자 명단·자동완성 후보를 쓰므로 한 번만 조회한다
+    const needsPicker = canAdd || (isMember && isPendingRotation)
+    const requestIds = detail.games.map((g) => g.sourceRequestId).filter((id): id is string => !!id)
+
+    const [participants, opponentCandidates, pastOpponents, confirmations, rotationSession] = await Promise.all([
+        needsPicker ? fetchRoomParticipantCandidates(roomId, user.id) : [],
+        needsPicker ? fetchOpponentCandidates(user.id) : [],
+        needsPicker ? fetchPastOpponents(user.id) : [],
+        // 협상 행이 오는 게임 = 내가 결과를 입력·확인할 수 있는 게임 (RLS가 당사자만 통과시킨다)
+        fetchRoomGameConfirmations(requestIds, user.id),
+        isMember && isPendingRotation ? fetchRoomRotationSession(roomId) : null,
+    ])
+    const gameCtx = canAdd ? buildRoomGameContext(detail, participants, user.id) : undefined
+    const picker = needsPicker ? { candidates: opponentCandidates, pastOpponents, selfUserId: user.id } : undefined
+
     // 미확정 로테이션 방은 참가자 전원이 각자 게임을 넣는 중 — 세션을 닫는 건 방장만 한다(0050)
     const canCloseRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
 
@@ -75,6 +84,10 @@ export default async function MatchRoomPage({ params }: Props) {
                 gameCtx={gameCtx}
                 opponentCandidates={opponentCandidates}
                 pastOpponents={pastOpponents}
+                confirmations={confirmations}
+                rotationSession={rotationSession}
+                participants={participants}
+                picker={picker}
             />
         </PageContainer>
     )

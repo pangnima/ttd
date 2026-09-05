@@ -1,20 +1,25 @@
 # 경기 기록 도메인 플로우 재정립 — 개인 결과 / 확인 요청 / 매칭 리스트 / 매칭 룸
 
-> **진행 상황 (2026-09-04 기준)**
+> **진행 상황 (2026-09-05 기준)**
 >
 > | Step | 상태 | 비고 |
 > |---|---|---|
 > | 0 · 순수 함수 + 캐시 무효화 보강 | ✅ 완료 | `lib/match-rooms/{revalidate,game-labels}.ts` 신설, 기존 revalidate 결함 3건 수정 |
 > | 1 · 마이그레이션 0051 (`has_result`) | ✅ 완료 | **원격 Supabase에 적용됨 — 다시 적용하지 말 것** |
-> | 2 · 순수 분류기 `match-requests/queue.ts` | ✅ 완료 | 아직 화면 미연결(dead export), 테스트 16개 |
-> | 3~12 | ⬜ 잔여 | 아래 본문 그대로 진행 |
+> | 2 · 순수 분류기 `match-requests/queue.ts` | ✅ 완료 | 테스트 18개 (`viewerIsParty` 케이스 포함) |
+> | 3 · 쿼리 계층 | ✅ 완료 | `queries/match-queue.ts`(`fetchMatchQueue`, React cache) + 개인 경기 확정/미확정 분할 + `viewerIsParty`·`isPerspective` 매핑 |
+> | 4 · 허브 실 연동 | ✅ 완료 | 픽스처·`result-confirm-card` 제거, 내 차례/상대 대기 2탭 8섹션 |
+> | 5 · 개인 결과 축소 + 배너 | ✅ 완료 | `QueueSummaryBanner`, `MatchActions` 축소, 저장 후 목적지 교정 |
+> | 6 · 뱃지 단일화 + 죽은 코드 제거 | ✅ 완료 | 뱃지 = `myTurnTotal`, 구 쿼리 6종·`RotationSessionList` 삭제 |
+> | 7 · 매칭 리스트 3탭 | ✅ 완료 | `lib/match-rooms/tabs.ts`(+테스트)·`LinkTabs`·`RoomListSection`·`ROOM_LIST_LIMIT` |
+> | 8 · 룸 안 게임 추가 | ✅ 완료 | `RoomGameDialog`, 폼 `variant='dialog'`+`SubmitNavigation`, `metaOk` 결함 수정, `?room=` redirect |
+> | 9 · 룸 안 결과 입력·로테이션 빌더 | ✅ 완료 | `RoomGameActions`(자격 = 협상 행 존재)·`RoomRotationBuilder`·`fetchRoomGameConfirmations` |
+> | 10 · 라벨 전수 교체 | ✅ 완료 | 매칭 리스트/매칭 룸/개인 경기 결과, 사이드바 생애 순서 재배열, `'방장'` 판정 키 보존 |
+> | 11 · 마이그레이션 0052 (선택) | ⬜ 미착수 | 없이도 동작한다(`viewerIsParty`가 전방 호환). 적용하면 파트너·상대2가 협상 상태를 읽는다 |
+> | 12 · 서버 필터·페이지네이션 | ⬜ 범위 밖 | 후속 |
 >
-> Step 0~2 종료 시점에 `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run`(41파일 387테스트) 전부 통과.
-> 사용자 눈에 보이는 화면 변화는 아직 없다(Step 4부터 시작된다).
->
-> **재개 시 먼저 볼 것** — 본문의 "실행 원칙"(순서를 어기면 결과를 입력할 화면이 사라진다)과
-> Step 3의 `viewerIsParty` 도입 지점. `queue.ts`의 판정 3번은 지금 `!m.confirmation`만 보므로
-> Step 3에서 `|| !c.viewerIsParty`로 한 줄 확장해야 한다(해당 위치에 주석으로 표시해 뒀다).
+> Step 10 종료 시점에 `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run` 전부 통과.
+> **남은 일**: 아래 "검증"의 엔드투엔드 수동 시나리오 8종(계정 2개)과 선택 과제 Step 11.
 
 ## Context
 

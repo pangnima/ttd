@@ -18,7 +18,7 @@ type PlayersSectionProps = {
     isDoubles: boolean
     candidates: OpponentCandidate[]
     pastOpponents: PastOpponent[]
-    // 경기 리스트 방 참가자 — 방 게임 구성·모집형 채우기에서 자동완성 최상단 그룹
+    // 매칭 리스트 방 참가자 — 방 게임 구성·모집형 채우기에서 자동완성 최상단 그룹
     roomParticipants?: OpponentCandidate[]
     opponent: PlayerFieldState
     partner: PlayerFieldState

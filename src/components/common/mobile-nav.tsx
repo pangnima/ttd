@@ -25,7 +25,7 @@ export function MobileNav({ clubs = [], userId = null, myTurnCount = 0 }: Mobile
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
 
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록 + 경기 리스트 + 경기 확인 요청
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록 + 매칭 리스트 + 경기 확인 요청
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
     const myNavActive = (href: string) => {
         if (href.startsWith('/me/personal-matches')) return pathname.startsWith('/me/personal-matches')

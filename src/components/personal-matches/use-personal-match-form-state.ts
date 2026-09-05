@@ -67,7 +67,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     // 복식 입력 방식 — 로테이션(기본, 선수 풀만 등록) vs 페어 고정. 로테이션은 신규 등록에서만 지원(수정·방 게임은 페어 고정).
     const [doublesMode, setDoublesMode] = useState<DoublesMode>(ctx ? 'fixed' : 'rotation')
     const rotation = useRotationGames()
-    // 경기 리스트 노출 — 신규 등록에서만. 켜면 비밀번호(4~20자) 필수. 기록 저장 후 액션이 create_match_room RPC로 방을 만든다.
+    // 매칭 리스트 노출 — 신규 등록에서만. 켜면 비밀번호(4~20자) 필수. 기록 저장 후 액션이 create_match_room RPC로 방을 만든다.
     const [listed, setListedState] = useState(false)
     const [roomPassword, setRoomPassword] = useState('')
 

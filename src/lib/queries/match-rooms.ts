@@ -4,13 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { parseRoomDetail } from '@/lib/match-rooms/parse-detail'
 import { countJoined } from '@/lib/match-rooms/headcount'
 import { toDominantHand, type OpponentCandidate } from '@/lib/queries/users'
+import { buildConfirmation } from '@/lib/personal-matches/confirmation'
 import type {
     CourtSurface, MatchRoomDetail, MatchRoomHost, MatchRoomInvite, MatchRoomMemberRole, MatchRoomMemberStatus,
-    MatchRoomSourceKind, MatchRoomSourceRole, MatchRoomSummary, MatchType,
+    MatchRoomSourceKind, MatchRoomSourceRole, MatchRoomSummary, MatchType, PersonalMatchConfirmation,
 } from '@/types'
 
 /**
- * 경기 리스트(경기 방) 조회.
+ * 매칭 리스트(매칭 룸) 조회.
  * match_rooms는 로그인 회원 전원 SELECT(공개 메타), 비밀번호 해시는 match_room_secrets(정책 없음)라 여기서 절대 읽히지 않는다.
  * 상세는 get_match_room_detail RPC가 멤버십을 검증한 뒤 jsonb로 내려준다.
  */
@@ -73,7 +74,7 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
  */
 export const ROOM_LIST_LIMIT = 200
 
-/** 경기 리스트 전체 (예정/지난 분리는 lib/match-rooms/split.ts) */
+/** 매칭 리스트 전체 (예정/지난 분리는 lib/match-rooms/split.ts) */
 export async function fetchMatchRooms(viewerId: string): Promise<MatchRoomSummary[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -103,6 +104,40 @@ export async function fetchMatchRoomDetail(roomId: string): Promise<MatchRoomDet
     const { data, error } = await supabase.rpc('get_match_room_detail', { p_room_id: roomId })
     if (error) return null
     return parseRoomDetail(data)
+}
+
+/**
+ * 방 게임의 결과 협상 상태 — key는 sourceRequestId.
+ * **행의 존재 자체가 '결과 입력·확인 자격'이다**: match_requests SELECT 정책이 요청 당사자(요청자·대표
+ * 확인자)만 통과시키므로, 파트너·상대2에게는 애초에 행이 오지 않는다. 자격 판정에 isRoomGameParty를
+ * 쓰면 안 되는 이유 — 로테이션 파생 게임은 대표가 opponent2일 수 있어 role로 대표를 추정할 수 없다.
+ * proposedSets는 buildConfirmation이 viewer 관점으로 반전해 준다(검증된 코드 재사용).
+ */
+export async function fetchRoomGameConfirmations(
+    requestIds: string[], viewerId: string,
+): Promise<Record<string, PersonalMatchConfirmation>> {
+    if (requestIds.length === 0) return {}
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_requests')
+        .select('id, requester_id, opponent_user_id, negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason)')
+        .in('id', requestIds)
+    if (error || !data) return {}
+
+    const byRequest: Record<string, PersonalMatchConfirmation> = {}
+    for (const row of data) {
+        const neg = row.negotiation
+        byRequest[row.id] = buildConfirmation({
+            id: row.id,
+            requester_id: row.requester_id,
+            opponent_user_id: row.opponent_user_id,
+            result_status: neg?.result_status ?? 'none',
+            proposed_by: neg?.proposed_by ?? null,
+            proposed_set_scores: neg?.proposed_set_scores ?? [],
+            dispute_reason: neg?.dispute_reason ?? null,
+        }, viewerId)
+    }
+    return byRequest
 }
 
 type ParticipantRow = {
@@ -198,7 +233,7 @@ function mapInviteRow(row: InviteRow): MatchRoomInvite | null {
     }
 }
 
-/** 내가 받은 방 초대 (status='invited', 최신순) — 확인 요청 허브 '경기 리스트 초대' 섹션 */
+/** 내가 받은 방 초대 (status='invited', 최신순) — 확인 요청 허브 '매칭 리스트 초대' 섹션 */
 export async function fetchPendingRoomInvites(userId: string): Promise<MatchRoomInvite[]> {
     const supabase = await createClient()
     const { data, error } = await supabase

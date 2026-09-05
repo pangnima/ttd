@@ -37,7 +37,7 @@ function slotLabel(key: NtrpField, isDoubles: boolean): string {
 
 /**
  * 모집형(리스트에 노출) 참가자 입력 — 빈 슬롯을 미리 그리지 않고 '참가자 추가'로 연 슬롯만 보여 준다(0048).
- * 열린 슬롯은 이름·손잡이·NTRP가 모두 필수이고 '삭제'로 닫는다. 닫힌 슬롯은 경기 리스트에서 모집한다.
+ * 열린 슬롯은 이름·손잡이·NTRP가 모두 필수이고 '삭제'로 닫는다. 닫힌 슬롯은 매칭 리스트에서 모집한다.
  * 복식은 어느 자리(내 파트너/상대 1/상대 2)를 열지 메뉴에서 고른다.
  */
 export function RecruitingPlayersSection({
@@ -50,7 +50,7 @@ export function RecruitingPlayersSection({
     return (
         <div className="space-y-4">
             {open.length === 0 && (
-                <p className="text-body2 text-muted-foreground">비워 두면 경기 리스트에서 참가자를 모집합니다.</p>
+                <p className="text-body2 text-muted-foreground">비워 두면 매칭 리스트에서 참가자를 모집합니다.</p>
             )}
             <div>
                 {open.map((key, i) => (

@@ -27,7 +27,7 @@ export default async function EditPersonalMatchPage({ params }: Props) {
     if (!match || match.userId !== user.id) notFound()
     // 상호 확인으로 확정된 경기는 수정 불가 (액션·RLS와 삼중 방어)
     if (match.sourceRequestId) redirect('/me/personal-matches')
-    // 경기 리스트 방의 기록이면 방 참가자를 자동완성 최상단에 — 모집 중인 빈 자리를 들어온 사람으로 채운다(0048)
+    // 매칭 리스트 방의 기록이면 방 참가자를 자동완성 최상단에 — 모집 중인 빈 자리를 들어온 사람으로 채운다(0048)
     const roomParticipants = match.roomId ? await fetchRoomParticipantCandidates(match.roomId, user.id) : undefined
 
     return (

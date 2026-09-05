@@ -8,7 +8,7 @@ import { CARD_HOVER, PILL_BASE } from '@/lib/dashboard/tokens'
 
 type Props = { room: MatchRoomSummary }
 
-/** 경기 리스트 1행 — 날짜 컬럼 + 시각·코트명 + 방장 + 참가 인원 + 내 상태 칩. 클릭하면 상세(미입장이면 비밀번호 게이트) */
+/** 매칭 리스트 1행 — 날짜 컬럼 + 시각·코트명 + 방장 + 참가 인원 + 내 상태 칩. 클릭하면 상세(미입장이면 비밀번호 게이트) */
 export function MatchRoomCard({ room }: Props) {
     const when = room.playedTime ? formatHourLabel(room.playedTime) : null
     const title = [when, room.courtName].filter(Boolean).join(' · ') || `${MATCH_TYPE_LABELS[room.matchType]} 경기`

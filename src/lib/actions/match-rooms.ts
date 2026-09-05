@@ -6,7 +6,7 @@ import { validateRoomPassword } from '@/lib/match-rooms/password'
 import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
- * 경기 리스트(경기 방) 쓰기 — 입장·초대 응답·방장 관리·방 게임 등록.
+ * 매칭 리스트(매칭 룸) 쓰기 — 입장·초대 응답·방장 관리·방 게임 등록.
  * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046·0048) 안에서 하고, 여기서는 사용자 문구로 번역만 한다.
  * 방 생성은 세 등록 액션이 lib/match-rooms/create-room.ts를 통해 한다.
  */

@@ -36,7 +36,7 @@ export type MatchRequestInput = {
     courtName?: string  // 선택, ≤40자 — 수락 시 양측 기록에 복사
 }
 
-/** 확인 요청 생성. listing(리스트에 노출)이 있으면 요청을 경기 리스트의 방으로 등록한다(회원 파트너/상대2 초대, 대표는 수락 시 참가). */
+/** 확인 요청 생성. listing(리스트에 노출)이 있으면 요청을 매칭 리스트의 방으로 등록한다(회원 파트너/상대2 초대, 대표는 수락 시 참가). */
 export async function createMatchRequestAction(
     input: MatchRequestInput,
     listing?: RoomListingInput,
