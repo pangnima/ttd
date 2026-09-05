@@ -181,7 +181,7 @@ export async function finalizeRotationSessionAction(
 
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/match-requests')
     revalidateRoomPaths(session?.room_id)
     return { error: null }

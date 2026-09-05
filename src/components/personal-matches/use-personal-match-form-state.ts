@@ -175,7 +175,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         listed, setListed, roomPassword, setRoomPassword, listing, allowEmptyPlayers,
         openSlots, openSlot, closeSlot,
         roomContext: ctx, isRoomGame,
-        roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined, viewerIsHost: ctx?.viewerIsHost ?? true,
+        roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
         // 저장 후 목적지 판정용 — 폼은 세트를 받지 않으므로 '수정 전 결과 유무'가 곧 저장 후 결과 유무다
         initialHasResult: (d?.setScores.length ?? 0) > 0,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildConfirmation, bystanderWaitingBadge, type ConfirmationSourceRow } from './confirmation'
+import { buildConfirmation, bystanderWaitingBadge, canReopenResult, type ConfirmationSourceRow } from './confirmation'
 import { invertSetScores } from './perspective'
 
 const REQ: ConfirmationSourceRow = {
@@ -72,5 +72,28 @@ describe('invertSetScores', () => {
         expect(invertSetScores(invertSetScores(sets))).toEqual(sets)
         expect(invertSetScores(sets)[0]).toEqual({ me: 4, opp: 6 })
         expect(invertSetScores([])).toEqual([])
+    })
+})
+
+describe('canReopenResult', () => {
+    const conf = (status: string, viewerIsParty: boolean) =>
+        buildConfirmation({ ...REQ, result_status: status }, viewerIsParty ? 'alice' : 'carol')
+
+    it('확정 + 요청 당사자면 되돌릴 수 있다', () => {
+        expect(canReopenResult(conf('confirmed', true))).toBe(true)
+    })
+
+    it('확정이어도 당사자가 아니면(복식 파트너·상대2) 되돌릴 수 없다', () => {
+        expect(canReopenResult(conf('confirmed', false))).toBe(false)
+    })
+
+    it('아직 확정되지 않은 상태에서는 되돌릴 것이 없다', () => {
+        for (const status of ['none', 'proposed', 'disputed']) {
+            expect(canReopenResult(conf(status, true))).toBe(false)
+        }
+    })
+
+    it('협상 행을 못 읽으면 false', () => {
+        expect(canReopenResult(undefined)).toBe(false)
     })
 })

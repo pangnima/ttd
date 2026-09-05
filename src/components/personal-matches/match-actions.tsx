@@ -6,6 +6,8 @@ import type { PersonalMatch } from '@/types'
 import { Button } from '@/components/ui/button'
 import { deletePersonalMatchAction, updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
+import { canReopenResult } from '@/lib/personal-matches/confirmation'
+import { ReopenResultButton } from '@/components/personal-matches/reopen-result-button'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -15,12 +17,22 @@ const LOCKED_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-primar
 
 /**
  * 개인 경기 **결과**(확정) 카드의 우측 액션.
- *  - 상호 확인 경기 → 잠금 배지 (수정·삭제를 DB가 RESTRICTIVE 정책으로 막는다)
+ *  - 상호 확인 경기 → 잠금 배지 + [결과 정정](요청 당사자만, 0055)
  *  - 자유 기록 → 수정/삭제
  * 미확정 경기의 결과 입력·확인·참가자 채우기는 확인 요청 허브(PendingMatchActions)가 담당한다.
  */
 export function MatchActions({ match }: Props) {
-    if (match.sourceRequestId) return <MutualLockedBadge />
+    if (match.sourceRequestId) {
+        const requestId = match.confirmation?.requestId
+        return (
+            <span className="flex items-center gap-2">
+                <MutualLockedBadge />
+                {requestId && canReopenResult(match.confirmation) && (
+                    <ReopenResultButton requestId={requestId} description={formatTeams(match)} />
+                )}
+            </span>
+        )
+    }
     return <FreeMatchEditActions match={match} />
 }
 

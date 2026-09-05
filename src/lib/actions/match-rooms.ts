@@ -24,6 +24,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['not_room_host', '방장만 할 수 있습니다.'],
     ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
     ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
+    ['host_cannot_leave', '방장은 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
     ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
     ['cannot_request_self', '자기 자신과의 게임은 등록할 수 없습니다.'],
     ['invalid_opponent', '게임 상대를 다시 선택해주세요.'],
@@ -72,6 +73,23 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
     const { error } = await supabase.rpc('respond_room_invite', { p_room_id: roomId, p_accept: accept })
     if (error) return { error: translate(error.message, '초대 응답에 실패했습니다.') }
     revalidateRoomPaths(roomId)
+    revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
+/**
+ * 방 나가기(0054) — 명단에서 declined로 빠진다. 내가 올린 기록은 그대로 남는다
+ * (기록을 방에서 떼는 것은 방장의 '매칭 리스트에서 내리기'가 하는 일이다).
+ * 미확정 로테이션 방이면 선수 풀에서도 빠지고, 다시 비밀번호로 입장하면 원래대로 돌아온다.
+ */
+export async function leaveMatchRoomAction(roomId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('leave_match_room', { p_room_id: roomId })
+    if (error) return { error: translate(error.message, '방에서 나가지 못했습니다.') }
+    revalidateRoomPaths(roomId)
+    revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
     return { error: null }
 }

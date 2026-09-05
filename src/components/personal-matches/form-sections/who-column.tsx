@@ -46,9 +46,12 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                 )}
                 {s.isRoomGame && (
                     <p className="text-caption text-muted-foreground break-keep">
-                        {s.viewerIsHost
-                            ? '방에 참가한 회원이 자동완성 맨 위에 뜹니다. 방 밖의 상대도 입력할 수 있습니다.'
-                            : '방에 참가한 회원 중에서 함께 친 상대를 고르세요.'}
+                        방에 참가한 회원이 자동완성 맨 위에 뜹니다. 비회원도 이름으로 입력할 수 있습니다.
+                    </p>
+                )}
+                {s.isRoomGame && (
+                    <p className="text-caption text-muted-foreground break-keep">
+                        회원을 고르면 상호 확인 게임이 되고, 비회원이면 내 자유 기록으로 남습니다.
                     </p>
                 )}
                 {s.isRotation ? (

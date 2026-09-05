@@ -33,6 +33,8 @@ const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
     ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요.'],
     ['dispute_reason_too_long', '이의 사유는 200자 이내로 입력해주세요.'],
     ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
+    ['perspective_row_missing', '참가자 기록 일부가 없어 확정하지 못했습니다.'],
+    ['result_not_confirmed', '아직 확정되지 않은 결과입니다.'],
 ]
 
 function mapRpcError(message: string, fallback: string): string {
@@ -40,10 +42,11 @@ function mapRpcError(message: string, fallback: string): string {
     return known ? known[1] : fallback
 }
 
-function revalidateResultPaths(roomId?: string | null) {
+function revalidateResultPaths(viewerId: string, roomId?: string | null) {
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
-    revalidatePath('/me/analytics')
+    // 통계 화면은 /profile/[userId] — /me/analytics는 리다이렉트 전용이라 무효화 대상이 아니다
+    revalidatePath(`/profile/${viewerId}`)
     // 방 게임·로테이션 게임의 요청에는 room_id가 채워져 있다(0049·0050) — 결과가 바뀌면 방 정산도 재계산된다
     revalidateRoomPaths(roomId)
 }
@@ -89,7 +92,7 @@ export async function proposeMatchResultAction(
     })
     if (error) return { error: mapRpcError(error.message, '결과 제안에 실패했습니다.') }
 
-    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
+    revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }
 
@@ -104,7 +107,7 @@ export async function confirmMatchResultAction(requestId: string): Promise<Actio
 
     // 확정된 경기가 통계·레이팅에 반영되므로 본인 캐시 재계산 (accept와 동일하게 상대는 다음 CUD에서 갱신)
     await recomputePersonalNtrp(user.id)
-    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
+    revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }
 
@@ -123,6 +126,30 @@ export async function disputeMatchResultAction(requestId: string, reason?: strin
     })
     if (error) return { error: mapRpcError(error.message, '이의 제기에 실패했습니다.') }
 
-    revalidateResultPaths(await resolveRequestRoomId(supabase, requestId))
+    revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
+    return { error: null }
+}
+
+/**
+ * 확정된 결과를 다시 협상 상태로 되돌린다(0055). 확정 후 오입력을 고칠 유일한 경로다 —
+ * 상호 확인 경기의 personal_matches는 RESTRICTIVE 정책으로 소유자도 직접 수정할 수 없다.
+ * 되돌리면 양측(복식이면 참가자 전원) 기록이 미확정으로 돌아가 확인 요청 허브에 다시 나타나고,
+ * 직전 확정값이 제안값으로 남아 재제안 다이얼로그에 프리필된다.
+ */
+export async function reopenMatchResultAction(requestId: string, reason?: string): Promise<ActionResult> {
+    const trimmed = reason?.trim() ?? ''
+    if (trimmed.length > 200) return { error: '정정 사유는 200자 이내로 입력해주세요.' }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('reopen_match_result', {
+        p_request_id: requestId,
+        p_reason: trimmed || undefined,
+    })
+    if (error) return { error: mapRpcError(error.message, '결과 정정에 실패했습니다.') }
+
+    revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }
 }

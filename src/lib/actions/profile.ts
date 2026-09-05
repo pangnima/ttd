@@ -50,7 +50,7 @@ export async function updateProfileAction(
     if (error) return { error: error.message }
 
     revalidatePath('/profile/settings')
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     // 헤더(이름·아바타)가 포함된 (main) 레이아웃 무효화 → 저장 후 즉시 반영
     revalidatePath('/', 'layout')
     return { success: true }
@@ -62,7 +62,7 @@ export async function toggleStatsHiddenAction(hidden: boolean): Promise<void> {
     if (!user) return
 
     await supabase.from('users').update({ stats_hidden: hidden }).eq('id', user.id)
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/profile/settings')
     // 내 분석 화면(/profile/[userId])의 블러 모드 즉시 반영
     revalidatePath('/profile', 'layout')

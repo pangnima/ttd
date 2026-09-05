@@ -2,8 +2,10 @@ import type { CourtSurface, MatchRoomDetail, MatchType } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 
 /**
- * 방 게임 구성 컨텍스트(0048·0049) — 방 참가자가 방 상세 '게임 추가'로 등록 폼을 열 때 넘기는 값.
+ * 방 게임 구성 컨텍스트(0048·0049·0054) — 방 참가자가 방 상세 '게임 추가'로 등록 폼을 열 때 넘기는 값.
  * 일시·타입·표면·코트명·메모는 방 값으로 고정되고(폼에서 수정 불가), 참가자 자동완성에 방 참가자가 최상단에 뜬다.
+ * 방장/참가자를 구분하지 않는다 — 0054에서 INSERT 정책이 is_room_participant로 완화되어
+ * 참가자도 비회원 상대 게임을 자유 기록으로 남길 수 있다.
  */
 export type RoomGameContext = {
     roomId: string
@@ -14,8 +16,6 @@ export type RoomGameContext = {
     courtName?: string
     notes?: string
     participants: OpponentCandidate[]
-    // 방장만 비회원(게스트) 상대를 자유 기록으로 남길 수 있다 — 참가자의 게임은 create_room_game(회원 상대) 전용
-    viewerIsHost: boolean
 }
 
 /**
@@ -39,7 +39,6 @@ export function canViewerAddRoomGame(detail: MatchRoomDetail, viewerId: string):
 export function buildRoomGameContext(
     detail: MatchRoomDetail,
     participants: OpponentCandidate[],
-    viewerId: string,
 ): RoomGameContext {
     const { room } = detail
     return {
@@ -51,6 +50,5 @@ export function buildRoomGameContext(
         courtName: room.courtName,
         notes: room.notes,
         participants,
-        viewerIsHost: room.hostUserId === viewerId,
     }
 }

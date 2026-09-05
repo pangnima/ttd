@@ -70,10 +70,12 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
                 ))}
             </QueueSection>
 
+            {/* 숫자는 뱃지(myTurnTotal)와 같은 counts를 쓴다 — 이미 입력한 방 세션 카드는
+                아래에 계속 보이지만(추가 입력 가능) '내 차례'로는 세지 않는다 */}
             <QueueSection
                 title="결과 입력 대기"
                 hint="게임 스코어를 넣으면 전적에 확정됩니다"
-                count={enterList.length + rotationSessions.length}
+                count={counts.enterResult}
             >
                 {enterList.map(({ match, bucket }) => (
                     <PersonalMatchCard

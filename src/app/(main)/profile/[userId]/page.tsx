@@ -2,17 +2,15 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchUserById } from '@/lib/queries/users'
 import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
-import type { AnalyticsScope } from '@/lib/queries/analytics'
+import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import {
+    fetchClubRatingHistory,
+    fetchClubRatingRanking,
+    fetchUserClubRatings,
     type ClubRatingRankingEntry,
     type RatingHistoryPoint,
 } from '@/lib/queries/ratings'
-// TODO(redesign): DB 재설계(club_player_ratings/club_rating_history) 후 실제 쿼리로 교체.
-import { dummyClubRatingHistory, dummyClubRatingRanking, dummyUserClubRatings } from '@/lib/redesign-fixtures/ratings'
-// TODO(redesign): 실 Supabase 연동 복원 시 fetchAnalyticsBundle(userId, { scope })로 되돌리고 fixture 파라미터 제거.
-import { getDummyAnalyticsBundle } from '@/lib/redesign-fixtures/personal-analytics'
-import { parseFixtureScenario } from '@/lib/redesign-fixtures/_scenario'
 import { ProfileScopeTabs } from '@/components/profile/profile-scope-tabs'
 import { personalNavHref } from '@/lib/nav-items'
 import type { RatingSummary } from '@/components/profile/rating-summary-row'
@@ -31,8 +29,7 @@ import { buildOnboardingSteps, isOnboardingComplete } from '@/lib/onboarding'
 
 type Props = {
     params: Promise<{ userId: string }>
-    // fixture: 재설계 임시 — 'empty'면 데이터 없음 시나리오 (기본 데이터 있음)
-    searchParams: Promise<{ clubId?: string; scope?: string; fixture?: string }>
+    searchParams: Promise<{ clubId?: string; scope?: string }>
 }
 
 // 추세 이력 마지막 ratingAfter = 현재 클럽 레이팅, 길이 = 경기 수 → 헤더 뱃지 파생.
@@ -81,7 +78,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     if (!authUser) redirect('/login')
 
     const { userId } = await params
-    const { clubId, scope: scopeParam, fixture } = await searchParams
+    const { clubId, scope: scopeParam } = await searchParams
 
     const [target, club] = await Promise.all([
         fetchUserById(userId),
@@ -103,15 +100,13 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             ? { kind: 'club', clubId: matchedClub.id, clubName: matchedClub.name }
             : { kind: 'personal' }
 
-        const scenario = parseFixtureScenario(fixture)
-        const bundle = getDummyAnalyticsBundle({ userId, gender: target.gender, scope, scenario })
-        // '개인' 탭 링크 — 빈 상태 검수용 fixture 파라미터를 유지한다
-        const personalHref = scenario === 'empty' ? `${personalNavHref(userId)}&fixture=empty` : personalNavHref(userId)
+        const personalHref = personalNavHref(userId)
 
-        // 클럽 scope일 때만 레이팅 추세/순위/헤더 뱃지 표시
-        const [ratingHistory, ranking] = await Promise.all([
-            scope.kind === 'club' ? Promise.resolve(dummyClubRatingHistory()) : Promise.resolve([] as RatingHistoryPoint[]),
-            scope.kind === 'club' ? Promise.resolve(dummyClubRatingRanking()) : Promise.resolve([] as ClubRatingRankingEntry[]),
+        // 통계 번들 + 클럽 레이팅 추세/순위(클럽 scope에서만 — 헤더 뱃지·순위에 쓴다)
+        const [bundle, ratingHistory, ranking] = await Promise.all([
+            fetchAnalyticsBundle(userId, { scope }),
+            scope.kind === 'club' ? fetchClubRatingHistory(scope.clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
+            scope.kind === 'club' ? fetchClubRatingRanking(scope.clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
         ])
         const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
         const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
@@ -138,7 +133,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         // 통합 탭: 자가선언·개인·가입 클럽별 레이팅을 헤더에 요약(클럽별 본인 레이팅 일괄 조회).
         let ratingSummary: RatingSummary | undefined
         if (scope.kind === 'total') {
-            const clubRatingMap = dummyUserClubRatings(myClubs.map((c) => c.id))
+            const clubRatingMap = await fetchUserClubRatings(userId, myClubs.map((c) => c.id))
             const clubs = myClubs
                 .map((c) => {
                     const r = clubRatingMap[c.id]
@@ -198,8 +193,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     const showStats = !target.statsHidden
     const [bundle, ratingHistory, ranking] = await Promise.all([
         fetchPlayerStatsBundle(userId, clubId),
-        clubId ? Promise.resolve(dummyClubRatingHistory()) : Promise.resolve([] as RatingHistoryPoint[]),
-        clubId && showStats ? Promise.resolve(dummyClubRatingRanking()) : Promise.resolve([] as ClubRatingRankingEntry[]),
+        clubId ? fetchClubRatingHistory(clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
+        clubId && showStats ? fetchClubRatingRanking(clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
     ])
     // 통계 비공개(statsHidden) 프로필에서는 클럽 레이팅·스탯·순위를 노출하지 않는다(헤더·추세 모두).
     const { clubRating, provisional } = showStats

@@ -14,7 +14,7 @@ import {
 } from '@/lib/personal-matches/validate-input'
 import type { PersonalMatchSetScore } from '@/types'
 import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
-import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
@@ -113,7 +113,8 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
 }
 
 type CreateOptions = {
-    // 방 게임 추가(0048) — 방장이 자기 방에 게임을 붙인다. RLS(personal_matches_insert)가 방장 소유 방만 허용한다.
+    // 방 게임 추가(0048·0054) — 방에 참가한 회원이 자기 방 게임을 붙인다.
+    // RLS(personal_matches_insert)가 is_room_participant로 입장하지 않은 방을 막는다.
     roomId?: string
 }
 
@@ -143,7 +144,7 @@ export async function createPersonalMatchesAction(
 
     const baseRows = inputs.map((input) => ({ ...buildPersonalMatchBaseRow(input, user.id), room_id: options.roomId ?? null }))
     const { data: inserted, error } = await supabase.from('personal_matches').insert(baseRows).select('id')
-    if (error || !inserted) return { error: options.roomId ? '방의 게임 저장에 실패했습니다. 방장만 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }
+    if (error || !inserted) return { error: options.roomId ? '방의 게임 저장에 실패했습니다. 방에 참가한 뒤 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }
 
     const participantRows = inputs.flatMap((input, i) => buildParticipantRows(input, inserted[i].id))
     if (participantRows.length > 0) {
@@ -152,17 +153,18 @@ export async function createPersonalMatchesAction(
     }
 
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
+    // 신규 등록은 세트가 없어 항상 미확정이다 — 저장 직후 도착하는 화면이 확인 요청 허브다
+    revalidatePath('/me/match-requests')
 
     if (listing) {
         const room = await listRecordAsRoom('direct', inserted[0].id, listing.password)
         if (room.error) return { error: room.error }
-        revalidatePath('/match-rooms')
+        revalidateRoomList()
     }
     if (options.roomId) {
-        revalidatePath('/match-rooms')
-        revalidatePath(`/match-rooms/${options.roomId}`)
+        revalidateRoomPaths(options.roomId)
     }
     return { error: null }
 }
@@ -212,12 +214,11 @@ export async function updatePersonalMatchAction(
     }
 
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
-    if (roomId) {
-        revalidatePath('/match-rooms')
-        revalidatePath(`/match-rooms/${roomId}`)
-    }
+    // 참가자를 채워도 세트가 없으면 여전히 미확정 — 허브 카드가 갱신돼야 한다
+    revalidatePath('/me/match-requests')
+    if (roomId) revalidateRoomPaths(roomId)
     return { error: null }
 }
 
@@ -242,8 +243,9 @@ export async function deletePersonalMatchAction(
     if (!deleted?.length) return { error: '상호 확인된 경기는 수정·삭제할 수 없습니다.' }
 
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
+    revalidatePath('/me/match-requests')
     // cleanup 트리거가 방을 지우거나 정산을 재계산하므로 방 목록·상세도 무효화한다
     revalidateRoomPaths(deleted[0].room_id)
     return { error: null }
@@ -288,7 +290,7 @@ export async function updatePersonalMatchSetsAction(
     if (!updated?.length) return { error: '상호 확인된 경기는 상대 확인을 거쳐 결과를 등록해야 합니다.' }
 
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
     revalidatePath('/me/match-requests')
     // 확정으로 방의 is_settled가 재계산되므로(recompute_match_room_settled) 방 화면도 갱신한다

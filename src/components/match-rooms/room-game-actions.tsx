@@ -10,7 +10,8 @@ import {
 import { updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildRoomGameLabels } from '@/lib/match-rooms/game-labels'
 import { canEditRoomGame, isRoomGameParty } from '@/lib/match-rooms/game-status'
-import { bystanderWaitingBadge } from '@/lib/personal-matches/confirmation'
+import { bystanderWaitingBadge, canReopenResult } from '@/lib/personal-matches/confirmation'
+import { ReopenResultButton } from '@/components/personal-matches/reopen-result-button'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
@@ -39,8 +40,14 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
     const teams = formatTeams(labels)
     const opponentName = formatOpponents(labels)
 
-    // 결과가 이미 있으면 스코어만 보여준다 (roomGameStatusLabel도 null)
-    if (game.setScores.length > 0) return null
+    // 결과가 이미 있으면 스코어만 보여준다 (roomGameStatusLabel도 null).
+    // 예외: 상호 확인 게임을 확정한 당사자에게는 [결과 정정]을 남긴다 — 확정 후 오입력을
+    // 고칠 유일한 경로이고, 룸을 떠나지 않고 끝내는 이 화면의 원칙과도 같다(0055).
+    if (game.setScores.length > 0) {
+        const settledRequestId = game.sourceRequestId
+        if (!settledRequestId || !canReopenResult(c)) return null
+        return <ReopenResultButton requestId={settledRequestId} description={teams} />
+    }
 
     // 자유 기록 — 작성자만 손댈 수 있고, 라인업이 차면 즉시 확정된다
     if (game.sourceType !== 'confirmation') {

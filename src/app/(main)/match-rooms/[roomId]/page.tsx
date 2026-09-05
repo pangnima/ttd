@@ -17,6 +17,7 @@ import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
 import { RoomMembersSection } from '@/components/match-rooms/room-members-section'
 import { RoomGamesSection } from '@/components/match-rooms/room-games-section'
 import { RoomHostActions } from '@/components/match-rooms/room-host-actions'
+import { RoomLeaveButton } from '@/components/match-rooms/room-leave-button'
 
 export const metadata = { title: '매칭 룸' }
 
@@ -64,7 +65,7 @@ export default async function MatchRoomPage({ params }: Props) {
         fetchRoomGameConfirmations(requestIds, user.id),
         isMember && isPendingRotation ? fetchRoomRotationSession(roomId) : null,
     ])
-    const gameCtx = canAdd ? buildRoomGameContext(detail, participants, user.id) : undefined
+    const gameCtx = canAdd ? buildRoomGameContext(detail, participants) : undefined
     const picker = needsPicker ? { candidates: opponentCandidates, pastOpponents, selfUserId: user.id } : undefined
 
     // 미확정 로테이션 방은 참가자 전원이 각자 게임을 넣는 중 — 세션을 닫는 건 방장만 한다(0050)
@@ -89,6 +90,10 @@ export default async function MatchRoomPage({ params }: Props) {
                 participants={participants}
                 picker={picker}
             />
+            {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
+            {!isHost && detail.viewer && detail.viewer.status !== 'declined' && (
+                <RoomLeaveButton roomId={roomId} />
+            )}
         </PageContainer>
     )
 }

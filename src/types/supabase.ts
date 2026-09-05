@@ -1136,6 +1136,11 @@ export type Database = {
         Returns: string
       }
       close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
+      leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
+      reopen_match_result: {
+        Args: { p_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
       materialize_accepted_request: {
         Args: {
           p_group_seq?: number

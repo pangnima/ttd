@@ -61,10 +61,12 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 /**
  * 결과가 확정된 개인 경기만 — '개인 경기 결과' 화면 본문.
  * has_result(0051 생성 컬럼)가 hasResult(winner.ts)와 같은 규칙이라 확정/미확정 집합이 DB에서 갈린다.
- * confirmation은 붙이지 않는다 — 확정 행에 남은 상호 확인 표시는 잠금 배지(sourceRequestId)뿐이다.
+ * confirmation을 붙이는 이유: 확정 카드의 [결과 정정](0055) 자격이 canReopenResult(confirmation)이고,
+ * 그 판정은 '요청 당사자인가'를 알아야 한다 — 복식 파트너·상대2에게는 버튼이 뜨면 안 된다.
  */
 export async function fetchSettledPersonalMatches(userId: string): Promise<PersonalMatch[]> {
-    return fetchPersonalMatchesByHasResult(userId, true)
+    const matches = await fetchPersonalMatchesByHasResult(userId, true)
+    return attachConfirmations(matches, userId)
 }
 
 /** 결과 미확정 개인 경기만 — 확인 요청 허브의 작업 큐(classifyPendingMatch 입력). confirmation 부착 필수 */

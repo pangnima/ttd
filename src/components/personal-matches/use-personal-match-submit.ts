@@ -86,12 +86,6 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             return
         }
 
-        // 방 게임의 상대가 비회원이면 자유 기록이 되는데, 그 행은 방장만 만들 수 있다(RLS)
-        if (s.roomId && !s.rep && !s.viewerIsHost) {
-            setError('방 게임의 상대는 방에 참가한 회원 중에서 선택해주세요.')
-            return
-        }
-
         if (s.rep && s.surface) {
             // 대표가 상대2 칸에 있었다면 슬롯을 스왑해 opponent = 대표로 보낸다
             const rep = s.rep.opponent.slot

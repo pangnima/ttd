@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { revalidateRoomList } from '@/lib/match-rooms/revalidate'
 import { createClient } from '@/lib/supabase/server'
 import type { CourtSurface, MatchType, PersonalMatchSetScore } from '@/types'
 import { isDoublesMatchType, validatePersonalMatchInput, type NtrpField } from '@/lib/personal-matches/validate-input'
@@ -97,7 +98,7 @@ export async function createMatchRequestAction(
     if (listing && requestId) {
         const room = await listRecordAsRoom('confirmation', requestId, listing.password)
         if (room.error) return { error: room.error }
-        revalidatePath('/match-rooms')
+        revalidateRoomList()
     }
     return { error: null }
 }
@@ -169,6 +170,6 @@ export async function acceptMatchRequestAction(id: string): Promise<{ error: str
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/match-requests')
     revalidatePath('/me/personal-matches')
-    revalidatePath('/me/analytics')
+    revalidatePath(`/profile/${user.id}`)
     return { error: null }
 }

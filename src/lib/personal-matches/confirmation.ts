@@ -64,3 +64,15 @@ export function bystanderWaitingBadge(c?: PersonalMatchConfirmation): BystanderW
     // confirmed인데 세트가 비어 있는 조합은 존재할 수 없다 — 방어적 폴백
     return REP_WAITING
 }
+
+/**
+ * 확정된 결과를 다시 협상 상태로 되돌릴 수 있는가(0055 reopen_match_result).
+ *
+ * 조건은 RPC의 통과 조건과 같다 — 상호 확인 경기(requestId 있음) · 결과 확정 상태 ·
+ * 뷰어가 요청 당사자. 복식 파트너·상대2는 협상을 읽지만 되돌리지 못한다(대표 확인자 모델 유지).
+ * 자유 기록은 애초에 본인이 수정·삭제할 수 있으므로 이 경로가 필요 없다.
+ */
+export function canReopenResult(c?: PersonalMatchConfirmation): boolean {
+    if (!c) return false
+    return c.status === 'confirmed' && c.viewerIsParty
+}
