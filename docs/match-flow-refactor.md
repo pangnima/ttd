@@ -16,10 +16,10 @@
 > | 9 · 룸 안 결과 입력·로테이션 빌더 | ✅ 완료 | `RoomGameActions`(자격 = 협상 행 존재)·`RoomRotationBuilder`·`fetchRoomGameConfirmations` |
 > | 10 · 라벨 전수 교체 | ✅ 완료 | 매칭 리스트/매칭 룸/개인 경기 결과, 사이드바 생애 순서 재배열, `'방장'` 판정 키 보존 |
 > | 11 · 마이그레이션 0052 | ✅ 완료 | **원격 Supabase에 적용됨 — 다시 적용하지 말 것.** `is_request_party` 헬퍼 + SELECT 정책 3종 교체, 파트너·상대2 대기 배지를 실제 상태로 승격(`bystanderWaitingBadge`) |
-> | 12 · 서버 필터·페이지네이션 | ⬜ 범위 밖 | 후속 |
+> | 12 · 서버 필터·커서 페이지네이션 | ✅ 완료 | 탭별 서버 필터 + keyset `(played_at, played_time, id)`. PostgREST 동작 4종을 실측 확인 후 구현 |
 >
 > 종료 시점에 `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run` 전부 통과(테스트 404).
-> **엔드투엔드 수동 시나리오 8종도 완료**(아래 "검증") — 표시 결함 3건을 찾아 수정했다. 남은 것은 Step 12(후속·범위 밖)뿐이다.
+> **엔드투엔드 수동 시나리오 8종도 완료**(아래 "검증") — 표시 결함 3건을 찾아 수정했다. Step 12까지 끝나 이 설계의 남은 항목은 없다.
 
 ## Context
 
@@ -627,9 +627,33 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 
 ---
 
-## Step 12 — (후속, 범위 외) 매칭 리스트 서버 필터·페이지네이션
+## Step 12 — ✅ 완료 · 매칭 리스트 서버 필터·커서 페이지네이션
 
-`fetchMatchRoomsForTab(viewerId, tab, todayIso)` + `fetchRoomTabCounts`(head count). **임베드 배열이 깨지는 건 임베드 테이블 컬럼에 필터를 걸 때뿐**이므로 `match_rooms` 자기 컬럼(`played_at`·`is_settled`) 필터는 `members` 임베드를 훼손하지 않는다 → `open`/`past`는 안전하게 서버 필터 가능하고, `mine`은 멤버십 2단 조회(`fetchPendingRoomInvites:164` 패턴). `ROOM_LIST_LIMIT` 100으로 축소. 커서 페이지네이션(keyset `(played_at, id)`)은 그다음.
+구 방식은 탭 하나를 그리려고 목록 **전체**(`ROOM_LIST_LIMIT` 200)를 받아 메모리에서 `splitRooms`로 나눴다. 탭별 필터·정렬·페이지를 전부 서버로 옮긴다.
+
+**설계**
+- `fetchRoomPage(viewerId, filter, todayIso, { cursor, roomIds, limit })` 하나로 세 탭을 그린다. `filter`는 `open`(미정산 ∧ 오늘 이후, 가까운 순) / `past`(정산 ∨ 날짜 경과, 최근순) 두 축뿐이고, `mine`은 **멤버십 2단 조회**(`fetchMyRoomIds` → `.in('id', ids)`)로 같은 두 축을 다시 쓴다.
+- **임베드 배열이 깨지는 건 임베드 테이블 컬럼에 필터를 걸 때뿐**이라 `match_rooms` 자기 컬럼(`played_at`·`is_settled`) 필터는 `members` 임베드를 훼손하지 않는다.
+- 배지는 `fetchOpenRoomCount`(head count)와 `myRoomIds.length` — 페이지 크기와 무관하게 정확하다(구 방식은 200건 상한 때문에 숫자가 진실이 아니었다).
+- 커서는 **계속 자라는 쪽(종료된 경기)에만** 붙인다. '내가 참여한'의 진행 중 섹션은 한 사람의 예정 경기라 페이지를 넘길 일이 없고, 섹션마다 커서를 두면 URL이 두 개가 된다.
+- 다음 페이지 유무는 `limit + 1`건을 받아 판정한다 — count 왕복을 추가하지 않는다.
+
+**keyset을 `(played_at, id)`가 아니라 `(played_at, played_time, id)`로 잡은 이유**
+2열로 잡으면 같은 날짜 안의 순서가 uuid 순(사실상 무작위)이 된다. 시각 순서를 지키려면 정렬에 `played_time`이 들어가야 하고, **커서는 ORDER BY와 정확히 같은 열을 담아야** 페이지 경계에서 행이 새거나 겹치지 않는다. `played_time`은 nullable이고 정렬이 asc=NULLS FIRST / desc=NULLS LAST(구 `sortKey`의 `playedTime ?? ''`와 동치)라 null 커서를 별도 분기로 처리한다 → `lib/match-rooms/room-cursor.ts`(순수, vitest 10).
+
+**커서 파싱이 곧 보안 경계다.** 커서 값은 PostgREST `or()` 문자열에 그대로 들어가므로, 쉼표·괄호가 섞인 값을 통과시키면 필터식이 조작된다. `parseRoomCursor`가 날짜/시각/uuid 형식을 전부 검사하고 조금이라도 어긋나면 `null`(첫 페이지 폴백)을 돌린다.
+
+**구현 전 PostgREST 실측 확인 4종** (문서만 믿지 않고 실제 프로젝트에 질의)
+| 확인 | 결과 |
+|---|---|
+| 최상위 `or=` 파라미터 2개(종료 조건 + 커서)가 AND로 합쳐지는가 | ✅ 항진식 ∧ 모순식 → 0건 |
+| `or()` 안의 중첩 `and(...)`·`played_time.not.is.null` | ✅ |
+| `order=played_time.asc.nullsfirst` | ✅ |
+| `Prefer: count=exact` + `head` | ✅ `content-range: 0-0/1` |
+
+**페이지 경계 검증**: 더미 방 150건(같은 날짜에 null 시각이 몰리도록 경계를 의도적으로 구성)을 넣고, 코드와 같은 술어로 페이지를 이어붙인 결과가 **전체 정렬 목록과 완전히 동일**함을 확인했다(open 61건/3페이지, past 90건/3페이지, 중복 0·누락 0). 브라우저에서 null 시각 커서(`?cursor=2026-10-01__<uuid>`)가 실제로 발생하는 것과, 조작된 커서가 첫 페이지로 떨어지는 것도 확인했다. 검증용 더미는 삭제했다.
+
+**제거**: `fetchMatchRooms`·`ROOM_LIST_LIMIT`·`splitRooms`(+테스트) — 목록 전체를 받는 경로가 사라졌다.
 
 ---
 

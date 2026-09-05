@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { parseRoomDetail } from '@/lib/match-rooms/parse-detail'
 import { countJoined } from '@/lib/match-rooms/headcount'
+import { encodeRoomCursor, roomKeysetFilter, type RoomCursor } from '@/lib/match-rooms/room-cursor'
 import { toDominantHand, type OpponentCandidate } from '@/lib/queries/users'
 import { buildConfirmation } from '@/lib/personal-matches/confirmation'
 import type {
@@ -67,23 +68,111 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
     }
 }
 
-/**
- * 목록 상한. `played_at desc` + limit이므로 **최신 날짜부터** 남는다 —
- * 미래 경기는 안전하게 다 들어오고 오래된 종료 방부터 잘리므로 '진행 중' 탭 정확도에는 영향이 없다.
- * 탭별 서버 필터·커서 페이지네이션은 후속 과제.
- */
-export const ROOM_LIST_LIMIT = 200
+/** 한 페이지에 담는 방 수 — 넘치면 커서로 다음 페이지를 연다 */
+export const ROOM_PAGE_SIZE = 30
 
-/** 매칭 리스트 전체 (예정/지난 분리는 lib/match-rooms/split.ts) */
-export async function fetchMatchRooms(viewerId: string): Promise<MatchRoomSummary[]> {
+/**
+ * '내가 참여한' 탭이 방 목록을 좁히는 데 쓰는 멤버십 id 상한.
+ * `.in('id', ids)`가 URL로 나가므로 무한정 늘릴 수 없다. 한 사람의 참여 방 수라
+ * 현실적으로 닿지 않지만, 닿으면 최근 멤버십부터 남는다.
+ */
+const MY_ROOM_ID_LIMIT = 500
+
+/** 진행 중(가까운 순) / 종료(최근순) — 두 축이 정렬 방향과 커서 방향을 함께 결정한다 */
+export type RoomListFilter = 'open' | 'past'
+
+export type RoomPage = {
+    rooms: MatchRoomSummary[]
+    /** 다음 페이지가 있으면 인코딩된 커서, 없으면 null */
+    nextCursor: string | null
+}
+
+const EMPTY_PAGE: RoomPage = { rooms: [], nextCursor: null }
+
+/**
+ * 진행/종료 경계 규칙(0049) — **지난 경기 = 정산 완료(is_settled) 또는 날짜 경과**.
+ * 확정이 날짜보다 앞선다: 오늘 잡힌 경기라도 모든 게임이 확정되면 종료로 내려간다.
+ * 구 `splitRooms`가 메모리에서 하던 판정을 그대로 서버 필터로 옮긴 것이다.
+ * `match_rooms` 자기 컬럼만 건드리므로 `members` 임베드 배열은 훼손되지 않는다.
+ *
+ * 진행 중은 이 조건의 부정(`is_settled=false ∧ played_at>=오늘`)이라 `.eq().gte()`로 걸린다 —
+ * 빌더 타입이 갈려 한 함수로 묶지 않고, 두 호출부가 이 주석을 함께 참조한다.
+ */
+function pastRoomFilter(todayIso: string): string {
+    return `is_settled.eq.true,played_at.lt.${todayIso}`
+}
+
+/**
+ * 탭 한 페이지. 필터·정렬·커서를 서버에서 처리한다(구 방식: 전체 200건을 받아 메모리 분리).
+ *
+ * ⚠ 정렬 3열은 `roomKeysetFilter`의 술어와 정확히 짝을 이뤄야 한다 —
+ * `played_time`의 nulls 위치까지 포함해서. 한쪽만 바꾸면 페이지 경계에서 행이 새거나 겹친다.
+ * PostgREST는 최상위 필터를 전부 AND로 묶으므로 `or`(종료 조건)와 `or`(커서)를 같이 걸어도 안전하다.
+ */
+export async function fetchRoomPage(
+    viewerId: string,
+    filter: RoomListFilter,
+    todayIso: string,
+    opts: { cursor?: RoomCursor | null; roomIds?: string[]; limit?: number } = {},
+): Promise<RoomPage> {
+    const { cursor, roomIds, limit = ROOM_PAGE_SIZE } = opts
+    // 참여 방이 하나도 없으면 .in([])으로 빈 결과를 굳이 왕복시키지 않는다
+    if (roomIds && roomIds.length === 0) return EMPTY_PAGE
+
+    const asc = filter === 'open'
+    const supabase = await createClient()
+    const base = supabase.from('match_rooms').select(`${ROOM_COLUMNS}, ${HOST_JOIN}, ${MEMBERS_JOIN}`)
+    let query = asc
+        ? base.eq('is_settled', false).gte('played_at', todayIso)
+        : base.or(pastRoomFilter(todayIso))
+    if (roomIds) query = query.in('id', roomIds)
+    if (cursor) query = query.or(roomKeysetFilter(cursor, asc ? 'asc' : 'desc'))
+
+    const { data, error } = await query
+        .order('played_at', { ascending: asc })
+        .order('played_time', { ascending: asc, nullsFirst: asc })
+        .order('id', { ascending: asc })
+        .limit(limit + 1)  // 다음 페이지 유무 판정용 1건 더 — 별도 count 왕복을 없앤다
+    if (error || !data) return EMPTY_PAGE
+
+    const hasMore = data.length > limit
+    const rows = hasMore ? data.slice(0, limit) : data
+    const last = rows[rows.length - 1]
+    return {
+        rooms: rows.map((row) => mapRoomRow(row, viewerId)),
+        // 커서는 표시용으로 자르기 전의 DB 원본 시각을 담는다(필터 비교가 어긋나면 안 된다)
+        nextCursor: hasMore && last
+            ? encodeRoomCursor({ playedAt: last.played_at, playedTime: last.played_time ?? undefined, id: last.id })
+            : null,
+    }
+}
+
+/**
+ * 내가 얽힌 방 id — 거절(declined)만 제외한다(`isViewerInvolved`와 같은 술어).
+ * '내가 참여한' 탭의 2단 조회 1단계이자 그 탭 배지 숫자의 출처다.
+ */
+export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
-        .from('match_rooms')
-        .select(`${ROOM_COLUMNS}, ${HOST_JOIN}, ${MEMBERS_JOIN}`)
-        .order('played_at', { ascending: false })
-        .limit(ROOM_LIST_LIMIT)
+        .from('match_room_members')
+        .select('room_id')
+        .eq('user_id', viewerId)
+        .neq('status', 'declined')
+        .order('created_at', { ascending: false })
+        .limit(MY_ROOM_ID_LIMIT)
     if (error || !data) return []
-    return data.map((row) => mapRoomRow(row, viewerId))
+    return data.map((row) => row.room_id)
+}
+
+/** '진행 중인 경기' 탭 배지 — 행을 받지 않는 head count라 페이지 크기와 무관하게 정확하다 */
+export async function fetchOpenRoomCount(todayIso: string): Promise<number> {
+    const supabase = await createClient()
+    const { count, error } = await supabase
+        .from('match_rooms')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_settled', false)
+        .gte('played_at', todayIso)
+    return error ? 0 : (count ?? 0)
 }
 
 /** 공개 메타 1건 — 미입장 게이트 화면용 */

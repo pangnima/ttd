@@ -86,7 +86,7 @@ src/
 │   │   ├── match-requests.ts     # fetchMyMatchRequests — 내가 당사자인 요청 전량 1회 조회(pending/종료 분류는 조립 계층)
 │   │   ├── match-queue.ts        # fetchMatchQueue(React cache) — 확인 요청 허브·개인 결과 배너·사이드바 뱃지의 단일 소스(미확정 personal_matches + 요청 + 방 초대 + 로테이션 세션 2웨이브 조립)
 │   │   ├── rotation-sessions.ts  # 결과 입력 대기 로테이션 세션 조회(내 세션 ∪ 참가 방 세션 .or 1회, 방 단건)
-│   │   ├── match-rooms.ts        # 매칭 리스트 목록(공개 메타+인원+내 상태, ROOM_LIST_LIMIT)·게이트용 요약·상세(get_match_room_detail RPC → parse-detail)·방 멤버십(초대+joined 1회)·참가자 후보(단건/배치)·방 게임 협상 상태(fetchRoomGameConfirmations)
+│   │   ├── match-rooms.ts        # 매칭 리스트 탭별 서버 필터·커서 페이지(fetchRoomPage/fetchMyRoomIds/fetchOpenRoomCount, ROOM_PAGE_SIZE)·게이트용 요약·상세(get_match_room_detail RPC → parse-detail)·방 멤버십(초대+joined 1회)·참가자 후보(단건/배치)·방 게임 협상 상태(fetchRoomGameConfirmations)
 │   │   ├── player-profile.ts     # fetchPlayerStatsBundle (타인 프로필용)
 │   │   ├── analytics.ts          # fetchAnalyticsBundle (본인 분석용)
 │   │   ├── club-dashboard.ts     # 클럽 운영 쿼리 (에이스·활동/승률 랭킹 등)
@@ -125,12 +125,13 @@ src/
 │   │   └── validators.ts
 │   ├── match-rooms/              # 매칭 리스트(매칭 룸) 순수 함수 + server-only 헬퍼 (0046·0048·0049)
 │   │   ├── password.ts           # validateRoomPassword(4~20자·공백 금지) + RoomListingInput 타입 (클라·액션 공용, RPC와 3중 방어)
-│   │   ├── title.ts / split.ts / headcount.ts / members-view.ts   # 자동 제목(일시·코트명·타입) / 예정·지난 분리(todayIsoKst) / 참가 인원('참가 N명', 정원 없음)·상태 칩 / 상세 명단 행 빌더 (vitest)
+│   │   ├── title.ts / split.ts / headcount.ts / members-view.ts   # 자동 제목(일시·코트명·타입) / 진행·종료 기준 날짜(todayIsoKst — 분리 자체는 서버 필터로 이관) / 참가 인원('참가 N명', 정원 없음)·상태 칩 / 상세 명단 행 빌더 (vitest)
 │   │   ├── parse-detail.ts       # get_match_room_detail jsonb → MatchRoomDetail 런타임 가드 파서
 │   │   ├── room-context.ts       # RoomGameContext(방 게임 추가 폼 컨텍스트: 방 메타 고정 + 참가자 후보 + viewerIsHost) + canAddRoomGame(출처만 판정 — 단독 사용 금지) + canViewerAddRoomGame(방 참가자면 추가 가능) + buildRoomGameContext
 │   │   ├── game-status.ts        # 방 상세 게임 행 표시 규칙 (roomGameStatusLabel 상태 칩·canEditRoomGame 작성자 수정·isRoomGameParty 배지 표시·roomGamesEmptyMessage, vitest)
 │   │   ├── game-labels.ts        # buildRoomGameLabels — 방 게임 참가자 → 뷰어 관점 팀 라벨(작성자/상대팀/작성자 파트너 3관점) + buildRoomGameLine·buildRoomGameSets(행의 팀 라인·스코어를 같은 관점으로 — '나'는 당사자에게만, 상대팀이면 스코어도 반전, vitest)
-│   │   ├── tabs.ts               # 매칭 리스트 3탭 메타 + resolveRoomListTab(레거시 upcoming·미지의 값 → open 폴백, vitest)
+│   │   ├── tabs.ts               # 매칭 리스트 3탭 메타 + resolveRoomListTab(레거시 upcoming·미지의 값 → open 폴백) + roomListHref(탭·커서 → URL, vitest)
+│   │   ├── room-cursor.ts        # 커서 페이지네이션 keyset `(played_at, played_time, id)` — encode/parse(형식 검증이 곧 필터 주입 방어) + roomKeysetFilter(PostgREST or() 술어, asc=NULLS FIRST / desc=NULLS LAST, vitest)
 │   │   ├── revalidate.ts         # revalidateRoomPaths — 방을 건드린 액션의 캐시 무효화 단일 출처 (server-only)
 │   │   └── create-room.ts        # listRecordAsRoom — 출처 저장 후 create_match_room RPC 호출 (세 등록 액션 공용, server-only)
 │   ├── rating/                   # 레이팅 순수 엔진 (docs/rating-system.md)
@@ -299,7 +300,8 @@ src/
     - 룸 게임 행이 `'나'`를 **작성자가 아닌 모든 뷰어**에게 써서, 정원 없는 방(0048)의 무관한 참가자에게 남의 게임이 자기 게임처럼 보였다 → `buildRoomGameLine`이 `isRoomGameParty`로 당사자에게만
     - 팀 라인은 뷰어 관점으로 뒤집으면서 **스코어는 대표 행 값 그대로**라 진 사람이 WIN 배지를 봤다 → `buildRoomGameSets`가 상대팀 뷰어에게 `invertSetScores`(같은 팀 파트너는 me/opp가 같아 반전 없음)
     - 방 게임 안내가 비회원이 섞여도 '회원 네 명 모두'라고 말했다 → `ConfirmFlowNotice`가 `memberCount`(= `hideNtrpFor` + 나)로 실제 회원 수를 말한다
-  - [ ] 2차: 매칭 리스트 서버 필터·커서 페이지네이션 · 룸 '참가자 채우기'를 `RoomGameDialog initialData`로 전환
+  - [x] Step 12 — 매칭 리스트 서버 필터·커서 페이지네이션. 탭 하나를 그리려고 목록 전체(구 `ROOM_LIST_LIMIT` 200)를 받던 것을 탭별 서버 필터로 바꾸고, keyset `(played_at, played_time, id)` 커서로 페이지를 넘긴다(`ROOM_PAGE_SIZE` 30). 진행/종료 경계(`is_settled` ∨ 날짜 경과)가 메모리 `splitRooms` → 서버 필터로 이관됐고, 탭 배지는 head count·멤버십 건수라 페이지 크기와 무관하게 정확해졌다. 커서는 계속 자라는 쪽(종료된 경기)에만 붙인다
+  - [ ] 2차: 룸 '참가자 채우기'를 `RoomGameDialog initialData`로 전환
 
 - [ ] 배포
   - [ ] Vercel 배포 + 환경변수 등록 (`NEXT_PUBLIC_SUPABASE_URL`, `..._ANON_KEY`, `ANTHROPIC_API_KEY`)
@@ -389,7 +391,7 @@ View: `user_match_participations` (security_invoker=on, `match_game_participants
 | **확인 요청 / 상호 확인 경기** | 회원 간 단식·페어 고정 복식 대진 요청(`match_requests`, pending→accepted/rejected/canceled — 생성은 `create_match_request` RPC 전용). 복식은 상대팀 회원 1명이 **대표 확인자**(`opponent_user_id`, 상대1→상대2 순 회원 자동 선택·슬롯 스왑), 파트너/상대2는 `match_request_participants`. 수락 시 요청자/대표 관점 `personal_matches` 2행 생성(`source_type='confirmation'`, `source_request_id` 표식, 수정/삭제 잠금) — 파트너·상대2가 회원이어도 그들 기록에는 생성하지 않음 |
 | **코트명 / 경기 시각** | `court_name`(선택, ≤40자, 자유 텍스트) — 대진표 `match_game_courts.label`과 별개. 등록 폼에서 본인 과거 코트명을 '최근 코트'로 재선택. 경기 시각(`played_time`)은 시 단위만 입력(`HH:00` 저장, 카드에 'N시' 표시) |
 | **결과 미확정** | `personal_matches.set_scores`가 빈 배열(`hasResult` false) — 게임 스코어 없이 등록된 개인 경기. 카드에 '미확정' 배지, 통계·레이팅·AI 코칭 집계에서 제외(`explodePersonalMatchSets`). 카드 '결과 입력' 팝업에서 게임 스코어가 등록되면 확정 |
-| **매칭 리스트 / 매칭 룸** | 개인 경기 등록 폼에서 '매칭 리스트에 노출'을 켠 기록이 방(`match_rooms`) 1개가 된다. 로그인 회원 전원이 목록(자동 제목 = 일시·코트명·경기 타입, 방장, '참가 N명')을 보고, **비밀번호**(4~20자, `match_room_secrets`에 bcrypt)를 아는 회원만 상세(참가자·메모·게임)에 **입장**(= 참가, 재입장 시 생략). **정원은 없다**(0048) — 단식 방에 4명이 들어와 단식을 돌아가며 칠 수도 있다. 방 제목 필드 없음. 방 삭제('리스트에서 내리기')는 기록을 남기고 `room_id`만 푼다. 목록은 **진행 중 / 내가 참여한 / 종료된** 3탭이고(`lib/match-rooms/tabs.ts`), 진행/종료 분리는 `is_settled`(정산 완료) 또는 날짜 경과 기준이다(0049). '내가 참여한'은 다른 두 탭과 교차하는 관점 필터(`isViewerInvolved` — 초대 대기 포함, 거절 제외)라 종료된 방도 남는다 |
+| **매칭 리스트 / 매칭 룸** | 개인 경기 등록 폼에서 '매칭 리스트에 노출'을 켠 기록이 방(`match_rooms`) 1개가 된다. 로그인 회원 전원이 목록(자동 제목 = 일시·코트명·경기 타입, 방장, '참가 N명')을 보고, **비밀번호**(4~20자, `match_room_secrets`에 bcrypt)를 아는 회원만 상세(참가자·메모·게임)에 **입장**(= 참가, 재입장 시 생략). **정원은 없다**(0048) — 단식 방에 4명이 들어와 단식을 돌아가며 칠 수도 있다. 방 제목 필드 없음. 방 삭제('리스트에서 내리기')는 기록을 남기고 `room_id`만 푼다. 목록은 **진행 중 / 내가 참여한 / 종료된** 3탭이고(`lib/match-rooms/tabs.ts`), 진행/종료 분리는 `is_settled`(정산 완료) 또는 날짜 경과 기준이다(0049). '내가 참여한'은 다른 두 탭과 교차하는 관점 필터(`isViewerInvolved` — 초대 대기 포함, 거절 제외)라 종료된 방도 남는다. 탭별 필터·정렬·페이지는 서버가 처리하고 페이지는 keyset 커서로 넘긴다(`room-cursor.ts`) |
 | **방 게임** | 방에 참가한 회원이 함께 친 게임을 올린 기록(0048 도입, 0049에서 참가자 전원 개방). 매칭 룸 상세 '게임 추가' → **룸 안 다이얼로그**(`RoomGameDialog`, 메타는 방 값으로 고정, 자동완성 최상단 '방 참가자')에서 참가자만 입력한다(`/me/personal-matches/new?room=`은 룸으로 리다이렉트). 결과 입력·확인도 룸 안에서 끝난다(`RoomGameActions`). 상대가 회원이면 **상호 확인 게임**(`create_room_game`)이 되어 회원 참가자 전원(복식은 4명)의 기록에 미확정으로 남고, 결과는 한쪽이 제안하고 상대 대표가 확인하면 동시에 확정된다 — 방 입장이 곧 참여 동의라 요청 수락 단계는 없다. 비회원 상대는 방장만 자유 기록으로 남길 수 있다. 최초 노출 기록(모집 중)은 수정 폼('참가자 채우기')에서 채우며, 회원으로 채우면 그 seed는 상호 확인 게임으로 치환된다. 미확정 로테이션 방은 게임 빌더가 담당 — 입장자가 풀에 자동 추가되고, 방에 참가한 회원 누구나 **룸 안 [게임 입력]** 또는 확인 요청 허브의 '결과 입력 대기 로테이션' 카드에서 **자기 기준으로** 게임을 넣는다. 상대팀에 회원이 있으면 그 게임도 제안→확인을 거치고, 전원 비회원인 게임만 즉시 확정된다(0050) |
 | **모집 중 경기** | 리스트에 노출하면서 참가자를 비워 둔 기록(0047). 카드 배지 '모집 중'(`isRecruiting`), 결과 입력 불가. 참가자를 비울 수 있는 조건은 **신규 등록 + 노출** 또는 **노출된 기록 + 결과 없음** — "세트가 있는 기록은 라인업이 완성돼 있다"가 통계 집계의 불변식이다. 폼은 빈 슬롯을 미리 그리지 않고 '+ 참가자 추가'로 연 슬롯만 보여 주며(복식은 역할 선택), 연 슬롯은 NTRP까지 필수 |
 | **관점 행 / 정산(is_settled)** | `room_id`가 있는 기록은 회원 참가자 **전원**에게 각자 관점의 `personal_matches` 행이 생긴다(0049). 관점 변환은 대표=`invert_set_scores`(팀 가로지르기), 파트너=`swap_partner_perspective`(나↔파트너), 상대2=둘의 합성이며 참가자 슬롯도 함께 재배치된다. 방 상세 게임 목록은 중복을 피해 **대표 게임 한 벌**만 보여준다 — 판정 기준은 `is_perspective = false`(0050, 종전의 '로테이션은 방장 행' 가정을 대체한다. 앵커가 입력자로 바뀌어 방장이 아닌 원본 행이 생기기 때문). `match_rooms.is_settled` = 대표 게임이 1건 이상이고 전부 확정 + 대기 중인 요청·미확정 로테이션 세션 없음 |

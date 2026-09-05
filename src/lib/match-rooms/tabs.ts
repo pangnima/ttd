@@ -6,25 +6,37 @@
 
 export type RoomListTab = 'open' | 'mine' | 'past'
 
+/**
+ * 탭·커서 → URL. 기본 탭은 `?tab=`을 붙이지 않아 `/match-rooms`가 정규 주소로 남고,
+ * 커서는 탭을 유지한 채 덧붙는다(페이지를 넘겨도 보던 탭이 바뀌지 않는다).
+ */
+export function roomListHref(tab: RoomListTab, cursor?: string | null): string {
+    const params = new URLSearchParams()
+    if (tab !== 'open') params.set('tab', tab)
+    if (cursor) params.set('cursor', cursor)
+    const qs = params.toString()
+    return qs ? `/match-rooms?${qs}` : '/match-rooms'
+}
+
 export const ROOM_LIST_TABS: { key: RoomListTab; label: string; href: string; emptyTitle: string; emptyHint?: string }[] = [
     {
         key: 'open',
         label: '진행 중인 경기',
-        href: '/match-rooms',
+        href: roomListHref('open'),
         emptyTitle: '진행 중인 경기가 없습니다.',
         emptyHint: '경기를 등록하고 매칭 리스트에 노출해보세요',
     },
     {
         key: 'mine',
         label: '내가 참여한 경기',
-        href: '/match-rooms?tab=mine',
+        href: roomListHref('mine'),
         emptyTitle: '참여한 경기가 없습니다.',
         emptyHint: '진행 중인 경기에 입장해보세요',
     },
     {
         key: 'past',
         label: '종료된 경기',
-        href: '/match-rooms?tab=past',
+        href: roomListHref('past'),
         emptyTitle: '종료된 경기가 없습니다.',
     },
 ]
