@@ -8,7 +8,7 @@ import { WhoColumn } from '@/components/personal-matches/form-sections/who-colum
 import { WhenColumn } from '@/components/personal-matches/form-sections/when-column'
 import { FormFooter } from '@/components/personal-matches/form-sections/form-footer'
 import { usePersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
-import { usePersonalMatchSubmit } from '@/components/personal-matches/use-personal-match-submit'
+import { usePersonalMatchSubmit, type SubmitNavigation } from '@/components/personal-matches/use-personal-match-submit'
 
 type Props = {
     initialData?: PersonalMatch
@@ -22,6 +22,10 @@ type Props = {
     roomParticipants?: OpponentCandidate[]
     // 방 게임 추가(0048) — 메타를 방 값으로 고정하고 room_id를 붙여 자유 기록으로 저장
     roomContext?: RoomGameContext
+    // 'dialog'는 매칭 룸 안의 팝업 — 단일 열로 좁히고 메타 요약 카드를 숨긴다(룸 헤더가 이미 보여준다)
+    variant?: 'page' | 'dialog'
+    // 저장/취소 후 이동을 호출부가 가져간다 (다이얼로그 닫기 + refresh). 없으면 종전대로 router.push
+    nav?: SubmitNavigation
 }
 
 /**
@@ -32,19 +36,22 @@ type Props = {
  */
 export function PersonalMatchForm({
     initialData, opponentCandidates = [], pastOpponents = [], recentCourtNames = [], selfUserId, roomParticipants, roomContext,
+    variant = 'page', nav,
 }: Props) {
     const s = usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId, roomContext })
-    const submit = usePersonalMatchSubmit(s, initialData?.id)
+    const submit = usePersonalMatchSubmit(s, initialData?.id, nav)
     // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049)
     const submitLabel = s.roomId && s.isConfirmFlow ? '게임 저장'
         : s.isConfirmFlow ? '확인 요청 보내기'
             : s.isEdit ? '수정 완료'
                 : s.isRoomGame ? '게임 저장' : '경기 저장'
 
+    const isDialog = variant === 'dialog'
+
     return (
-        <form onSubmit={submit.handleSubmit} className="mx-auto w-full max-w-2xl space-y-5 lg:max-w-5xl">
+        <form onSubmit={submit.handleSubmit} className={isDialog ? 'space-y-4' : 'mx-auto w-full max-w-2xl space-y-5 lg:max-w-5xl'}>
             {/* 넓은 화면에서는 2열로 분할해 폼 길이를 줄인다 (좌: 누구와 / 우: 언제·어디서) */}
-            <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+            <div className={isDialog ? 'space-y-4' : 'grid gap-5 lg:grid-cols-2 lg:items-start'}>
                 <WhoColumn
                     s={s}
                     opponentCandidates={opponentCandidates}
@@ -52,7 +59,7 @@ export function PersonalMatchForm({
                     roomParticipants={roomContext?.participants ?? roomParticipants}
                     selfUserId={selfUserId}
                 />
-                <WhenColumn s={s} recentCourtNames={recentCourtNames} existingSets={initialData?.setScores} />
+                <WhenColumn s={s} recentCourtNames={recentCourtNames} existingSets={initialData?.setScores} variant={variant} />
             </div>
 
             <FormFooter error={submit.error} isPending={submit.isPending} isValid={s.isValid} submitLabel={submitLabel} onCancel={submit.cancel} />

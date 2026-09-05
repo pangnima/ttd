@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { fetchPendingRoomInviteCount } from '@/lib/queries/match-rooms'
 import type { Database } from '@/types/supabase'
 import type {
     CourtSurface, MatchRequest, MatchRequestStatus, MatchResultStatus, MatchType, PersonalMatchSetScore,
@@ -46,6 +45,7 @@ function mapMatchRequestRow(row: MatchRequestRowWithJoins): MatchRequest {
         notes: row.notes ?? undefined,
         courtName: row.court_name ?? undefined,
         status: row.status as MatchRequestStatus,
+        roomId: row.room_id ?? undefined,
         createdAt: row.created_at,
         respondedAt: row.responded_at ?? undefined,
         resultStatus: (neg?.result_status as MatchResultStatus) ?? 'none',
@@ -91,79 +91,23 @@ const COUNTERPART_COLUMNS = 'id, name, nickname, profile_image, deleted_at'
 // 결과 협상(match_result_negotiations, 1:1)·참가자(match_request_participants, 복식 partner/opponent2) 공용 임베드.
 const REQUEST_JOINS = 'negotiation:match_result_negotiations(*), participants:match_request_participants(*)'
 
-/** 내가 받은 확인 요청 (상대측 = 요청자 프로필 포함, 최신순) */
-export async function fetchReceivedMatchRequests(userId: string): Promise<MatchRequestWithUser[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('match_requests')
-        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
-        .eq('opponent_user_id', userId)
-        .order('created_at', { ascending: false })
-    if (error || !data) return []
-    return data.map((row) => ({
-        request: mapMatchRequestRow(row),
-        counterpart: mapCounterpart(row.requester),
-    }))
-}
-
-/** 내가 보낸 확인 요청 (상대측 = 수신자 프로필 포함, 최신순) */
-export async function fetchSentMatchRequests(userId: string): Promise<MatchRequestWithUser[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('match_requests')
-        .select(`*, opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
-        .eq('requester_id', userId)
-        .order('created_at', { ascending: false })
-    if (error || !data) return []
-    return data.map((row) => ({
-        request: mapMatchRequestRow(row),
-        counterpart: mapCounterpart(row.opponent),
-    }))
-}
-
 /**
- * 내가 확인해야 할 결과 제안 (수락된 경기에서 상대가 세트를 제안한 것, 최신 제안순).
- * 요청자/상대 어느 쪽이든 확인자가 될 수 있으므로 양쪽 프로필을 임베드한 뒤 viewer 기준으로 상대측을 고른다.
- * result_status/proposed_by는 match_result_negotiations로 이전됐으므로 !inner로 조인해 필터한다.
+ * 내가 당사자인 확인 요청 전량(요청자·대표 확인자 양방향) 1회 조회 — 확인 요청 허브의 A축.
+ * 받은/보낸/종료를 세 쿼리로 나누던 구 경로(fetchReceived·fetchSent·fetchPendingResultConfirmations)를
+ * 대체한다. 상태 필터를 걸지 않는 이유: 허브가 pending(참여 확인)·rejected/canceled(이력)를 한 화면에서
+ * 나눠 보여주고, accepted는 personal_matches 쪽(B축)이 담당하므로 분류는 조립 계층이 한다.
+ * 양쪽 users를 임베드한 뒤 viewer 기준으로 counterpart를 고른다(최신순).
  */
-export async function fetchPendingResultConfirmations(userId: string): Promise<MatchRequestWithUser[]> {
+export async function fetchMyMatchRequests(userId: string): Promise<MatchRequestWithUser[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), participants:match_request_participants(*), negotiation:match_result_negotiations!inner(*)`)
-        .eq('status', 'accepted')
-        .eq('negotiation.result_status', 'proposed')
-        .neq('negotiation.proposed_by', userId)
+        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
         .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`)
+        .order('created_at', { ascending: false })
     if (error || !data) return []
-    const rows = data.map((row) => ({
+    return data.map((row) => ({
         request: mapMatchRequestRow(row),
         counterpart: mapCounterpart(row.requester_id === userId ? row.opponent : row.requester),
     }))
-    rows.sort((a, b) => (b.request.proposedAt ?? '').localeCompare(a.request.proposedAt ?? ''))
-    return rows
-}
-
-/**
- * 사이드바/모바일 nav 뱃지 건수 — 받은 pending 요청 + 내가 확인해야 할 결과 제안 + 경기 리스트 방 초대.
- * (main)/layout.tsx가 한 번 조회해 Sidebar·Header→MobileNav에 props로 내린다 (클라이언트 중복 질의 없음).
- */
-export async function fetchPendingReceivedCount(userId: string): Promise<number> {
-    const supabase = await createClient()
-    const [pending, proposals, invites] = await Promise.all([
-        supabase
-            .from('match_requests')
-            .select('id', { count: 'exact', head: true })
-            .eq('opponent_user_id', userId)
-            .eq('status', 'pending'),
-        supabase
-            .from('match_requests')
-            .select('id, negotiation:match_result_negotiations!inner(result_status, proposed_by)', { count: 'exact', head: true })
-            .eq('status', 'accepted')
-            .eq('negotiation.result_status', 'proposed')
-            .neq('negotiation.proposed_by', userId)
-            .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`),
-        fetchPendingRoomInviteCount(userId),
-    ])
-    return (pending.error ? 0 : pending.count ?? 0) + (proposals.error ? 0 : proposals.count ?? 0) + invites
 }

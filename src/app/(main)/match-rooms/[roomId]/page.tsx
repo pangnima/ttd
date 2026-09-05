@@ -1,6 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match-rooms'
+import { fetchMatchRoomDetail, fetchMatchRoomSummary, fetchRoomParticipantCandidates } from '@/lib/queries/match-rooms'
+import { fetchOpponentCandidates } from '@/lib/queries/users'
+import { fetchPastOpponents } from '@/lib/queries/personal-matches'
+import { buildRoomGameContext, canViewerAddRoomGame } from '@/lib/match-rooms/room-context'
 import { buildRoomTitle } from '@/lib/match-rooms/title'
 import { formatHeadcount } from '@/lib/match-rooms/headcount'
 import { PageHeader } from '@/components/common/page-header'
@@ -42,6 +45,18 @@ export default async function MatchRoomPage({ params }: Props) {
         )
     }
 
+    // 룸 안에서 게임을 추가하려면 폼 컨텍스트가 필요하다 — RPC 재호출 없이 detail + 참가자 명단으로 만든다.
+    // 참가자 명단은 로테이션 빌더 풀에도 쓰이므로 한 번만 조회한다.
+    const canAdd = canViewerAddRoomGame(detail, user.id)
+    const [participants, opponentCandidates, pastOpponents] = canAdd
+        ? await Promise.all([
+            fetchRoomParticipantCandidates(roomId, user.id),
+            fetchOpponentCandidates(user.id),
+            fetchPastOpponents(user.id),
+        ])
+        : [[], [], []]
+    const gameCtx = canAdd ? buildRoomGameContext(detail, participants, user.id) : undefined
+
     const isHost = detail.room.hostUserId === user.id
     // 미확정 로테이션 방은 참가자 전원이 각자 게임을 넣는 중 — 세션을 닫는 건 방장만 한다(0050)
     const canCloseRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
@@ -54,7 +69,13 @@ export default async function MatchRoomPage({ params }: Props) {
             />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
             <RoomMembersSection detail={detail} />
-            <RoomGamesSection detail={detail} viewerId={user.id} />
+            <RoomGamesSection
+                detail={detail}
+                viewerId={user.id}
+                gameCtx={gameCtx}
+                opponentCandidates={opponentCandidates}
+                pastOpponents={pastOpponents}
+            />
         </PageContainer>
     )
 }

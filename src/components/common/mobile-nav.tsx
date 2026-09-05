@@ -17,11 +17,11 @@ type MobileNavProps = {
     clubs?: { id: string; name: string }[]
     /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인' href) */
     userId?: string | null
-    /** 확인 요청 pending + 결과 제안 + 방 초대 건수 — 서버 fetchPendingReceivedCount 1곳에서 계산해 props로 전달 */
-    pendingRequestCount?: number
+    /** 확인 요청 허브 '내 차례' 건수 — 서버 fetchMatchQueue 1곳(myTurnTotal)에서 계산해 props로 전달 */
+    myTurnCount?: number
 }
 
-export function MobileNav({ clubs = [], userId = null, pendingRequestCount = 0 }: MobileNavProps) {
+export function MobileNav({ clubs = [], userId = null, myTurnCount = 0 }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
 
@@ -86,7 +86,7 @@ export function MobileNav({ clubs = [], userId = null, pendingRequestCount = 0 }
                         <div className="mt-2 pt-2 border-t border-foreground/5 dark:border-foreground/10 space-y-1">
                             {myNavItems.map(({ href, label, icon: Icon }) => {
                                 const active = myNavActive(href)
-                                const showBadge = href === '/me/match-requests' && pendingRequestCount > 0
+                                const showBadge = href === '/me/match-requests' && myTurnCount > 0
                                 return (
                                     <Link
                                         key={href}
@@ -98,7 +98,7 @@ export function MobileNav({ clubs = [], userId = null, pendingRequestCount = 0 }
                                         {label}
                                         {showBadge && (
                                             <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-spot/15 text-spot tabular-nums">
-                                                {pendingRequestCount}
+                                                {myTurnCount}
                                             </span>
                                         )}
                                     </Link>

@@ -18,10 +18,10 @@ type SidebarProps = {
     /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
     /** 받은 확인 요청 pending + 결과 제안 + 경기 리스트 방 초대 건수 (경기 확인 요청 메뉴 뱃지) */
-    pendingRequestCount?: number
+    myTurnCount?: number
 }
 
-export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount = 0 }: SidebarProps) {
+export function Sidebar({ currentPath, clubs = [], userId, myTurnCount = 0 }: SidebarProps) {
     const pathname = usePathname()
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
@@ -95,7 +95,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                     <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
                         {myNavItems.map(({ href, label, icon: Icon }) => {
                             const active = myNavActive(href)
-                            const showBadge = href === '/me/match-requests' && pendingRequestCount > 0
+                            const showBadge = href === '/me/match-requests' && myTurnCount > 0
                             return (
                                 <Link
                                     key={href}
@@ -107,7 +107,7 @@ export function Sidebar({ currentPath, clubs = [], userId, pendingRequestCount =
                                     <span className={labelClass}>{label}</span>
                                     {showBadge && !collapsed && (
                                         <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-spot/15 text-spot tabular-nums">
-                                            {pendingRequestCount}
+                                            {myTurnCount}
                                         </span>
                                     )}
                                     {showBadge && collapsed && (

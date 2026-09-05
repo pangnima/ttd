@@ -161,6 +161,9 @@ export type PersonalMatch = {
     rotationSessionId?: string  // 로테이션 세션 tombstone id (0044) — 같은 값이면 같은 로테이션에서 분해된 게임(목록 그룹 키)
     groupSeq?: number           // 로테이션 세션 내 게임 순번 (0044). finalize 루프 순서 = 실제 입력 순서
     roomId?: string             // 경기 리스트에 노출된 기록이면 방 id (0046) — 카드 '경기 리스트에서 보기' 링크
+    // 다른 참가자의 기록에서 파생된 관점 복사본 (0050). 방의 '대표 게임' 판정 술어(is_perspective=false)이며,
+    // ⚠ 수락자(대표) 행도 true다 — '액션 불가'의 근거로 쓰면 안 된다(그 판정은 confirmation.viewerIsParty).
+    isPerspective?: boolean
     // 상호 확인 경기의 결과 제안/확인 상태 (목록 조회 시 match_requests에서 부착, 그 외 경로는 undefined)
     confirmation?: PersonalMatchConfirmation
     createdAt: string
@@ -176,6 +179,9 @@ export type PersonalMatchConfirmation = {
     proposedByMe: boolean
     proposedSets: PersonalMatchSetScore[]  // viewer 관점으로 반전 완료된 제안 세트
     disputeReason?: string
+    // viewer가 요청 당사자(requester 또는 대표 확인자 opponent)인가 — 제안·확인·이의 3종 RPC의 통과 조건과 같다.
+    // false면 복식 파트너·상대2의 관점 행이라 대표의 확인을 기다리는 것 외에 할 수 있는 일이 없다.
+    viewerIsParty: boolean
 }
 
 // ── 로테이션(파트너 교체) 복식 세션 (0038) ────────────────────────────
@@ -327,6 +333,7 @@ export type MatchRequest = {
     notes?: string
     courtName?: string      // 수락 시 요청자·수락자 양측 기록에 복사(notes와 달리 공유)
     status: MatchRequestStatus
+    roomId?: string         // 매칭 룸에서 만들어진 요청이면 방 id (0046·0049) — 방 게임·로테이션 파생 게임
     createdAt: string
     respondedAt?: string
     // ── 복식 전용 (0038): 요청자 파트너 / 상대팀 2번째. opponentUserId는 상대팀 대표 확인자 ──

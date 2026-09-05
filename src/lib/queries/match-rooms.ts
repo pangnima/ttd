@@ -66,6 +66,13 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
     }
 }
 
+/**
+ * 목록 상한. `played_at desc` + limit이므로 **최신 날짜부터** 남는다 —
+ * 미래 경기는 안전하게 다 들어오고 오래된 종료 방부터 잘리므로 '진행 중' 탭 정확도에는 영향이 없다.
+ * 탭별 서버 필터·커서 페이지네이션은 후속 과제.
+ */
+export const ROOM_LIST_LIMIT = 200
+
 /** 경기 리스트 전체 (예정/지난 분리는 lib/match-rooms/split.ts) */
 export async function fetchMatchRooms(viewerId: string): Promise<MatchRoomSummary[]> {
     const supabase = await createClient()
@@ -73,7 +80,7 @@ export async function fetchMatchRooms(viewerId: string): Promise<MatchRoomSummar
         .from('match_rooms')
         .select(`${ROOM_COLUMNS}, ${HOST_JOIN}, ${MEMBERS_JOIN}`)
         .order('played_at', { ascending: false })
-        .limit(200)
+        .limit(ROOM_LIST_LIMIT)
     if (error || !data) return []
     return data.map((row) => mapRoomRow(row, viewerId))
 }
@@ -121,17 +128,48 @@ export async function fetchRoomParticipantCandidates(roomId: string, excludeUser
     return (data as ParticipantRow[])
         .map((row) => row.users)
         .filter((u): u is NonNullable<ParticipantRow['users']> => !!u && !u.deleted_at)
-        .map((u) => ({
-            id: u.id,
-            name: u.name,
-            nickname: u.nickname || undefined,
-            ntrp: u.ntrp ?? undefined,
-            personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
-            dominantHand: toDominantHand(u.dominant_hand),
-            isGuest: u.is_guest ?? false,
-            clubNames: [],
-        }))
+        .map(toParticipantCandidate)
         .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): OpponentCandidate {
+    return {
+        id: u.id,
+        name: u.name,
+        nickname: u.nickname || undefined,
+        ntrp: u.ntrp ?? undefined,
+        personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+        dominantHand: toDominantHand(u.dominant_hand),
+        isGuest: u.is_guest ?? false,
+        clubNames: [],
+    }
+}
+
+/**
+ * 여러 방의 참가자 후보를 한 번에 — 확인 요청 허브가 방 로테이션 세션마다 조회하던 N+1을 없앤다.
+ * 결과는 room_id → 후보 목록. 단건(fetchRoomParticipantCandidates)은 룸 게임 폼·로테이션 빌더가 그대로 쓴다.
+ */
+export async function fetchRoomParticipantCandidatesByRooms(
+    roomIds: string[], excludeUserId: string,
+): Promise<Record<string, OpponentCandidate[]>> {
+    if (roomIds.length === 0) return {}
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_room_members')
+        .select('room_id, users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, dominant_hand, is_guest, deleted_at)')
+        .in('room_id', roomIds)
+        .eq('status', 'joined')
+        .neq('user_id', excludeUserId)
+    if (error || !data) return {}
+
+    const byRoom: Record<string, OpponentCandidate[]> = {}
+    for (const row of data as (ParticipantRow & { room_id: string })[]) {
+        const u = row.users
+        if (!u || u.deleted_at) continue
+        ;(byRoom[row.room_id] ??= []).push(toParticipantCandidate(u))
+    }
+    for (const list of Object.values(byRoom)) list.sort((a, b) => a.name.localeCompare(b.name))
+    return byRoom
 }
 
 type InviteRow = {
@@ -173,13 +211,28 @@ export async function fetchPendingRoomInvites(userId: string): Promise<MatchRoom
     return data.map(mapInviteRow).filter((i): i is MatchRoomInvite => !!i)
 }
 
-/** 사이드바 뱃지용 초대 건수 (fetchPendingReceivedCount가 합산) */
-export async function fetchPendingRoomInviteCount(userId: string): Promise<number> {
+/**
+ * 확인 요청 허브·작업 큐용 내 방 멤버십 1회 조회 — 초대 대기(invited)와 참가 중(joined)을 함께 가져온다.
+ * 초대 카드(A축)와 방 로테이션 세션 조회(B축)가 같은 행 집합을 두 번 읽던 것을 한 쿼리로 합친다.
+ */
+export async function fetchMyRoomMemberships(
+    userId: string,
+): Promise<{ invites: MatchRoomInvite[]; joinedRoomIds: string[] }> {
     const supabase = await createClient()
-    const { count, error } = await supabase
+    const { data, error } = await supabase
         .from('match_room_members')
-        .select('id', { count: 'exact', head: true })
+        .select(`room_id, status, source_role, room:match_rooms!inner(played_at, played_time, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
         .eq('user_id', userId)
-        .eq('status', 'invited')
-    return error ? 0 : count ?? 0
+        .in('status', ['invited', 'joined'])
+        .order('created_at', { ascending: false })
+    if (error || !data) return { invites: [], joinedRoomIds: [] }
+
+    const rows = data as (InviteRow & { status: string })[]
+    return {
+        invites: rows
+            .filter((row) => row.status === 'invited')
+            .map(mapInviteRow)
+            .filter((i): i is MatchRoomInvite => !!i),
+        joinedRoomIds: [...new Set(rows.filter((row) => row.status === 'joined').map((row) => row.room_id))],
+    }
 }

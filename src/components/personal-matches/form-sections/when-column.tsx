@@ -13,11 +13,13 @@ type Props = {
     s: PersonalMatchFormState
     recentCourtNames: string[]
     existingSets?: PersonalMatchSetScore[]
+    variant?: 'page' | 'dialog'
 }
 
 /** 등록 폼 우측 열 — "언제·어디서": 경기 정보 · 메모 · 경기 리스트 노출(신규 등록만). 방 게임은 방 값 요약만 */
-export function WhenColumn({ s, recentCourtNames, existingSets }: Props) {
-    if (s.roomContext) return <RoomMetaSummaryCard ctx={s.roomContext} step="02" />
+export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page' }: Props) {
+    // 룸 안 다이얼로그에서는 RoomDetailHeader가 이미 일시·코트·표면을 보여주므로 요약 카드를 중복하지 않는다
+    if (s.roomContext) return variant === 'dialog' ? null : <RoomMetaSummaryCard ctx={s.roomContext} step="02" />
     return (
         <div className="space-y-5">
             <FormSectionCard title="경기 정보" step="03" contentClassName="space-y-4">

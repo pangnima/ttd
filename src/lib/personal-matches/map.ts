@@ -44,6 +44,8 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         rotationSessionId: row.rotation_session_id ?? undefined,
         groupSeq: row.group_seq ?? undefined,
         roomId: row.room_id ?? undefined,
+        // 관점 복사본 표식 (0050) — 방의 '대표 게임' 판정 술어. 액션 자격 판정에는 쓰지 않는다
+        isPerspective: row.is_perspective,
         createdAt: row.created_at,
     }
 }

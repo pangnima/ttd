@@ -42,7 +42,7 @@ export function RoomGameRow({ game, index, detail, viewerId }: Props) {
                     {editable && lineupPending ? (
                         <Link href={`/me/personal-matches/${game.id}/edit`} className="text-caption text-primary hover:underline">참가자 채우기</Link>
                     ) : (
-                        <Link href="/me/personal-matches" className="text-caption text-primary hover:underline">
+                        <Link href="/me/match-requests" className="text-caption text-primary hover:underline">
                             {game.sourceType === 'confirmation' ? '결과 입력·확인' : '결과 입력'}
                         </Link>
                     )}

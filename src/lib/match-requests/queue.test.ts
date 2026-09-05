@@ -24,7 +24,7 @@ function base(over: Partial<PersonalMatch> = {}): PersonalMatch {
 }
 
 function conf(status: MatchResultStatus, proposedByMe = false): PersonalMatchConfirmation {
-    return { requestId: 'r1', status, proposedByMe, proposedSets: [] }
+    return { requestId: 'r1', status, proposedByMe, proposedSets: [], viewerIsParty: true }
 }
 
 describe('classifyPendingMatch — 자유 기록', () => {
@@ -76,6 +76,13 @@ describe('classifyPendingMatch — 상호 확인 경기', () => {
 
     it('협상을 못 읽는 관점 복사본(복식 파트너·상대2)은 대표를 기다린다', () => {
         expect(classifyPendingMatch(mutual(undefined))).toBe('awaitingCounterpart')
+    })
+
+    it('협상을 읽더라도 당사자가 아니면(파트너·상대2, 0052 이후) 대표를 기다린다', () => {
+        const notParty = { ...conf('none'), viewerIsParty: false }
+        expect(classifyPendingMatch(mutual(notParty))).toBe('awaitingCounterpart')
+        const proposedByRep = { ...conf('proposed', false), viewerIsParty: false }
+        expect(classifyPendingMatch(mutual(proposedByRep))).toBe('awaitingCounterpart')
     })
 
     it('confirmed인데 세트가 없는 조합은 방어적으로 대기 처리', () => {

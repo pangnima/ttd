@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { PersonalMatch } from '@/types'
 import { TYPO, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
+import { hasResult } from '@/lib/personal-matches/winner'
 import { PersonalMatchMonthBrowser } from '@/components/personal-matches/personal-match-month-browser'
 
 type Props = {
@@ -9,7 +10,9 @@ type Props = {
 }
 
 export function PersonalMatchesPreview({ personalMatches }: Props) {
-    const groups = groupByMonth(personalMatches)
+    // bundle.personalMatches는 통계 원본(미확정 포함)이라 표시 직전에 확정분만 남긴다 —
+    // fetchAnalyticsBundle은 레이팅·AI 코칭 공용이라 쿼리 레벨에서 거르지 않는다
+    const groups = groupByMonth(personalMatches.filter(hasResult))
 
     return (
         <section className="space-y-3">

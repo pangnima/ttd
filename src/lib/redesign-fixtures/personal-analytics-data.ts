@@ -154,7 +154,7 @@ export function buildDummyPersonalAnalyticsData({ userId, gender, today }: DataI
         playedAt: proposedAt, playedTime: '21:00', matchType: 'singles', surface: 'hard',
         setScores: [], sourceRequestId: 'fx-req-proposed',
         confirmation: {
-            requestId: 'fx-req-proposed', status: 'proposed', proposedByMe: true,
+            requestId: 'fx-req-proposed', status: 'proposed', proposedByMe: true, viewerIsParty: true,
             proposedSets: [{ me: 6, opp: 4 }, { me: 6, opp: 3 }],
         },
         createdAt: `${proposedAt}T21:00:00Z`,

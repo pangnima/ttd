@@ -132,7 +132,9 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         isSlotOk(s.player, s.ntrp, allowEmptyPlayers && !openSlots.includes(key), hideNtrpFor.includes(key))
 
     const meta: RotationSessionMeta = { playedAt, playedTime, matchType, surface, notes, courtName }
-    const metaOk = !!playedAt && !!playedTime && !!surface
+    // 방 게임은 메타를 화면에서 바꿀 수 없다(요약 카드로 대체) — 표면·시각이 빈 방에서 저장이
+    // 영구 차단되지 않도록 날짜만 요구한다. 서버는 create_room_game의 coalesce와 validatePersonalMatchInput이 방어한다.
+    const metaOk = isRoomGame ? !!playedAt : (!!playedAt && !!playedTime && !!surface)
     // 파트너 NTRP도 상대와 동일하게 필수 (회원 파트너는 확인 플로우에서 hideNtrpFor로 면제)
     const fixedValid =
         slotOk('opponent', opponent) &&
@@ -175,6 +177,8 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         roomContext: ctx, isRoomGame,
         roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined, viewerIsHost: ctx?.viewerIsHost ?? true,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
+        // 저장 후 목적지 판정용 — 폼은 세트를 받지 않으므로 '수정 전 결과 유무'가 곧 저장 후 결과 유무다
+        initialHasResult: (d?.setScores.length ?? 0) > 0,
     }
 }
 

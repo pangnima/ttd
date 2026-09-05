@@ -5,6 +5,7 @@ import { invertSetScores } from './perspective'
 const REQ: ConfirmationSourceRow = {
     id: 'req-1',
     requester_id: 'alice',
+    opponent_user_id: 'bob',
     result_status: 'proposed',
     proposed_by: 'bob',
     proposed_set_scores: [{ me: 6, opp: 4 }, { me: 3, opp: 6 }],  // 요청자(alice) 관점
@@ -22,6 +23,13 @@ describe('buildConfirmation', () => {
         expect(forBob.proposedByMe).toBe(true)
         expect(forBob.status).toBe('proposed')
         expect(forBob.requestId).toBe('req-1')
+    })
+
+    it('요청 당사자(요청자·대표 확인자)만 viewerIsParty', () => {
+        expect(buildConfirmation(REQ, 'alice').viewerIsParty).toBe(true)
+        expect(buildConfirmation(REQ, 'bob').viewerIsParty).toBe(true)
+        // 복식 파트너의 관점 행 — 협상 행을 읽어도 제안·확인 자격은 없다
+        expect(buildConfirmation(REQ, 'carol').viewerIsParty).toBe(false)
     })
 
     it('이의 사유와 비배열 제안값을 안전하게 매핑', () => {

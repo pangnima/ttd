@@ -1,35 +1,34 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchMatchRooms } from '@/lib/queries/match-rooms'
+import { ROOM_LIST_LIMIT, fetchMatchRooms } from '@/lib/queries/match-rooms'
 import { splitRooms, todayIsoKst } from '@/lib/match-rooms/split'
-import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
+import { isViewerInvolved } from '@/lib/match-rooms/headcount'
+import { resolveRoomListTab, roomListTabMeta, ROOM_LIST_TABS } from '@/lib/match-rooms/tabs'
+import { LinkTabs } from '@/components/common/link-tabs'
+import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
-import { CARD_BASE, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
-import { cn } from '@/lib/utils'
 
 export const metadata = { title: '매칭 리스트' }
 
 type Props = { searchParams: Promise<{ tab?: string }> }
 
-/** 경기 리스트 — 리스트에 노출된 경기(방) 전체. 예정(결과 미확정 + 오늘 이후, 가까운 순) / 지난 경기(결과 확정이거나 날짜 지남, 최근순) 탭 */
+/**
+ * 매칭 리스트 — 노출된 경기(방) 전체. 진행 중(가까운 순) / 내가 참여한(진행 중 → 종료) / 종료된(최근순).
+ * '내가 참여한'은 다른 두 탭과 교차하는 관점 필터라 종료된 방도 함께 남는다(내 경기함).
+ */
 export default async function MatchRoomsPage({ searchParams }: Props) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const { tab } = await searchParams
-    const activeTab = tab === 'past' ? 'past' : 'upcoming'
+    const activeTab = resolveRoomListTab((await searchParams).tab)
     const rooms = await fetchMatchRooms(user.id)
     const { upcoming, past } = splitRooms(rooms, todayIsoKst())
-    const items = activeTab === 'upcoming' ? upcoming : past
-
-    const tabClass = (active: boolean) =>
-        cn(
-            'inline-flex items-center gap-1.5 px-3 py-2 text-body2 border-b-2 -mb-px transition-colors',
-            active ? 'border-primary text-foreground font-medium' : 'border-transparent text-muted-foreground hover:text-foreground',
-        )
+    const mineUpcoming = upcoming.filter((r) => isViewerInvolved(r.viewer))
+    const minePast = past.filter((r) => isViewerInvolved(r.viewer))
+    const meta = roomListTabMeta(activeTab)
 
     return (
         <PageContainer>
@@ -43,29 +42,39 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 }
             />
 
-            <div className="border-b border-border flex">
-                <Link href="/match-rooms" className={tabClass(activeTab === 'upcoming')}>
-                    예정 경기
-                    {upcoming.length > 0 && <span className="text-caption text-muted-foreground tabular-nums">{upcoming.length}</span>}
-                </Link>
-                <Link href="/match-rooms?tab=past" className={tabClass(activeTab === 'past')}>지난 경기</Link>
-            </div>
+            {/* 종료 탭은 200건 상한 때문에 숫자가 진실이 아니므로 배지를 붙이지 않는다 */}
+            <LinkTabs
+                ariaLabel="매칭 리스트 탭"
+                activeKey={activeTab}
+                items={ROOM_LIST_TABS.map((t) => ({
+                    ...t,
+                    count: t.key === 'open' ? upcoming.length : t.key === 'mine' ? mineUpcoming.length + minePast.length : undefined,
+                    emphasis: t.key === 'mine',
+                }))}
+            />
 
-            {items.length === 0 ? (
-                <div className={EMPTY_BLOCK}>
-                    {activeTab === 'upcoming' ? (
-                        <>
-                            예정된 경기가 없습니다.{' '}
-                            <Link href="/me/personal-matches/new" className="text-primary hover:underline">
-                                경기를 등록하고 리스트에 노출해보세요
-                            </Link>
-                        </>
-                    ) : '지난 경기가 없습니다.'}
-                </div>
+            {activeTab === 'mine' ? (
+                mineUpcoming.length + minePast.length === 0 ? (
+                    <RoomListSection rooms={[]} emptyTitle={meta.emptyTitle} emptyHint={meta.emptyHint} emptyHref="/match-rooms" />
+                ) : (
+                    <>
+                        <RoomListSection rooms={mineUpcoming} title="진행 중" />
+                        <RoomListSection rooms={minePast} title="종료됨" />
+                    </>
+                )
             ) : (
-                <div className={`${CARD_BASE} divide-y divide-border`}>
-                    {items.map((room) => <MatchRoomCard key={room.id} room={room} />)}
-                </div>
+                <RoomListSection
+                    rooms={activeTab === 'open' ? upcoming : past}
+                    emptyTitle={meta.emptyTitle}
+                    emptyHint={meta.emptyHint}
+                    emptyHref={activeTab === 'open' ? '/me/personal-matches/new' : undefined}
+                />
+            )}
+
+            {rooms.length === ROOM_LIST_LIMIT && (
+                <p className="text-caption text-muted-foreground text-center">
+                    최근 {ROOM_LIST_LIMIT}건만 표시합니다.
+                </p>
             )}
         </PageContainer>
     )

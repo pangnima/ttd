@@ -16,8 +16,17 @@ import { handOf, type PersonalMatchFormState } from '@/components/personal-match
  *  ③ 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
  *  ④ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
  * 신규 등록은 s.listing('리스트에 노출')을 넘기면 액션이 기록 저장 후 경기 리스트의 방을 만든다.
+ *
+ * 저장 후 목적지: 폼은 세트를 받지 않아 **신규 저장물은 전부 미확정**이므로 확인 요청 허브로 보낸다
+ * (개인 경기 결과로 보내면 방금 저장한 기록이 없는 화면에 도착한다). 방 게임만 방 상세로 돌아간다.
  */
-export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: string) {
+export type SubmitNavigation = {
+    /** 저장 성공 후 — 다이얼로그를 닫고 새로고침한다. 주면 router.push(next)를 하지 않는다 */
+    onDone?: () => void
+    onCancel?: () => void
+}
+
+export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: string, nav?: SubmitNavigation) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
@@ -26,6 +35,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         startTransition(async () => {
             const res = await action()
             if (res.error) setError(res.error)
+            else if (nav?.onDone) nav.onDone()
             else router.push(next)
         })
     }
@@ -45,7 +55,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 courtName: courtName.trim() || undefined,
                 // 빈 행은 제거하고 보낸다 (모집형은 0명도 허용)
                 players: poolToPlayers(compactPool(s.rotation.pool)),
-            }, s.listing), '/me/personal-matches')
+            }, s.listing), '/me/match-requests')
             return
         }
 
@@ -103,7 +113,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
                 playedAt, playedTime, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-            }, s.listing), '/me/match-requests?tab=sent')
+            }, s.listing), '/me/match-requests?tab=waiting')
             return
         }
 
@@ -114,9 +124,16 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             () => (initialId
                 ? updatePersonalMatchAction(initialId, input)
                 : createPersonalMatchesAction([input], s.listing, newRoomId ? { roomId: newRoomId } : undefined)),
-            s.roomId ? `/match-rooms/${s.roomId}` : '/me/personal-matches',
+            // 폼은 세트를 받지 않는다 — 신규는 언제나 미확정이므로 허브로 보내야 방금 저장한 기록이 보인다.
+            // 수정은 원래 결과가 있었으면 확정 목록으로 돌아간다.
+            s.roomId
+                ? `/match-rooms/${s.roomId}`
+                : initialId && s.initialHasResult
+                    ? '/me/personal-matches'
+                    : '/me/match-requests',
         )
     }
 
-    return { handleSubmit, isPending, error, cancel: () => router.back() }
+    // 다이얼로그에서 취소가 router.back()으로 룸을 떠나는 사고를 막는다
+    return { handleSubmit, isPending, error, cancel: nav?.onCancel ?? (() => router.back()) }
 }

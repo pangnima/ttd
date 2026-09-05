@@ -18,13 +18,15 @@ type Props = {
     picker: PoolPickerProps
     viewerId: string
     roomParticipants: RoomParticipant[]
+    /** 내가 이미 이 세션에 게임을 넣었는가 (0050 방 세션은 finalize 후에도 남는다) — 라벨만 바뀐다 */
+    entered?: boolean
 }
 
 /**
  * 결과 입력 대기 로테이션 세션 카드 — 참가자 요약 + 시각·코트명·메모 + [결과 입력](게임 빌더 Dialog).
  * 방 세션은 참가자 누구에게나 보이고 누구나 게임을 입력할 수 있다(0050). 세션 삭제는 만든 사람만.
  */
-export function RotationSessionCard({ session: s, picker, viewerId, roomParticipants }: Props) {
+export function RotationSessionCard({ session: s, picker, viewerId, roomParticipants, entered = false }: Props) {
     const d = useResultDialog()
     const [isDeleting, startDelete] = useTransition()
     const isOwner = s.userId === viewerId
@@ -51,12 +53,14 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                             <p className="text-caption text-muted-foreground truncate">{pool.map((p) => p.name).join(' · ')}</p>
                         )}
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>게임 미입력</span>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>
+                        {entered ? '입력함' : '게임 미입력'}
+                    </span>
                 </div>
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="mt-1 space-y-0.5" />
                 {s.roomId && <RoomLink roomId={s.roomId} className="mt-1 inline-block" />}
                 <div className="flex items-center justify-end gap-2 mt-2">
-                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>결과 입력</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>{entered ? '게임 추가 입력' : '결과 입력'}</Button>
                     {isOwner && (
                         <button onClick={handleDelete} disabled={isDeleting} className="text-caption text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
                             삭제

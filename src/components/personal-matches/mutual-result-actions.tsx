@@ -8,11 +8,11 @@ import {
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { hasResult } from '@/lib/personal-matches/winner'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
+import { MutualLockedBadge } from '@/components/personal-matches/match-actions'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
 type Props = { match: PersonalMatch }
 
-const LOCKED_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary'
 const WAITING_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-dashed border-border text-muted-foreground'
 
 /**
@@ -40,13 +40,7 @@ export function MutualResultActions({ match }: Props) {
         )
     }
 
-    if (hasResult(match) || !c || !requestId || c.status === 'confirmed') {
-        return (
-            <span className={LOCKED_BADGE} title="상대 확인으로 확정된 경기는 수정·삭제할 수 없습니다">
-                상호 확인
-            </span>
-        )
-    }
+    if (hasResult(match) || !c || !requestId || c.status === 'confirmed') return <MutualLockedBadge />
 
     const reviewMode = c.status === 'proposed' && !c.proposedByMe
     const editingOwn = c.status === 'proposed' && c.proposedByMe
