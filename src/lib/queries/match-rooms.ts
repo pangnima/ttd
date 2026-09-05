@@ -108,9 +108,10 @@ export async function fetchMatchRoomDetail(roomId: string): Promise<MatchRoomDet
 
 /**
  * 방 게임의 결과 협상 상태 — key는 sourceRequestId.
- * **행의 존재 자체가 '결과 입력·확인 자격'이다**: match_requests SELECT 정책이 요청 당사자(요청자·대표
- * 확인자)만 통과시키므로, 파트너·상대2에게는 애초에 행이 오지 않는다. 자격 판정에 isRoomGameParty를
- * 쓰면 안 되는 이유 — 로테이션 파생 게임은 대표가 opponent2일 수 있어 role로 대표를 추정할 수 없다.
+ * SELECT 정책(0052)은 요청 당사자 + 복식 참가자(파트너·상대2)에게 열려 있으므로 **행의 존재는 '열람
+ * 자격'일 뿐 '입력·확인 자격'이 아니다** — 그 판정은 `viewerIsParty`(요청자 또는 상대 대표)로 한다.
+ * 자격 판정에 isRoomGameParty를 쓰면 안 되는 이유 — 로테이션 파생 게임은 대표가 opponent2일 수 있어
+ * role로 대표를 추정할 수 없다.
  * proposedSets는 buildConfirmation이 viewer 관점으로 반전해 준다(검증된 코드 재사용).
  */
 export async function fetchRoomGameConfirmations(

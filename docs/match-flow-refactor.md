@@ -15,11 +15,11 @@
 > | 8 · 룸 안 게임 추가 | ✅ 완료 | `RoomGameDialog`, 폼 `variant='dialog'`+`SubmitNavigation`, `metaOk` 결함 수정, `?room=` redirect |
 > | 9 · 룸 안 결과 입력·로테이션 빌더 | ✅ 완료 | `RoomGameActions`(자격 = 협상 행 존재)·`RoomRotationBuilder`·`fetchRoomGameConfirmations` |
 > | 10 · 라벨 전수 교체 | ✅ 완료 | 매칭 리스트/매칭 룸/개인 경기 결과, 사이드바 생애 순서 재배열, `'방장'` 판정 키 보존 |
-> | 11 · 마이그레이션 0052 (선택) | ⬜ 미착수 | 없이도 동작한다(`viewerIsParty`가 전방 호환). 적용하면 파트너·상대2가 협상 상태를 읽는다 |
+> | 11 · 마이그레이션 0052 | ✅ 완료 | **원격 Supabase에 적용됨 — 다시 적용하지 말 것.** `is_request_party` 헬퍼 + SELECT 정책 3종 교체, 파트너·상대2 대기 배지를 실제 상태로 승격(`bystanderWaitingBadge`) |
 > | 12 · 서버 필터·페이지네이션 | ⬜ 범위 밖 | 후속 |
 >
-> Step 10 종료 시점에 `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run` 전부 통과.
-> **남은 일**: 아래 "검증"의 엔드투엔드 수동 시나리오 8종(계정 2개)과 선택 과제 Step 11.
+> Step 11 종료 시점에 `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run` 전부 통과(테스트 396).
+> **남은 일**: 아래 "검증"의 엔드투엔드 수동 시나리오 8종(계정 2개). 코드 작업은 Step 12(후속·범위 밖)만 남았다.
 
 ## Context
 
@@ -273,7 +273,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 |---|---|---|---|
 | 5 | **내 제안 확인 대기** | `proposed` ∧ 제안자=나 | `MutualResultActions` editingOwn(`:52,56`) → [제안 수정] |
 | 6 | **상대 수락 대기** | `status='pending'` ∧ `requester=나` | `SentRequestCard` [취소] (**props 불변**) |
-| 7 | **대표 확인 대기** | `sourceRequestId` 있음 ∧ `!viewerIsParty` (복식 파트너·상대2 관점 행) | 읽기 전용 배지(현 `mutual-result-actions.tsx:35-41` 그대로). Step 11 후 실제 상태로 승격 |
+| 7 | **대표 확인 대기** | `sourceRequestId` 있음 ∧ `!viewerIsParty` (복식 파트너·상대2 관점 행) | 읽기 전용 배지. Step 11(0052) 이후 `bystanderWaitingBadge`가 결과 입력 대기/대표 확인 대기/이의 제기됨을 구분해 표시 |
 | 8 | **종료된 요청** (`<details>` 접힘) | `rejected`/`canceled` 양방향 | 없음 (이력) |
 
 **승격 규칙**: `confirm_match_result` 성공 → `set_scores` 채워짐 → `hasResult` true → 허브에서 사라지고 개인 결과에 나타난다. **별도 코드 없이 불변식이 처리한다.**
@@ -517,7 +517,7 @@ export async function fetchRoomGameConfirmations(
 | `confirmation.status` `none`\|`disputed` | 당사자 | `[결과 입력]`(disputed면 사유 표시) | `proposeMatchResultAction` |
 | `proposed` + `proposedByMe` | 제안자 | `상대 확인 대기` 배지 + `[제안 수정]` | `proposeMatchResultAction` |
 | `proposed` + `!proposedByMe` | 확인자 | `[결과 확인]` → `mode="review"` | `confirm`/`disputeMatchResultAction` |
-| `confirmation` 없음 + `isRoomGameParty` | 파트너·상대2 | `대표 확인 대기` 배지(title 툴팁) | 없음 (`mutual-result-actions.tsx:35-41`과 동문구) |
+| `!viewerIsParty` + `isRoomGameParty` | 파트너·상대2 | `bystanderWaitingBadge` 배지(title 툴팁) | 없음 (`MutualResultActions`와 동문구) |
 
 팀 라벨은 Step 0의 `buildRoomGameLabels(game, viewerId)`가 공급한다. 다이얼로그 상태는 `useResultDialog` 재사용, 화면 갱신은 Step 0에서 보강한 `revalidateRoomPaths`가 처리한다.
 
@@ -573,9 +573,9 @@ URL·라우트·`revalidatePath`·파일명·컴포넌트명·타입명·식별�
 
 ---
 
-## Step 11 — (선택, 권장) 마이그레이션 0052: 참가자 SELECT 확장
+## Step 11 — ✅ 완료 · 마이그레이션 0052: 참가자 SELECT 확장
 
-**필수가 아니다.** 섹션 7(관점 행)은 `sourceRequestId && !viewerIsParty`로 감지되고, 파트너는 어차피 액션 권한이 없다 — `propose/confirm/dispute` 3종 모두 `requester_id`/`opponent_user_id`만 통과한다. **0052 없이도 허브와 룸은 완성된다.**
+**필수는 아니었다.** 섹션 7(관점 행)은 `sourceRequestId && !viewerIsParty`로 감지되고, 파트너는 어차피 액션 권한이 없다 — `propose/confirm/dispute` 3종 모두 `requester_id`/`opponent_user_id`만 통과한다. **0052 없이도 허브와 룸은 완성된다.**
 
 **그래도 권장하는 이유**: 0052 없이는 파트너에게 "대표 확인 대기"가 영구 표시되고, *아무도 제안하지 않았는지 / 제안돼서 대표 확인만 남았는지*를 구분할 수 없다. Step 9의 룸 내 결과 검토도 파트너에게는 동작하지 않는다. CLAUDE.md의 2차 과제에 이미 등재돼 있다.
 
@@ -608,9 +608,22 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 --   match_result_negotiations_select  (0040:166-173) → is_request_party(request_id)
 ```
 
-앱 변경은 섹션 7 표시 문구뿐 — `viewerIsParty`는 Step 3에서 이미 도입돼 **0052 전후 동작이 동일하게 유지된다**(전방 호환).
+### 적용 결과
 
-**리스크**: 중. 정책 재귀가 없는지 `explain`으로 확인, 파트너 세션의 쓰기 시도가 여전히 `not_request_party`로 막히는지 검증.
+**DB**: `supabase/migrations/0052_request_participant_select.sql` — 원격 적용 완료(`is_request_party` SECURITY DEFINER 헬퍼 + SELECT 정책 3종 교체). anon EXECUTE는 부여되지 않았다(`authenticated`·`service_role`만).
+
+**롤백 스모크 테스트**(합성 요청 1건 삽입 → 역할 전환 조회 → `raise exception`으로 롤백):
+
+| 세션 | requests | participants | negotiations | UPDATE |
+|---|---|---|---|---|
+| 파트너(`match_request_participants.user_id`) | 1 | 1 | 1 | **0행** (cancel/reject 정책 무변경) |
+| 무관한 회원 | 0 | 0 | 0 | — |
+
+정책 상호 재귀 없음(조회가 정상 반환).
+
+**앱 변경 — 표시 문구만이 아니었다.** `MutualResultActions:35`의 가드가 `!c`(협상 행 부재)였기 때문에, 0052로 파트너에게 행이 내려오는 순간 `reviewMode = status==='proposed' && !proposedByMe`가 참이 되어 **파트너에게 [결과 확인] 버튼이 노출되고 누르면 `not_request_party`로 실패**했다. 가드를 `!c?.viewerIsParty`로 옮겨 자격 판정의 단일 출처를 `viewerIsParty`로 통일했다(`RoomGameActions`는 이미 그렇게 판정하고 있었다).
+
+승격된 문구는 순수 함수 `bystanderWaitingBadge(confirmation?)`(`lib/personal-matches/confirmation.ts`, vitest 3)가 단일 출처다 — `none`→`결과 입력 대기` / `proposed`→`대표 확인 대기` / `disputed`→`이의 제기됨`(사유를 툴팁으로), 협상을 못 읽으면 종전 문구로 폴백해 **0052 전후 모두 안전하다**.
 
 ---
 
@@ -632,7 +645,7 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 7. 폼 4갈래 저장 직후 도착 화면에 방금 저장한 기록이 보이는지
 8. 표면·시각이 빈 방에서 룸 게임 저장이 되는지(Step 8c 결함 수정 확인)
 
-**Supabase**: 0051·0052는 MCP `apply_migration` 적용 후 `execute_sql` 롤백 스모크 테스트. 0052는 정책 음성 테스트(무관한 계정이 남의 요청을 못 읽는지) 필수. 신규 함수는 anon EXECUTE 회수 확인.
+**Supabase**: 0051·0052 모두 MCP `apply_migration` 적용 + `execute_sql` 롤백 스모크 테스트 완료(0052는 위 표 — 음성 테스트·anon EXECUTE 회수 포함). ✅
 
 ---
 
@@ -654,7 +667,8 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 - `src/components/common/link-tabs.tsx`
 - `src/components/match-requests/{queue-section,pending-match-actions,my-turn-panel,waiting-panel,queue-summary-banner}.tsx`
 - `src/components/match-rooms/{room-game-dialog,room-game-actions,room-rotation-builder}.tsx` (+ 필요 시 `room-list-section.tsx`)
-- `supabase/migrations/0051_personal_match_has_result.sql` (+ 선택 `0052_request_participant_select.sql`)
+- `supabase/migrations/0051_personal_match_has_result.sql` · `0052_request_participant_select.sql`
+- `bystanderWaitingBadge`(`lib/personal-matches/confirmation.ts`, +test)
 
 **주요 수정**
 - `app/(main)/me/match-requests/page.tsx` (픽스처 제거 + 2탭 8섹션)
@@ -671,6 +685,6 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 - `src/lib/redesign-fixtures/match-requests.ts` · `src/components/match-requests/result-confirm-card.tsx`
 - `fetchPendingReceivedCount` · `fetchReceivedMatchRequests` · `fetchSentMatchRequests` · `fetchPendingResultConfirmations` · `fetchPersonalMatchesWithConfirmation`
 
-**DB**: 마이그레이션 1건 필수(0051 생성 컬럼 + 부분 인덱스) + 1건 권장(0052 RLS SELECT 확장). 신규 테이블·RPC 없음.
+**DB**: 마이그레이션 2건(0051 생성 컬럼 + 부분 인덱스 / 0052 RLS SELECT 확장 + `is_request_party` 헬퍼). 신규 테이블 없음.
 
 **부수 수정되는 기존 결함 4건**: `updatePersonalMatchSetsAction`·`deletePersonalMatchAction`의 방 경로 revalidate 누락 · `match-results.ts`의 방 경로 누락 · 룸 게임 폼 `metaOk` 영구 차단 · `room-password-gate` 안내 문구가 0049 이후 사실과 불일치

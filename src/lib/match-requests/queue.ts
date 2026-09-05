@@ -39,9 +39,9 @@ export function classifyPendingMatch(m: PersonalMatch): MatchQueueBucket {
     // 자유 기록 — 상대 확인 없이 내가 바로 확정한다
     if (!m.sourceRequestId) return isLineupComplete(m) ? 'enterResult' : 'fillLineup'
 
-    // 협상 행을 못 읽거나(RLS가 요청 당사자만 허용, 0040) 읽더라도 당사자가 아닌 관점 복사본.
+    // 협상 행을 못 읽거나(조회 경로가 부착하지 않은 경우) 읽더라도 당사자가 아닌 관점 복사본.
     // 복식 파트너·상대2는 제안·확인·이의 3종 RPC가 전부 requester/opponent만 통과시키므로 대표를 기다린다.
-    // 0052로 열람을 넓혀도 viewerIsParty가 false로 남아 이 분기가 유지된다(전방 호환).
+    // 0052가 열람을 넓혔어도 viewerIsParty가 false로 남아 이 분기가 그대로 유지된다.
     const c = m.confirmation
     if (!c || !c.viewerIsParty) return 'awaitingCounterpart'
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildConfirmation, type ConfirmationSourceRow } from './confirmation'
+import { buildConfirmation, bystanderWaitingBadge, type ConfirmationSourceRow } from './confirmation'
 import { invertSetScores } from './perspective'
 
 const REQ: ConfirmationSourceRow = {
@@ -40,6 +40,29 @@ describe('buildConfirmation', () => {
         expect(c.status).toBe('disputed')
         expect(c.disputeReason).toBe('2세트는 6-3')
         expect(c.proposedSets).toEqual([])
+    })
+})
+
+describe('bystanderWaitingBadge', () => {
+    // 파트너(carol) 관점 — 0052로 협상은 읽지만 viewerIsParty는 false다
+    const forPartner = (row: Partial<ConfirmationSourceRow>) =>
+        bystanderWaitingBadge(buildConfirmation({ ...REQ, ...row }, 'carol'))
+
+    it('협상 행을 못 읽으면 종전 문구로 폴백한다', () => {
+        expect(bystanderWaitingBadge(undefined).label).toBe('대표 확인 대기')
+    })
+
+    it('제안 전/후/이의를 문구로 구분한다', () => {
+        expect(forPartner({ result_status: 'none', proposed_by: null }).label).toBe('결과 입력 대기')
+        expect(forPartner({ result_status: 'proposed' }).label).toBe('대표 확인 대기')
+
+        const disputed = forPartner({ result_status: 'disputed', dispute_reason: '2세트는 6-3' })
+        expect(disputed.label).toBe('이의 제기됨')
+        expect(disputed.title).toBe('2세트는 6-3')
+    })
+
+    it('confirmed인데 세트가 없는 불가능 조합은 폴백한다', () => {
+        expect(forPartner({ result_status: 'confirmed' }).label).toBe('대표 확인 대기')
     })
 })
 

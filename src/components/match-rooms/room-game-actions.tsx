@@ -10,6 +10,7 @@ import {
 import { updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildRoomGameLabels } from '@/lib/match-rooms/game-labels'
 import { canEditRoomGame, isRoomGameParty } from '@/lib/match-rooms/game-status'
+import { bystanderWaitingBadge } from '@/lib/personal-matches/confirmation'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
@@ -18,7 +19,10 @@ import { useResultDialog } from '@/components/personal-matches/use-result-dialog
 type Props = {
     game: MatchRoomGame
     viewerId: string
-    /** 협상 행 — **있으면 곧 결과 입력·확인 자격이 있다는 뜻**(RLS가 요청 당사자에게만 내려준다) */
+    /**
+     * 협상 행 — 0052 이후 복식 파트너·상대2도 **읽기만** 하므로 존재 자체는 자격이 아니다.
+     * 결과 입력·확인 자격의 판정은 `viewerIsParty`(요청자 또는 상대 대표)다.
+     */
     confirmation?: PersonalMatchConfirmation
 }
 
@@ -69,13 +73,12 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
     }
 
     const requestId = game.sourceRequestId
-    // 협상을 읽을 수 없는 참가자(복식 파트너·상대2) — 대표가 확인해야 확정된다
+    // 액션 자격이 없는 참가자(복식 파트너·상대2) — 대표가 확인해야 확정된다.
+    // 협상 행은 0052로 읽히므로 배지 문구만 실제 상태로 승격한다.
     if (!c || !requestId || !c.viewerIsParty) {
-        return isRoomGameParty(game, viewerId) ? (
-            <span className={WAITING_BADGE} title="이 경기의 결과는 작성자와 상대 대표가 확인하면 확정됩니다">
-                대표 확인 대기
-            </span>
-        ) : null
+        if (!isRoomGameParty(game, viewerId)) return null
+        const badge = bystanderWaitingBadge(c)
+        return <span className={WAITING_BADGE} title={badge.title}>{badge.label}</span>
     }
 
     const reviewMode = c.status === 'proposed' && !c.proposedByMe

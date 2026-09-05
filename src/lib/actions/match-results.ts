@@ -50,7 +50,7 @@ function revalidateResultPaths(roomId?: string | null) {
 
 /**
  * 이 요청이 매칭 룸에 속하는지 — 무효화 경로를 알기 위한 조회.
- * match_requests SELECT는 당사자에게만 열려 있어(0040) 남의 방을 들여다볼 수 없다.
+ * match_requests SELECT는 이 경기의 참가자에게만 열려 있어(0040·0052) 남의 방을 들여다볼 수 없다.
  */
 async function resolveRequestRoomId(
     supabase: SupabaseClient<Database>,

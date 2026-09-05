@@ -23,8 +23,8 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
 
 /**
  * 상호 확인 경기의 결과 제안/확인 상태(confirmation)를 개인 경기 목록에 부착한다.
- * source_request_id를 모아 match_requests를 1회 in() 조회한다 (당사자 SELECT 정책으로 자연 필터 —
- * 복식 파트너·상대2의 관점 행은 행 자체가 안 와서 confirmation이 undefined로 남는다).
+ * source_request_id를 모아 match_requests를 1회 in() 조회한다 (SELECT 정책으로 자연 필터 — 0052부터
+ * 복식 파트너·상대2도 자기 경기의 협상을 읽지만 confirmation.viewerIsParty가 false로 남아 액션은 없다).
  * 개인 경기 결과 화면(확정)·확인 요청 허브(미확정)·매칭 룸 상세가 공용한다.
  */
 export async function attachConfirmations(matches: PersonalMatch[], userId: string): Promise<PersonalMatch[]> {

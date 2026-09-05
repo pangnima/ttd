@@ -1146,6 +1146,10 @@ export type Database = {
       }
       resolve_rotation_player: { Args: { p_player: Json }; Returns: Json }
       swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
+      is_request_party: {
+        Args: { p_request_id: string }
+        Returns: boolean
+      }
       is_room_participant: {
         Args: { p_room_id: string }
         Returns: boolean
