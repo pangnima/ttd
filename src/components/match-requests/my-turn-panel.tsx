@@ -28,7 +28,9 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
     const entered = new Set(enteredSessionIds)
     const byBucket = (bucket: MatchQueueBucket) => pendingMatches.filter((p) => p.bucket === bucket)
 
-    if (myTurnTotal(counts) === 0) {
+    // 이미 게임을 넣은 방 세션은 뱃지에서 빠지지만(enteredSessionIds) 카드는 계속 노출한다 —
+    // 참가자가 나중에 게임을 더 넣을 수 있으므로 빈 상태로 덮어 감추면 안 된다
+    if (myTurnTotal(counts) === 0 && rotationSessions.length === 0) {
         return (
             <div className={EMPTY_BLOCK}>
                 확인할 경기가 없습니다.{' '}
