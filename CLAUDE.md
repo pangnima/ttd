@@ -283,7 +283,7 @@ src/
   - [x] 카테고리 팔레트 `--cat-1~8` 신설 — 경기 타입·코트 표면·손잡이·듀스/애드·아바타·메달을 승패 시맨틱에서 분리(`surface.ts`·`match-type-style.ts`·`avatar-color.ts`·`rank-badge`). Tailwind 팔레트 하드코딩 72건 → 0건, `dark:` 색상 분기 소멸
   - [x] `colors.test.ts` 회귀 가드 — 금지 클래스·임의값·hex 리터럴 0건 + 라이트/다크 대비율 단언 + `og/brand.ts`·`layout.tsx themeColor` 미러 드리프트 검출. `public/logo.svg`·`empty/*.svg` 브랜드 색 동기화
   - [ ] 2차: 티어 8계급 색상(`lib/rating/tier.ts`·`public/tiers/*.svg`) 리마스터 — 챌린저 `red-600`이 새 destructive 코랄과 인접
-- [x] Week 27: 경기 기록 도메인 플로우 재정립 — 미확정은 확인 요청, 확정은 개인 결과, 입력은 룸 안에서 (`docs/match-flow-refactor.md`, 0051 마이그레이션)
+- [x] Week 27: 경기 기록 도메인 플로우 재정립 — 미확정은 확인 요청, 확정은 개인 결과, 입력은 룸 안에서 (`docs/match-flow-refactor.md`, 0051~0052 마이그레이션)
   - [x] 집합 분할: `personal_matches.has_result`(0051 생성 컬럼 + 부분 인덱스 2종) 하나로 개인 경기 결과(확정)/확인 요청 허브(미확정)를 나눈다 — `fetchSettledPersonalMatches`/`fetchPendingPersonalMatches` + `attachConfirmations` 추출
   - [x] 순수 분류기 `lib/match-requests/queue.ts`(4버킷 + `myTurnTotal`, vitest 18) + `fetchMatchQueue`(React `cache()`) — 허브 본문·개인 결과 배너·사이드바 뱃지가 **한 소스**를 본다(구 SQL 합산 `fetchPendingReceivedCount` 폐기)
   - [x] 확인 요청 허브 실 연동(픽스처 제거) — 「내 차례」(참여 확인·결과 확인 대기·결과 입력 대기·참가자 채우기) / 「상대 대기」(`?tab=waiting`: 내 제안·상대 수락·대표 확인·종료 이력) 2탭 8섹션. 카드·액션은 기존 컴포넌트 재사용(`PersonalMatchCard`·`MutualResultActions`·`RotationSessionCard`)
@@ -294,6 +294,11 @@ src/
   - [x] 라벨 재정립: 경기 리스트→**매칭 리스트**, 경기 방→**매칭 룸**, 개인 경기 기록→**개인 경기 결과**. 사이드바를 생애 순서로 재배열(매칭 리스트 → 확인 요청 → 개인 결과). `'방장'`은 정렬·색 판정 키라 유지
   - [x] 부수 수정: 룸 게임 폼 `metaOk` 영구 차단(표면·시각이 빈 방), `room-password-gate` 안내 문구 0049 반영, 방 참가자 후보 N+1 제거(배치 조회)
   - [x] 마이그레이션 0052 — 참가자 SELECT 확장(`is_request_party` 헬퍼로 SELECT 정책 3종 교체). 복식 파트너·상대2가 자기 경기의 협상 상태를 **읽기만** 하게 되면서 대기 배지가 결과 입력 대기/대표 확인 대기/이의 제기됨으로 갈린다(`bystanderWaitingBadge` 단일 출처). 부수로 `MutualResultActions`의 자격 가드를 `!confirmation` → `!viewerIsParty`로 교정 — 안 고치면 파트너에게 누를 수 없는 [결과 확인] 버튼이 노출된다
+  - [x] 엔드투엔드 수동 검증 — 계정 4개(관리자 + 테스트 3)로 문서의 시나리오 8종 전량. 확인 요청 생성→수락→제안→**이의→재제안**→확인, 방 게임 복식(파트너 관점 배지가 협상 상태에 따라 갈리는지), 로테이션 방 다중 입력(`group_seq` 이어붙기·게임별 대표 분리·방장 게임 입력 종료), 매칭 리스트 3탭 이동·`?tab=` 폴백, 뱃지=탭=배너 3자 일치, 확정 시 허브→개인 결과 이동. 검증 데이터·계정은 사후 삭제
+  - [x] 검증에서 찾은 표시 결함 3건 수정 — 모두 순수 함수로 분리 + vitest 고정
+    - 룸 게임 행이 `'나'`를 **작성자가 아닌 모든 뷰어**에게 써서, 정원 없는 방(0048)의 무관한 참가자에게 남의 게임이 자기 게임처럼 보였다 → `buildRoomGameLine`이 `isRoomGameParty`로 당사자에게만
+    - 팀 라인은 뷰어 관점으로 뒤집으면서 **스코어는 대표 행 값 그대로**라 진 사람이 WIN 배지를 봤다 → `buildRoomGameSets`가 상대팀 뷰어에게 `invertSetScores`(같은 팀 파트너는 me/opp가 같아 반전 없음)
+    - 방 게임 안내가 비회원이 섞여도 '회원 네 명 모두'라고 말했다 → `ConfirmFlowNotice`가 `memberCount`(= `hideNtrpFor` + 나)로 실제 회원 수를 말한다
   - [ ] 2차: 매칭 리스트 서버 필터·커서 페이지네이션 · 룸 '참가자 채우기'를 `RoomGameDialog initialData`로 전환
 
 - [ ] 배포
