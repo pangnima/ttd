@@ -93,6 +93,8 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         opponentName={s.rep.opponent.slot.player.name.trim() || '상대'}
                         isDoubles={s.isDoubles}
                         isRoomGame={!!s.roomId}
+                        // hideNtrpFor = 회원으로 연결된 슬롯 목록(확인 플로우) — 나를 더하면 관점 행이 생길 인원이다
+                        memberCount={1 + s.hideNtrpFor.length}
                     />
                 )}
             </FormSectionCard>
