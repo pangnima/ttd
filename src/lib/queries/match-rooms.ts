@@ -233,7 +233,7 @@ export async function fetchRoomGameConfirmations(
 type ParticipantRow = {
     users: {
         id: string; name: string; nickname: string; ntrp: number | null; personal_ntrp: number | null
-        dominant_hand: string | null; is_guest: boolean; deleted_at: string | null
+        stats_hidden: boolean | null; dominant_hand: string | null; is_guest: boolean; deleted_at: string | null
     } | null
 }
 
@@ -245,7 +245,7 @@ export async function fetchRoomParticipantCandidates(roomId: string, excludeUser
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
-        .select('users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, dominant_hand, is_guest, deleted_at)')
+        .select('users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, stats_hidden, dominant_hand, is_guest, deleted_at)')
         .eq('room_id', roomId)
         .eq('status', 'joined')
         .neq('user_id', excludeUserId)
@@ -264,6 +264,7 @@ function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): Oppone
         nickname: u.nickname || undefined,
         ntrp: u.ntrp ?? undefined,
         personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+        statsHidden: u.stats_hidden ?? false,
         dominantHand: toDominantHand(u.dominant_hand),
         isGuest: u.is_guest ?? false,
         clubNames: [],
@@ -281,7 +282,7 @@ export async function fetchRoomParticipantCandidatesByRooms(
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
-        .select('room_id, users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, dominant_hand, is_guest, deleted_at)')
+        .select('room_id, users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, stats_hidden, dominant_hand, is_guest, deleted_at)')
         .in('room_id', roomIds)
         .eq('status', 'joined')
         .neq('user_id', excludeUserId)

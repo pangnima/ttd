@@ -1,5 +1,6 @@
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
+import { derivePublicNtrp } from './ntrp'
 
 /**
  * 상대 자동완성 후보 (순수 모듈 — DB 접근 없음).
@@ -17,7 +18,7 @@ export type PlayerSuggestion = {
     source: PlayerSuggestionSource
     userId?: string
     hand?: 'right' | 'left'
-    ntrp?: number   // 회원: personalNtrp ?? ntrp / 만나본 사람: 마지막 입력 NTRP
+    ntrp?: number   // 회원: derivePublicNtrp(프로필 파생) / 만나본 사람: 마지막 입력 NTRP
     isGuest: boolean
     meta?: string   // 클럽명(클럽 회원) / 닉네임(방 참가자·전체 회원)
 }
@@ -55,7 +56,8 @@ function fromCandidate(c: OpponentCandidate, source: 'room' | 'club' | 'search')
         source,
         userId: c.id,
         hand: c.dominantHand,
-        ntrp: c.personalNtrp ?? c.ntrp,
+        // 회원 NTRP는 서버가 프로필에서 파생하는 값 — 같은 규칙(derive_public_ntrp)으로 프리필해 화면과 저장값을 맞춘다
+        ntrp: derivePublicNtrp(c),
         isGuest: c.isGuest,
         meta: source === 'club' ? c.clubNames[0] : c.nickname,
     }

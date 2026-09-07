@@ -2,7 +2,7 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
-import type { NtrpField } from '@/lib/personal-matches/validate-input'
+import { isNtrpLocked } from '@/lib/personal-matches/ntrp'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 
@@ -25,19 +25,18 @@ type PlayersSectionProps = {
     opponent2: PlayerFieldState
     // 로그인 유저 id — 전달 시 모든 선수 필드에 플랫폼 전체 회원 검색 활성화 (상호 확인 요청 대상 지정)
     searchSelfUserId?: string
-    // 상호 확인 플로우 — 회원 참가자의 NTRP는 수락 시 서버 파생이므로 해당 필드 입력란 숨김
-    hideNtrpFor?: NtrpField[]
 }
 
 /**
  * 경기 타입(단식/복식)에 따라 선수 입력란을 분기 렌더링 — 모든 슬롯이 항상 보이고 NTRP까지 필수.
  * 단식은 상대 1명, 복식은 내 팀(파트너) + 상대팀(상대1·상대2) 박스로 구성한다.
+ * 회원 슬롯의 NTRP는 프로필 파생값이라 읽기 전용으로 보여준다(isNtrpLocked).
  * (모집형은 RecruitingPlayersSection이 열린 슬롯만 그린다)
  */
 export function PlayersSection({
-    isDoubles, candidates, pastOpponents, roomParticipants, opponent, partner, opponent2, searchSelfUserId, hideNtrpFor = [],
+    isDoubles, candidates, pastOpponents, roomParticipants, opponent, partner, opponent2, searchSelfUserId,
 }: PlayersSectionProps) {
-    const field = (label: string, s: PlayerFieldState, key: NtrpField, placeholder: string) => (
+    const field = (label: string, s: PlayerFieldState, placeholder: string) => (
         <PlayerNtrpField
             label={`${label} *`}
             candidates={candidates}
@@ -50,12 +49,12 @@ export function PlayersSection({
             ntrpRequired
             placeholder={placeholder}
             searchSelfUserId={searchSelfUserId}
-            hideNtrp={hideNtrpFor.includes(key)}
+            ntrpLocked={isNtrpLocked(s.player, s.ntrp, candidates)}
         />
     )
 
     if (!isDoubles) {
-        return field('상대', opponent, 'opponent', '상대방 이름 또는 닉네임')
+        return field('상대', opponent, '상대방 이름 또는 닉네임')
     }
     return (
         <div>
@@ -65,7 +64,7 @@ export function PlayersSection({
                     <span className="text-caption font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary">내 팀</span>
                     <span className="text-caption text-muted-foreground">나 + 파트너</span>
                 </div>
-                {field('내 파트너', partner, 'partner', '파트너 이름 또는 닉네임')}
+                {field('내 파트너', partner, '파트너 이름 또는 닉네임')}
             </div>
 
             {/* 상대팀 (상대1 + 상대2) */}
@@ -76,10 +75,10 @@ export function PlayersSection({
                         상대1 + 상대2 · 참가자를 모두 채우면 상대팀 회원이 대표로 확인합니다
                     </span>
                 </div>
-                {field('상대팀 선수 1', opponent, 'opponent', '상대방 이름 또는 닉네임')}
+                {field('상대팀 선수 1', opponent, '상대방 이름 또는 닉네임')}
             </div>
             <div className="mt-6 border-t border-border pt-6">
-                {field('상대팀 선수 2', opponent2, 'opponent2', '상대방 이름 또는 닉네임')}
+                {field('상대팀 선수 2', opponent2, '상대방 이름 또는 닉네임')}
             </div>
         </div>
     )

@@ -76,7 +76,6 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         onOpenSlot={s.openSlot}
                         onCloseSlot={s.closeSlot}
                         searchSelfUserId={searchSelfUserId}
-                        hideNtrpFor={s.hideNtrpFor}
                     />
                 ) : (
                     <PlayersSection
@@ -88,7 +87,6 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         partner={slots.partner}
                         opponent2={slots.opponent2}
                         searchSelfUserId={searchSelfUserId}
-                        hideNtrpFor={s.hideNtrpFor}
                     />
                 )}
                 {s.rep && (

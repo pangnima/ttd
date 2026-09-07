@@ -123,7 +123,8 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         )
         : null
     const isConfirmFlow = !!rep
-    // 확인 플로우에서 회원 참가자의 NTRP는 수락 시 서버가 파생하므로 입력란을 숨긴다
+    // 확인 플로우에서 회원 참가자의 NTRP는 수락 시 서버가 파생하므로 폼 검증을 면제한다
+    // (서버 actions/match-requests.ts의 skipNtrpFor와 짝을 이루는 규칙 — 화면 잠금은 isNtrpLocked가 따로 판정한다)
     const hideNtrpFor: NtrpField[] = isConfirmFlow
         ? SLOT_KEYS.filter((k) => isPlatformMember(slots[k].player, opponentCandidates))
         : []

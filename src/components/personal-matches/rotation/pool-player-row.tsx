@@ -2,6 +2,7 @@
 
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
+import { isNtrpLocked } from '@/lib/personal-matches/ntrp'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
 import { cn } from '@/lib/utils'
@@ -44,6 +45,7 @@ export function PoolPlayerRow({ index, value, candidates, pastOpponents, onChang
                 ntrpRequired
                 placeholder="이름 또는 닉네임"
                 searchSelfUserId={searchSelfUserId}
+                ntrpLocked={isNtrpLocked(value.player, value.ntrp, candidates)}
             />
         </div>
     )

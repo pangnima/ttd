@@ -61,6 +61,7 @@ export type OpponentCandidate = {
     nickname?: string      // 전체 회원 검색 결과에서만 채움 (닉네임 매칭 표시·필터용)
     ntrp?: number          // 정적 자가선언 NTRP (fallback)
     personalNtrp?: number  // 동적 개인 NTRP(개인경기 기반 캐시). 있으면 프리필 우선
+    statsHidden?: boolean  // 통계 비공개 — 개인 NTRP를 감추고 자가선언 값만 쓴다 (derivePublicNtrp)
     dominantHand?: 'right' | 'left'  // 프로필 손잡이 — 선택 시 손잡이 자동 채움
     isGuest: boolean
     clubNames: string[]
@@ -77,7 +78,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('club_members')
-        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, personal_ntrp, dominant_hand, is_guest)')
+        .select('club_id, clubs(name), users!club_members_user_id_fkey(id, name, ntrp, personal_ntrp, stats_hidden, dominant_hand, is_guest)')
         .eq('status', 'approved')
         .neq('user_id', userId)
 
@@ -87,7 +88,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
     for (const row of data) {
         const u = row.users as {
             id: string; name: string; ntrp: number | null; personal_ntrp: number | null
-            dominant_hand: string | null; is_guest: boolean
+            stats_hidden: boolean | null; dominant_hand: string | null; is_guest: boolean
         } | null
         const club = row.clubs as { name: string } | null
         if (!u) continue
@@ -100,6 +101,7 @@ export async function fetchOpponentCandidates(userId: string): Promise<OpponentC
                 name: u.name,
                 ntrp: u.ntrp ?? undefined,
                 personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
+                statsHidden: u.stats_hidden ?? false,
                 dominantHand: toDominantHand(u.dominant_hand),
                 isGuest: u.is_guest ?? false,
                 clubNames: club ? [club.name] : [],

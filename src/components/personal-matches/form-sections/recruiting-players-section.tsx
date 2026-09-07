@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { NtrpField } from '@/lib/personal-matches/validate-input'
+import { isNtrpLocked } from '@/lib/personal-matches/ntrp'
 import { cn } from '@/lib/utils'
 import { PlayerNtrpField } from '@/components/personal-matches/player-ntrp-field'
 import type { PlayerFieldState } from '@/components/personal-matches/form-sections/players-section'
@@ -20,7 +21,6 @@ type Props = {
     onOpenSlot: (key: NtrpField) => void
     onCloseSlot: (key: NtrpField) => void
     searchSelfUserId?: string
-    hideNtrpFor?: NtrpField[]
 }
 
 const PLACEHOLDER: Record<NtrpField, string> = {
@@ -41,7 +41,7 @@ function slotLabel(key: NtrpField, isDoubles: boolean): string {
  * 복식은 어느 자리(내 파트너/상대 1/상대 2)를 열지 메뉴에서 고른다.
  */
 export function RecruitingPlayersSection({
-    isDoubles, candidates, pastOpponents, roomParticipants, slots, openSlots, onOpenSlot, onCloseSlot, searchSelfUserId, hideNtrpFor = [],
+    isDoubles, candidates, pastOpponents, roomParticipants, slots, openSlots, onOpenSlot, onCloseSlot, searchSelfUserId,
 }: Props) {
     const order: NtrpField[] = isDoubles ? ['partner', 'opponent', 'opponent2'] : ['opponent']
     const open = order.filter((k) => openSlots.includes(k))
@@ -73,7 +73,7 @@ export function RecruitingPlayersSection({
                             ntrpRequired
                             placeholder={PLACEHOLDER[key]}
                             searchSelfUserId={searchSelfUserId}
-                            hideNtrp={hideNtrpFor.includes(key)}
+                            ntrpLocked={isNtrpLocked(slots[key].player, slots[key].ntrp, candidates)}
                         />
                     </div>
                 ))}
