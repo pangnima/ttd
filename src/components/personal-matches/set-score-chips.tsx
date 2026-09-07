@@ -1,5 +1,5 @@
 import type { PersonalMatchSetScore } from '@/types'
-import { PENDING_RESULT_BADGE, PENDING_RESULT_LABEL, formatRecord } from '@/lib/dashboard/outcome'
+import { PENDING_RESULT_BADGE, PENDING_RESULT_LABEL, formatGameSummary } from '@/lib/dashboard/outcome'
 import { resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
 
 type Props = {
@@ -15,12 +15,15 @@ export const RESULT_BADGE = {
     pending: { label: PENDING_RESULT_LABEL, className: PENDING_RESULT_BADGE },
 } as const
 
-// 세트 1개 = 게임 1개. 게임 1개면 WIN/LOSS/무, 2개 이상이면 'N승 M패' 전적(다수결 승패는 쓰지 않는다).
+// 세트 1개 = 게임 1개. 게임 1개면 WIN/LOSS/무, 2개 이상이면 'N게임 · N승 M패'(다수결 승패는 쓰지 않는다).
 function resultBadge(valid: PersonalMatchSetScore[]): { label: string; className: string } {
     if (valid.length === 0) return RESULT_BADGE.pending
     if (valid.length === 1) return RESULT_BADGE[resolveSetWinner(valid[0])]
     const t = tallySets(valid)
-    return { label: formatRecord(t.wins, t.losses, t.draws), className: 'bg-muted text-muted-foreground' }
+    return {
+        label: formatGameSummary(valid.length, t.wins, t.losses, t.draws),
+        className: 'bg-muted text-muted-foreground',
+    }
 }
 
 /** 내 관점 게임(세트) 스코어 칩 + 결과 배지 — 확인 요청 요약·결과 검토/제안 패널이 공유 */

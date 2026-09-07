@@ -1,5 +1,5 @@
 import type { MatchGroup } from '@/lib/personal-matches/match-groups'
-import { formatRecord } from '@/lib/dashboard/outcome'
+import { formatGameSummary } from '@/lib/dashboard/outcome'
 import { formatHourLabel } from '@/lib/format'
 
 type Props = { group: MatchGroup }
@@ -13,7 +13,6 @@ export function RotationGroupHeader({ group: g }: Props) {
     const [, mm, dd] = g.playedAt.split('-')
     const when = [`${mm}.${dd}`, g.playedTime && formatHourLabel(g.playedTime)].filter(Boolean).join(' ')
     const tail = ['로테이션', g.courtName].filter(Boolean).join(' · ')
-    const hasRecord = g.wins + g.losses + g.draws > 0
 
     return (
         <div className="bg-muted/30 px-3 py-2.5 space-y-0.5">
@@ -22,7 +21,7 @@ export function RotationGroupHeader({ group: g }: Props) {
                     {when} <span className="font-normal text-muted-foreground">· {tail}</span>
                 </p>
                 <span className="text-caption px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground shrink-0 tabular-nums">
-                    {g.gameCount}게임{hasRecord && ` · ${formatRecord(g.wins, g.losses, g.draws)}`}
+                    {formatGameSummary(g.gameCount, g.wins, g.losses, g.draws)}
                 </span>
             </div>
             {g.participantNames.length > 0 && (

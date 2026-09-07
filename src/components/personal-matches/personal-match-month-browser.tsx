@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import {
     Select,
@@ -60,9 +59,7 @@ export function PersonalMatchMonthBrowser({ groups }: Props) {
             </div>
 
             <div className="max-h-[600px] overflow-y-auto pr-1">
-                <div className={`${CARD_BASE} divide-y divide-border/60`}>
-                    <MatchGroupList groups={selected.groups} />
-                </div>
+                <MatchGroupList groups={selected.groups} />
             </div>
         </div>
     )

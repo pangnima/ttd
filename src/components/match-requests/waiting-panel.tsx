@@ -5,6 +5,7 @@ import { QueueSection } from '@/components/match-requests/queue-section'
 import { PendingMatchActions } from '@/components/match-requests/pending-match-actions'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
+import { AwaitingMemberRequestCard } from '@/components/match-requests/awaiting-member-request-card'
 
 type Props = {
     queue: MatchQueue
@@ -21,7 +22,10 @@ export function WaitingPanel({ queue, viewerId }: Props) {
     const [myProposals, repWaiting] = partition(waiting, (p) => !!p.match.confirmation?.proposedByMe)
     const closed = queue.closedRequests
 
-    if (waiting.length === 0 && queue.sentRequests.length === 0 && closed.length === 0) {
+    const awaitingMembers = queue.awaitingMemberRequests
+
+    if (waiting.length === 0 && queue.sentRequests.length === 0
+        && awaitingMembers.length === 0 && closed.length === 0) {
         return <div className={EMPTY_BLOCK}>상대를 기다리는 경기가 없습니다.</div>
     }
 
@@ -40,6 +44,16 @@ export function WaitingPanel({ queue, viewerId }: Props) {
             <QueueSection title="상대 수락 대기" hint="상대가 수락해야 기록이 만들어집니다" count={queue.sentRequests.length}>
                 {queue.sentRequests.map((item) => (
                     <SentRequestCard key={item.request.id} item={item} />
+                ))}
+            </QueueSection>
+
+            <QueueSection
+                title="참가자 수락 대기"
+                hint="내 수락은 끝났습니다 — 남은 회원이 수락하면 기록이 만들어집니다"
+                count={awaitingMembers.length}
+            >
+                {awaitingMembers.map((item) => (
+                    <AwaitingMemberRequestCard key={item.request.id} item={item} />
                 ))}
             </QueueSection>
 

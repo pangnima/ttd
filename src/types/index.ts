@@ -321,6 +321,21 @@ export type MatchRequestStatus = 'pending' | 'accepted' | 'rejected' | 'canceled
 // 수락 후 결과(세트) 제안/확인 상태 — none → proposed → confirmed | disputed(→ 재제안)
 export type MatchResultStatus = 'none' | 'proposed' | 'confirmed' | 'disputed'
 
+// 확인 요청의 좌석 — 요청자·대표·파트너·상대2. 단식은 2석, 복식은 4석
+export type RequestSeatRole = 'requester' | 'opponent' | 'partner' | 'opponent2'
+export type RequestAcceptance = 'accepted' | 'pending' | 'rejected'
+
+/**
+ * 좌석 1개. 회원(userId 있음)만 수락 대상이고, 비회원은 항상 'accepted'로 채운다.
+ * 방 밖 요청은 회원 좌석이 전부 accepted가 되어야 기록이 생긴다(0056).
+ */
+export type MatchRequestSeat = {
+    role: RequestSeatRole
+    userId?: string
+    name: string
+    acceptance: RequestAcceptance
+}
+
 export type MatchRequest = {
     id: string
     requesterId: string
@@ -351,4 +366,9 @@ export type MatchRequest = {
     proposedBy?: string
     proposedAt?: string
     disputeReason?: string
+    // ── 참여 수락 (0056): 방 밖 요청은 회원 좌석 전원이 수락해야 기록이 생긴다 ──
+    seats: MatchRequestSeat[]
+    viewerRole?: RequestSeatRole   // 조회된 요청이면 내가 앉은 자리. 없으면 무관한 요청(방어적)
+    rotationSessionId?: string     // 로테이션 파생 요청의 세션 키 — 세션 단위 일괄 수락·목록 묶음
+    groupSeq?: number
 }

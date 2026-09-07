@@ -3,7 +3,8 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
 import type {
-    CourtSurface, MatchRequest, MatchRequestStatus, MatchResultStatus, MatchType, PersonalMatchSetScore,
+    CourtSurface, MatchRequest, MatchRequestSeat, MatchRequestStatus, MatchResultStatus,
+    MatchType, PersonalMatchSetScore,
 } from '@/types'
 
 type MatchRequestRow = Database['public']['Tables']['match_requests']['Row']
@@ -12,6 +13,8 @@ type RequestParticipantRow = Database['public']['Tables']['match_request_partici
 type MatchRequestRowWithJoins = MatchRequestRow & {
     negotiation: NegotiationRow | null
     participants: RequestParticipantRow[]
+    requester: CounterpartRow
+    opponent: CounterpartRow
 }
 
 // 요청 카드에 표시할 상대측(요청자 또는 수신자) 프로필 요약
@@ -28,11 +31,45 @@ export type MatchRequestWithUser = {
     counterpart: MatchRequestCounterpart  // 받은 요청이면 요청자, 보낸 요청이면 상대
 }
 
-function mapMatchRequestRow(row: MatchRequestRowWithJoins): MatchRequest {
+/**
+ * 요청 행 + 참가자 행 → 좌석 배열(0056). 요청자·대표는 참가자 테이블에 행이 없으므로
+ * requester_id / opponent_user_id + opponent_accepted_at에서 만든다.
+ * 요청자는 만든 사람이라 동의가 자명하고, 비회원 좌석은 수락 대상이 아니다.
+ */
+function buildSeats(row: MatchRequestRowWithJoins): MatchRequestSeat[] {
+    const seats: MatchRequestSeat[] = [
+        { role: 'requester', userId: row.requester_id, name: row.requester?.name ?? '', acceptance: 'accepted' },
+        {
+            role: 'opponent',
+            userId: row.opponent_user_id,
+            name: row.opponent?.name ?? '',
+            acceptance: row.status === 'rejected' ? 'rejected'
+                : row.opponent_accepted_at || row.status === 'accepted' ? 'accepted' : 'pending',
+        },
+    ]
+    for (const role of ['partner', 'opponent2'] as const) {
+        const p = row.participants?.find((x) => x.role === role)
+        if (!p) continue
+        seats.push({
+            role,
+            userId: p.user_id ?? undefined,
+            name: p.name,
+            acceptance: (p.participation_status as MatchRequestSeat['acceptance']) ?? 'accepted',
+        })
+    }
+    return seats
+}
+
+function mapMatchRequestRow(row: MatchRequestRowWithJoins, viewerId: string): MatchRequest {
     const neg = row.negotiation
     const partner = row.participants?.find((p) => p.role === 'partner')
     const opponent2 = row.participants?.find((p) => p.role === 'opponent2')
+    const seats = buildSeats(row)
     return {
+        seats,
+        viewerRole: seats.find((s) => s.userId === viewerId)?.role,
+        rotationSessionId: row.rotation_session_id ?? undefined,
+        groupSeq: row.group_seq ?? undefined,
         id: row.id,
         requesterId: row.requester_id,
         opponentUserId: row.opponent_user_id,
@@ -100,14 +137,43 @@ const REQUEST_JOINS = 'negotiation:match_result_negotiations(*), participants:ma
  */
 export async function fetchMyMatchRequests(userId: string): Promise<MatchRequestWithUser[]> {
     const supabase = await createClient()
+    const seatedIds = await fetchSeatedRequestIds(userId, supabase)
+    const filters = [`requester_id.eq.${userId}`, `opponent_user_id.eq.${userId}`]
+    // 빈 배열이면 `id.in.()`가 422를 내고 목록 전체가 빈 배열로 폴백된다 — 조건부로만 붙인다
+    if (seatedIds.length > 0) filters.push(`id.in.(${seatedIds.join(',')})`)
+
     const { data, error } = await supabase
         .from('match_requests')
         .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
-        .or(`requester_id.eq.${userId},opponent_user_id.eq.${userId}`)
+        // accepted는 personal_matches 행(B축)이 대신 표현한다. 방 로테이션이 게임마다 accepted 요청을
+        // 1행씩 남기므로(0050) 필터가 없으면 순수 잡음을 수십~수백 행 읽는다.
+        .neq('status', 'accepted')
+        .or(filters.join(','))
         .order('created_at', { ascending: false })
     if (error || !data) return []
     return data.map((row) => ({
-        request: mapMatchRequestRow(row),
+        request: mapMatchRequestRow(row, userId),
         counterpart: mapCounterpart(row.requester_id === userId ? row.opponent : row.requester),
     }))
+}
+
+// uuid 36자 × N이 URL 길이 상한에 닿는다 — 넘치면 최신순으로 자른다
+const SEATED_REQUEST_LIMIT = 200
+
+/**
+ * 내가 파트너·상대2 좌석에 앉은 요청 id(0056). RLS(0052 is_request_party)는 이미 열려 있고,
+ * 좁히던 것은 애플리케이션 필터였다. 임베드 필터(`!inner` + eq)를 쓰면 참가자 배열 자체가
+ * 걸러져 나머지 좌석이 사라지므로, id만 먼저 뽑아 본 쿼리의 or에 얹는다.
+ */
+async function fetchSeatedRequestIds(
+    userId: string, supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string[]> {
+    const { data, error } = await supabase
+        .from('match_request_participants')
+        .select('request_id, request:match_requests!inner(status)')
+        .eq('user_id', userId)
+        .neq('request.status', 'accepted')
+        .limit(SEATED_REQUEST_LIMIT)
+    if (error || !data) return []
+    return [...new Set(data.map((r) => r.request_id))]
 }

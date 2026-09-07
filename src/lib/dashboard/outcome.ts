@@ -47,3 +47,14 @@ export const PENDING_RESULT_BAR = 'bg-border'
 export function formatRecord(wins: number, losses: number, draws = 0): string {
     return `${wins}승 ${losses}패${draws > 0 ? ` ${draws}무` : ''}`
 }
+
+/**
+ * 게임 묶음 요약: "3게임 · 1승 2패". 전적이 0건(전부 미확정)이면 "3게임"만.
+ * 로테이션 그룹 헤더·멀티 게임 카드 배지·요청 요약 칩이 공유하는 단일 문구 규칙 —
+ * 세트 1개 = 게임 1개이므로 "몇 게임이 집계됐는지"를 화면이 직접 말해야 한다.
+ * 게임 1개에는 쓰지 않는다 (WIN/LOSS 배지가 더 강한 정보다).
+ */
+export function formatGameSummary(gameCount: number, wins: number, losses: number, draws = 0): string {
+    const record = wins + losses + draws > 0 ? ` · ${formatRecord(wins, losses, draws)}` : ''
+    return `${gameCount}게임${record}`
+}

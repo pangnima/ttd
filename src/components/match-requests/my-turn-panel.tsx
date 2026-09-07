@@ -3,6 +3,7 @@ import type { MatchQueue } from '@/lib/queries/match-queue'
 import type { RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
 import { myTurnTotal, type MatchQueueBucket } from '@/lib/match-requests/queue'
+import { groupRotationRequests } from '@/lib/match-requests/participants'
 import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { PersonalMatchCard } from '@/components/personal-matches/personal-match-card'
 import { RotationSessionCard } from '@/components/personal-matches/rotation-session-card'
@@ -10,6 +11,7 @@ import { QueueSection } from '@/components/match-requests/queue-section'
 import { PendingMatchActions } from '@/components/match-requests/pending-match-actions'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { RoomInviteCard } from '@/components/match-requests/room-invite-card'
+import { RotationRequestGroupCard } from '@/components/match-requests/rotation-request-group-card'
 
 type Props = {
     queue: MatchQueue
@@ -41,6 +43,8 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
         )
     }
 
+    // 로테이션 세션에서 파생된 요청은 세션 한 장으로 묶는다(0056) — 카드 수는 줄어도 건수는 요청 단위다
+    const received = groupRotationRequests(queue.receivedRequests)
     const confirmList = byBucket('confirmResult')
     const enterList = byBucket('enterResult')
     const fillList = byBucket('fillLineup')
@@ -50,9 +54,13 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
             <QueueSection
                 title="경기 참여 확인"
                 hint="수락하면 양쪽 기록에 함께 남습니다"
-                count={queue.receivedRequests.length + queue.roomInvites.length}
+                count={counts.participation}
             >
-                {queue.receivedRequests.map((item) => (
+                {/* 로테이션은 게임마다 요청이 생기지만 참여 동의의 단위는 세션이라 한 장으로 묶는다(0056) */}
+                {received.sessions.map(({ sessionId, items }) => (
+                    <RotationRequestGroupCard key={sessionId} sessionId={sessionId} items={items} />
+                ))}
+                {received.singles.map((item) => (
                     <ReceivedRequestCard key={item.request.id} item={item} />
                 ))}
                 {queue.roomInvites.map((invite) => (

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
 import type { MonthGroup } from '@/lib/personal-matches/grouping'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { formatRecord } from '@/lib/dashboard/outcome'
 import { MatchGroupList } from '@/components/personal-matches/match-group-list'
 
@@ -23,9 +22,7 @@ export function PersonalMatchMonthGroup({ group, renderActions }: Props) {
                 </div>
                 <span className="text-caption text-muted-foreground">승률 {group.winRate}%</span>
             </div>
-            <div className={`${CARD_BASE} divide-y divide-border/60`}>
-                <MatchGroupList groups={group.groups} renderActions={renderActions} />
-            </div>
+            <MatchGroupList groups={group.groups} renderActions={renderActions} />
         </section>
     )
 }

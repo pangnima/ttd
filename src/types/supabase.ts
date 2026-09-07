@@ -523,7 +523,9 @@ export type Database = {
           id: string
           name: string
           ntrp_snapshot: number | null
+          participation_status: string
           request_id: string
+          responded_at: string | null
           role: string
           user_id: string | null
         }
@@ -532,7 +534,9 @@ export type Database = {
           id?: string
           name: string
           ntrp_snapshot?: number | null
+          participation_status?: string
           request_id: string
+          responded_at?: string | null
           role: string
           user_id?: string | null
         }
@@ -541,7 +545,9 @@ export type Database = {
           id?: string
           name?: string
           ntrp_snapshot?: number | null
+          participation_status?: string
           request_id?: string
+          responded_at?: string | null
           role?: string
           user_id?: string | null
         }
@@ -567,6 +573,8 @@ export type Database = {
           court_name: string | null
           created_at: string
           id: string
+          group_seq: number | null
+          opponent_accepted_at: string | null
           match_type: string
           notes: string | null
           opponent_user_id: string
@@ -575,6 +583,7 @@ export type Database = {
           requester_id: string
           responded_at: string | null
           room_id: string | null
+          rotation_session_id: string | null
           set_scores: Json
           status: string
           surface: string
@@ -583,6 +592,8 @@ export type Database = {
           court_name?: string | null
           created_at?: string
           id?: string
+          group_seq?: number | null
+          opponent_accepted_at?: string | null
           match_type?: string
           notes?: string | null
           opponent_user_id: string
@@ -591,6 +602,7 @@ export type Database = {
           requester_id: string
           responded_at?: string | null
           room_id?: string | null
+          rotation_session_id?: string | null
           set_scores?: Json
           status?: string
           surface: string
@@ -599,6 +611,8 @@ export type Database = {
           court_name?: string | null
           created_at?: string
           id?: string
+          group_seq?: number | null
+          opponent_accepted_at?: string | null
           match_type?: string
           notes?: string | null
           opponent_user_id?: string
@@ -607,6 +621,7 @@ export type Database = {
           requester_id?: string
           responded_at?: string | null
           room_id?: string | null
+          rotation_session_id?: string | null
           set_scores?: Json
           status?: string
           surface?: string
@@ -1139,6 +1154,18 @@ export type Database = {
       leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
       reopen_match_result: {
         Args: { p_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      respond_request_participation: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: boolean
+      }
+      respond_rotation_participation: {
+        Args: { p_accept: boolean; p_rotation_session_id: string }
+        Returns: number
+      }
+      reject_match_request: {
+        Args: { p_request_id: string }
         Returns: undefined
       }
       materialize_accepted_request: {

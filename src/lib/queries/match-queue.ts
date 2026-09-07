@@ -10,6 +10,7 @@ import {
     EMPTY_QUEUE_COUNTS, classifyPendingMatch, tallyBuckets,
     type MatchQueueBucket, type MatchQueueCounts,
 } from '@/lib/match-requests/queue'
+import { classifyPendingRequest } from '@/lib/match-requests/participants'
 import type { MatchRoomInvite, PersonalMatch, RotationSession } from '@/types'
 
 /**
@@ -26,10 +27,12 @@ export type PendingMatchEntry = { match: PersonalMatch; bucket: MatchQueueBucket
 
 export type MatchQueue = {
     // ── A축 ──
-    /** 내가 수락/거절해야 할 요청 (status='pending', 내가 대표 확인자) */
+    /** 내가 수락/거절해야 할 요청 (status='pending', 내 좌석이 미응답) */
     receivedRequests: MatchRequestWithUser[]
     /** 상대 수락을 기다리는 내 요청 (status='pending', 내가 요청자) */
     sentRequests: MatchRequestWithUser[]
+    /** 내 응답은 끝났고 남은 회원의 수락을 기다리는 요청 (0056) — 참가자는 취소 권한이 없어 sent와 구분한다 */
+    awaitingMemberRequests: MatchRequestWithUser[]
     /** 종료된 요청 이력 (rejected|canceled, 양방향) */
     closedRequests: MatchRequestWithUser[]
     roomInvites: MatchRoomInvite[]
@@ -42,7 +45,7 @@ export type MatchQueue = {
 }
 
 const EMPTY_QUEUE: MatchQueue = {
-    receivedRequests: [], sentRequests: [], closedRequests: [], roomInvites: [],
+    receivedRequests: [], sentRequests: [], awaitingMemberRequests: [], closedRequests: [], roomInvites: [],
     pendingMatches: [], rotationSessions: [], enteredSessionIds: [], counts: EMPTY_QUEUE_COUNTS,
 }
 
@@ -69,12 +72,17 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
 
     const receivedRequests: MatchRequestWithUser[] = []
     const sentRequests: MatchRequestWithUser[] = []
+    const awaitingMemberRequests: MatchRequestWithUser[] = []
     const closedRequests: MatchRequestWithUser[] = []
     for (const item of requests) {
-        const { status, requesterId } = item.request
+        const { status } = item.request
         // accepted는 personal_matches 행(B축)이 대신 표현한다 — 같은 경기를 두 목록에 넣지 않기 위한 경계
-        if (status === 'pending') (requesterId === userId ? sentRequests : receivedRequests).push(item)
-        else if (status === 'rejected' || status === 'canceled') closedRequests.push(item)
+        if (status === 'pending') {
+            const lane = classifyPendingRequest(item.request)
+            if (lane === 'respond') receivedRequests.push(item)
+            else if (lane === 'mine') sentRequests.push(item)
+            else awaitingMemberRequests.push(item)
+        } else if (status === 'rejected' || status === 'canceled') closedRequests.push(item)
     }
 
     const entered = new Set(enteredSessionIds)
@@ -82,7 +90,7 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     const tallied = tallyBuckets(pendingMatches.map((p) => p.bucket))
 
     return {
-        receivedRequests, sentRequests, closedRequests,
+        receivedRequests, sentRequests, awaitingMemberRequests, closedRequests,
         roomInvites: memberships.invites,
         pendingMatches, rotationSessions, enteredSessionIds,
         counts: {
@@ -90,7 +98,7 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
             confirmResult: tallied.confirmResult,
             enterResult: tallied.enterResult + unenteredSessions,
             fillLineup: tallied.fillLineup,
-            waiting: tallied.waiting + sentRequests.length,
+            waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length,
         },
     }
 })

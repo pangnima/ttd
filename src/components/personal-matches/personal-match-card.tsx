@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
 import {
-    formatRecord, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
+    formatGameSummary, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
 } from '@/lib/dashboard/outcome'
 import { hasResult, resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
 import { formatOpponents } from '@/lib/personal-matches/labels'
@@ -41,7 +41,10 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
         : !hasResult(m)
         ? RESULT.pending
         : isMulti
-            ? (() => { const t = tallySets(m.setScores); return { ...MULTI, label: formatRecord(t.wins, t.losses, t.draws) } })()
+            ? (() => {
+                const t = tallySets(m.setScores)
+                return { ...MULTI, label: formatGameSummary(m.setScores.length, t.wins, t.losses, t.draws) }
+            })()
             : RESULT[resolveSetWinner(m.setScores[0])]
 
     return (
@@ -62,12 +65,20 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
                             <span className="text-muted-foreground">vs </span>{opponentLabel}
                         </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${result.badge}`}>{result.label}</span>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 whitespace-nowrap tabular-nums ${result.badge}`}>
+                        {result.label}
+                    </span>
                 </div>
 
                 {!hideMeta && (
                     <>
-                        <MatchMetaLine playedTime={m.playedTime} courtName={m.courtName} notes={m.notes} className="mt-1 space-y-0.5" />
+                        <MatchMetaLine
+                            playedTime={m.playedTime}
+                            courtName={m.courtName}
+                            notes={m.notes}
+                            className="mt-1 space-y-0.5"
+                            emphasizeTime
+                        />
                         {m.roomId && <RoomLink roomId={m.roomId} className="mt-1 inline-block" />}
                     </>
                 )}
