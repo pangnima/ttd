@@ -18,3 +18,22 @@ export function invertSetScores(sets: PersonalMatchSetScore[]): PersonalMatchSet
         return out
     })
 }
+
+/**
+ * **내 팀 안쪽** 관점 교차 — 나↔파트너 (SQL `swap_partner_perspective`의 TS 미러, 0049).
+ * `invertSetScores`가 팀을 가로지른다면 이쪽은 팀 안에서 자리만 바꾼다:
+ * 같은 팀이라 **스코어(me/opp)는 그대로**이고 `myAd`만 뒤집힌다(`oppAd`는 건드리지 않는다).
+ *
+ * ⚠ 이 파일은 **표시 방향**(요청자 관점 → 보는 사람 관점)만 다룬다. 좌석별 표시 변환은
+ *    요청자=그대로 / 파트너=`P` / 대표=`I` / 상대2=`P∘I`라 이 둘이면 전부 덮인다.
+ *    제안을 요청자 관점으로 되돌리는 **역방향은 SQL이 한다**(`normalize_to_requester_perspective`, 0059) —
+ *    상대2에서 합성 순서가 반대(`I∘P`)이고 차이가 애드에서만 나므로 두 방향을 한 파일에 섞지 않는다.
+ */
+export function swapPartnerPerspective(sets: PersonalMatchSetScore[]): PersonalMatchSetScore[] {
+    return sets.map((s) => {
+        const out: PersonalMatchSetScore = { me: s.me, opp: s.opp }
+        if (s.myAd) out.myAd = s.myAd === 'me' ? 'partner' : 'me'
+        if (s.oppAd) out.oppAd = s.oppAd
+        return out
+    })
+}

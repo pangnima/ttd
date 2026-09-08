@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { buildConfirmation, bystanderWaitingBadge, canReopenResult, type ConfirmationSourceRow } from './confirmation'
+import {
+    buildConfirmation, bystanderWaitingBadge, canReopenResult, canRespondToProposal, formatConfirmProgress,
+    type ConfirmationSourceRow,
+} from './confirmation'
 import { invertSetScores } from './perspective'
 
 const REQ: ConfirmationSourceRow = {
@@ -10,6 +13,13 @@ const REQ: ConfirmationSourceRow = {
     proposed_by: 'bob',
     proposed_set_scores: [{ me: 6, opp: 4 }, { me: 3, opp: 6 }],  // 요청자(alice) 관점
     dispute_reason: null,
+    confirmed_by: ['bob'],  // 제안이 곧 제안자의 확인 (0060 트리거)
+}
+
+// 복식 좌석 넷을 갖춘 픽스처 — alice(요청자)·carol(파트너) vs bob(대표)·dave(상대2)
+const DOUBLES: ConfirmationSourceRow = {
+    ...REQ,
+    participants: [{ role: 'partner', user_id: 'carol' }, { role: 'opponent2', user_id: 'dave' }],
 }
 
 describe('buildConfirmation', () => {
@@ -25,16 +35,52 @@ describe('buildConfirmation', () => {
         expect(forBob.requestId).toBe('req-1')
     })
 
-    it('요청 당사자(요청자·대표 확인자)만 viewerIsParty', () => {
-        expect(buildConfirmation(REQ, 'alice').viewerIsParty).toBe(true)
-        expect(buildConfirmation(REQ, 'bob').viewerIsParty).toBe(true)
-        // 복식 파트너의 관점 행 — 협상 행을 읽어도 제안·확인 자격은 없다
+    it('좌석 넷 전원이 viewerIsParty — 좌석 누구나 협상에 참여한다', () => {
+        expect(buildConfirmation(DOUBLES, 'alice').viewerIsParty).toBe(true)   // 요청자
+        expect(buildConfirmation(DOUBLES, 'carol').viewerIsParty).toBe(true)   // 내 파트너
+        expect(buildConfirmation(DOUBLES, 'bob').viewerIsParty).toBe(true)     // 상대 대표
+        expect(buildConfirmation(DOUBLES, 'dave').viewerIsParty).toBe(true)    // 상대2
+        expect(buildConfirmation(DOUBLES, 'eve').viewerIsParty).toBe(false)    // 무관자
+    })
+
+    it('참가자를 부착하지 않으면 좌석을 못 찾아 권한이 **과소**로 무너진다(안전 설계)', () => {
         expect(buildConfirmation(REQ, 'carol').viewerIsParty).toBe(false)
+    })
+
+    it('제안자는 제안 시점에 확인한 것으로 센다 — confirmedByMe', () => {
+        expect(buildConfirmation(DOUBLES, 'bob').confirmedByMe).toBe(true)
+        expect(buildConfirmation(DOUBLES, 'dave').confirmedByMe).toBe(false)   // 제안자의 파트너도 아직이다
+        expect(buildConfirmation(DOUBLES, 'alice').confirmedByMe).toBe(false)
+    })
+
+    it('진행도 — 분모는 user_id가 있는 좌석 수, 분자는 확인 배열 길이', () => {
+        expect(buildConfirmation(DOUBLES, 'alice').confirmProgress).toEqual({ confirmed: 1, total: 4 })
+        const two = { ...DOUBLES, confirmed_by: ['bob', 'carol'] }
+        expect(buildConfirmation(two, 'alice').confirmProgress).toEqual({ confirmed: 2, total: 4 })
+        // 비회원 슬롯(user_id null)은 분모에서 빠진다
+        const guest = { ...DOUBLES, participants: [{ role: 'partner', user_id: null }, { role: 'opponent2', user_id: 'dave' }] }
+        expect(buildConfirmation(guest, 'alice').confirmProgress.total).toBe(3)
+        // 단식은 2
+        expect(buildConfirmation(REQ, 'alice').confirmProgress.total).toBe(2)
+    })
+
+    it('확인 배열을 부착하지 않으면 0/n — 권한이 과소로 무너진다', () => {
+        const noArr = { ...DOUBLES, confirmed_by: undefined }
+        expect(buildConfirmation(noArr, 'bob').confirmedByMe).toBe(false)
+        expect(buildConfirmation(noArr, 'bob').confirmProgress.confirmed).toBe(0)
+    })
+
+    it('좌석마다 제안 세트를 자기 관점으로 준다 — 팀 안쪽은 스코어가 같고 애드만 바뀐다', () => {
+        const ad: ConfirmationSourceRow = { ...DOUBLES, proposed_set_scores: [{ me: 6, opp: 4, myAd: 'me' }] }
+        expect(buildConfirmation(ad, 'alice').proposedSets).toEqual([{ me: 6, opp: 4, myAd: 'me' }])
+        expect(buildConfirmation(ad, 'carol').proposedSets).toEqual([{ me: 6, opp: 4, myAd: 'partner' }])
+        expect(buildConfirmation(ad, 'bob').proposedSets).toEqual([{ me: 4, opp: 6, oppAd: 'opponent' }])
+        expect(buildConfirmation(ad, 'dave').proposedSets).toEqual([{ me: 4, opp: 6, oppAd: 'opponent' }])
     })
 
     it('이의 사유와 비배열 제안값을 안전하게 매핑', () => {
         const c = buildConfirmation(
-            { ...REQ, result_status: 'disputed', dispute_reason: '2세트는 6-3', proposed_set_scores: null },
+            { ...REQ, result_status: 'disputed', dispute_reason: '2세트는 6-3', proposed_set_scores: null, confirmed_by: [] },
             'alice',
         )
         expect(c.status).toBe('disputed')
@@ -43,18 +89,52 @@ describe('buildConfirmation', () => {
     })
 })
 
+describe('canRespondToProposal — 만장일치의 단일 출처', () => {
+    it('제안자도 아니고 아직 확인하지 않은 좌석만 확인·이의할 수 있다', () => {
+        expect(canRespondToProposal(buildConfirmation(DOUBLES, 'alice'))).toBe(true)   // 상대팀
+        expect(canRespondToProposal(buildConfirmation(DOUBLES, 'carol'))).toBe(true)
+        expect(canRespondToProposal(buildConfirmation(DOUBLES, 'dave'))).toBe(true)    // 제안자의 파트너도 한 표
+        expect(canRespondToProposal(buildConfirmation(DOUBLES, 'bob'))).toBe(false)    // 제안자 본인
+    })
+
+    it('이미 확인한 좌석은 남은 좌석을 기다린다', () => {
+        const partial = { ...DOUBLES, confirmed_by: ['bob', 'carol'] }
+        expect(canRespondToProposal(buildConfirmation(partial, 'carol'))).toBe(false)
+        expect(canRespondToProposal(buildConfirmation(partial, 'alice'))).toBe(true)
+    })
+
+    it('proposed가 아니거나 좌석이 없으면 false', () => {
+        expect(canRespondToProposal(buildConfirmation({ ...DOUBLES, result_status: 'none' }, 'alice'))).toBe(false)
+        expect(canRespondToProposal(buildConfirmation(DOUBLES, 'eve'))).toBe(false)
+        expect(canRespondToProposal(undefined)).toBe(false)
+    })
+})
+
+describe('formatConfirmProgress', () => {
+    it("복식은 '1/4명 확인', 단식은 진행도라는 개념이 없어 빈 문자열", () => {
+        expect(formatConfirmProgress(buildConfirmation(DOUBLES, 'alice'))).toBe('1/4명 확인')
+        expect(formatConfirmProgress(buildConfirmation({ ...DOUBLES, confirmed_by: ['bob', 'carol', 'dave'] }, 'alice'))).toBe('3/4명 확인')
+        expect(formatConfirmProgress(buildConfirmation(REQ, 'alice'))).toBe('')
+    })
+
+    it('제안 중이 아니면 빈 문자열', () => {
+        expect(formatConfirmProgress(buildConfirmation({ ...DOUBLES, result_status: 'disputed' }, 'alice'))).toBe('')
+        expect(formatConfirmProgress(undefined)).toBe('')
+    })
+})
+
 describe('bystanderWaitingBadge', () => {
-    // 파트너(carol) 관점 — 0052로 협상은 읽지만 viewerIsParty는 false다
+    // 참가자를 부착하지 않은 조회 경로 — 좌석을 못 찾아 협상 자격이 없다(0059 이후 폴백 전용)
     const forPartner = (row: Partial<ConfirmationSourceRow>) =>
         bystanderWaitingBadge(buildConfirmation({ ...REQ, ...row }, 'carol'))
 
     it('협상 행을 못 읽으면 종전 문구로 폴백한다', () => {
-        expect(bystanderWaitingBadge(undefined).label).toBe('대표 확인 대기')
+        expect(bystanderWaitingBadge(undefined).label).toBe('참가자 확인 대기')
     })
 
     it('제안 전/후/이의를 문구로 구분한다', () => {
         expect(forPartner({ result_status: 'none', proposed_by: null }).label).toBe('결과 입력 대기')
-        expect(forPartner({ result_status: 'proposed' }).label).toBe('대표 확인 대기')
+        expect(forPartner({ result_status: 'proposed' }).label).toBe('참가자 확인 대기')
 
         const disputed = forPartner({ result_status: 'disputed', dispute_reason: '2세트는 6-3' })
         expect(disputed.label).toBe('이의 제기됨')
@@ -62,7 +142,7 @@ describe('bystanderWaitingBadge', () => {
     })
 
     it('confirmed인데 세트가 없는 불가능 조합은 폴백한다', () => {
-        expect(forPartner({ result_status: 'confirmed' }).label).toBe('대표 확인 대기')
+        expect(forPartner({ result_status: 'confirmed' }).label).toBe('참가자 확인 대기')
     })
 })
 
@@ -79,11 +159,11 @@ describe('canReopenResult', () => {
     const conf = (status: string, viewerIsParty: boolean) =>
         buildConfirmation({ ...REQ, result_status: status }, viewerIsParty ? 'alice' : 'carol')
 
-    it('확정 + 요청 당사자면 되돌릴 수 있다', () => {
+    it('확정 + 요청 좌석이면 되돌릴 수 있다', () => {
         expect(canReopenResult(conf('confirmed', true))).toBe(true)
     })
 
-    it('확정이어도 당사자가 아니면(복식 파트너·상대2) 되돌릴 수 없다', () => {
+    it('확정이어도 좌석을 못 찾으면(참가자 미부착 폴백) 되돌릴 수 없다', () => {
         expect(canReopenResult(conf('confirmed', false))).toBe(false)
     })
 

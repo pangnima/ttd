@@ -4,6 +4,7 @@ import type { PersonalMatch } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
+import type { ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
 import { WhoColumn } from '@/components/personal-matches/form-sections/who-column'
 import { WhenColumn } from '@/components/personal-matches/form-sections/when-column'
 import { FormFooter } from '@/components/personal-matches/form-sections/form-footer'
@@ -26,6 +27,8 @@ type Props = {
     variant?: 'page' | 'dialog'
     // 저장/취소 후 이동을 호출부가 가져간다 (다이얼로그 닫기 + refresh). 없으면 종전대로 router.push
     nav?: SubmitNavigation
+    // 내 미확정 일정 — 같은 날짜·시각이면 중복 생성 경고를 띄운다 (0057)
+    scheduleSlots?: ScheduleSlot[]
 }
 
 /**
@@ -36,15 +39,19 @@ type Props = {
  */
 export function PersonalMatchForm({
     initialData, opponentCandidates = [], pastOpponents = [], recentCourtNames = [], selfUserId, roomParticipants, roomContext,
-    variant = 'page', nav,
+    variant = 'page', nav, scheduleSlots,
 }: Props) {
     const s = usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId, roomContext })
     const submit = usePersonalMatchSubmit(s, initialData?.id, nav)
-    // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049)
+    // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049).
+    // 로테이션도 풀의 회원에게 참여 요청이 나가므로 그 사실을 라벨이 말한다 (0057).
     const submitLabel = s.roomId && s.isConfirmFlow ? '게임 저장'
         : s.isConfirmFlow ? '확인 요청 보내기'
             : s.isEdit ? '수정 완료'
-                : s.isRoomGame ? '게임 저장' : '경기 저장'
+                : s.isRoomGame ? '게임 저장'
+                    : s.saveOutcome === 'rotationPlan' && !s.listed && s.rotationMemberCount > 0
+                        ? '참여 요청 보내기'
+                        : '경기 저장'
 
     const isDialog = variant === 'dialog'
 
@@ -59,7 +66,7 @@ export function PersonalMatchForm({
                     roomParticipants={roomContext?.participants ?? roomParticipants}
                     selfUserId={selfUserId}
                 />
-                <WhenColumn s={s} recentCourtNames={recentCourtNames} existingSets={initialData?.setScores} variant={variant} />
+                <WhenColumn s={s} recentCourtNames={recentCourtNames} existingSets={initialData?.setScores} variant={variant} scheduleSlots={scheduleSlots} />
             </div>
 
             <FormFooter error={submit.error} isPending={submit.isPending} isValid={s.isValid} submitLabel={submitLabel} onCancel={submit.cancel} />

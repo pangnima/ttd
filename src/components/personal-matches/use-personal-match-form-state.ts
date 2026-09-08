@@ -6,8 +6,8 @@ import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PersonalMatchInput, NtrpField } from '@/lib/personal-matches/validate-input'
 import { isPlayerFilled } from '@/lib/personal-matches/validators'
 import { isSlotEmpty, isSlotOk } from '@/lib/personal-matches/lineup'
-import { isPlatformMember, resolveConfirmRep } from '@/lib/personal-matches/confirm-flow'
-import type { RotationSessionMeta } from '@/lib/personal-matches/rotation'
+import { isPlatformMember, resolveConfirmRep, resolveSaveOutcome } from '@/lib/personal-matches/confirm-flow'
+import { compactPool, type RotationSessionMeta } from '@/lib/personal-matches/rotation'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
@@ -178,6 +178,13 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         roomContext: ctx, isRoomGame,
         roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined,
         isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
+        allFilled,
+        // 로테이션 풀의 회원 수 — 저장 시 참여 요청을 받을 사람 수(0057). 비회원은 요청 대상이 아니다.
+        rotationMemberCount: compactPool(rotation.pool).filter((r) => !!r.player.userId).length,
+        // 저장이 실제로 무슨 일을 하는지 — 안내 배너·버튼 라벨의 단일 출처
+        saveOutcome: resolveSaveOutcome({
+            isRotation, hasRep: !!rep, roomId, allowEmptyPlayers, allFilled,
+        }),
         // 저장 후 목적지 판정용 — 폼은 세트를 받지 않으므로 '수정 전 결과 유무'가 곧 저장 후 결과 유무다
         initialHasResult: (d?.setScores.length ?? 0) > 0,
     }

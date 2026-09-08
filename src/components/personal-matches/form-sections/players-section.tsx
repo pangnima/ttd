@@ -72,7 +72,7 @@ export function PlayersSection({
                 <div className="flex items-center gap-2">
                     <span className="text-caption font-semibold px-2 py-0.5 rounded bg-secondary text-foreground">상대팀</span>
                     <span className="text-caption text-muted-foreground">
-                        상대1 + 상대2 · 참가자를 모두 채우면 상대팀 회원이 대표로 확인합니다
+                        상대1 + 상대2 · 참가자를 모두 채우면 회원 참가자 전원에게 참여 요청이 갑니다
                     </span>
                 </div>
                 {field('상대팀 선수 1', opponent, '상대방 이름 또는 닉네임')}

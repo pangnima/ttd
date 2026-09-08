@@ -174,8 +174,10 @@ export async function fetchConfirmedMatchesForRating(clubId: string): Promise<{
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_game_matches')
+        // participants embed가 빠지면 mapMatchRow가 빈 팀을 만들고 replayClubRatings가 전 경기를 건너뛴다
+        // (그 결과 apply_club_rating_snapshot이 기존 이력을 지우고 빈 스냅샷을 넣는다).
         .select(
-            '*, match_games!inner(date, club_id, is_fixed), round:match_game_rounds(order), slot:match_game_time_slots(start_at)',
+            '*, participants:match_game_participants(*), match_games!inner(date, club_id, is_fixed), round:match_game_rounds(order), slot:match_game_time_slots(start_at)',
         )
         .eq('match_games.club_id', clubId)
         .eq('match_games.is_fixed', true)

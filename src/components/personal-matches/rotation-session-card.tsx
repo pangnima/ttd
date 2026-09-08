@@ -12,6 +12,8 @@ import { useResultDialog } from '@/components/personal-matches/use-result-dialog
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
+import { SeatProgressBadge } from '@/components/match-requests/request-acceptance-note'
+import { canManageRotationPool, pendingSeats, poolMemberIds, rejectedSeats } from '@/lib/personal-matches/rotation-participation'
 
 type Props = {
     session: RotationSession
@@ -32,6 +34,19 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
     const isOwner = s.userId === viewerId
     // 빌더의 '나' = 입력자이므로 카드의 참가자 요약도 같은 풀(세션 풀 ∪ 방 참가자 − 나)로 보여준다
     const pool = useMemo(() => buildBuilderPool(s.players, roomParticipants, viewerId), [s.players, roomParticipants, viewerId])
+    const waitingNames = pendingSeats(s.seats).map((seat) => seat.name)
+    const declinedNames = rejectedSeats(s.seats).map((seat) => seat.name)
+    // 명부 편집은 방 밖 세션에서만 — 방은 '비밀번호 공유 = 초대'라 명단의 권위가 match_room_members다(0058)
+    const poolAdmin = canManageRotationPool(s, viewerId)
+        ? {
+            sessionId: s.id,
+            seats: s.seats,
+            poolMemberIds: poolMemberIds(s.players),
+            ownerUserId: s.userId,
+            canInvite: true,
+            isOwner,
+        }
+        : undefined
 
     function handleDelete() {
         if (!confirm('이 로테이션 세션을 삭제할까요? 참가자 정보가 사라집니다.')) return
@@ -53,10 +68,20 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                             <p className="text-caption text-muted-foreground truncate">{pool.map((p) => p.name).join(' · ')}</p>
                         )}
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 ${PENDING_RESULT_BADGE}`}>
-                        {entered ? '입력함' : '게임 미입력'}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        {/* 참여 진행도(0057) — 주최자가 "누가 아직 답을 안 했는지"를 여기서 본다 */}
+                        <SeatProgressBadge seats={s.seats} />
+                        <span className={`px-2 py-1 rounded-[4px] text-caption font-bold ${PENDING_RESULT_BADGE}`}>
+                            {entered ? '입력함' : '게임 미입력'}
+                        </span>
+                    </div>
                 </div>
+                {waitingNames.length > 0 && (
+                    <p className="text-caption text-muted-foreground truncate">응답 대기: {waitingNames.join(' · ')}</p>
+                )}
+                {declinedNames.length > 0 && (
+                    <p className="text-caption text-muted-foreground truncate">거절: {declinedNames.join(' · ')}</p>
+                )}
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="mt-1 space-y-0.5" />
                 {s.roomId && <RoomLink roomId={s.roomId} className="mt-1 inline-block" />}
                 <div className="flex items-center justify-end gap-2 mt-2">
@@ -77,6 +102,7 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                 isRoomSession={!!s.roomId}
                 picker={picker}
                 onSubmit={(games) => d.run(() => finalizeRotationSessionAction(s.id, games))}
+                poolAdmin={poolAdmin}
                 isPending={d.isPending}
                 error={d.error}
             />

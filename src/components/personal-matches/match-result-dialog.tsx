@@ -20,6 +20,7 @@ type ReviewProps = {
     proposedSets: PersonalMatchSetScore[]
     onConfirm: () => void
     onDispute: (reason: string) => void
+    progressLabel?: string  // '2/4명 확인' — 복식 만장일치 진행도(0060). 단식은 생략
 }
 
 type Props = (ProposeProps | ReviewProps) & {
@@ -34,8 +35,8 @@ type Props = (ProposeProps | ReviewProps) & {
 
 /**
  * 개인 경기 결과 등록 레이어 팝업.
- *  - propose: 게임별 스코어 입력(추가/삭제) → 저장 (자유 기록은 즉시 확정, 상호 확인 경기는 상대 확인 대기)
- *  - review : 상대가 제안한 게임 스코어를 검토 → 확인 / 이의 제기
+ *  - propose: 게임별 스코어 입력(추가/삭제) → 저장 (자유 기록은 즉시 확정, 상호 확인 경기는 회원 참가자 확인 대기)
+ *  - review : 제안된 게임 스코어를 검토 → 확인 / 이의 제기 (회원 좌석 전원이 확인하면 확정, 0060)
  * 닫히면 내부 패널이 언마운트되어 입력 state가 초기화된다. 복식 게임의 애드/듀스는 propose 모드에서 입력한다.
  */
 export function MatchResultDialog(props: Props) {
@@ -66,6 +67,7 @@ export function MatchResultDialog(props: Props) {
                         sets={props.proposedSets}
                         onConfirm={props.onConfirm}
                         onDispute={props.onDispute}
+                        progressLabel={props.progressLabel}
                         isPending={isPending}
                         error={error}
                     />

@@ -6,6 +6,7 @@ import { MATCH_TYPE_OPTIONS } from '@/lib/dashboard/match-type-style'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
+import { SaveOutcomeNotice } from '@/components/personal-matches/form-sections/save-outcome-notice'
 import { PlayersSection } from '@/components/personal-matches/form-sections/players-section'
 import { RecruitingPlayersSection } from '@/components/personal-matches/form-sections/recruiting-players-section'
 import { DoublesModeToggle } from '@/components/personal-matches/doubles-mode-toggle'
@@ -89,7 +90,7 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         searchSelfUserId={searchSelfUserId}
                     />
                 )}
-                {s.rep && (
+                {s.rep ? (
                     <ConfirmFlowNotice
                         opponentName={s.rep.opponent.slot.player.name.trim() || '상대'}
                         isDoubles={s.isDoubles}
@@ -97,6 +98,9 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         // hideNtrpFor = 회원으로 연결된 슬롯 목록(확인 플로우) — 나를 더하면 관점 행이 생길 인원이다
                         memberCount={1 + s.hideNtrpFor.length}
                     />
+                ) : (
+                    // 대표가 없는 갈래(로테이션·전원 비회원·모집 중)에도 무슨 일이 일어날지 말해 준다(0057)
+                    <SaveOutcomeNotice outcome={s.saveOutcome} memberCount={s.rotationMemberCount} listed={s.listed} />
                 )}
             </FormSectionCard>
         </div>

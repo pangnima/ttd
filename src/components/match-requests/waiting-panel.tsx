@@ -6,6 +6,7 @@ import { PendingMatchActions } from '@/components/match-requests/pending-match-a
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
 import { AwaitingMemberRequestCard } from '@/components/match-requests/awaiting-member-request-card'
+import { RotationSessionInviteCard } from '@/components/match-requests/rotation-session-invite-card'
 
 type Props = {
     queue: MatchQueue
@@ -14,25 +15,29 @@ type Props = {
 
 /**
  * 확인 요청 허브 「상대 대기」 탭 — 공이 상대에게 넘어가 있는 것들(뱃지에 세지 않는다).
- * 내 제안 확인 대기 / 상대 수락 대기 / 대표 확인 대기 + 종료된 요청 이력.
+ * 남은 참가자 확인 대기 / 상대 수락 대기 / 열람 전용 대기 + 종료된 요청 이력.
  */
 export function WaitingPanel({ queue, viewerId }: Props) {
     const waiting = queue.pendingMatches.filter((p) => p.bucket === 'awaitingCounterpart')
-    // 제안자가 나면 상대의 확인을, 아니면(복식 파트너·상대2의 관점 행) 대표의 처리를 기다린다
-    const [myProposals, repWaiting] = partition(waiting, (p) => !!p.match.confirmation?.proposedByMe)
+    // 내 확인(제안 포함)은 끝났고 남은 좌석을 기다리는 것과, 협상 자격이 없는 관점 행(폴백)을 가른다(0060)
+    const [myConfirmed, repWaiting] = partition(
+        waiting, (p) => !!p.match.confirmation && (p.match.confirmation.proposedByMe || p.match.confirmation.confirmedByMe),
+    )
     const closed = queue.closedRequests
 
     const awaitingMembers = queue.awaitingMemberRequests
+    // 참여는 수락했지만 아직 아무도 결과를 넣지 않은 로테이션 일정 (0057)
+    const awaitingOwner = queue.awaitingOwnerSessions
 
     if (waiting.length === 0 && queue.sentRequests.length === 0
-        && awaitingMembers.length === 0 && closed.length === 0) {
+        && awaitingMembers.length === 0 && awaitingOwner.length === 0 && closed.length === 0) {
         return <div className={EMPTY_BLOCK}>상대를 기다리는 경기가 없습니다.</div>
     }
 
     return (
         <>
-            <QueueSection title="내 제안 확인 대기" hint="상대가 확인하면 확정됩니다" count={myProposals.length}>
-                {myProposals.map(({ match, bucket }) => (
+            <QueueSection title="참가자 확인 대기" hint="내 확인은 끝났습니다 — 남은 회원 참가자가 모두 확인하면 확정됩니다" count={myConfirmed.length}>
+                {myConfirmed.map(({ match, bucket }) => (
                     <PersonalMatchCard
                         key={match.id}
                         match={match}
@@ -57,7 +62,17 @@ export function WaitingPanel({ queue, viewerId }: Props) {
                 ))}
             </QueueSection>
 
-            <QueueSection title="대표 확인 대기" hint="상대팀 대표가 결과를 확인하면 확정됩니다" count={repWaiting.length}>
+            <QueueSection
+                title="주최자 결과 입력 대기"
+                hint="참여를 수락했습니다 — 경기 후 결과가 입력되면 확정 절차가 시작됩니다"
+                count={awaitingOwner.length}
+            >
+                {awaitingOwner.map((s) => (
+                    <RotationSessionInviteCard key={s.id} session={s} viewerId={viewerId} readOnly />
+                ))}
+            </QueueSection>
+
+            <QueueSection title="확인 대기 (열람 전용)" hint="회원 참가자가 결과를 확인하면 확정됩니다" count={repWaiting.length}>
                 {repWaiting.map(({ match, bucket }) => (
                     <PersonalMatchCard
                         key={match.id}

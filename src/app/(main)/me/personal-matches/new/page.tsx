@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchPastOpponents, fetchRecentCourtNames } from '@/lib/queries/personal-matches'
+import { fetchMatchQueue, scheduleSlotsOf } from '@/lib/queries/match-queue'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 import { PageContainer } from '@/components/common/page-container'
 import { PageHeader } from '@/components/common/page-header'
@@ -20,10 +21,13 @@ export default async function NewPersonalMatchPage({ searchParams }: Props) {
     const { room } = await searchParams
     if (room) redirect(`/match-rooms/${room}`)
 
-    const [opponentCandidates, pastOpponents, recentCourtNames] = await Promise.all([
+    // fetchMatchQueue는 React cache이고 (main)/layout.tsx이 뱃지 때문에 이미 호출한다 —
+    // 여기서 다시 불러도 쿼리는 늘지 않는다(중복 일정 경고용 슬롯만 파생한다, 0057)
+    const [opponentCandidates, pastOpponents, recentCourtNames, queue] = await Promise.all([
         fetchOpponentCandidates(user.id),
         fetchPastOpponents(user.id),
         fetchRecentCourtNames(user.id),
+        fetchMatchQueue(user.id),
     ])
 
     return (
@@ -38,6 +42,7 @@ export default async function NewPersonalMatchPage({ searchParams }: Props) {
                 pastOpponents={pastOpponents}
                 recentCourtNames={recentCourtNames}
                 selfUserId={user.id}
+                scheduleSlots={scheduleSlotsOf(queue)}
             />
         </PageContainer>
     )

@@ -35,8 +35,17 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
         fetchPastOpponents(user.id),
         fetchRoomParticipantCandidatesByRooms(roomIds, user.id),
     ])
+    // 빌더 풀은 "세션 풀 ∪ 방 참가자 − 나"인데 세션 풀에는 소유자가 없다('나 제외'로 저장된다).
+    // 방 세션은 host 멤버 행이 소유자를 채워 줬지만 방 밖 세션에는 방 참가자가 없다 —
+    // 수락한 참가자가 결과를 입력할 때 주최자를 게임에 넣지 못하므로 여기서 끼워 넣는다(0057).
     const bySession = Object.fromEntries(
-        queue.rotationSessions.map((s) => [s.id, (s.roomId && roomParticipants[s.roomId]) || []]),
+        queue.rotationSessions.map((s) => {
+            const fromRoom = (s.roomId && roomParticipants[s.roomId]) || []
+            const owner = s.owner?.userId && s.userId !== user.id && !fromRoom.some((p) => p.id === s.owner?.userId)
+                ? [{ id: s.owner.userId, name: s.owner.name, dominantHand: s.owner.hand, ntrp: s.owner.ntrp }]
+                : []
+            return [s.id, [...fromRoom, ...owner]]
+        }),
     )
 
     return (

@@ -273,7 +273,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 |---|---|---|---|
 | 5 | **내 제안 확인 대기** | `proposed` ∧ 제안자=나 | `MutualResultActions` editingOwn(`:52,56`) → [제안 수정] |
 | 6 | **상대 수락 대기** | `status='pending'` ∧ `requester=나` | `SentRequestCard` [취소] (**props 불변**) |
-| 7 | **대표 확인 대기** | `sourceRequestId` 있음 ∧ `!viewerIsParty` (복식 파트너·상대2 관점 행) | 읽기 전용 배지. Step 11(0052) 이후 `bystanderWaitingBadge`가 결과 입력 대기/대표 확인 대기/이의 제기됨을 구분해 표시 |
+| 7 | **참가자 확인 대기** | `sourceRequestId` 있음 ∧ `!viewerIsParty` (좌석 판정 실패 폴백 — 0059부터 좌석 넷 전원이 협상하고, 0060부터 확정은 좌석 전원 만장일치) | 읽기 전용 배지. Step 11(0052) 이후 `bystanderWaitingBadge`가 결과 입력 대기/참가자 확인 대기/이의 제기됨을 구분해 표시 |
 | 8 | **종료된 요청** (`<details>` 접힘) | `rejected`/`canceled` 양방향 | 없음 (이력) |
 
 **승격 규칙**: `confirm_match_result` 성공 → `set_scores` 채워짐 → `hasResult` true → 허브에서 사라지고 개인 결과에 나타난다. **별도 코드 없이 불변식이 처리한다.**

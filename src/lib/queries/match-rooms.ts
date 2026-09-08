@@ -198,7 +198,8 @@ export async function fetchMatchRoomDetail(roomId: string): Promise<MatchRoomDet
 /**
  * 방 게임의 결과 협상 상태 — key는 sourceRequestId.
  * SELECT 정책(0052)은 요청 당사자 + 복식 참가자(파트너·상대2)에게 열려 있으므로 **행의 존재는 '열람
- * 자격'일 뿐 '입력·확인 자격'이 아니다** — 그 판정은 `viewerIsParty`(요청자 또는 상대 대표)로 한다.
+ * 자격'일 뿐 '입력·확인 자격'이 아니다** — 그 판정은 `viewerIsParty`(좌석 넷 중 하나, 0059)와
+ * `canRespondToProposal`(제안자도 아니고 아직 확인하지 않은 좌석, 0060)로 한다.
  * 자격 판정에 isRoomGameParty를 쓰면 안 되는 이유 — 로테이션 파생 게임은 대표가 opponent2일 수 있어
  * role로 대표를 추정할 수 없다.
  * proposedSets는 buildConfirmation이 viewer 관점으로 반전해 준다(검증된 코드 재사용).
@@ -210,7 +211,7 @@ export async function fetchRoomGameConfirmations(
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, opponent_user_id, negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason)')
+        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, confirmed_by)')
         .in('id', requestIds)
     if (error || !data) return {}
 
@@ -225,6 +226,8 @@ export async function fetchRoomGameConfirmations(
             proposed_by: neg?.proposed_by ?? null,
             proposed_set_scores: neg?.proposed_set_scores ?? [],
             dispute_reason: neg?.dispute_reason ?? null,
+            participants: row.participants ?? [],
+            confirmed_by: neg?.confirmed_by ?? [],
         }, viewerId)
     }
     return byRequest

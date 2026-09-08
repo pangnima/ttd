@@ -89,6 +89,91 @@ export async function createRotationSessionAction(input: RotationSessionInput, l
     return { error: null }
 }
 
+/** RPC 식별자 → 안내 문구 */
+const PLAN_ERROR_MESSAGES: Array<[string, string]> = [
+    ['session_not_found', '삭제되었거나 종료된 일정입니다.'],
+    ['plan_already_responded', '이미 응답했거나 참여 대상이 아닌 일정입니다.'],
+]
+
+/**
+ * 로테이션 **일정** 초대에 대한 참여 응답 (0057).
+ * 거절하면 나만 선수 풀에서 빠지고 일정 자체는 남는다 — 확인 요청(한 명의 거절 = 요청 종료)과 다르다.
+ *
+ * ⚠ 0056의 `respondRotationParticipationAction`(match-requests.ts)과 혼동 금지.
+ * 그쪽은 결과 입력 후 생긴 **게임 파생 요청들**에 대한 일괄 응답이다.
+ *
+ * personal_matches를 만들지 않으므로 개인 통계·레이팅 경로는 재검증하지 않는다.
+ */
+export async function respondRotationPlanAction(sessionId: string, accept: boolean): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('respond_rotation_plan', {
+        p_session_id: sessionId,
+        p_accept: accept,
+    })
+    if (error) {
+        const known = PLAN_ERROR_MESSAGES.find(([key]) => error.message.includes(key))
+        return { error: known ? known[1] : '응답에 실패했습니다.' }
+    }
+
+    revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
+/** 풀 편집 RPC가 raise하는 식별자 → 사용자 안내 문구 */
+const POOL_ERROR_MESSAGES: Array<[string, string]> = [
+    ['session_not_found', '삭제되었거나 종료된 일정입니다.'],
+    ['room_session_invite_unsupported', '매칭 리스트에 올린 경기는 방 비밀번호로 입장해 참가합니다.'],
+    ['not_session_participant', '참여를 수락한 사람만 참가자를 초대할 수 있습니다.'],
+    ['not_session_owner', '참가자를 빼는 것은 경기를 만든 사람만 할 수 있습니다.'],
+    ['already_in_pool', '이미 참가자로 등록된 회원입니다.'],
+    ['invalid_player', '초대할 수 없는 회원입니다.'],
+    ['ntrp_missing', 'NTRP가 없는 회원은 초대할 수 없습니다.'],
+    ['not_in_pool', '참가자 명단에 없는 회원입니다.'],
+]
+
+function poolError(message: string): string {
+    return POOL_ERROR_MESSAGES.find(([key]) => message.includes(key))?.[1] ?? '참가자 변경에 실패했습니다.'
+}
+
+/**
+ * 로테이션 일정의 선수 풀에 회원을 초대한다 (0058).
+ * 좌석 생성과 재초대(거절 → 다시 대기) 복귀는 0057 트리거가 대신하므로 여기서는 RPC만 부른다.
+ * `respondRotationPlanAction`과 같은 이유로 통계·레이팅 경로는 재검증하지 않는다.
+ */
+export async function addRotationSessionPlayerAction(sessionId: string, userId: string): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('add_rotation_session_player', {
+        p_session_id: sessionId,
+        p_user_id: userId,
+    })
+    if (error) return { error: poolError(error.message) }
+
+    revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
+/** 선수 풀에서 회원을 뺀다 — 경기를 만든 사람만 (0058). 본인이 빠지는 길은 '거절'이다. */
+export async function removeRotationSessionPlayerAction(sessionId: string, userId: string): Promise<ActionResult> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('remove_rotation_session_player', {
+        p_session_id: sessionId,
+        p_user_id: userId,
+    })
+    if (error) return { error: poolError(error.message) }
+
+    revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
 export async function deleteRotationSessionAction(id: string): Promise<ActionResult> {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -122,8 +207,8 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
 
 /** RPC가 raise하는 식별자 → 사용자 안내 문구 */
 const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
-    ['not_session_participant', '이 방에 참가한 사람만 결과를 입력할 수 있습니다.'],
-    ['participant_not_in_room', '이 방의 참가자만 게임에 넣을 수 있습니다.'],
+    ['not_session_participant', '참여를 수락한 사람만 결과를 입력할 수 있습니다.'],
+    ['participant_not_in_room', '참여를 거절했거나 이 경기의 참가자가 아닌 사람은 게임에 넣을 수 없습니다.'],
     ['duplicate_players', '한 게임에 같은 사람을 두 번 넣을 수 없습니다.'],
     ['session_not_found', '게임 입력이 종료되었거나 삭제된 경기입니다.'],
     ['invalid_games', '게임 구성을 확인해주세요. (파트너·상대1·상대2 필수)'],
@@ -133,7 +218,7 @@ const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
 /**
  * 게임별 기록으로 분해 저장 (RPC 한 트랜잭션).
  * 방 세션이면 방에 참가한 회원 누구나 자기 기준으로 입력할 수 있고, 상대팀에 회원이 있으면
- * 상호 확인 경기로 만들어져 상대 대표 확인 후 확정된다. 세션 행은 방장이 닫을 때까지 남는다(0050).
+ * 상호 확인 경기로 만들어져 회원 참가자 전원의 확인 후 확정된다(0060). 세션 행은 방장이 닫을 때까지 남는다(0050).
  */
 export async function finalizeRotationSessionAction(
     sessionId: string,

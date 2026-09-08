@@ -12,9 +12,9 @@ import type { Database } from '@/types/supabase'
 /**
  * 상호 확인 경기(match_requests 수락 → personal_matches 2행)의 사후 결과(세트) 등록 플로우.
  * 그 행은 RESTRICTIVE RLS로 잠겨 있어 모든 쓰기는 SECURITY DEFINER RPC(0037)로만 이뤄진다.
- *   propose  — 당사자 누구든 세트 제안 (호출자 관점 → RPC가 요청자 관점으로 정규화)
- *   confirm  — 제안자가 아닌 당사자가 승인 → 양측 personal_matches 확정
- *   dispute  — 제안자가 아닌 당사자가 이의 제기 → 재제안 가능
+ *   propose  — 좌석 누구든 세트 제안 (호출자 관점 → RPC가 요청자 관점으로 정규화). 제안이 곧 제안자의 확인
+ *   confirm  — 제안자가 아닌 좌석이 각자 확인 → 활성 회원 좌석 전원이 확인한 순간 관점 행 전부 확정 (0060 만장일치)
+ *   dispute  — 제안자가 아닌 좌석이 이의 제기 → 확인 초기화, 재제안 가능
  */
 
 type ActionResult = { error: string | null }
@@ -23,13 +23,14 @@ type ActionResult = { error: string | null }
 const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
     ['request_not_found', '존재하지 않는 경기입니다.'],
     ['request_not_accepted', '수락된 상호 확인 경기에만 결과를 등록할 수 있습니다.'],
-    ['not_request_party', '이 경기의 당사자만 결과를 등록할 수 있습니다.'],
+    ['not_request_party', '이 경기에 참가한 회원만 결과를 등록할 수 있습니다.'],
     ['result_already_confirmed', '이미 확정된 결과입니다.'],
-    ['result_already_proposed', '상대가 먼저 결과를 제안했습니다. 제안된 결과를 확인해주세요.'],
+    ['result_already_proposed', '다른 참가자가 먼저 결과를 제안했습니다. 제안된 결과를 확인해주세요.'],
     ['result_not_proposed', '확인할 결과 제안이 없습니다.'],
-    ['cannot_confirm_own_proposal', '본인이 제안한 결과는 직접 확정할 수 없습니다.'],
+    ['cannot_confirm_own_proposal', '본인이 제안한 결과는 이미 확인한 것으로 칩니다. 남은 참가자의 확인을 기다려주세요.'],
+    ['result_already_confirmed_by_seat', '이미 확인한 결과입니다. 남은 참가자의 확인을 기다려주세요.'],
     ['cannot_dispute_own_proposal', '본인이 제안한 결과에는 이의를 제기할 수 없습니다. 제안을 수정해주세요.'],
-    ['counterpart_deleted', '상대가 탈퇴하여 결과를 확정할 수 없습니다.'],
+    ['counterpart_deleted', '상대팀 회원이 모두 탈퇴하여 결과를 확정할 수 없습니다.'],
     ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요.'],
     ['dispute_reason_too_long', '이의 사유는 200자 이내로 입력해주세요.'],
     ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
@@ -96,22 +97,25 @@ export async function proposeMatchResultAction(
     return { error: null }
 }
 
-/** 상대 제안 승인 → 양측 personal_matches 확정. 확정 후 본인 개인 NTRP 캐시 갱신(상대는 lazy). */
-export async function confirmMatchResultAction(requestId: string): Promise<ActionResult> {
+/**
+ * 제안 결과에 내 좌석의 확인을 더한다. 활성 회원 좌석 전원이 확인한 순간(RPC가 true를 돌려준다)
+ * 관점 행 전부가 확정되므로 그때만 본인 개인 NTRP 캐시를 갱신한다(나머지 좌석은 lazy).
+ */
+export async function confirmMatchResultAction(requestId: string): Promise<ActionResult & { settled?: boolean }> {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    const { error } = await supabase.rpc('confirm_match_result', { p_request_id: requestId })
-    if (error) return { error: mapRpcError(error.message, '결과 확정에 실패했습니다.') }
+    const { data: settled, error } = await supabase.rpc('confirm_match_result', { p_request_id: requestId })
+    if (error) return { error: mapRpcError(error.message, '결과 확인에 실패했습니다.') }
 
-    // 확정된 경기가 통계·레이팅에 반영되므로 본인 캐시 재계산 (accept와 동일하게 상대는 다음 CUD에서 갱신)
-    await recomputePersonalNtrp(user.id)
+    // 정산된 경기만 통계·레이팅에 반영되므로 마지막 확인일 때만 본인 캐시 재계산 (나머지 좌석은 다음 CUD에서 갱신)
+    if (settled) await recomputePersonalNtrp(user.id)
     revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
-    return { error: null }
+    return { error: null, settled: !!settled }
 }
 
-/** 상대 제안에 이의 제기 (사유 선택, 200자). 양측 누구든 다시 제안할 수 있는 disputed 상태로 전이. */
+/** 제안에 이의 제기 (사유 선택, 200자). 확인이 초기화되고 좌석 누구든 다시 제안할 수 있는 disputed 상태로 전이. */
 export async function disputeMatchResultAction(requestId: string, reason?: string): Promise<ActionResult> {
     const trimmed = reason?.trim() ?? ''
     if (trimmed.length > 200) return { error: '이의 사유는 200자 이내로 입력해주세요.' }

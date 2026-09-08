@@ -23,8 +23,12 @@ function base(over: Partial<PersonalMatch> = {}): PersonalMatch {
     }
 }
 
-function conf(status: MatchResultStatus, proposedByMe = false): PersonalMatchConfirmation {
-    return { requestId: 'r1', status, proposedByMe, proposedSets: [], viewerIsParty: true }
+function conf(status: MatchResultStatus, proposedByMe = false, confirmedByMe = proposedByMe): PersonalMatchConfirmation {
+    return {
+        requestId: 'r1', status, proposedByMe, confirmedByMe,
+        confirmProgress: { confirmed: confirmedByMe ? 2 : 1, total: 4 },
+        proposedSets: [], viewerIsParty: true,
+    }
 }
 
 describe('classifyPendingMatch — 자유 기록', () => {
@@ -70,15 +74,19 @@ describe('classifyPendingMatch — 상호 확인 경기', () => {
         expect(classifyPendingMatch(mutual(conf('proposed', false)))).toBe('confirmResult')
     })
 
-    it('proposed & 내 제안 — 상대를 기다린다', () => {
+    it('proposed & 내 제안 — 남은 좌석을 기다린다', () => {
         expect(classifyPendingMatch(mutual(conf('proposed', true)))).toBe('awaitingCounterpart')
     })
 
-    it('협상을 못 읽는 관점 복사본(복식 파트너·상대2)은 대표를 기다린다', () => {
+    it('proposed & 내가 이미 확인 — 남은 좌석을 기다린다 (0060 만장일치)', () => {
+        expect(classifyPendingMatch(mutual(conf('proposed', false, true)))).toBe('awaitingCounterpart')
+    })
+
+    it('협상을 못 읽는 관점 복사본(좌석 판정 실패 폴백)은 남은 좌석을 기다린다', () => {
         expect(classifyPendingMatch(mutual(undefined))).toBe('awaitingCounterpart')
     })
 
-    it('협상을 읽더라도 당사자가 아니면(파트너·상대2, 0052 이후) 대표를 기다린다', () => {
+    it('협상을 읽더라도 좌석이 아니면 남은 좌석을 기다린다', () => {
         const notParty = { ...conf('none'), viewerIsParty: false }
         expect(classifyPendingMatch(mutual(notParty))).toBe('awaitingCounterpart')
         const proposedByRep = { ...conf('proposed', false), viewerIsParty: false }

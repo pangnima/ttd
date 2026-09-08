@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import type { PersonalMatchSetScore } from '@/types'
+import type { PersonalMatchSetScore, RotationPoolPlayer } from '@/types'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import {
     buildRotationGamePayloads,
     isPoolRowEmpty,
+    playersToPool,
     validateRotationGames,
     validateRotationPool,
     type PoolPlayer,
@@ -39,6 +40,14 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
     // ── 풀 핸들러 ──
     function addPoolPlayer() {
         setPool((prev) => [...prev, emptyPoolPlayer()])
+    }
+    /**
+     * 서버 초대가 성공한 회원을 로컬 풀에도 넣는다 (0058).
+     * pool은 useState 초기값이라 재검증으로 갱신되지 않는다 — 이게 없으면 [다시 초대]한 사람이
+     * 명부에는 들어갔는데 게임 셀렉트에는 나타나지 않아 사용자가 다시 막힌다.
+     */
+    function addPoolMember(p: RotationPoolPlayer) {
+        setPool((prev) => (prev.some((x) => x.player.userId === p.userId) ? prev : [...prev, ...playersToPool([p])]))
     }
     function updatePoolPlayer(tempId: string, patch: Partial<Omit<PoolPlayer, 'tempId'>>) {
         setPool((prev) => prev.map((p) => (p.tempId === tempId ? { ...p, ...patch } : p)))
@@ -114,7 +123,7 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
 
     return {
         pool, games,
-        addPoolPlayer, updatePoolPlayer, removePoolPlayer, compactEmptyRows, ensureMinRows,
+        addPoolPlayer, addPoolMember, updatePoolPlayer, removePoolPlayer, compactEmptyRows, ensureMinRows,
         addGame, updateGame, removeGame,
         updateSet, setMyAd, setOppAd,
         isPoolValid, isGamesValid, buildPayloads,

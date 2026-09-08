@@ -63,7 +63,7 @@ export default async function MatchRoomPage({ params }: Props) {
         needsPicker ? fetchPastOpponents(user.id) : [],
         // 협상 행이 오는 게임 = 내가 결과를 입력·확인할 수 있는 게임 (RLS가 당사자만 통과시킨다)
         fetchRoomGameConfirmations(requestIds, user.id),
-        isMember && isPendingRotation ? fetchRoomRotationSession(roomId) : null,
+        isMember && isPendingRotation ? fetchRoomRotationSession(roomId, user.id) : null,
     ])
     const gameCtx = canAdd ? buildRoomGameContext(detail, participants) : undefined
     const picker = needsPicker ? { candidates: opponentCandidates, pastOpponents, selfUserId: user.id } : undefined

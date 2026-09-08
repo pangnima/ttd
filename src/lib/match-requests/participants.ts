@@ -1,4 +1,4 @@
-import type { MatchRequest, MatchRequestSeat, RequestSeatRole } from '@/types'
+import type { MatchRequest, RequestAcceptance, RequestSeatRole } from '@/types'
 
 /**
  * 확인 요청의 좌석·참여 수락 규칙 (순수 모듈 — DB 접근 없음).
@@ -7,7 +7,8 @@ import type { MatchRequest, MatchRequestSeat, RequestSeatRole } from '@/types'
  * 매칭 룸 안에서 만들어진 요청은 '비밀번호 입장 = 참여 동의'라 종전대로 대표 1명 모델을 쓴다 —
  * 그 경계가 `requiresAllMembers` 하나이고, 큐 분류·카드 문구가 모두 이 술어를 본다.
  *
- * 결과(스코어) 확정 권한은 여기서 다루지 않는다. 그쪽은 끝까지 요청 당사자 2명(요청자·대표)뿐이다.
+ * 결과(스코어) 확정 권한은 여기서 다루지 않는다. 그쪽은 0059부터 경기의 회원 참가자 전원이며,
+ * 확인은 제안자와 다른 팀만 한다(lib/personal-matches/confirmation.ts).
  */
 
 /** 좌석이 앉은 팀. 스코어 반전 부호의 단일 출처 — 요청 세트는 언제나 요청자 관점으로 저장된다. */
@@ -20,20 +21,30 @@ export function requiresAllMembers(r: Pick<MatchRequest, 'roomId'>): boolean {
     return !r.roomId
 }
 
-/** 수락 진행도 — 회원 좌석만 분모에 넣는다(비회원은 수락 대상이 아니다). */
-export function acceptanceProgress(seats: MatchRequestSeat[]): { accepted: number; total: number } {
-    const members = seats.filter((s) => !!s.userId)
+/**
+ * 진행도 3종이 보는 것은 좌석의 `userId`·`acceptance`뿐이다. 로테이션 세션 좌석(0057)도
+ * 같은 두 필드를 가지므로 최소형으로 받아 문구·계산을 한 벌만 유지한다.
+ */
+export type AcceptanceSeat = { userId?: string; acceptance: RequestAcceptance | 'removed' }
+
+/**
+ * 수락 진행도 — 회원 좌석만 분모에 넣는다(비회원은 수락 대상이 아니다).
+ * 거절·제외된 좌석도 뺀다(0059): 그들은 이미 명단에서 빠졌으므로 더 기다릴 응답이 없는데,
+ * 분모에 남겨 두면 '2/3명 수락'처럼 영원히 안 채워지는 진행도가 된다.
+ */
+export function acceptanceProgress(seats: AcceptanceSeat[]): { accepted: number; total: number } {
+    const members = seats.filter((s) => !!s.userId && (s.acceptance === 'pending' || s.acceptance === 'accepted'))
     return { accepted: members.filter((s) => s.acceptance === 'accepted').length, total: members.length }
 }
 
 /** '2/3명 수락'. 회원이 없으면 빈 문자열(표시하지 않는다). */
-export function formatAcceptanceProgress(seats: MatchRequestSeat[]): string {
+export function formatAcceptanceProgress(seats: AcceptanceSeat[]): string {
     const { accepted, total } = acceptanceProgress(seats)
     return total === 0 ? '' : `${accepted}/${total}명 수락`
 }
 
 /** 아직 응답하지 않은 회원 좌석 수 */
-export function pendingMemberCount(seats: MatchRequestSeat[]): number {
+export function pendingMemberCount(seats: AcceptanceSeat[]): number {
     const { accepted, total } = acceptanceProgress(seats)
     return total - accepted
 }

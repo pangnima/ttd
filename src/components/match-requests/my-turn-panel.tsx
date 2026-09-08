@@ -12,6 +12,7 @@ import { PendingMatchActions } from '@/components/match-requests/pending-match-a
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { RoomInviteCard } from '@/components/match-requests/room-invite-card'
 import { RotationRequestGroupCard } from '@/components/match-requests/rotation-request-group-card'
+import { RotationSessionInviteCard } from '@/components/match-requests/rotation-session-invite-card'
 
 type Props = {
     queue: MatchQueue
@@ -26,7 +27,7 @@ type Props = {
  * 섹션 순서 = 처리 우선순위: 참여 확인 → 결과 확인 → 결과 입력 → 참가자 채우기.
  */
 export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props) {
-    const { counts, pendingMatches, rotationSessions, enteredSessionIds } = queue
+    const { counts, pendingMatches, rotationSessions, enteredSessionIds, sessionInvites } = queue
     const entered = new Set(enteredSessionIds)
     const byBucket = (bucket: MatchQueueBucket) => pendingMatches.filter((p) => p.bucket === bucket)
 
@@ -63,12 +64,16 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
                 {received.singles.map((item) => (
                     <ReceivedRequestCard key={item.request.id} item={item} />
                 ))}
+                {/* 로테이션 '일정' 초대 — 아직 게임이 없어 요청도 기록도 없는 단계다(0057) */}
+                {sessionInvites.map((s) => (
+                    <RotationSessionInviteCard key={s.id} session={s} viewerId={viewerId} />
+                ))}
                 {queue.roomInvites.map((invite) => (
                     <RoomInviteCard key={invite.roomId} invite={invite} />
                 ))}
             </QueueSection>
 
-            <QueueSection title="결과 확인 대기" hint="상대가 제안한 결과를 확인해주세요" count={confirmList.length}>
+            <QueueSection title="결과 확인 대기" hint="제안된 결과를 확인해주세요 — 회원 참가자 전원이 확인하면 확정됩니다" count={confirmList.length}>
                 {confirmList.map(({ match, bucket }) => (
                     <PersonalMatchCard
                         key={match.id}

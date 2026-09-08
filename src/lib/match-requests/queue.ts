@@ -1,4 +1,5 @@
 import type { PersonalMatch } from '@/types'
+import { canRespondToProposal } from '@/lib/personal-matches/confirmation'
 import { isLineupComplete, isRecruiting } from '@/lib/personal-matches/lineup'
 
 /**
@@ -9,10 +10,10 @@ import { isLineupComplete, isRecruiting } from '@/lib/personal-matches/lineup'
  * 분류가 SQL 필터가 아니라 순수 함수라 상태 조합 전량을 테스트로 고정할 수 있다.
  *
  * 버킷 → 섹션 대응 (허브 2탭 8섹션 중 personal_matches 행이 있는 것들):
- *   confirmResult       내 차례 · 결과 확인 대기   — 상대가 제안했고 내가 확인해야 한다
+ *   confirmResult       내 차례 · 결과 확인 대기   — 누군가 제안했고 내 좌석이 아직 확인하지 않았다
  *   enterResult         내 차례 · 결과 입력 대기   — 아무도 제안하지 않았거나 이의로 되돌아왔다
  *   fillLineup          내 차례 · 참가자 채우기    — 모집 중이라 결과를 넣을 수 없다
- *   awaitingCounterpart 상대 대기                  — 내가 제안했거나, 대표가 확인해야 한다
+ *   awaitingCounterpart 상대 대기                  — 내가 제안했거나 이미 확인했고, 남은 좌석을 기다린다
  *
  * pending 요청·룸 초대·미입력 로테이션 세션은 아직 personal_matches 행이 없어 여기서 다루지 않는다.
  */
@@ -29,8 +30,8 @@ export type MatchQueueBucket =
  * 판정 순서가 규칙이다 — 위에서 걸리면 아래는 보지 않는다.
  *  1. 모집 중이면 결과를 넣을 수 없다(라인업이 통계 집계의 불변식)
  *  2. 자유 기록은 협상 상대가 없어 라인업만 보면 된다
- *  3. 상호 확인 경기인데 협상을 읽을 수 없으면(복식 파트너·상대2의 관점 행) 대표를 기다린다
- *  4. 제안된 상태는 제안자가 누구냐로 갈린다
+ *  3. 상호 확인 경기인데 협상을 읽을 수 없으면(좌석 판정 실패 폴백) 남은 좌석을 기다린다
+ *  4. 제안된 상태는 내 좌석이 아직 확인할 수 있느냐로 갈린다(0060 만장일치)
  *  5. 나머지(none·disputed)는 내가 제안할 차례
  */
 export function classifyPendingMatch(m: PersonalMatch): MatchQueueBucket {
@@ -39,13 +40,13 @@ export function classifyPendingMatch(m: PersonalMatch): MatchQueueBucket {
     // 자유 기록 — 상대 확인 없이 내가 바로 확정한다
     if (!m.sourceRequestId) return isLineupComplete(m) ? 'enterResult' : 'fillLineup'
 
-    // 협상 행을 못 읽거나(조회 경로가 부착하지 않은 경우) 읽더라도 당사자가 아닌 관점 복사본.
-    // 복식 파트너·상대2는 제안·확인·이의 3종 RPC가 전부 requester/opponent만 통과시키므로 대표를 기다린다.
-    // 0052가 열람을 넓혔어도 viewerIsParty가 false로 남아 이 분기가 그대로 유지된다.
+    // 협상 행을 못 읽거나(조회 경로가 참가자를 부착하지 않은 경우) 좌석 판정에 실패한 관점 복사본.
+    // 0059부터 좌석 넷 전원이 협상 자격을 가지므로 이 분기는 폴백에 가깝다.
     const c = m.confirmation
     if (!c || !c.viewerIsParty) return 'awaitingCounterpart'
 
-    if (c.status === 'proposed') return c.proposedByMe ? 'awaitingCounterpart' : 'confirmResult'
+    // 확인은 **좌석별 만장일치**다(0060) — 제안자도, 이미 확인한 좌석도 남은 좌석을 기다린다.
+    if (c.status === 'proposed') return canRespondToProposal(c) ? 'confirmResult' : 'awaitingCounterpart'
     if (c.status === 'none' || c.status === 'disputed') return 'enterResult'
 
     // confirmed인데 세트가 없는 조합은 존재할 수 없다(confirm이 양측 세트를 동시에 채운다) — 방어적 폴백

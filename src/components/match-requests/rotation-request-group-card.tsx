@@ -75,7 +75,7 @@ export function RotationRequestGroupCard({ sessionId, items }: Props) {
 
             <p className="text-caption text-muted-foreground break-keep">
                 회원 참가자 전원이 수락해야 모두의 기록에 추가됩니다
-                {remaining > 1 && ` (내 응답 외 ${remaining - 1}명 남음)`}. 이후 결과는 게임마다 상대팀 대표가 확인하면 확정됩니다.
+                {remaining > 1 && ` (내 응답 외 ${remaining - 1}명 남음)`}. 이후 결과는 게임마다 회원 참가자 전원이 확인하면 확정됩니다.
             </p>
             {error && <p className="text-caption text-destructive">{error}</p>}
         </div>

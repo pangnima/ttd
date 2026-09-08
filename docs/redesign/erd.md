@@ -96,7 +96,7 @@ Step1 §2에서 확인한 "두 개의 독립 상태 축"을 테이블로도 분�
 
 ```
 match_requests (                      -- 축 A: 요청 자체 상태만
-  id, requester_id, opponent_user_id, -- opponent_user_id = 대표 확인자(복식 포함)
+  id, requester_id, opponent_user_id, -- opponent_user_id = 상대 슬롯 대표(복식 포함). 0060부터 결과 확정은 좌석 전원 만장일치(negotiations.confirmed_by)
   played_at, played_time not null,    -- 상호확인 요청은 항상 시간 필수 (직접기록과의 의도된 비대칭, §7)
   match_type, surface, notes,
   status,                             -- 'pending' | 'accepted' | 'rejected' | 'canceled'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { OpponentCandidate } from '@/lib/queries/users'
-import { resolveConfirmRep } from './confirm-flow'
+import { resolveConfirmRep, resolveSaveOutcome } from './confirm-flow'
 
 const CANDIDATES: OpponentCandidate[] = [
     { id: 'member-1', name: '회원1', isGuest: false, clubNames: ['A'] },
@@ -32,5 +32,29 @@ describe('resolveConfirmRep', () => {
 
     it('단식은 상대2를 보지 않는다', () => {
         expect(resolveConfirmRep(p('A'), p('B', 'member-1'), CANDIDATES, false)).toBeNull()
+    })
+})
+
+describe('resolveSaveOutcome — 저장이 실제로 하는 일', () => {
+    const base = { isRotation: false, hasRep: false, allowEmptyPlayers: false, allFilled: true }
+
+    it('로테이션은 대표 유무와 무관하게 일정(참여 요청)이다', () => {
+        expect(resolveSaveOutcome({ ...base, isRotation: true })).toBe('rotationPlan')
+        expect(resolveSaveOutcome({ ...base, isRotation: true, hasRep: true })).toBe('rotationPlan')
+    })
+
+    it('대표가 있으면 방 안은 방 게임, 방 밖은 확인 요청', () => {
+        expect(resolveSaveOutcome({ ...base, hasRep: true })).toBe('confirmRequest')
+        expect(resolveSaveOutcome({ ...base, hasRep: true, roomId: 'r1' })).toBe('roomGame')
+    })
+
+    it('모집형에서 라인업이 비면 모집 중', () => {
+        expect(resolveSaveOutcome({ ...base, allowEmptyPlayers: true, allFilled: false })).toBe('recruiting')
+    })
+
+    it('상대팀에 회원이 없으면 내 기록에만 남는다 — 종전에 부정 신호가 없던 갈래', () => {
+        expect(resolveSaveOutcome(base)).toBe('freeRecord')
+        // 모집형이어도 라인업이 다 찼는데 대표가 없으면(전원 비회원) 자유 기록이다
+        expect(resolveSaveOutcome({ ...base, allowEmptyPlayers: true, allFilled: true })).toBe('freeRecord')
     })
 })

@@ -11,18 +11,19 @@ const REASON_MAX = 200
 
 type Props = {
     opponentName: string
-    sets: PersonalMatchSetScore[]  // 상대가 제안한 게임(세트) 스코어 — 내 관점으로 반전 완료
+    sets: PersonalMatchSetScore[]  // 제안된 게임(세트) 스코어 — 내 관점으로 반전 완료
     onConfirm: () => void
     onDispute: (reason: string) => void
+    progressLabel?: string  // '2/4명 확인' — 있으면 만장일치 진행도를 안내에 붙인다
     isPending: boolean
     error: string | null
 }
 
 /**
- * 결과 검토 패널 — 상대가 제안한 게임 스코어를 내 관점으로 보여주고 [확인] 또는 [이의 제기(사유 선택)]를 받는다.
- * 확인하면 양측 기록이 확정되어 이후 수정할 수 없다.
+ * 결과 검토 패널 — 제안된 게임 스코어를 내 관점으로 보여주고 [확인] 또는 [이의 제기(사유 선택)]를 받는다.
+ * 내 확인은 한 표다(0060) — 회원 좌석 전원이 확인한 순간 모두의 기록이 확정되어 이후 수정할 수 없다.
  */
-export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, isPending, error }: Props) {
+export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, progressLabel, isPending, error }: Props) {
     const [disputing, setDisputing] = useState(false)
     const [reason, setReason] = useState('')
 
@@ -51,7 +52,8 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, is
                 </div>
             ) : (
                 <p className="text-caption text-muted-foreground break-keep">
-                    확인하면 양쪽 기록에 결과가 확정되며 이후 수정할 수 없습니다. 다르면 이의를 제기해 다시 입력받을 수 있습니다.
+                    회원 참가자 전원이 확인하면 모두의 기록에 결과가 확정되며 이후 수정할 수 없습니다.
+                    {progressLabel && ` (지금까지 ${progressLabel})`} 다르면 이의를 제기해 다시 입력받을 수 있습니다.
                 </p>
             )}
 

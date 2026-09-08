@@ -170,17 +170,25 @@ export type PersonalMatch = {
 }
 
 /**
- * 상호 확인 경기의 결과 제안/확인 상태 — match_requests.result_status를 보는 사람(viewer) 관점으로 정리한 것.
- * none: 결과 없음 / proposed: 한쪽이 세트 제안 → 상대 확인 대기 / confirmed: 양측 확정 / disputed: 이의 제기됨(재제안 가능)
+ * 상호 확인 경기의 결과 제안/확인 상태 — match_result_negotiations를 보는 사람(viewer) 관점으로 정리한 것.
+ * none: 결과 없음 / proposed: 한쪽이 세트 제안 → 회원 좌석 전원의 확인 대기 / confirmed: 전원 확정 /
+ * disputed: 이의 제기됨(재제안 가능). 0060부터 확인은 **좌석별 만장일치**다 — 제안이 곧 제안자의 확인이고,
+ * 나머지 회원 좌석(단식 1·복식 3)이 각각 확인해야 정산된다.
  */
 export type PersonalMatchConfirmation = {
     requestId: string
     status: MatchResultStatus
     proposedByMe: boolean
-    proposedSets: PersonalMatchSetScore[]  // viewer 관점으로 반전 완료된 제안 세트
+    // 내 좌석이 이미 확인했는가 (0060). 제안자는 제안 시점에 자동으로 확인한 것이 된다.
+    // 검토 모드·큐 버킷 판정은 이 값과 proposedByMe를 함께 본다(canRespondToProposal).
+    confirmedByMe: boolean
+    // 확인 진행도 — 분모는 user_id가 있는 좌석 수(단식 2·복식 최대 4). DB 분모는 활성 회원이라
+    // 탈퇴자가 끼면 1 차이가 날 수 있다(표시 전용).
+    confirmProgress: { confirmed: number; total: number }
+    proposedSets: PersonalMatchSetScore[]  // viewer 좌석 관점으로 변환 완료된 제안 세트
     disputeReason?: string
-    // viewer가 요청 당사자(requester 또는 대표 확인자 opponent)인가 — 제안·확인·이의 3종 RPC의 통과 조건과 같다.
-    // false면 복식 파트너·상대2의 관점 행이라 대표의 확인을 기다리는 것 외에 할 수 있는 일이 없다.
+    // viewer가 이 요청의 **좌석 넷**(요청자·파트너·대표·상대2) 중 하나인가 — 제안·확인·이의·정정
+    // 4종 RPC의 통과 조건과 같다(0059). false면 협상 자격이 없어 배지만 본다.
     viewerIsParty: boolean
 }
 
@@ -190,6 +198,27 @@ export type PersonalMatchConfirmation = {
 export type RotationPoolPlayer = {
     userId?: string
     name: string
+    hand?: 'right' | 'left'
+    ntrp?: number
+}
+
+/**
+ * 좌석 상태. 요청 좌석(3값)과 달리 **주최자의 제외(`removed`)** 가 더 있다 (0059).
+ * 거절과 같은 성질의 이력이다 — 둘 다 명부에서는 빠지지만 좌석은 남아, 다시 초대할 수 있다.
+ */
+export type RotationSeatStatus = RequestAcceptance | 'removed'
+
+/**
+ * 세션(일정) 참여 좌석 1개 (0057). 풀의 **회원**만 좌석을 갖는다 — 비회원은 수락 대상이 아니다.
+ * 세션 소유자는 좌석 행이 없다(세션을 만든 것이 곧 동의). 요청 좌석(MatchRequestSeat)과 달리
+ * role이 없다: 세션에는 좌석이 아니라 풀만 있고, 역할은 게임을 구성할 때 비로소 정해진다.
+ */
+export type RotationSessionSeat = {
+    userId: string
+    name: string
+    acceptance: RotationSeatStatus
+    // 좌석은 users 조인으로 채운다 — 거절자는 players에서 빠지므로 명부에서 이름을 찾을 수 없다(0058).
+    // 재초대 시 빌더의 로컬 행을 그대로 채우는 데도 쓴다.
     hand?: 'right' | 'left'
     ntrp?: number
 }
@@ -206,6 +235,14 @@ export type RotationSession = {
     players: RotationPoolPlayer[]  // 나 제외, 3명 이상
     createdAt: string
     roomId?: string         // 매칭 리스트에 노출된 세션이면 방 id (0046)
+    // ── 참여 동의 (0057) ──
+    seats: RotationSessionSeat[]
+    viewerParticipation?: RotationSeatStatus  // 없으면 나는 좌석이 없다(소유자·방 참가자·무관자)
+    /**
+     * 세션을 만든 사람. players에는 소유자가 없으므로(= '나 제외'), 비소유자가 결과를 입력할 때
+     * 빌더 풀에 소유자를 끼워 넣으려면 이 값이 필요하다(방 세션은 방 참가자 목록이 대신해 왔다).
+     */
+    owner?: RotationPoolPlayer
 }
 
 // ── 매칭 리스트(매칭 룸) (0046·0048) ────────────────────────────────

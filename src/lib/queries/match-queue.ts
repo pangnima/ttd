@@ -11,6 +11,8 @@ import {
     type MatchQueueBucket, type MatchQueueCounts,
 } from '@/lib/match-requests/queue'
 import { classifyPendingRequest } from '@/lib/match-requests/participants'
+import { classifyRotationSession } from '@/lib/personal-matches/rotation-participation'
+import type { ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
 import type { MatchRoomInvite, PersonalMatch, RotationSession } from '@/types'
 
 /**
@@ -36,8 +38,13 @@ export type MatchQueue = {
     /** 종료된 요청 이력 (rejected|canceled, 양방향) */
     closedRequests: MatchRequestWithUser[]
     roomInvites: MatchRoomInvite[]
+    /** 내가 수락/거절해야 할 로테이션 일정 (0057) — 경기 전이라 아직 요청도 기록도 없다 */
+    sessionInvites: RotationSession[]
+    /** 내 수락은 끝났고 주최자의 결과 입력을 기다리는 세션 (0057) */
+    awaitingOwnerSessions: RotationSession[]
     // ── B축 ──
     pendingMatches: PendingMatchEntry[]
+    /** 내가 지금 결과를 입력할 수 있는 세션만 — 수락 전 세션이 섞이면 눌리지 않는 버튼이 뜬다 */
     rotationSessions: RotationSession[]
     /** 내가 이미 게임을 넣은 방 세션 id — 카드는 계속 보이되 뱃지 카운트에서만 제외 */
     enteredSessionIds: string[]
@@ -46,6 +53,7 @@ export type MatchQueue = {
 
 const EMPTY_QUEUE: MatchQueue = {
     receivedRequests: [], sentRequests: [], awaitingMemberRequests: [], closedRequests: [], roomInvites: [],
+    sessionInvites: [], awaitingOwnerSessions: [],
     pendingMatches: [], rotationSessions: [], enteredSessionIds: [], counts: EMPTY_QUEUE_COUNTS,
 }
 
@@ -62,7 +70,21 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     ])
 
     // 웨이브 2 — 방 멤버십을 알아야 방 세션을 좁힐 수 있다
-    const rotationSessions = await fetchQueueRotationSessions(userId, memberships.joinedRoomIds)
+    const allSessions = await fetchQueueRotationSessions(userId, memberships.joinedRoomIds)
+
+    // 레인 분리(0057). 'enter'만 결과 입력 목록에 넣는다 — 수락 전 세션에 [결과 입력]을 그리면
+    // finalize가 not_session_participant로 거부하는 버튼이 화면에 남는다.
+    const joined = new Set(memberships.joinedRoomIds)
+    const sessionInvites: RotationSession[] = []
+    const awaitingOwnerSessions: RotationSession[] = []
+    const rotationSessions: RotationSession[] = []
+    for (const s of allSessions) {
+        const lane = classifyRotationSession(s, userId, joined)
+        if (lane === 'enter') rotationSessions.push(s)
+        else if (lane === 'respond') sessionInvites.push(s)
+        else if (lane === 'awaitOwner') awaitingOwnerSessions.push(s)
+    }
+
     // 웨이브 3 — 내가 이미 게임을 넣은 세션(0050 이후 방 세션은 finalize 후에도 남는다)
     const enteredSessionIds = await fetchEnteredSessionIds(userId, rotationSessions.map((s) => s.id))
 
@@ -92,13 +114,15 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     return {
         receivedRequests, sentRequests, awaitingMemberRequests, closedRequests,
         roomInvites: memberships.invites,
+        sessionInvites, awaitingOwnerSessions,
         pendingMatches, rotationSessions, enteredSessionIds,
         counts: {
-            participation: receivedRequests.length + memberships.invites.length,
+            participation: receivedRequests.length + memberships.invites.length + sessionInvites.length,
             confirmResult: tallied.confirmResult,
             enterResult: tallied.enterResult + unenteredSessions,
             fillLineup: tallied.fillLineup,
-            waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length,
+            waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length
+                + awaitingOwnerSessions.length,
         },
     }
 })
@@ -106,6 +130,31 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
 /** 빈 큐 — 비로그인 등 조회를 건너뛰는 경로가 같은 형태를 쓰도록 */
 export function emptyMatchQueue(): MatchQueue {
     return EMPTY_QUEUE
+}
+
+/**
+ * 큐 → 중복 일정 경고용 슬롯 목록 (0057). 큐는 이미 **미확정 일정 전량**을 담고 있으므로
+ * 새 쿼리 없이 파생한다(fetchMatchQueue는 React cache라 레이아웃과 같은 한 벌을 쓴다).
+ * 확정된 경기는 큐에 없다 — 이미 끝난 경기와의 시각 일치는 중복 일정이 아니다.
+ */
+export function scheduleSlotsOf(queue: MatchQueue): ScheduleSlot[] {
+    const label = (opponent: string | undefined, kind: string) => `${opponent || kind}`
+    return [
+        ...queue.pendingMatches.map(({ match }) => ({
+            playedAt: match.playedAt,
+            playedTime: match.playedTime,
+            label: label(match.opponentName, '기록'),
+        })),
+        ...queue.sentRequests.map(({ request }) => ({
+            playedAt: request.playedAt, playedTime: request.playedTime, label: label(undefined, '보낸 확인 요청'),
+        })),
+        ...queue.awaitingMemberRequests.map(({ request }) => ({
+            playedAt: request.playedAt, playedTime: request.playedTime, label: label(undefined, '참여 대기 중인 경기'),
+        })),
+        ...[...queue.rotationSessions, ...queue.awaitingOwnerSessions].map((s) => ({
+            playedAt: s.playedAt, playedTime: s.playedTime, label: '로테이션 경기',
+        })),
+    ]
 }
 
 /**

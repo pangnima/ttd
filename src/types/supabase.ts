@@ -652,6 +652,7 @@ export type Database = {
       }
       match_result_negotiations: {
         Row: {
+          confirmed_by: string[]
           dispute_reason: string | null
           proposed_at: string | null
           proposed_by: string | null
@@ -661,6 +662,7 @@ export type Database = {
           set_scores: Json
         }
         Insert: {
+          confirmed_by?: string[]
           dispute_reason?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
@@ -670,6 +672,7 @@ export type Database = {
           set_scores?: Json
         }
         Update: {
+          confirmed_by?: string[]
           dispute_reason?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
@@ -943,6 +946,45 @@ export type Database = {
           },
         ]
       }
+      rotation_session_participants: {
+        Row: {
+          created_at: string
+          participation_status: string
+          responded_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          participation_status?: string
+          responded_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          participation_status?: string
+          responded_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotation_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rotation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rotation_session_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rotation_sessions: {
         Row: {
           court_name: string | null
@@ -1108,7 +1150,7 @@ export type Database = {
       }
       confirm_match_result: {
         Args: { p_request_id: string }
-        Returns: undefined
+        Returns: boolean
       }
       create_match_game: {
         Args: {
@@ -1164,6 +1206,38 @@ export type Database = {
         Args: { p_accept: boolean; p_rotation_session_id: string }
         Returns: number
       }
+      respond_rotation_plan: {
+        Args: { p_accept: boolean; p_session_id: string }
+        Returns: undefined
+      }
+      add_rotation_session_player: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      request_result_seats: {
+        Args: { p_request_id: string }
+        Returns: string[]
+      }
+      request_seat_of: {
+        Args: { p_request_id: string; p_user_id: string }
+        Returns: string
+      }
+      normalize_to_requester_perspective: {
+        Args: { p_seat: string; p_sets: Json }
+        Returns: Json
+      }
+      remove_rotation_session_player: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      is_rotation_session_party: {
+        Args: { p_session_id: string }
+        Returns: boolean
+      }
+      rotation_seats_accepted: {
+        Args: { p_session_id: string; p_uids: string[] }
+        Returns: boolean
+      }
       reject_match_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -1177,6 +1251,10 @@ export type Database = {
         Returns: undefined
       }
       resolve_rotation_player: { Args: { p_player: Json }; Returns: Json }
+      settle_match_result: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
       is_request_party: {
         Args: { p_request_id: string }
