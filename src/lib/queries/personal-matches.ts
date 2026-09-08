@@ -26,6 +26,7 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
  * source_request_id를 모아 match_requests를 1회 in() 조회한다 (SELECT 정책으로 자연 필터 — 0052부터
  * 복식 파트너·상대2도 자기 경기의 협상을 읽고, 0059부터 좌석 넷 전원이 협상에 참여한다).
  * confirmed_by(0060)까지 실어야 '내가 이미 확인했는가'와 진행도가 나온다 — 빠뜨리면 권한이 과소로 무너진다.
+ * disputed_by(0061)는 이의 탭의 섹션 분할·배지 이름용 — 빠뜨리면 이의자 미상 폴백 문구로만 떨어진다.
  * 개인 경기 결과 화면(확정)·확인 요청 허브(미확정)·매칭 룸 상세가 공용한다.
  */
 export async function attachConfirmations(matches: PersonalMatch[], userId: string): Promise<PersonalMatch[]> {
@@ -35,7 +36,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, confirmed_by)')
+        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, confirmed_by)')
         .in('id', requestIds)
     if (error || !data) return matches
 
@@ -54,6 +55,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
                 proposed_by: neg?.proposed_by ?? null,
                 proposed_set_scores: neg?.proposed_set_scores ?? [],
                 dispute_reason: neg?.dispute_reason ?? null,
+                disputed_by: neg?.disputed_by ?? null,
                 participants: row.participants ?? [],
                 confirmed_by: neg?.confirmed_by ?? [],
             }, userId),

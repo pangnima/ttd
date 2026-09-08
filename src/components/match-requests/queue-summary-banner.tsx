@@ -14,9 +14,11 @@ export function QueueSummaryBanner({ counts }: Props) {
 
     const toEnter = counts.enterResult + counts.fillLineup
     const toConfirm = counts.confirmResult + counts.participation
+    // 이의 재입력은 결과 입력 대기에 합치지 않는다 — 다른 탭(이의 제기)으로 간다(0061)
     const parts = [
         toEnter > 0 && `결과 입력 대기 ${toEnter}건`,
         toConfirm > 0 && `확인 대기 ${toConfirm}건`,
+        counts.reenterResult > 0 && `이의 재입력 ${counts.reenterResult}건`,
     ].filter((v): v is string => !!v)
 
     return (

@@ -2,10 +2,11 @@
 
 import type { PersonalMatch } from '@/types'
 import { Button } from '@/components/ui/button'
-import { bystanderWaitingBadge, canRespondToProposal } from '@/lib/personal-matches/confirmation'
-import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
+import { bystanderWaitingBadge, canRespondToProposal, disputerNameOf } from '@/lib/personal-matches/confirmation'
+import { buildAdLabels, formatOpponents, formatTeams, namedSeatsOf } from '@/lib/personal-matches/labels'
 import { hasResult } from '@/lib/personal-matches/winner'
 import { MutualLockedBadge } from '@/components/personal-matches/match-actions'
+import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
 import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
@@ -18,7 +19,8 @@ const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정�
 /**
  * 상호 확인 경기(source_request_id 보유)의 카드 액션 — 결과 제안/확인 상태별 분기.
  *  - 확정(winner 있음/confirmed): '상호 확인' 잠금 배지
- *  - none/disputed: [결과 입력] → propose (disputed면 사유 표시)
+ *  - disputed: 이의자 배지 + [다시 입력] (DisputedResultActions — 제안자만 강조, 0061)
+ *  - none: [결과 입력] → propose
  *  - proposed & 내 제안: '참가자 확인 대기' + 진행도 + [제안 수정]
  *  - proposed & 내가 이미 확인: '확인 완료' + 진행도 (버튼 없음)
  *  - proposed & 아직 미확인: [결과 확인] → review (확인/이의)
@@ -36,6 +38,20 @@ export function MutualResultActions({ match }: Props) {
     }
 
     if (hasResult(match) || !c || !requestId || c.status === 'confirmed') return <MutualLockedBadge />
+
+    if (c.status === 'disputed') {
+        return (
+            <DisputedResultActions
+                requestId={requestId}
+                confirmation={c}
+                opponentName={formatOpponents(match)}
+                teams={formatTeams(match)}
+                adLabels={buildAdLabels(match)}
+                disputerName={disputerNameOf(c, namedSeatsOf(match))}
+                badgeClassName={WAITING_BADGE}
+            />
+        )
+    }
 
     const reviewMode = canRespondToProposal(c)
     const editingOwn = c.status === 'proposed' && c.proposedByMe
@@ -57,11 +73,6 @@ export function MutualResultActions({ match }: Props) {
                     <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
                     <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
                 </>
-            )}
-            {c.status === 'disputed' && (
-                <span className={WAITING_BADGE} title={c.disputeReason ?? '제안 결과에 이의가 제기됐습니다'}>
-                    이의 제기됨
-                </span>
             )}
             <Button
                 size="sm"

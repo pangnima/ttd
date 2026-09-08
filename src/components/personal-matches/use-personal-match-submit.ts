@@ -7,6 +7,7 @@ import { createMatchRequestAction } from '@/lib/actions/match-requests'
 import { createRoomGameAction } from '@/lib/actions/match-rooms'
 import { createRotationSessionAction } from '@/lib/actions/rotation-sessions'
 import { compactPool, poolToPlayers } from '@/lib/personal-matches/rotation'
+import { hubTabHref } from '@/lib/match-requests/tabs'
 import { handOf, type PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 /**
@@ -107,7 +108,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
                 playedAt, playedTime, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-            }, s.listing), '/me/match-requests?tab=waiting')
+            }, s.listing), hubTabHref('waiting'))
             return
         }
 

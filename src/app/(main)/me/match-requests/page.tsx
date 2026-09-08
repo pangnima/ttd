@@ -4,10 +4,12 @@ import { fetchMatchQueue } from '@/lib/queries/match-queue'
 import { fetchPastOpponents } from '@/lib/queries/personal-matches'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchRoomParticipantCandidatesByRooms } from '@/lib/queries/match-rooms'
-import { myTurnTotal } from '@/lib/match-requests/queue'
+import { myTurnTotal, type MatchQueueCounts } from '@/lib/match-requests/queue'
+import { HUB_TABS, resolveHubTab, type HubTab } from '@/lib/match-requests/tabs'
 import { LinkTabs } from '@/components/common/link-tabs'
 import { MyTurnPanel } from '@/components/match-requests/my-turn-panel'
 import { WaitingPanel } from '@/components/match-requests/waiting-panel'
+import { DisputedPanel } from '@/components/match-requests/disputed-panel'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 
@@ -16,8 +18,19 @@ export const metadata = { title: '경기 확인 요청' }
 type Props = { searchParams: Promise<{ tab?: string }> }
 
 /**
+ * 탭 배지 — 내 차례 탭은 그 탭 안의 건수(뱃지에서 이의 재입력을 뺀 것), 이의 탭은 다시 입력할 차례만.
+ * 두 배지의 합이 사이드바 뱃지(myTurnTotal)와 같다. 상대 대기는 뱃지 밖이다.
+ */
+function tabCount(tab: HubTab, c: MatchQueueCounts): number {
+    if (tab === 'mine') return myTurnTotal(c) - c.reenterResult
+    if (tab === 'waiting') return c.waiting
+    return c.reenterResult
+}
+
+/**
  * 미확정 경기 전량의 단일 작업 큐 — 확정 경기는 '개인 경기 결과'가 담당한다(분할 술어 has_result).
- * 「내 차례」는 사이드바 뱃지와 같은 집합이고, 「상대 대기」는 공이 상대에게 넘어간 것들이다.
+ * 「내 차례」와 「이의 제기」의 다시 입력할 차례가 사이드바 뱃지의 집합이고, 「상대 대기」는 공이 상대에게 넘어간 것들이다.
+ * 세 탭은 상호배타다(0061).
  */
 export default async function MatchRequestsPage({ searchParams }: Props) {
     const supabase = await createClient()
@@ -25,7 +38,7 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
     if (!user) redirect('/login')
 
     const { tab } = await searchParams
-    const activeTab = tab === 'waiting' ? 'waiting' : 'mine'
+    const activeTab = resolveHubTab(tab)
 
     const queue = await fetchMatchQueue(user.id)
     // 로테이션 게임 빌더의 참가자 자동완성 — 허브에서만 필요하므로 큐(레이아웃 뱃지 경로)에는 넣지 않는다
@@ -58,22 +71,21 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
             <LinkTabs
                 ariaLabel="확인 요청 탭"
                 activeKey={activeTab}
-                items={[
-                    { key: 'mine', label: '내 차례', href: '/me/match-requests', count: myTurnTotal(queue.counts), emphasis: true },
-                    { key: 'waiting', label: '상대 대기', href: '/me/match-requests?tab=waiting', count: queue.counts.waiting },
-                ]}
+                items={HUB_TABS.map((t) => ({
+                    ...t, count: tabCount(t.key, queue.counts), emphasis: t.key !== 'waiting',
+                }))}
             />
 
-            {activeTab === 'mine' ? (
+            {activeTab === 'mine' && (
                 <MyTurnPanel
                     queue={queue}
                     viewerId={user.id}
                     picker={{ candidates: opponentCandidates, pastOpponents, selfUserId: user.id }}
                     roomParticipants={bySession}
                 />
-            ) : (
-                <WaitingPanel queue={queue} viewerId={user.id} />
             )}
+            {activeTab === 'waiting' && <WaitingPanel queue={queue} viewerId={user.id} />}
+            {activeTab === 'disputed' && <DisputedPanel queue={queue} />}
         </PageContainer>
     )
 }

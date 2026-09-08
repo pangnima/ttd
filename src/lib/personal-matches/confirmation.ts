@@ -22,6 +22,11 @@ export type ConfirmationSourceRow = {
      * 다시 뜨지만 RPC가 `result_already_confirmed_by_seat`로 거부하므로 역시 과다가 아니라 과소다.
      */
     confirmed_by?: string[] | null
+    /**
+     * 이의·정정으로 disputed를 만든 좌석의 user_id (0061). optional인 이유는 위와 같다 — 빠뜨리면
+     * `disputedByMe=false`·이름 미상으로 떨어져 배지가 '이의 제기됨' 폴백 문구를 쓸 뿐, 차례 판정은 흔들리지 않는다.
+     */
+    disputed_by?: string | null
 }
 
 /** 결과 협상 축의 좌석 — DB `request_seat_of`(0059)의 앱쪽 거울. 판정 순서까지 같아야 한다. */
@@ -82,6 +87,8 @@ export function buildConfirmation(row: ConfirmationSourceRow, viewerId: string):
         confirmProgress: { confirmed: confirmedBy.length, total: memberSeatCount(row) },
         proposedSets: toSeatPerspective(proposed, seat),
         disputeReason: row.dispute_reason ?? undefined,
+        disputedByMe: row.disputed_by === viewerId,
+        disputedBy: row.disputed_by ?? undefined,
         viewerIsParty: seat !== null,
     }
 }
@@ -94,6 +101,36 @@ export function buildConfirmation(row: ConfirmationSourceRow, viewerId: string):
 export function canRespondToProposal(c?: PersonalMatchConfirmation): boolean {
     if (!c) return false
     return c.status === 'proposed' && c.viewerIsParty && !c.proposedByMe && !c.confirmedByMe
+}
+
+/**
+ * 이의(disputed) 상태에서 '다시 입력할 차례'인가 — 큐 버킷(reenterResult)·이의 탭 섹션·카드 버튼 강조가
+ * 이 한 문장을 본다. 차례는 **제안자**다: 제안이 곧 제안자의 확인이므로 틀린 제안을 한 사람이 고친다.
+ * ⚠ `!disputedByMe`를 넣지 않는다 — dispute RPC가 제안자의 이의를 막아 그 조건은 이의 경로에서 항상 참이고,
+ * 정정(reopen)에서 제안자 본인이 되돌리면 `proposedByMe && disputedByMe`라 아무도 차례가 아닌 교착이 된다.
+ * 재제안 RPC는 좌석 누구나 통과시키므로 차례가 아닌 좌석에도 [다시 입력]은 남긴다(강조만 다르다).
+ * proposed_by가 null인 disputed 행(하드 삭제 시에만)은 전원 대기지만, 그 outline 버튼이 있어 교착은 아니다.
+ */
+export function isReentryTurn(c?: PersonalMatchConfirmation): boolean {
+    if (!c) return false
+    return c.status === 'disputed' && c.viewerIsParty && c.proposedByMe
+}
+
+/** 이름 해석용 좌석 — 관점 행의 참가자 스냅샷(파트너·상대1·상대2)에서 만든다(labels.ts namedSeatsOf) */
+export type NamedSeat = { userId?: string; name: string }
+
+/** 이의 제기자의 표시 이름 — 나면 '나', 좌석에서 찾으면 그 이름, 미상(0061 이전 행·좌석 밖)이면 undefined */
+export function disputerNameOf(c: PersonalMatchConfirmation | undefined, seats: NamedSeat[]): string | undefined {
+    if (!c || c.status !== 'disputed') return undefined
+    if (c.disputedByMe) return '나'
+    if (!c.disputedBy) return undefined
+    return seats.find((s) => s.userId && s.userId === c.disputedBy)?.name.trim() || undefined
+}
+
+/** 이의 배지 문구 — '내가 이의 제기' / 'OOO님 이의' / '이의 제기됨'(미상 폴백). 툴팁은 사유 */
+export function disputeBadge(c: PersonalMatchConfirmation, disputerName?: string): BystanderWaitingBadge {
+    const label = disputerName === '나' ? '내가 이의 제기' : disputerName ? `${disputerName}님 이의` : '이의 제기됨'
+    return { label, title: c.disputeReason ?? '제안 결과에 이의가 제기됐습니다' }
 }
 
 /**

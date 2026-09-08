@@ -211,7 +211,7 @@ export async function fetchRoomGameConfirmations(
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, confirmed_by)')
+        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, confirmed_by)')
         .in('id', requestIds)
     if (error || !data) return {}
 
@@ -226,6 +226,7 @@ export async function fetchRoomGameConfirmations(
             proposed_by: neg?.proposed_by ?? null,
             proposed_set_scores: neg?.proposed_set_scores ?? [],
             dispute_reason: neg?.dispute_reason ?? null,
+            disputed_by: neg?.disputed_by ?? null,
             participants: row.participants ?? [],
             confirmed_by: neg?.confirmed_by ?? [],
         }, viewerId)

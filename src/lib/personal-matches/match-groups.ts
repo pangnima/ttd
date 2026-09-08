@@ -103,3 +103,13 @@ export function buildMatchGroups(matches: PersonalMatch[]): MatchGroup[] {
     }
     return groups
 }
+
+/**
+ * 카드 순번 라벨 '게임 N' — 로테이션은 groupSeq(입력 순. 한 세션의 게임이 허브 섹션마다 갈려도 번호가 보존된다),
+ * 멀티 게임은 가상 카드 인덱스, 게임 1개짜리 레코드는 없음. 룸 행·로테이션 요청 묶음 카드와 같은 어휘다.
+ */
+export function gameLabelOf(kind: MatchGroupKind, m: PersonalMatch, index: number): string | undefined {
+    if (kind === 'record') return undefined
+    if (kind === 'rotation') return `게임 ${m.groupSeq ?? index + 1}`
+    return `게임 ${index + 1}`
+}

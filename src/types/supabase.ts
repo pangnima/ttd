@@ -654,6 +654,7 @@ export type Database = {
         Row: {
           confirmed_by: string[]
           dispute_reason: string | null
+          disputed_by: string | null
           proposed_at: string | null
           proposed_by: string | null
           proposed_set_scores: Json
@@ -664,6 +665,7 @@ export type Database = {
         Insert: {
           confirmed_by?: string[]
           dispute_reason?: string | null
+          disputed_by?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
           proposed_set_scores?: Json
@@ -674,6 +676,7 @@ export type Database = {
         Update: {
           confirmed_by?: string[]
           dispute_reason?: string | null
+          disputed_by?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
           proposed_set_scores?: Json
@@ -682,6 +685,13 @@ export type Database = {
           set_scores?: Json
         }
         Relationships: [
+          {
+            foreignKeyName: "match_result_negotiations_disputed_by_fkey"
+            columns: ["disputed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "match_result_negotiations_proposed_by_fkey"
             columns: ["proposed_by"]

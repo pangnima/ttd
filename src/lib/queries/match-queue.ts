@@ -21,6 +21,7 @@ import type { MatchRoomInvite, PersonalMatch, RotationSession } from '@/types'
  * 미확정 상태는 두 축으로 나뉜다:
  *  - A축: 아직 personal_matches 행이 없는 단계 — pending 요청 · 방 초대 · 미입력 로테이션 세션
  *  - B축: 경기가 된 뒤 결과가 비어 있는 행(has_result=false) — classifyPendingMatch가 버킷으로 나눈다
+ *    (이의 상태는 이의 탭 전용 버킷 2종으로 — 3탭은 상호배타, 0061)
  *
  * 확정 경기는 여기 절대 들어오지 않는다(개인 경기 결과 화면 소관) — 분할 술어는 has_result 하나다.
  */
@@ -123,6 +124,9 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
             fillLineup: tallied.fillLineup,
             waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length
                 + awaitingOwnerSessions.length,
+            // 이의 탭(0061) — 둘 다 B축 행뿐이라 조립 단계에서 더할 것이 없다
+            reenterResult: tallied.reenterResult,
+            disputeWaiting: tallied.disputeWaiting,
         },
     }
 })

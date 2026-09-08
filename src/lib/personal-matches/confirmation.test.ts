@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-    buildConfirmation, bystanderWaitingBadge, canReopenResult, canRespondToProposal, formatConfirmProgress,
+    buildConfirmation, bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf,
+    formatConfirmProgress, isReentryTurn,
     type ConfirmationSourceRow,
 } from './confirmation'
 import { invertSetScores } from './perspective'
@@ -86,6 +87,65 @@ describe('buildConfirmation', () => {
         expect(c.status).toBe('disputed')
         expect(c.disputeReason).toBe('2세트는 6-3')
         expect(c.proposedSets).toEqual([])
+    })
+})
+
+describe('이의 제기자 (0061)', () => {
+    // bob이 제안, dave(상대2)가 이의
+    const DISPUTED: ConfirmationSourceRow = {
+        ...DOUBLES, result_status: 'disputed', dispute_reason: '2게임 6-3', confirmed_by: [], disputed_by: 'dave',
+    }
+    const seats = [
+        { userId: 'carol', name: '캐롤' }, { userId: 'bob', name: '밥' }, { userId: 'dave', name: '데이브' },
+    ]
+
+    it('buildConfirmation — disputedByMe는 이의자에게만, disputedBy는 전원에게 같은 값', () => {
+        expect(buildConfirmation(DISPUTED, 'dave')).toMatchObject({ disputedByMe: true, disputedBy: 'dave' })
+        expect(buildConfirmation(DISPUTED, 'bob')).toMatchObject({ disputedByMe: false, disputedBy: 'dave' })
+        expect(buildConfirmation(DISPUTED, 'alice')).toMatchObject({ disputedByMe: false, disputedBy: 'dave' })
+    })
+
+    it('부착하지 않으면(0061 이전 행·미부착 경로) 미상 — false/undefined로 무너진다', () => {
+        const legacy = { ...DISPUTED, disputed_by: undefined }
+        expect(buildConfirmation(legacy, 'dave')).toMatchObject({ disputedByMe: false, disputedBy: undefined })
+    })
+
+    it('isReentryTurn — 제안자만 다시 입력할 차례', () => {
+        expect(isReentryTurn(buildConfirmation(DISPUTED, 'bob'))).toBe(true)     // 제안자
+        expect(isReentryTurn(buildConfirmation(DISPUTED, 'dave'))).toBe(false)   // 이의자
+        expect(isReentryTurn(buildConfirmation(DISPUTED, 'alice'))).toBe(false)  // 상대팀
+        expect(isReentryTurn(buildConfirmation(DISPUTED, 'carol'))).toBe(false)  // 제안자의 파트너
+    })
+
+    it('isReentryTurn — 제안자 본인이 정정(reopen)해도 그 사람이 차례다 (교착 방지 회귀)', () => {
+        const selfReopen = { ...DISPUTED, disputed_by: 'bob' }
+        expect(isReentryTurn(buildConfirmation(selfReopen, 'bob'))).toBe(true)
+    })
+
+    it('isReentryTurn — disputed가 아니거나 좌석이 없으면 false', () => {
+        expect(isReentryTurn(buildConfirmation(DOUBLES, 'bob'))).toBe(false)      // proposed
+        expect(isReentryTurn(buildConfirmation(DISPUTED, 'eve'))).toBe(false)     // 무관자
+        expect(isReentryTurn(buildConfirmation({ ...REQ, result_status: 'disputed' }, 'carol'))).toBe(false)  // 참가자 미부착
+        expect(isReentryTurn(undefined)).toBe(false)
+    })
+
+    it("disputerNameOf — 나면 '나', 좌석에서 찾으면 이름, 미상이면 undefined", () => {
+        expect(disputerNameOf(buildConfirmation(DISPUTED, 'dave'), seats)).toBe('나')
+        expect(disputerNameOf(buildConfirmation(DISPUTED, 'bob'), seats)).toBe('데이브')
+        expect(disputerNameOf(buildConfirmation({ ...DISPUTED, disputed_by: null }, 'bob'), seats)).toBeUndefined()
+        // userId 없는 비회원 슬롯은 건너뛴다 / 좌석 목록에 없는 id도 미상
+        expect(disputerNameOf(buildConfirmation(DISPUTED, 'bob'), [{ name: '비회원' }])).toBeUndefined()
+        expect(disputerNameOf(buildConfirmation(DOUBLES, 'bob'), seats)).toBeUndefined()  // proposed
+        expect(disputerNameOf(undefined, seats)).toBeUndefined()
+    })
+
+    it('disputeBadge — 세 문구 + 툴팁은 사유(없으면 폴백)', () => {
+        const c = buildConfirmation(DISPUTED, 'bob')
+        expect(disputeBadge(c, '나')).toEqual({ label: '내가 이의 제기', title: '2게임 6-3' })
+        expect(disputeBadge(c, '데이브')).toEqual({ label: '데이브님 이의', title: '2게임 6-3' })
+        expect(disputeBadge(c, undefined).label).toBe('이의 제기됨')
+        expect(disputeBadge(buildConfirmation({ ...DISPUTED, dispute_reason: null }, 'bob')).title)
+            .toBe('제안 결과에 이의가 제기됐습니다')
     })
 })
 

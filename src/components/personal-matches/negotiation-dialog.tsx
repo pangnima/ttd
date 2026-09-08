@@ -15,6 +15,8 @@ type Props = {
     opponentName: string
     teams: string
     adLabels?: AdLabels
+    /** 이의 제기자 표시 이름(disputerNameOf) — disputed 상태의 설명줄에만 쓴다 */
+    disputerName?: string
     dialog: ReturnType<typeof useResultDialog>
 }
 
@@ -23,7 +25,7 @@ type Props = {
  * 개인 경기 카드(MutualResultActions)와 룸 게임 행(RoomGameActions)이 같은 분기를 공유한다.
  * 검토/제안의 갈림은 canRespondToProposal 하나다(0060 만장일치) — 화면과 RPC의 자격이 같은 문장이어야 한다.
  */
-export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, dialog: d }: Props) {
+export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, dialog: d }: Props) {
     if (canRespondToProposal(c)) {
         return (
             <MatchResultDialog
@@ -44,8 +46,11 @@ export function NegotiationDialog({ requestId, confirmation: c, opponentName, te
     }
 
     const editingOwn = c.status === 'proposed' && c.proposedByMe
-    const description = c.status === 'disputed' && c.disputeReason
-        ? `${teams} · 상대 이의 사유: ${c.disputeReason}`
+    const disputed = c.status === 'disputed'
+    // 이의자 호칭 — '내 이의 사유' / 'OOO님 이의 사유' / '상대 이의 사유'(미상 폴백)
+    const disputer = disputerName === '나' ? '내' : disputerName ? `${disputerName}님` : '상대'
+    const description = disputed && c.disputeReason
+        ? `${teams} · ${disputer} 이의 사유: ${c.disputeReason}`
         : editingOwn
             ? `${teams} · 수정하면 다른 참가자의 확인이 초기화됩니다`
             : `${teams} · 저장하면 회원 참가자 전원에게 확인을 요청합니다`
@@ -55,7 +60,7 @@ export function NegotiationDialog({ requestId, confirmation: c, opponentName, te
             open={d.open}
             onOpenChange={d.setOpen}
             opponentName={opponentName}
-            title={editingOwn ? '제안 결과 수정' : '경기 결과 입력'}
+            title={editingOwn ? '제안 결과 수정' : disputed ? '경기 결과 다시 입력' : '경기 결과 입력'}
             description={description}
             initialSets={c.proposedSets.length > 0 ? c.proposedSets : undefined}
             adLabels={adLabels}

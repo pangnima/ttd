@@ -1,4 +1,5 @@
-import type { MatchType } from '@/types'
+import type { MatchType, PersonalMatch } from '@/types'
+import type { NamedSeat } from '@/lib/personal-matches/confirmation'
 
 /**
  * 개인 경기 참가자 라벨 헬퍼 — 카드·결과 입력 Dialog·요청 카드가 공유한다.
@@ -43,4 +44,15 @@ export function buildAdLabels(m: TeamLabelSource): AdLabels | undefined {
         myAdLabels: { me: '나', partner: m.partnerName?.trim() || UNSET.partner },
         oppAdLabels: { opponent: m.opponentName.trim() || UNSET.opponent1, opponent2: m.opponent2Name?.trim() || UNSET.opponent2 },
     }
+}
+
+/** 관점 행의 다른 좌석 셋(파트너·상대1·상대2) — 이의 제기자 이름 해석(disputerNameOf)용. 비회원 슬롯은 userId가 없다 */
+export function namedSeatsOf(
+    m: Pick<PersonalMatch, 'opponentUserId' | 'opponentName' | 'partnerUserId' | 'partnerName' | 'opponent2UserId' | 'opponent2Name'>,
+): NamedSeat[] {
+    return [
+        { userId: m.partnerUserId, name: m.partnerName ?? '' },
+        { userId: m.opponentUserId, name: m.opponentName },
+        { userId: m.opponent2UserId, name: m.opponent2Name ?? '' },
+    ]
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchResultStatus, PersonalMatch, PersonalMatchConfirmation } from '@/types'
 import {
-    EMPTY_QUEUE_COUNTS, classifyPendingMatch, myTurnTotal, tallyBuckets,
+    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeTotal, myTurnTotal, tallyBuckets,
 } from './queue'
 
 /**
@@ -25,7 +25,7 @@ function base(over: Partial<PersonalMatch> = {}): PersonalMatch {
 
 function conf(status: MatchResultStatus, proposedByMe = false, confirmedByMe = proposedByMe): PersonalMatchConfirmation {
     return {
-        requestId: 'r1', status, proposedByMe, confirmedByMe,
+        requestId: 'r1', status, proposedByMe, confirmedByMe, disputedByMe: false,
         confirmProgress: { confirmed: confirmedByMe ? 2 : 1, total: 4 },
         proposedSets: [], viewerIsParty: true,
     }
@@ -66,8 +66,31 @@ describe('classifyPendingMatch — 상호 확인 경기', () => {
         expect(classifyPendingMatch(mutual(conf('none')))).toBe('enterResult')
     })
 
-    it('disputed — 이의로 되돌아왔으니 다시 제안할 차례', () => {
-        expect(classifyPendingMatch(mutual(conf('disputed')))).toBe('enterResult')
+    it('disputed & 내 제안 — 이의 탭 · 다시 입력할 차례 (0061)', () => {
+        expect(classifyPendingMatch(mutual(conf('disputed', true, false)))).toBe('reenterResult')
+    })
+
+    it('disputed & 내가 이의 제기 — 이의 탭 · 재입력 대기', () => {
+        expect(classifyPendingMatch(mutual({ ...conf('disputed'), disputedByMe: true, disputedBy: 'me' }))).toBe('awaitingReentry')
+    })
+
+    it('disputed & 제안자도 이의자도 아닌 좌석(복식 파트너) — 재입력 대기', () => {
+        expect(classifyPendingMatch(mutual({ ...conf('disputed'), disputedBy: 'other' }))).toBe('awaitingReentry')
+    })
+
+    it('disputed & 제안자 본인이 정정(reopen) — 그래도 제안자 차례 (disputedByMe는 차례 판정에 쓰지 않는다)', () => {
+        expect(classifyPendingMatch(mutual({ ...conf('disputed', true, false), disputedByMe: true, disputedBy: 'me' }))).toBe('reenterResult')
+    })
+
+    it('disputed & 좌석 판정 실패 폴백 — 상대 대기가 아니라 이의 탭 (3탭 상호배타)', () => {
+        expect(classifyPendingMatch(mutual({ ...conf('disputed'), viewerIsParty: false }))).toBe('awaitingReentry')
+        expect(classifyPendingMatch(mutual({ ...conf('disputed', true, false), viewerIsParty: false }))).toBe('awaitingReentry')
+    })
+
+    it('disputed라도 모집 중이 먼저다', () => {
+        expect(classifyPendingMatch(base({
+            sourceRequestId: 'r1', roomId: 'room1', opponentName: '', confirmation: conf('disputed', true, false),
+        }))).toBe('fillLineup')
     })
 
     it('proposed & 상대 제안 — 내가 확인해야 한다', () => {
@@ -105,26 +128,42 @@ describe('classifyPendingMatch — 상호 확인 경기', () => {
 })
 
 describe('tallyBuckets', () => {
-    it('버킷별로 집계하고 awaitingCounterpart는 waiting으로 접는다', () => {
+    it('버킷별로 집계하고 awaitingCounterpart→waiting, awaitingReentry→disputeWaiting으로 접는다', () => {
         expect(tallyBuckets([
             'confirmResult', 'enterResult', 'enterResult', 'fillLineup',
             'awaitingCounterpart', 'awaitingCounterpart',
-        ])).toEqual({ confirmResult: 1, enterResult: 2, fillLineup: 1, waiting: 2 })
+            'reenterResult', 'awaitingReentry', 'awaitingReentry', 'awaitingReentry',
+        ])).toEqual({ confirmResult: 1, enterResult: 2, fillLineup: 1, waiting: 2, reenterResult: 1, disputeWaiting: 3 })
     })
 
     it('빈 목록은 전부 0', () => {
-        expect(tallyBuckets([])).toEqual({ confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0 })
+        expect(tallyBuckets([])).toEqual({
+            confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0, reenterResult: 0, disputeWaiting: 0,
+        })
     })
 })
 
-describe('myTurnTotal', () => {
-    it('내 차례 네 섹션만 합산하고 상대 대기는 뱃지에서 뺀다', () => {
-        expect(myTurnTotal({
-            participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99,
-        })).toBe(7)
+describe('myTurnTotal / disputeTotal', () => {
+    const counts = {
+        participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99, reenterResult: 2, disputeWaiting: 5,
+    }
+
+    it('뱃지 = 내 차례 네 섹션 + 이의 재입력. 상대 대기·이의 대기는 뺀다', () => {
+        expect(myTurnTotal(counts)).toBe(9)
+    })
+
+    it('이의 탭 총건수 = 재입력 차례 + 재입력 대기', () => {
+        expect(disputeTotal(counts)).toBe(7)
+    })
+
+    it('뱃지 = 내 차례 탭 배지 + 이의 탭 배지 — 탭 배지 두 개를 더하면 사이드바와 같다', () => {
+        const mineTab = myTurnTotal(counts) - counts.reenterResult
+        const disputedTab = counts.reenterResult
+        expect(mineTab + disputedTab).toBe(myTurnTotal(counts))
     })
 
     it('빈 큐는 0 — 배너·뱃지가 렌더되지 않는 조건', () => {
         expect(myTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
+        expect(disputeTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
     })
 })

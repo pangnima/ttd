@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PersonalMatch } from '@/types'
-import { buildMatchGroups, splitGameCards } from './match-groups'
+import { buildMatchGroups, gameLabelOf, splitGameCards } from './match-groups'
 
 type Over = Partial<PersonalMatch> & { id: string }
 
@@ -133,5 +133,23 @@ describe('buildMatchGroups — 방 로테이션(0050)', () => {
     it('결과 확인 대기(세트 없음) 게임은 게임 수에는 들어가고 전적에는 빠진다', () => {
         const [g] = buildMatchGroups([mutual, immediate, later])
         expect(g).toMatchObject({ gameCount: 3, wins: 1, losses: 0, draws: 0 })
+    })
+})
+
+describe("gameLabelOf — 순번 어휘 '게임 N' 단일 출처", () => {
+    it('로테이션은 groupSeq(입력 순) — 섹션이 갈려 인덱스가 0부터 시작해도 번호가 보존된다', () => {
+        expect(gameLabelOf('rotation', pm({ id: 'g', groupSeq: 3 }), 0)).toBe('게임 3')
+    })
+
+    it('로테이션인데 groupSeq가 없으면(레거시) 인덱스로 폴백', () => {
+        expect(gameLabelOf('rotation', pm({ id: 'g' }), 1)).toBe('게임 2')
+    })
+
+    it('멀티 게임은 가상 카드 인덱스 — 원본 행의 groupSeq는 쓰지 않는다', () => {
+        expect(gameLabelOf('multi', pm({ id: 'm', groupSeq: 9 }), 1)).toBe('게임 2')
+    })
+
+    it('게임 1개짜리 레코드는 라벨 없음', () => {
+        expect(gameLabelOf('record', pm({ id: 'r' }), 0)).toBeUndefined()
     })
 })

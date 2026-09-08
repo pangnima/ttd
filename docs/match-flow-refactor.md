@@ -8,7 +8,7 @@
 > | 1 · 마이그레이션 0051 (`has_result`) | ✅ 완료 | **원격 Supabase에 적용됨 — 다시 적용하지 말 것** |
 > | 2 · 순수 분류기 `match-requests/queue.ts` | ✅ 완료 | 테스트 18개 (`viewerIsParty` 케이스 포함) |
 > | 3 · 쿼리 계층 | ✅ 완료 | `queries/match-queue.ts`(`fetchMatchQueue`, React cache) + 개인 경기 확정/미확정 분할 + `viewerIsParty`·`isPerspective` 매핑 |
-> | 4 · 허브 실 연동 | ✅ 완료 | 픽스처·`result-confirm-card` 제거, 내 차례/상대 대기 2탭 8섹션 |
+> | 4 · 허브 실 연동 | ✅ 완료 | 픽스처·`result-confirm-card` 제거, 내 차례/상대 대기 2탭 8섹션 → 0061에서 「이의 제기」 탭 추가(3탭) |
 > | 5 · 개인 결과 축소 + 배너 | ✅ 완료 | `QueueSummaryBanner`, `MatchActions` 축소, 저장 후 목적지 교정 |
 > | 6 · 뱃지 단일화 + 죽은 코드 제거 | ✅ 완료 | 뱃지 = `myTurnTotal`, 구 쿼리 6종·`RotationSessionList` 삭제 |
 > | 7 · 매칭 리스트 3탭 | ✅ 완료 | `lib/match-rooms/tabs.ts`(+테스트)·`LinkTabs`·`RoomListSection`·`ROOM_LIST_LIMIT` |
@@ -36,7 +36,7 @@ Week 17~26을 거치며 기능이 화면 단위로 증식한 결과, **같은 "�
 | 화면 | 정체성 | 담는 상태 |
 |---|---|---|
 | **개인 경기 결과** `/me/personal-matches` | 내 확정 전적 아카이브 + 경기 추가 진입점 | 확정 경기만. 미확정은 상단 요약 배너로만 |
-| **경기 확인 요청** `/me/match-requests` | 미확정 전량의 단일 작업 큐 (**내 차례 / 상대 대기** 2탭) | 요청 대기·결과 미입력·확인 대기·이의·로테이션 미입력·모집 중·룸 초대 |
+| **경기 확인 요청** `/me/match-requests` | 미확정 전량의 단일 작업 큐 (**내 차례 / 상대 대기 / 이의 제기** 3탭 — 0061에서 이의 탭 추가, 상호배타) | 요청 대기·결과 미입력·확인 대기·이의·로테이션 미입력·모집 중·룸 초대 |
 | **매칭 리스트** `/match-rooms` | 전 회원 공개 방 목록 | **진행 중 / 내가 참여한 / 종료된** 3탭 |
 | **매칭 룸** `/match-rooms/[roomId]` | 참여자 정보 + **게임 입력 공간** | 룸 안에서 게임 추가·결과 입력까지 완결 |
 
@@ -264,7 +264,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 |---|---|---|---|
 | 1 | **경기 참여 확인** | `status='pending'` ∧ `opponent=나` **+** 룸 초대 `invited` | `ReceivedRequestCard` 수락/거절 · `RoomInviteCard` 수락/거절 (**props 불변**) |
 | 2 | **결과 확인 대기** | `accepted` ∧ `proposed` ∧ 제안자≠나 | `PersonalMatchCard` + `MutualResultActions` review(`:51,71-84`) → `confirm/disputeMatchResultAction` |
-| 3 | **결과 입력 대기** | (a) `accepted` ∧ `none` — **방 게임 전량 포함** (b) `disputed` (c) 자유 기록 `!hasResult` ∧ 라인업 완성 (d) 미입력 로테이션 세션 | (a)(b) `MutualResultActions` propose(`:85-104`) (c) `FreeMatchActions`(`match-actions.tsx:43-61`) → `updatePersonalMatchSetsAction` (d) `RotationSessionCard` → `RotationGamesDialog` → `finalizeRotationSessionAction` |
+| 3 | **결과 입력 대기** | (a) `accepted` ∧ `none` — **방 게임 전량 포함** (b) ~~`disputed`~~ → 0061부터 탭 3 「이의 제기」 (c) 자유 기록 `!hasResult` ∧ 라인업 완성 (d) 미입력 로테이션 세션 | (a)(b) `MutualResultActions` propose(`:85-104`) (c) `FreeMatchActions`(`match-actions.tsx:43-61`) → `updatePersonalMatchSetsAction` (d) `RotationSessionCard` → `RotationGamesDialog` → `finalizeRotationSessionAction` |
 | 4 | **참가자 채우기** | `isRecruiting(m)` | 작성자면 `/me/personal-matches/[id]/edit` + `RoomLink`, 아니면 안내 문구(현 `match-actions.tsx:40-42` 승계) |
 
 ### 탭 2 「상대 대기」 (`?tab=waiting`, 뱃지 제외)
@@ -275,6 +275,16 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 | 6 | **상대 수락 대기** | `status='pending'` ∧ `requester=나` | `SentRequestCard` [취소] (**props 불변**) |
 | 7 | **참가자 확인 대기** | `sourceRequestId` 있음 ∧ `!viewerIsParty` (좌석 판정 실패 폴백 — 0059부터 좌석 넷 전원이 협상하고, 0060부터 확정은 좌석 전원 만장일치) | 읽기 전용 배지. Step 11(0052) 이후 `bystanderWaitingBadge`가 결과 입력 대기/참가자 확인 대기/이의 제기됨을 구분해 표시 |
 | 8 | **종료된 요청** (`<details>` 접힘) | `rejected`/`canceled` 양방향 | 없음 (이력) |
+
+### 탭 3 「이의 제기」 (`?tab=disputed`, 0061 — 다시 입력할 차례만 뱃지)
+
+| # | 섹션 | 상태 조합 | 액션 |
+|---|---|---|---|
+| 9 | **다시 입력할 차례** | `disputed` ∧ 제안자=나 (`isReentryTurn`, 버킷 `reenterResult`) | `DisputedResultActions` — 'OOO님 이의' 배지 + [다시 입력] default → propose(사유 프리필 표시) |
+| 10 | **내가 이의 제기함** | `disputed` ∧ `disputed_by`=나 (버킷 `awaitingReentry`) | '내가 이의 제기' 배지 + [다시 입력] outline (RPC는 좌석 누구나 재제안 허용) |
+| 11 | **이의 진행 중** | `disputed` ∧ 제안자도 이의자도 아님 (+ 비좌석 폴백 `bystanderWaitingBadge` '이의 제기됨') | 배지 + [다시 입력] outline |
+
+세 탭은 **상호배타**다 — `classifyPendingMatch`가 disputed를 좌석 폴백보다 먼저 판정한다. 뱃지(`myTurnTotal`) = 내 차례 탭 배지 + 이의 탭 배지(`reenterResult`). ⚠ 차례 판정에 `!disputedByMe`를 넣으면 제안자 본인의 정정(reopen)에서 교착이 된다. 세션 게임은 `PendingMatchSection`이 `buildMatchGroups`로 묶어 '게임 N'(group_seq) 라벨을 붙인다.
 
 **승격 규칙**: `confirm_match_result` 성공 → `set_scores` 채워짐 → `hasResult` true → 허브에서 사라지고 개인 결과에 나타난다. **별도 코드 없이 불변식이 처리한다.**
 

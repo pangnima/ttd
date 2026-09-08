@@ -187,6 +187,10 @@ export type PersonalMatchConfirmation = {
     confirmProgress: { confirmed: number; total: number }
     proposedSets: PersonalMatchSetScore[]  // viewer 좌석 관점으로 변환 완료된 제안 세트
     disputeReason?: string
+    // 이의(dispute)·정정(reopen)으로 disputed를 만든 좌석 (0061). disputed 밖에서는 항상 false/undefined.
+    // '다시 입력할 차례' 판정에는 쓰지 않는다(isReentryTurn은 proposedByMe만 본다) — 섹션 분할·배지 문구 전용.
+    disputedByMe: boolean
+    disputedBy?: string   // user_id — 이름은 화면이 참가자 스냅샷과 대조한다(disputerNameOf). 0061 이전 행은 undefined
     // viewer가 이 요청의 **좌석 넷**(요청자·파트너·대표·상대2) 중 하나인가 — 제안·확인·이의·정정
     // 4종 RPC의 통과 조건과 같다(0059). false면 협상 자격이 없어 배지만 본다.
     viewerIsParty: boolean

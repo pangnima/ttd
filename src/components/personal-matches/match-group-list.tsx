@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
-import type { MatchGroup } from '@/lib/personal-matches/match-groups'
+import { gameLabelOf, type MatchGroup } from '@/lib/personal-matches/match-groups'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { PersonalMatchCard } from '@/components/personal-matches/personal-match-card'
 import { MatchGroupHeader } from '@/components/personal-matches/match-group-header'
@@ -14,8 +14,8 @@ type Props = {
 const GROUP_BOX = `${CARD_BASE} overflow-hidden`
 
 /**
- * 표시 그룹 → 카드 박스들. 묶음 그룹(로테이션 세션·멀티 게임 경기)은 헤더 행(일시가 앞) + 게임 카드 N장(메타 숨김)을
- * 한 박스에, 게임 1개짜리 레코드는 카드 1장을 각자의 박스에 담는다 —
+ * 표시 그룹 → 카드 박스들. 묶음 그룹(로테이션 세션·멀티 게임 경기)은 헤더 행(일시가 앞) + 게임 카드 N장(메타 숨김,
+ * '게임 N' 순번 — 로테이션은 group_seq 입력 순)을 한 박스에, 게임 1개짜리 레코드는 카드 1장을 각자의 박스에 담는다 —
  * 박스 사이 여백이 '다른 경기', 박스 안 얇은 선이 '같은 묶음의 다음 게임'이다.
  * 그룹마다 박스를 소유하므로 부모는 컨테이너를 주지 않는다(월 그룹·프로필 월 브라우저 공용).
  *
@@ -42,7 +42,7 @@ export function MatchGroupList({ groups, renderActions }: Props) {
                                 key={m.id}
                                 match={m}
                                 hideMeta
-                                gameLabel={isRotation ? undefined : `${i + 1}게임`}
+                                gameLabel={gameLabelOf(g.kind, m, i)}
                                 actions={isRotation ? renderActions?.(m) : undefined}
                             />
                         ))}

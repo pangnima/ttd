@@ -7,7 +7,10 @@ import { PILL_BASE } from '@/lib/dashboard/tokens'
 import { updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildRoomGameLabels } from '@/lib/match-rooms/game-labels'
 import { canEditRoomGame, isRoomGameParty } from '@/lib/match-rooms/game-status'
-import { bystanderWaitingBadge, canReopenResult, canRespondToProposal } from '@/lib/personal-matches/confirmation'
+import {
+    bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputerNameOf,
+} from '@/lib/personal-matches/confirmation'
+import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
 import { ReopenResultButton } from '@/components/personal-matches/reopen-result-button'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
@@ -85,6 +88,22 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
         if (!isRoomGameParty(game, viewerId)) return null
         const badge = bystanderWaitingBadge(c)
         return <span className={WAITING_BADGE} title={badge.title}>{badge.label}</span>
+    }
+
+    // 이의(0061) — 개인 경기 카드와 같은 컴포넌트. 이름 해석용 좌석은 작성자 + 라인업 회원
+    if (c.status === 'disputed') {
+        const seats = [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]
+        return (
+            <DisputedResultActions
+                requestId={requestId}
+                confirmation={c}
+                opponentName={opponentName}
+                teams={teams}
+                adLabels={buildAdLabels(labels)}
+                disputerName={disputerNameOf(c, seats)}
+                badgeClassName={WAITING_BADGE}
+            />
+        )
     }
 
     const reviewMode = canRespondToProposal(c)

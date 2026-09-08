@@ -1,8 +1,7 @@
 import type { MatchQueue } from '@/lib/queries/match-queue'
 import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
-import { PersonalMatchCard } from '@/components/personal-matches/personal-match-card'
 import { QueueSection } from '@/components/match-requests/queue-section'
-import { PendingMatchActions } from '@/components/match-requests/pending-match-actions'
+import { PendingMatchSection } from '@/components/match-requests/pending-match-section'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
 import { SentRequestCard } from '@/components/match-requests/sent-request-card'
 import { AwaitingMemberRequestCard } from '@/components/match-requests/awaiting-member-request-card'
@@ -16,13 +15,15 @@ type Props = {
 /**
  * 확인 요청 허브 「상대 대기」 탭 — 공이 상대에게 넘어가 있는 것들(뱃지에 세지 않는다).
  * 남은 참가자 확인 대기 / 상대 수락 대기 / 열람 전용 대기 + 종료된 요청 이력.
+ * 이의 상태는 여기 오지 않는다 — 「이의 제기」 탭 전용이다(0061).
  */
 export function WaitingPanel({ queue, viewerId }: Props) {
     const waiting = queue.pendingMatches.filter((p) => p.bucket === 'awaitingCounterpart')
     // 내 확인(제안 포함)은 끝났고 남은 좌석을 기다리는 것과, 협상 자격이 없는 관점 행(폴백)을 가른다(0060)
-    const [myConfirmed, repWaiting] = partition(
-        waiting, (p) => !!p.match.confirmation && (p.match.confirmation.proposedByMe || p.match.confirmation.confirmedByMe),
+    const myConfirmed = waiting.filter(
+        (p) => !!p.match.confirmation && (p.match.confirmation.proposedByMe || p.match.confirmation.confirmedByMe),
     )
+    const repWaiting = waiting.filter((p) => !myConfirmed.includes(p))
     const closed = queue.closedRequests
 
     const awaitingMembers = queue.awaitingMemberRequests
@@ -36,15 +37,11 @@ export function WaitingPanel({ queue, viewerId }: Props) {
 
     return (
         <>
-            <QueueSection title="참가자 확인 대기" hint="내 확인은 끝났습니다 — 남은 회원 참가자가 모두 확인하면 확정됩니다" count={myConfirmed.length}>
-                {myConfirmed.map(({ match, bucket }) => (
-                    <PersonalMatchCard
-                        key={match.id}
-                        match={match}
-                        actions={<PendingMatchActions match={match} bucket={bucket} />}
-                    />
-                ))}
-            </QueueSection>
+            <PendingMatchSection
+                title="참가자 확인 대기"
+                hint="내 확인은 끝났습니다 — 남은 회원 참가자가 모두 확인하면 확정됩니다"
+                entries={myConfirmed}
+            />
 
             <QueueSection title="상대 수락 대기" hint="상대가 수락해야 기록이 만들어집니다" count={queue.sentRequests.length}>
                 {queue.sentRequests.map((item) => (
@@ -72,15 +69,11 @@ export function WaitingPanel({ queue, viewerId }: Props) {
                 ))}
             </QueueSection>
 
-            <QueueSection title="확인 대기 (열람 전용)" hint="회원 참가자가 결과를 확인하면 확정됩니다" count={repWaiting.length}>
-                {repWaiting.map(({ match, bucket }) => (
-                    <PersonalMatchCard
-                        key={match.id}
-                        match={match}
-                        actions={<PendingMatchActions match={match} bucket={bucket} />}
-                    />
-                ))}
-            </QueueSection>
+            <PendingMatchSection
+                title="확인 대기 (열람 전용)"
+                hint="회원 참가자가 결과를 확인하면 확정됩니다"
+                entries={repWaiting}
+            />
 
             {closed.length > 0 && (
                 <details className="space-y-2">
@@ -100,11 +93,4 @@ export function WaitingPanel({ queue, viewerId }: Props) {
             )}
         </>
     )
-}
-
-function partition<T>(items: T[], predicate: (item: T) => boolean): [T[], T[]] {
-    const yes: T[] = []
-    const no: T[] = []
-    for (const item of items) (predicate(item) ? yes : no).push(item)
-    return [yes, no]
 }
