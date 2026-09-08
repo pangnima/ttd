@@ -4,7 +4,7 @@ import { viewerSideOf } from '@/lib/match-requests/participants'
 import { RequestMatchSummary } from '@/components/match-requests/request-match-summary'
 import { RequestTeamLine } from '@/components/match-requests/request-team-line'
 import {
-    AcceptanceProgressBadge, AwaitingMembersNote,
+    AcceptanceProgressBadge, AwaitingMembersNote, RequestAcceptanceStatusLine,
 } from '@/components/match-requests/request-acceptance-note'
 
 type Props = { item: MatchRequestWithUser }
@@ -39,6 +39,7 @@ export function AwaitingMemberRequestCard({ item }: Props) {
                 courtName={request.courtName}
                 sets={onRequesterSide ? request.setScores : invertSetScores(request.setScores)}
             />
+            <RequestAcceptanceStatusLine request={request} />
             <AwaitingMembersNote request={request} />
         </div>
     )

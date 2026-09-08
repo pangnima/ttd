@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { HUB_TABS, hubTabHref, resolveHubTab } from './tabs'
 
 describe('resolveHubTab', () => {
-    it('세 탭 키는 그대로 통과한다', () => {
+    it('네 탭 키는 그대로 통과한다', () => {
         expect(resolveHubTab('mine')).toBe('mine')
+        expect(resolveHubTab('settle')).toBe('settle')
         expect(resolveHubTab('waiting')).toBe('waiting')
         expect(resolveHubTab('disputed')).toBe('disputed')
     })
@@ -22,12 +23,23 @@ describe('HUB_TABS / hubTabHref', () => {
     })
 
     it('나머지 탭은 ?tab= 으로 — 저장 후 리다이렉트(use-personal-match-submit)와 같은 값', () => {
+        expect(hubTabHref('settle')).toBe('/me/match-requests?tab=settle')
         expect(hubTabHref('waiting')).toBe('/me/match-requests?tab=waiting')
         expect(hubTabHref('disputed')).toBe('/me/match-requests?tab=disputed')
     })
 
-    it("이의 탭 라벨은 '이의 처리' — 이의를 거친 협상의 생애 전체를 담는다(0062). 키는 유지해 기존 URL이 산다", () => {
-        const disputed = HUB_TABS.find((t) => t.key === 'disputed')
-        expect(disputed?.label).toBe('이의 처리')
+    it('탭 순서 = 처리 순서 — 내 차례 둘이 앞, 대기·이의가 뒤', () => {
+        expect(HUB_TABS.map((t) => t.key)).toEqual(['mine', 'settle', 'waiting', 'disputed'])
+    })
+
+    it('라벨은 무엇을 하는 자리인지로 짓는다 — 승인할 것 / 채워 넣을 것 / 기다리는 것', () => {
+        expect(HUB_TABS.map((t) => t.label))
+            .toEqual(['승인 요청', '경기 확정 대기', '상대 승인 대기', '이의 처리'])
+    })
+
+    it('키는 유지해 기존 ?tab= 링크가 산다 — 라벨만 바뀌었다', () => {
+        // 0062에서 '이의 제기'→'이의 처리'로 넓힐 때 세운 관례. 라벨은 내용을 따라가고 키는 URL을 지킨다.
+        expect(HUB_TABS.map((t) => t.key)).toContain('disputed')
+        expect(HUB_TABS.map((t) => t.key)).toContain('waiting')
     })
 })

@@ -213,6 +213,9 @@ const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
     ['session_not_found', '게임 입력이 종료되었거나 삭제된 경기입니다.'],
     ['invalid_games', '게임 구성을 확인해주세요. (파트너·상대1·상대2 필수)'],
     ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요. (게임당 스코어 1줄)'],
+    // 0064 — 전원 수락 게이트와 낙관적 선점
+    ['session_seats_pending', '아직 참여를 수락하지 않은 참가자가 있어 결과를 입력할 수 없습니다. 응답이 없으면 참가자 편집에서 명단에서 빼고 게스트로 기록할 수 있습니다.'],
+    ['session_games_changed', '다른 참가자가 먼저 게임을 등록했습니다. 목록을 확인한 뒤 다시 저장해주세요.'],
 ]
 
 /**
@@ -223,6 +226,12 @@ const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
 export async function finalizeRotationSessionAction(
     sessionId: string,
     games: RotationGamePayload[],
+    /**
+     * 빌더가 화면에 띄운 '새 게임은 N번부터'의 N (0064). 서버의 다음 번호와 다르면 그 사이에
+     * 다른 참가자가 등록한 것이므로 거부한다 — 조용히 이어붙이면 같은 게임이 두 번 들어간다.
+     * 넘기지 않으면 검사하지 않는다(옛 2인자 호출 호환).
+     */
+    expectedSeq?: number,
 ): Promise<ActionResult> {
     if (games.length < 1) return { error: '게임을 1개 이상 추가해주세요.' }
     if (games.length > MAX_GAMES) return { error: `게임은 최대 ${MAX_GAMES}개까지 등록할 수 있습니다.` }
@@ -258,6 +267,7 @@ export async function finalizeRotationSessionAction(
     const { error } = await supabase.rpc('finalize_rotation_session', {
         p_session_id: sessionId,
         p_games: payload,
+        ...(expectedSeq != null ? { p_expected_seq: expectedSeq } : {}),
     })
     if (error) {
         const known = FINALIZE_ERROR_MESSAGES.find(([key]) => error.message.includes(key))

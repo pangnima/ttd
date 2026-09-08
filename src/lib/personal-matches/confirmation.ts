@@ -15,7 +15,17 @@ export type ConfirmationSourceRow = {
      * 복식 좌석(partner·opponent2). **optional인 것이 안전 설계다** — 부착을 빠뜨린 호출부에서는
      * 좌석이 null로 떨어져 `viewerIsParty=false`, 즉 실수가 **권한 과다가 아니라 과소로** 무너진다.
      */
-    participants?: Array<{ role: string; user_id: string | null }>
+    participants?: Array<{
+        role: string
+        user_id: string | null
+        /** 좌석 이름 스냅샷 — 관점 행 스냅샷(namedSeatsOf)이 비었을 때의 폴백 이름 */
+        name?: string | null
+        /** users 조인 — 탈퇴 판별용. 없으면 활성으로 본다(종전 동작) */
+        user?: { deleted_at: string | null } | null
+    }>
+    /** 요청자·대표의 탈퇴 판별용 users 조인 (분모에서 빼야 명단에 유령 좌석이 안 생긴다) */
+    requester?: { deleted_at: string | null } | null
+    opponent?: { deleted_at: string | null } | null
     /**
      * 이 제안을 확인한 좌석의 user_id 배열 (0060, match_result_negotiations.confirmed_by).
      * 제안자는 제안 시점에 들어간다. 부착을 빠뜨리면 빈 배열 → `confirmedByMe=false`로 [결과 확인]이
@@ -61,13 +71,28 @@ function toSeatPerspective(sets: PersonalMatchSetScore[], seat: ResultSeat | nul
 }
 
 /**
- * 확인 진행도의 분모 — user_id가 있는 좌석(요청자·대표·회원 파트너·회원 상대2)의 distinct 수.
- * DB `request_result_seats`는 여기에 활성 회원 조건이 더 붙는다(탈퇴자 제외). 앱은 탈퇴 여부를 모르므로
- * 표시가 1 어긋날 수 있지만, 정산 판정은 어디까지나 DB가 한다.
+ * 탈퇴(soft delete)한 좌석의 user_id. users 조인을 부착하지 않은 호출부에서는 빈 집합이 되어
+ * 종전 동작(전원 활성으로 간주)으로 떨어진다 — 실수가 '분모 과다'로만 무너지도록.
  */
-function memberSeatCount(row: ConfirmationSourceRow): number {
+function inactiveSeatIds(row: ConfirmationSourceRow): Set<string> {
+    const out = new Set<string>()
+    if (row.requester?.deleted_at) out.add(row.requester_id)
+    if (row.opponent?.deleted_at) out.add(row.opponent_user_id)
+    for (const p of row.participants ?? []) {
+        if (p.user_id && p.user?.deleted_at) out.add(p.user_id)
+    }
+    return out
+}
+
+/**
+ * 확인 진행도의 분모 — user_id가 있는 **활성** 좌석(요청자·대표·회원 파트너·회원 상대2)의 distinct 수.
+ * DB `request_result_seats`와 같은 규칙이다. 탈퇴자를 빼지 않으면 숫자가 1 어긋날 뿐 아니라,
+ * 명단 표시(seat-status.ts)에서 **영영 오지 않을 확인을 기다리는 유령 좌석**이 생긴다.
+ */
+function memberSeatCount(row: ConfirmationSourceRow, inactive: Set<string>): number {
     const ids = new Set<string>([row.requester_id, row.opponent_user_id])
     for (const p of row.participants ?? []) if (p.user_id) ids.add(p.user_id)
+    for (const id of inactive) ids.delete(id)
     return ids.size
 }
 
@@ -84,12 +109,16 @@ export function buildConfirmation(row: ConfirmationSourceRow, viewerId: string):
         : []
     const seat = seatOf(row, viewerId)
     const confirmedBy = row.confirmed_by ?? []
+    const inactive = inactiveSeatIds(row)
     return {
         requestId: row.id,
         status: row.result_status as MatchResultStatus,
         proposedByMe: row.proposed_by === viewerId,
         confirmedByMe: confirmedBy.includes(viewerId),
-        confirmProgress: { confirmed: confirmedBy.length, total: memberSeatCount(row) },
+        confirmProgress: { confirmed: confirmedBy.length, total: memberSeatCount(row, inactive) },
+        confirmedUserIds: confirmedBy,
+        proposedBy: row.proposed_by ?? undefined,
+        inactiveUserIds: [...inactive],
         proposedSets: toSeatPerspective(proposed, seat),
         disputeReason: row.dispute_reason ?? undefined,
         disputedByMe: row.disputed_by === viewerId,
@@ -147,6 +176,29 @@ export function disputerNameOf(c: PersonalMatchConfirmation | undefined, seats: 
     if (c.disputedByMe) return '나'
     if (!c.disputedBy) return undefined
     return seats.find((s) => s.userId && s.userId === c.disputedBy)?.name.trim() || undefined
+}
+
+/**
+ * 이의자 호칭 — '내' / 'OOO님' / '상대'(미상 폴백). 협상 팝업 설명줄과 카드의 사유 줄이 공유한다.
+ * 두 곳에 인라인하면 한쪽만 고쳐졌을 때 같은 이의가 화면마다 다른 사람 것으로 보인다.
+ */
+export function disputerTitleOf(disputerName?: string): string {
+    return disputerName === '나' ? '내' : disputerName ? `${disputerName}님` : '상대'
+}
+
+/**
+ * 카드 본문에 그대로 읽히는 이의 사유 문구 — '내 이의 사유: 3게임 스코어가 다릅니다'.
+ *
+ * 0062까지 사유는 배지의 `title`(툴팁)에만 있어 모바일에서는 사실상 볼 수 없었고,
+ * 버튼이 없는 버킷(재입력 결과 확인 대기)은 팝업 경로조차 없어 **끝내 읽을 방법이 없었다**.
+ * 이의를 거치지 않았거나 사유가 없으면 undefined — 호출부에 조건문이 생기지 않도록.
+ */
+export function disputeReasonLine(
+    c: PersonalMatchConfirmation | undefined, disputerName?: string,
+): string | undefined {
+    if (!c || !hasDisputeHistory(c) || !c.disputeReason) return undefined
+    const prefix = c.status === 'disputed' ? '이의 사유' : '직전 이의 사유'
+    return `${disputerTitleOf(disputerName)} ${prefix}: ${c.disputeReason}`
 }
 
 /** 이의 배지 문구 — '내가 이의 제기' / 'OOO님 이의' / '이의 제기됨'(미상 폴백). 툴팁은 사유 */

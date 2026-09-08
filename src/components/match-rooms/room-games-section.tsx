@@ -9,6 +9,7 @@ import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
 import { RoomRotationBuilder } from '@/components/match-rooms/room-rotation-builder'
 import type { RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
+import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
 export type RoomGamesSectionProps = {
     detail: MatchRoomDetail
@@ -23,6 +24,8 @@ export type RoomGamesSectionProps = {
     rotationSession?: RotationSession | null
     participants: RoomParticipant[]
     picker?: PoolPickerProps
+    /** 그 세션에 이미 등록된 게임 (0064) — 빌더가 중복 입력을 눈으로 막고 선점 값을 만든다 */
+    sessionGames?: EnteredRotationGame[]
 }
 
 /**
@@ -32,6 +35,7 @@ export type RoomGamesSectionProps = {
  */
 export function RoomGamesSection({
     detail, viewerId, gameCtx, opponentCandidates, pastOpponents, confirmations, rotationSession, participants, picker,
+    sessionGames,
 }: RoomGamesSectionProps) {
     const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
@@ -47,6 +51,7 @@ export function RoomGamesSection({
                         participants={participants}
                         viewerId={viewerId}
                         picker={picker}
+                        enteredGames={sessionGames}
                     />
                 )}
                 {gameCtx && (

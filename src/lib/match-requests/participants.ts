@@ -50,6 +50,50 @@ export function pendingMemberCount(seats: AcceptanceSeat[]): number {
 }
 
 /**
+ * 이름이 붙은 좌석 — 진행도 계산에는 이름이 필요 없지만(위 함수들) **명단 표시**에는 필요하다.
+ * 요청 좌석(MatchRequestSeat)과 로테이션 세션 좌석(RotationSessionSeat)이 둘 다 이 형태를 만족한다.
+ */
+export type NamedAcceptanceSeat = AcceptanceSeat & { name: string }
+
+/** 좌석 명단의 상태. 결과 축(seat-status.ts SeatState)의 참여 축 대응물이다. */
+export type AcceptanceState = 'accepted' | 'pending' | 'guest' | 'rejected' | 'removed'
+
+const ACCEPTANCE_LABEL: Record<AcceptanceState, string> = {
+    accepted: '수락',
+    pending: '응답 대기',
+    guest: '자동 참여',
+    rejected: '거절',
+    removed: '제외됨',
+}
+
+export function acceptanceStateLabel(state: AcceptanceState): string {
+    return ACCEPTANCE_LABEL[state]
+}
+
+/**
+ * 좌석 → 상태별 이름 묶음. '2/3명 수락'이라는 숫자만으로는 **누구를 기다리는지** 알 수 없어
+ * 재촉할 대상을 특정할 수 없었다 — 그 절단점을 잇는다.
+ *
+ * 비회원(userId 없음)은 수락 대상이 아니므로 'guest'다 — 규칙상 항상 동의한 것으로 본다.
+ * 표시 순서는 수락 → 대기 → 게스트 → 거절 → 제외로, 결과 축의 groupSeatNames와 같은 결이다.
+ */
+export function groupAcceptanceNames(
+    seats: NamedAcceptanceSeat[],
+): Array<{ state: AcceptanceState; names: string[] }> {
+    const stateOf = (s: NamedAcceptanceSeat): AcceptanceState => {
+        if (!s.userId) return 'guest'
+        return s.acceptance as AcceptanceState
+    }
+    const order: AcceptanceState[] = ['accepted', 'pending', 'guest', 'rejected', 'removed']
+    return order
+        .map((state) => ({
+            state,
+            names: seats.filter((s) => stateOf(s) === state).map((s) => s.name.trim()).filter(Boolean),
+        }))
+        .filter((g) => g.names.length > 0)
+}
+
+/**
  * 요청 목록을 '로테이션 세션 묶음'과 '단독 요청'으로 가른다(0056).
  * 세션은 게임마다 요청 1건을 만들지만 참여 동의의 단위는 세션이라 화면에서 한 장으로 묶는다.
  * 묶음 안 순서는 group_seq(입력 순)를 따른다.

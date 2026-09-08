@@ -23,8 +23,14 @@ type Props = {
     error: string | null
     /** 세션 명부를 실제로 바꿀 수 있는 화면일 때만 온다 — 방 밖 세션 + 소유자/수락자 (0058) */
     poolAdmin?: Omit<PoolAdmin, 'onLocalAdd'>
-    /** 내가 이미 넣은 게임 — 중복 입력을 막기 위해 상단에 읽기 전용으로 보여준다 (0063) */
+    /** 이 세션에 등록된 게임 — 중복 입력을 막기 위해 상단에 읽기 전용으로 보여준다 (0063·0064) */
     enteredGames?: EnteredRotationGame[]
+    /**
+     * 저장이 막힌 이유 (0064). 있으면 저장 버튼을 비활성화하고 이유를 보여준다 —
+     * 눌러도 서버가 session_seats_pending으로 튕길 버튼을 살려 두지 않기 위해서다.
+     * 팝업 자체는 열려야 한다: 참가자 편집이 그 상태를 푸는 유일한 수단이다.
+     */
+    blockedReason?: string
 }
 
 /**
@@ -35,7 +41,9 @@ type Props = {
  * 상대팀에 회원이 있는 게임은 상호 확인 경기가 되어 '결과 확인 대기'로 저장되고(입력자의 제안 = 입력자의 확인,
  * 나머지 회원 참가자 전원이 확인해야 확정 — 0060), 상대팀이 전원 비회원인 게임만 즉시 확정된다(0050).
  */
-export function RotationGamesPanel({ pool: initialPool, picker, onSubmit, isPending, error, poolAdmin, enteredGames = [] }: Props) {
+export function RotationGamesPanel({
+    pool: initialPool, picker, onSubmit, isPending, error, poolAdmin, enteredGames = [], blockedReason,
+}: Props) {
     const r = useRotationGames(playersToPool(initialPool))
 
     // 0057부터 방 밖 세션도 상대팀에 회원이 있으면 제안 → 회원 참가자 확인을 거친다 —
@@ -88,12 +96,15 @@ export function RotationGamesPanel({ pool: initialPool, picker, onSubmit, isPend
                 </p>
             )}
 
+            {blockedReason && (
+                <p className="text-caption text-spot break-keep">{blockedReason}</p>
+            )}
             {error && <p className="text-caption text-destructive">{error}</p>}
 
             <DialogFooter showCloseButton>
                 <Button
                     type="button"
-                    disabled={!r.isGamesValid || isPending}
+                    disabled={!r.isGamesValid || isPending || !!blockedReason}
                     onClick={() => onSubmit(r.buildPayloads())}
                 >
                     {isPending ? '저장 중...' : `게임 ${r.games.length}개 저장`}

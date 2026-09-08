@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { MatchQueueCounts } from '@/lib/match-requests/queue'
-import { disputeMyTurnTotal, myTurnTotal } from '@/lib/match-requests/queue'
+import { disputeMyTurnTotal, mineTabMyTurn, myTurnTotal, settleTabMyTurn } from '@/lib/match-requests/queue'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 
 type Props = { counts: MatchQueueCounts }
@@ -12,14 +12,14 @@ type Props = { counts: MatchQueueCounts }
 export function QueueSummaryBanner({ counts }: Props) {
     if (myTurnTotal(counts) === 0) return null
 
-    const toEnter = counts.enterResult + counts.fillLineup
-    const toConfirm = counts.confirmResult + counts.participation
-    // 이의 건은 앞의 둘에 합치지 않는다 — 다른 탭(이의 처리)으로 가고, 다시 입력할 차례와
-    // 재입력된 결과 확인을 한 문구로 묶는다(0061·0062)
+    // 조각 하나 = 허브 탭 하나. 사용자가 어느 탭으로 가야 하는지 문구가 그대로 알려준다 —
+    // 셋을 더하면 사이드바 뱃지(myTurnTotal)와 같다.
+    const approve = mineTabMyTurn(counts)
+    const settle = settleTabMyTurn(counts)
     const dispute = disputeMyTurnTotal(counts)
     const parts = [
-        toEnter > 0 && `결과 입력 대기 ${toEnter}건`,
-        toConfirm > 0 && `확인 대기 ${toConfirm}건`,
+        approve > 0 && `승인 요청 ${approve}건`,
+        settle > 0 && `경기 확정 대기 ${settle}건`,
         dispute > 0 && `이의 처리 ${dispute}건`,
     ].filter((v): v is string => !!v)
 

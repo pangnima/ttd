@@ -8,7 +8,9 @@ import { hasResult } from '@/lib/personal-matches/winner'
 import { MutualLockedBadge } from '@/components/personal-matches/match-actions'
 import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
+import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
+import { SeatConfirmStatusLine } from '@/components/personal-matches/seat-confirm-status-line'
 import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -57,44 +59,55 @@ export function MutualResultActions({ match }: Props) {
     const reviewMode = canRespondToProposal(c)
     const editingOwn = c.status === 'proposed' && c.proposedByMe
     const reentry = <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={WAITING_BADGE} />
+    // 배지가 '2/4명 확인'이라고만 말하면 남은 사람이 누구인지 알 수 없어 재촉할 대상을 특정할 수 없다.
+    // 스스로 렌더 여부를 판정하므로(제안 중일 때만) 아래 두 갈래에 조건문이 생기지 않는다.
+    const seatLine = <SeatConfirmStatusLine confirmation={c} seats={namedSeatsOf(match)} className="text-right" />
 
     // 내 확인은 끝났고 남은 좌석을 기다린다 — 버튼 없이 배지만. 이 분기가 없으면 눌렀을 때 RPC가 튕기는 버튼이 뜬다.
     if (c.status === 'proposed' && !reviewMode && !editingOwn) {
         return (
-            <span className="flex items-center gap-2">
-                {reentry}
-                <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
-                <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+            <span className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-2">
+                    {reentry}
+                    <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
+                    <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                </span>
+                <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
+                {seatLine}
             </span>
         )
     }
 
     return (
-        <span className="flex items-center gap-2">
-            {reentry}
-            {editingOwn && (
-                <>
-                    <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
-                    <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
-                </>
-            )}
-            <Button
-                size="sm"
-                variant={reviewMode ? 'default' : 'outline'}
-                className="h-7 text-caption"
-                onClick={d.openDialog}
-            >
-                {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}
-            </Button>
-            <NegotiationDialog
-                requestId={requestId}
-                confirmation={c}
-                opponentName={formatOpponents(match)}
-                teams={formatTeams(match)}
-                adLabels={buildAdLabels(match)}
-                disputerName={disputerName}
-                dialog={d}
-            />
+        <span className="flex flex-col items-end gap-1">
+            <span className="flex items-center gap-2">
+                {reentry}
+                {editingOwn && (
+                    <>
+                        <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
+                        <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                    </>
+                )}
+                <Button
+                    size="sm"
+                    variant={reviewMode ? 'default' : 'outline'}
+                    className="h-7 text-caption"
+                    onClick={d.openDialog}
+                >
+                    {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}
+                </Button>
+                <NegotiationDialog
+                    requestId={requestId}
+                    confirmation={c}
+                    opponentName={formatOpponents(match)}
+                    teams={formatTeams(match)}
+                    adLabels={buildAdLabels(match)}
+                    disputerName={disputerName}
+                    dialog={d}
+                />
+            </span>
+            <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
+            {seatLine}
         </span>
     )
 }

@@ -9,6 +9,7 @@ import { PENDING_RESULT_BAR } from '@/lib/dashboard/outcome'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { SeatProgressBadge, SessionPlanNote } from '@/components/match-requests/request-acceptance-note'
+import { SeatAcceptanceStatusLine } from '@/components/match-requests/seat-acceptance-status-line'
 
 type Props = {
     session: RotationSession
@@ -63,7 +64,9 @@ export function RotationSessionInviteCard({ session: s, viewerId, readOnly = fal
                     </div>
                 </div>
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="space-y-0.5" />
-                <SessionPlanNote readOnly={readOnly} remaining={pendingMemberCount(s.seats)} />
+                {/* 명부 줄은 '누가 있는가'만 말한다 — 누가 응답했는지는 좌석 상태가 말한다 */}
+                <SeatAcceptanceStatusLine seats={s.seats} />
+                <SessionPlanNote readOnly={readOnly} remaining={pendingMemberCount(s.seats)} isOwner={s.userId === viewerId} />
                 {error && <p className="text-caption text-destructive">{error}</p>}
             </div>
         </div>

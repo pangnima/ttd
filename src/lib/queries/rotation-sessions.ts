@@ -3,8 +3,10 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/supabase'
 import type {
-    CourtSurface, MatchType, RotationPoolPlayer, RotationSeatStatus, RotationSession, RotationSessionSeat,
+    CourtSurface, MatchType, PersonalMatchSetScore, RotationPoolPlayer, RotationSeatStatus,
+    RotationSession, RotationSessionSeat,
 } from '@/types'
+import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
 type RotationSessionRow = Database['public']['Tables']['rotation_sessions']['Row']
 type SeatRow = Database['public']['Tables']['rotation_session_participants']['Row']
@@ -145,4 +147,55 @@ export async function fetchRoomRotationSession(roomId: string, viewerId?: string
         .maybeSingle()
     if (error || !data) return null
     return mapRotationSessionRow(data, viewerId)
+}
+
+/**
+ * 세션에 **등록된 게임 전량** — 참가자 누가 넣은 것이든 (0064).
+ *
+ * 직접 테이블을 읽지 않고 RPC를 쓰는 이유: `personal_matches` RLS가 '본인만'이라 참가자 A가 넣은
+ * 게임을 B는 읽을 수 없다. 그래서 종전 조회는 `user_id = 나`로 묶여 있었고, 둘이 같은 물리 게임을
+ * 각자 넣으면 group_seq만 다른 중복 2건이 생겼다(로테이션 파생 요청은 pending 중복 유니크
+ * 인덱스에서도 제외된다 — 0056). `get_rotation_session_games`는 SECURITY DEFINER로 그 벽을 넘되
+ * 좌석 보유자·소유자·방 참가자에게만 답한다(get_match_room_detail과 같은 관용구).
+ *
+ * 확인 요청 허브의 카드·빌더와 매칭 룸의 빌더가 같은 목록을 본다.
+ */
+export async function fetchRotationSessionGames(sessionId: string): Promise<EnteredRotationGame[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_rotation_session_games', { p_session_id: sessionId })
+    // 자격이 없거나 세션이 사라졌으면 빈 목록 — 화면은 '아직 등록된 게임 없음'으로 떨어진다
+    if (error) return []
+    return parseSessionGames(data)
+}
+
+/** 여러 세션을 한 번에 (허브) — 세션 단위 RPC라 N회 호출이지만 한 사람의 미확정 세션은 손에 꼽는다 */
+export async function fetchRotationSessionGamesBatch(
+    sessionIds: string[],
+): Promise<Map<string, EnteredRotationGame[]>> {
+    const entries = await Promise.all(
+        sessionIds.map(async (id) => [id, await fetchRotationSessionGames(id)] as const),
+    )
+    return new Map(entries)
+}
+
+/** jsonb → EnteredRotationGame[] 런타임 가드 (match-rooms/parse-detail.ts 관용구) */
+function parseSessionGames(data: unknown): EnteredRotationGame[] {
+    if (!Array.isArray(data)) return []
+    const out: EnteredRotationGame[] = []
+    for (const raw of data) {
+        if (typeof raw !== 'object' || raw === null) continue
+        const g = raw as Record<string, unknown>
+        out.push({
+            groupSeq: typeof g.groupSeq === 'number' ? g.groupSeq : 0,
+            matchType: String(g.matchType ?? 'men_doubles') as MatchType,
+            partnerName: String(g.partnerName ?? ''),
+            opponentName: String(g.opponentName ?? ''),
+            opponent2Name: String(g.opponent2Name ?? ''),
+            sets: Array.isArray(g.sets) ? (g.sets as PersonalMatchSetScore[]) : [],
+            awaitingConsent: g.awaitingConsent === true,
+            enteredByName: String(g.enteredByName ?? ''),
+            enteredByMe: g.enteredByMe === true,
+        })
+    }
+    return out
 }

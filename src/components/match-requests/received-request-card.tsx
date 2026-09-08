@@ -11,7 +11,9 @@ import { viewerSideOf } from '@/lib/match-requests/participants'
 import { RequestMatchSummary } from '@/components/match-requests/request-match-summary'
 import { RequestStatusBadge } from '@/components/match-requests/request-status-badge'
 import { RequestTeamLine } from '@/components/match-requests/request-team-line'
-import { AcceptanceNote, AcceptanceProgressBadge } from '@/components/match-requests/request-acceptance-note'
+import {
+    AcceptanceNote, AcceptanceProgressBadge, RequestAcceptanceStatusLine,
+} from '@/components/match-requests/request-acceptance-note'
 
 type Props = { item: MatchRequestWithUser }
 
@@ -84,6 +86,7 @@ export function ReceivedRequestCard({ item }: Props) {
                 courtName={request.courtName}
                 sets={sets}
             />
+            {request.status === 'pending' && <RequestAcceptanceStatusLine request={request} />}
             {request.status === 'pending' && <AcceptanceNote request={request} />}
             {error && <p className="text-caption text-destructive">{error}</p>}
         </div>

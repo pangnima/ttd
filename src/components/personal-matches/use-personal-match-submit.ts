@@ -56,7 +56,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 courtName: courtName.trim() || undefined,
                 // 빈 행은 제거하고 보낸다 (모집형은 0명도 허용)
                 players: poolToPlayers(compactPool(s.rotation.pool)),
-            }, s.listing), '/me/match-requests')
+            }, s.listing), rotationLanding(s.rotation.pool))
             return
         }
 
@@ -125,10 +125,23 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 ? `/match-rooms/${s.roomId}`
                 : initialId && s.initialHasResult
                     ? '/me/personal-matches'
-                    : '/me/match-requests',
+                    // 폼은 세트를 받지 않으므로 신규는 언제나 결과 미입력 — 「경기 확정 대기」 탭에 뜬다.
+                    // 기본 탭(승인 요청)으로 보내면 방금 저장한 기록이 없는 화면이 나온다.
+                    : hubTabHref('settle'),
         )
     }
 
     // 다이얼로그에서 취소가 router.back()으로 룸을 떠나는 사고를 막는다
     return { handleSubmit, isPending, error, cancel: nav?.onCancel ?? (() => router.back()) }
+}
+
+/**
+ * 로테이션 세션을 만든 뒤 어느 탭으로 보낼 것인가.
+ *
+ * 0064부터 풀에 **회원이 있으면** 좌석이 `pending`으로 태어나 그 세션은 결과 입력이 열리지 않는다 —
+ * 「상대 승인 대기」의 '참가자 응답 대기'에 뜬다. 전원 비회원이면 좌석 자체가 없어 곧바로 입력할 수
+ * 있으므로 「경기 확정 대기」다. 한쪽으로 고정하면 방금 만든 일정이 없는 화면이 나온다.
+ */
+function rotationLanding(pool: { player: { userId?: string } }[]): string {
+    return pool.some((row) => !!row.player.userId) ? hubTabHref('waiting') : hubTabHref('settle')
 }

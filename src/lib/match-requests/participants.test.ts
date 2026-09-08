@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchRequest, MatchRequestSeat, RequestSeatRole } from '@/types'
+import type { MatchRequest, MatchRequestSeat, RequestAcceptance, RequestSeatRole } from '@/types'
 import {
     acceptanceProgress, classifyPendingRequest, formatAcceptanceProgress,
-    pendingMemberCount, requiresAllMembers, viewerSideOf,
+    groupAcceptanceNames, pendingMemberCount, requiresAllMembers, viewerSideOf,
 } from './participants'
 
 const seat = (
@@ -113,5 +113,38 @@ describe('classifyPendingRequest (룸 요청 = 대표 1명 모델 유지)', () =
 
     it('룸 요청의 요청자는 내가 보낸 요청', () => {
         expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending'), 'requester', 'room-1'))).toBe('mine')
+    })
+})
+
+describe('groupAcceptanceNames', () => {
+    const s = (name: string, acceptance: RequestAcceptance | 'removed', userId?: string) =>
+        ({ name, acceptance, userId })
+
+    it('수락 · 응답 대기 · 자동 참여 · 거절 · 제외됨 순으로 이름을 묶는다', () => {
+        expect(groupAcceptanceNames([
+            s('제외자', 'removed', 'u4'),
+            s('거절자', 'rejected', 'u3'),
+            s('게스트', 'pending'),
+            s('대기자', 'pending', 'u2'),
+            s('수락자', 'accepted', 'u1'),
+        ])).toEqual([
+            { state: 'accepted', names: ['수락자'] },
+            { state: 'pending', names: ['대기자'] },
+            { state: 'guest', names: ['게스트'] },
+            { state: 'rejected', names: ['거절자'] },
+            { state: 'removed', names: ['제외자'] },
+        ])
+    })
+
+    it('userId가 없으면 acceptance와 무관하게 게스트다 — 수락 대상이 아니다', () => {
+        expect(groupAcceptanceNames([s('게스트', 'accepted')])).toEqual([
+            { state: 'guest', names: ['게스트'] },
+        ])
+    })
+
+    it('이름이 빈 좌석과 비어 있는 상태는 목록에서 사라진다', () => {
+        expect(groupAcceptanceNames([s('  ', 'accepted', 'u1'), s('A', 'pending', 'u2')])).toEqual([
+            { state: 'pending', names: ['A'] },
+        ])
     })
 })

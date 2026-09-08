@@ -38,7 +38,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, dispute_count, confirmed_by)')
+        .select('id, requester_id, opponent_user_id, requester:users!match_requests_requester_id_fkey(deleted_at), opponent:users!match_requests_opponent_user_id_fkey(deleted_at), participants:match_request_participants(role, user_id, name, user:users!match_request_participants_user_id_fkey(deleted_at)), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, dispute_count, confirmed_by)')
         .in('id', requestIds)
     if (error || !data) return matches
 
@@ -60,6 +60,8 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
                 disputed_by: neg?.disputed_by ?? null,
                 dispute_count: neg?.dispute_count ?? 0,
                 participants: row.participants ?? [],
+                requester: row.requester,
+                opponent: row.opponent,
                 confirmed_by: neg?.confirmed_by ?? [],
             }, userId),
         }

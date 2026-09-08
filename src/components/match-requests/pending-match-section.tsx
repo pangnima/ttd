@@ -21,7 +21,7 @@ type Props = {
  * 허브 섹션 공용 — 미확정 행들을 표시 그룹(buildMatchGroups)으로 묶어, 같은 로테이션 세션의 게임은
  * 헤더 한 줄 + '게임 N'(group_seq = 입력 순) 카드로, 나머지는 카드 1장씩 그린다.
  * 허브의 행은 세트가 비어 있어 kind가 record/rotation뿐이고(가상 카드 없음), 카드가 곧 실제 행이라
- * id로 버킷을 되찾아 액션을 붙인다. 세 패널(내 차례·상대 대기·이의 처리)이 같은 컴포넌트를 쓴다.
+ * id로 버킷을 되찾아 액션을 붙인다. 네 패널(승인 요청·경기 확정 대기·상대 승인 대기·이의 처리)이 같은 컴포넌트를 쓴다.
  */
 export function PendingMatchSection({ title, hint, count, entries, children }: Props) {
     const bucketById = new Map<string, MatchQueueBucket>(entries.map((e) => [e.match.id, e.bucket]))

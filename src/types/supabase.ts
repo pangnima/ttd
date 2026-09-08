@@ -1294,7 +1294,7 @@ export type Database = {
         Returns: undefined
       }
       finalize_rotation_session: {
-        Args: { p_games: Json; p_session_id: string }
+        Args: { p_expected_seq?: number; p_games: Json; p_session_id: string }
         Returns: undefined
       }
       get_club_activity_ranking: {
@@ -1335,6 +1335,10 @@ export type Database = {
         }[]
       }
       get_match_room_detail: { Args: { p_room_id: string }; Returns: Json }
+      get_rotation_session_games: {
+        Args: { p_session_id: string }
+        Returns: Json
+      }
       get_user_doubles_court_stats: {
         Args: { p_club_id?: string; p_user_id: string }
         Returns: Json

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
     awaitingConsentNote, buildEnteredGames, enteredBadgeLabel, enteredGameLabel,
-    enteredGameLine, summarizeEntered, type EnteredRotationGame,
+    enteredGameLine, nextGroupSeq, summarizeEntered, type EnteredRotationGame,
 } from '@/lib/personal-matches/rotation-entered'
 
 function game(groupSeq: number, awaitingConsent = false): EnteredRotationGame {
@@ -13,6 +13,8 @@ function game(groupSeq: number, awaitingConsent = false): EnteredRotationGame {
         opponent2Name: '상대2',
         sets: [{ me: 6, opp: 3 }],
         awaitingConsent,
+        enteredByName: '입력자',
+        enteredByMe: true,
     }
 }
 
@@ -54,7 +56,7 @@ describe('enteredBadgeLabel', () => {
     })
 
     it('입력이 있으면 건수를 말한다 — 화면이 finalize 성공을 직접 알린다', () => {
-        expect(enteredBadgeLabel([game(1), game(2)])).toBe('게임 2건 입력함')
+        expect(enteredBadgeLabel([game(1), game(2)])).toBe('게임 2건 등록됨')
     })
 })
 
@@ -86,5 +88,38 @@ describe('라벨', () => {
 
     it('순번 라벨은 index가 아니라 groupSeq를 쓴다 — 버킷이 갈려도 번호가 흔들리지 않는다', () => {
         expect(enteredGameLabel(game(7))).toBe('게임 7')
+    })
+})
+
+describe('enteredGameLine — 입력자 관점 (0064)', () => {
+    it('내가 넣은 게임은 첫 자리가 나다', () => {
+        expect(enteredGameLine(game(1))).toBe('나 · 파트너 vs 상대1 · 상대2')
+    })
+
+    it('남이 넣은 게임은 첫 자리가 그 사람이다 — 팀 라인이 입력자 관점이라 나로 두면 거짓이 된다', () => {
+        const other = { ...game(1), enteredByMe: false, enteredByName: '홍길동' }
+        expect(enteredGameLine(other)).toBe('홍길동 · 파트너 vs 상대1 · 상대2')
+    })
+
+    it('입력자 이름이 비어 있으면 참가자로 폴백한다', () => {
+        const other = { ...game(1), enteredByMe: false, enteredByName: '  ' }
+        expect(enteredGameLine(other)).toBe('참가자 · 파트너 vs 상대1 · 상대2')
+    })
+})
+
+describe('nextGroupSeq — 선점 값의 단일 출처 (0064)', () => {
+    it('빈 목록이면 1번부터', () => {
+        expect(nextGroupSeq([])).toBe(1)
+    })
+
+    it('가장 큰 순번 다음이다 — 목록 길이가 아니라 서버 채번값을 본다', () => {
+        expect(nextGroupSeq([game(1), game(3)])).toBe(4)
+    })
+})
+
+describe('enteredBadgeLabel', () => {
+    it('세션 전체 기준이라 "입력함"이 아니라 "등록됨"이다', () => {
+        expect(enteredBadgeLabel([])).toBe('게임 미입력')
+        expect(enteredBadgeLabel([game(1), game(2)])).toBe('게임 2건 등록됨')
     })
 })

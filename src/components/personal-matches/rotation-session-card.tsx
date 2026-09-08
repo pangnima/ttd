@@ -15,7 +15,7 @@ import { RoomLink } from '@/components/match-rooms/room-link'
 import { SeatProgressBadge } from '@/components/match-requests/request-acceptance-note'
 import { canManageRotationPool, pendingSeats, poolMemberIds, rejectedSeats } from '@/lib/personal-matches/rotation-participation'
 import {
-    awaitingConsentNote, enteredBadgeLabel, type EnteredRotationGame,
+    awaitingConsentNote, enteredBadgeLabel, nextGroupSeq, type EnteredRotationGame,
 } from '@/lib/personal-matches/rotation-entered'
 
 type Props = {
@@ -29,13 +29,21 @@ type Props = {
      * 사용자가 다시 넣으면 중복 요청이 쌓인다. 이제 목록을 받아 무엇이 들어갔는지 직접 말한다.
      */
     enteredGames?: EnteredRotationGame[]
+    /**
+     * 아직 응답하지 않은 참가자가 있어 결과를 저장할 수 없는 상태 (0064).
+     * 카드를 숨기지 않고 남기는 이유는 이 카드가 **무응답 탈출구의 유일한 진입점**이기 때문이다 —
+     * 팝업 안 참가자 편집에서 응답 없는 회원을 게스트로 대체해야 그날 경기를 기록할 수 있다.
+     */
+    resultBlocked?: boolean
 }
 
 /**
  * 결과 입력 대기 로테이션 세션 카드 — 참가자 요약 + 시각·코트명·메모 + [결과 입력](게임 빌더 Dialog).
  * 방 세션은 참가자 누구에게나 보이고 누구나 게임을 입력할 수 있다(0050). 세션 삭제는 만든 사람만.
  */
-export function RotationSessionCard({ session: s, picker, viewerId, roomParticipants, enteredGames = [] }: Props) {
+export function RotationSessionCard({
+    session: s, picker, viewerId, roomParticipants, enteredGames = [], resultBlocked = false,
+}: Props) {
     const d = useResultDialog()
     const [isDeleting, startDelete] = useTransition()
     const isOwner = s.userId === viewerId
@@ -97,7 +105,9 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="mt-1 space-y-0.5" />
                 {s.roomId && <RoomLink roomId={s.roomId} className="mt-1 inline-block" />}
                 <div className="flex items-center justify-end gap-2 mt-2">
-                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>{entered ? '게임 추가 입력' : '결과 입력'}</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>
+                        {resultBlocked ? '참가자 편집' : entered ? '게임 추가 입력' : '결과 입력'}
+                    </Button>
                     {isOwner && (
                         <button onClick={handleDelete} disabled={isDeleting} className="text-caption text-destructive/80 hover:text-destructive transition-colors disabled:opacity-40">
                             삭제
@@ -113,7 +123,8 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                 pool={pool}
                 isRoomSession={!!s.roomId}
                 picker={picker}
-                onSubmit={(games) => d.run(() => finalizeRotationSessionAction(s.id, games))}
+                onSubmit={(games) => d.run(() => finalizeRotationSessionAction(s.id, games, nextGroupSeq(enteredGames)))}
+                blockedReason={resultBlocked ? blockedNote(waitingNames) : undefined}
                 poolAdmin={poolAdmin}
                 enteredGames={enteredGames}
                 isPending={d.isPending}
@@ -121,4 +132,14 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
             />
         </div>
     )
+}
+
+/**
+ * 저장이 막힌 이유 + 탈출구 안내 (0064). 누구를 기다리는지 이름으로 말해야 주최자가
+ * '누구를 게스트로 대체할지' 판단할 수 있다.
+ */
+function blockedNote(waitingNames: string[]): string {
+    const who = waitingNames.length > 0 ? ` (대기: ${waitingNames.join(' · ')})` : ''
+    return `아직 응답하지 않은 참가자가 있어 결과를 저장할 수 없습니다${who}. `
+        + '응답을 기다리거나, 위 참가자 편집에서 [게스트로 대체]로 명단에서 빼주세요.'
 }

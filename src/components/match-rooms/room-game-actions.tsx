@@ -13,7 +13,9 @@ import { ReopenResultButton } from '@/components/personal-matches/reopen-result-
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { RoomFreeGameActions } from '@/components/match-rooms/room-free-game-actions'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
+import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
+import { SeatConfirmStatusLine } from '@/components/personal-matches/seat-confirm-status-line'
 import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -86,39 +88,55 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
     const editingOwn = c.status === 'proposed' && c.proposedByMe
     // 이의를 거친 재제안이면 어느 분기든 "무엇에 대한 답인가"를 먼저 말한다(0062)
     const reentry = <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={WAITING_BADGE} />
+    // 남은 확인자를 이름으로 말한다 — 좌석 이름은 이의자 해석과 같은 출처(작성자 + 라인업 회원)를 쓴다
+    const seatLine = (
+        <SeatConfirmStatusLine
+            confirmation={c}
+            seats={[{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]}
+            className="text-right"
+        />
+    )
 
     // 내 확인은 끝났고 남은 좌석을 기다린다(0060) — 버튼 없이 배지만
     if (c.status === 'proposed' && !reviewMode && !editingOwn) {
         return (
-            <span className="flex items-center gap-2">
-                {reentry}
-                <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
-                <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+            <span className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-2">
+                    {reentry}
+                    <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
+                    <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                </span>
+                <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
+                {seatLine}
             </span>
         )
     }
 
     return (
-        <span className="flex items-center gap-2">
-            {reentry}
-            {editingOwn && (
-                <>
-                    <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
-                    <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
-                </>
-            )}
-            <Button size="sm" variant={reviewMode ? 'default' : 'outline'} className="h-7 text-caption" onClick={d.openDialog}>
-                {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}
-            </Button>
-            <NegotiationDialog
-                requestId={requestId}
-                confirmation={c}
-                opponentName={opponentName}
-                teams={teams}
-                adLabels={buildAdLabels(labels)}
-                disputerName={disputerName}
-                dialog={d}
-            />
+        <span className="flex flex-col items-end gap-1">
+            <span className="flex items-center gap-2">
+                {reentry}
+                {editingOwn && (
+                    <>
+                        <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
+                        <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                    </>
+                )}
+                <Button size="sm" variant={reviewMode ? 'default' : 'outline'} className="h-7 text-caption" onClick={d.openDialog}>
+                    {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}
+                </Button>
+                <NegotiationDialog
+                    requestId={requestId}
+                    confirmation={c}
+                    opponentName={opponentName}
+                    teams={teams}
+                    adLabels={buildAdLabels(labels)}
+                    disputerName={disputerName}
+                    dialog={d}
+                />
+            </span>
+            <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
+            {seatLine}
         </span>
     )
 }

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
     fetchMatchRoomDetail, fetchMatchRoomSummary, fetchRoomGameConfirmations, fetchRoomParticipantCandidates,
 } from '@/lib/queries/match-rooms'
-import { fetchRoomRotationSession } from '@/lib/queries/rotation-sessions'
+import { fetchRoomRotationSession, fetchRotationSessionGames } from '@/lib/queries/rotation-sessions'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchPastOpponents } from '@/lib/queries/personal-matches'
 import { buildRoomGameContext, canViewerAddRoomGame } from '@/lib/match-rooms/room-context'
@@ -65,6 +65,9 @@ export default async function MatchRoomPage({ params }: Props) {
         fetchRoomGameConfirmations(requestIds, user.id),
         isMember && isPendingRotation ? fetchRoomRotationSession(roomId, user.id) : null,
     ])
+    // 세션에 이미 등록된 게임(0064) — 세션 id를 알아야 해서 위 웨이브 뒤에 온다.
+    // 방은 참가자 여럿이 각자 넣어 중복 위험이 가장 크므로, 빌더가 목록을 보여 주고 선점 값을 만든다.
+    const sessionGames = rotationSession ? await fetchRotationSessionGames(rotationSession.id) : []
     const gameCtx = canAdd ? buildRoomGameContext(detail, participants) : undefined
     const picker = needsPicker ? { candidates: opponentCandidates, pastOpponents, selfUserId: user.id } : undefined
 
@@ -89,6 +92,7 @@ export default async function MatchRoomPage({ params }: Props) {
                 rotationSession={rotationSession}
                 participants={participants}
                 picker={picker}
+                sessionGames={sessionGames}
             />
             {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
             {!isHost && detail.viewer && detail.viewer.status !== 'declined' && (

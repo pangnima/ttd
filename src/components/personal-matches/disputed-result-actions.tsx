@@ -4,6 +4,7 @@ import type { PersonalMatchConfirmation } from '@/types'
 import type { AdLabels } from '@/lib/personal-matches/labels'
 import { Button } from '@/components/ui/button'
 import { disputeBadge, isReentryTurn } from '@/lib/personal-matches/confirmation'
+import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -31,25 +32,29 @@ export function DisputedResultActions({
     const badge = disputeBadge(c, disputerName)
 
     return (
-        <span className="flex items-center gap-2">
-            <span className={badgeClassName} title={badge.title}>{badge.label}</span>
-            <Button
-                size="sm"
-                variant={isReentryTurn(c) ? 'default' : 'outline'}
-                className="h-7 text-caption"
-                onClick={d.openDialog}
-            >
-                다시 입력
-            </Button>
-            <NegotiationDialog
-                requestId={requestId}
-                confirmation={c}
-                opponentName={opponentName}
-                teams={teams}
-                adLabels={adLabels}
-                disputerName={disputerName}
-                dialog={d}
-            />
+        <span className="flex flex-col items-end gap-1">
+            <span className="flex items-center gap-2">
+                <span className={badgeClassName} title={badge.title}>{badge.label}</span>
+                <Button
+                    size="sm"
+                    variant={isReentryTurn(c) ? 'default' : 'outline'}
+                    className="h-7 text-caption"
+                    onClick={d.openDialog}
+                >
+                    다시 입력
+                </Button>
+                <NegotiationDialog
+                    requestId={requestId}
+                    confirmation={c}
+                    opponentName={opponentName}
+                    teams={teams}
+                    adLabels={adLabels}
+                    disputerName={disputerName}
+                    dialog={d}
+                />
+            </span>
+            {/* 사유가 툴팁에만 있으면 모바일에서 읽을 수 없다 — 본문 텍스트로 승격(0064) */}
+            <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
         </span>
     )
 }

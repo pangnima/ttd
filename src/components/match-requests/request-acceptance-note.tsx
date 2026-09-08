@@ -3,6 +3,7 @@ import { PILL_BASE } from '@/lib/dashboard/tokens'
 import {
     formatAcceptanceProgress, pendingMemberCount, requiresAllMembers, type AcceptanceSeat,
 } from '@/lib/match-requests/participants'
+import { SeatAcceptanceStatusLine } from '@/components/match-requests/seat-acceptance-status-line'
 
 type Props = { request: MatchRequest }
 
@@ -25,6 +26,15 @@ export function SeatProgressBadge({ seats }: { seats: AcceptanceSeat[] }) {
 export function AcceptanceProgressBadge({ request }: Props) {
     if (!requiresAllMembers(request)) return null
     return <SeatProgressBadge seats={request.seats} />
+}
+
+/**
+ * 좌석 명단 '수락: A / 응답 대기: B' — 배지와 같은 게이트를 쓴다(방 밖 요청만).
+ * 숫자 배지만으로는 **누구를 기다리는지** 알 수 없어 재촉할 대상을 특정할 수 없었다.
+ */
+export function RequestAcceptanceStatusLine({ request, className }: Props & { className?: string }) {
+    if (!requiresAllMembers(request)) return null
+    return <SeatAcceptanceStatusLine seats={request.seats} className={className} />
 }
 
 /** 수락 전 안내 문구 — 전원 수락 모델인지, 대표 1명 모델인지에 따라 갈린다 */
@@ -61,12 +71,28 @@ export function AwaitingMembersNote({ request }: Props) {
  * 로테이션 **일정**(경기 전) 초대 문구 (0057). 요청 문구와 달리 '기록에 추가'라고 말하지 않는다 —
  * 이 시점에는 게임이 하나도 없고, 수락은 "그 시간에 이 사람들과 친다"는 동의다.
  */
-export function SessionPlanNote({ readOnly, remaining }: { readOnly?: boolean; remaining: number }) {
+export function SessionPlanNote(
+    { readOnly, remaining, isOwner }: { readOnly?: boolean; remaining: number; isOwner?: boolean },
+) {
     return (
-        <p className="text-caption text-muted-foreground break-keep">
-            {readOnly
-                ? `참여를 수락했습니다. 남은 참가자 ${remaining}명이 응답하면 일정이 확정됩니다. 결과는 경기 후에 누구든 입력할 수 있습니다.`
-                : '수락하면 이 일정이 내 화면에도 표시되고, 경기 후 결과를 직접 입력할 수 있습니다. 거절하면 나만 참가자 명단에서 빠집니다.'}
-        </p>
+        <p className="text-caption text-muted-foreground break-keep">{sessionPlanText(readOnly, remaining, isOwner)}</p>
     )
+}
+
+/**
+ * 0064로 '전원 수락 전에는 결과를 입력할 수 없다'가 되면서 이 문구가 네 갈래가 됐다.
+ * ⚠ 주최자에게 "참여를 수락했습니다"라고 말하면 안 된다 — 초대를 **보낸** 사람이다.
+ * 주최자가 이 카드를 보는 것 자체가 0064의 신설 경로(awaitSeats)라 종전 문구에는 이 갈래가 없었다.
+ */
+function sessionPlanText(readOnly: boolean | undefined, remaining: number, isOwner: boolean | undefined): string {
+    if (!readOnly) {
+        return '수락하면 이 일정이 내 화면에도 표시되고, 경기 후 결과를 직접 입력할 수 있습니다. 거절하면 나만 참가자 명단에서 빠집니다.'
+    }
+    if (isOwner) {
+        return `초대한 회원 ${remaining}명의 응답을 기다립니다. 전원이 수락해야 결과를 입력할 수 있습니다 — 응답이 없으면 참가자 편집에서 명단에서 빼고 게스트로 기록할 수 있습니다.`
+    }
+    if (remaining > 0) {
+        return `참여를 수락했습니다. 남은 참가자 ${remaining}명이 응답해야 결과를 입력할 수 있습니다.`
+    }
+    return '참여를 수락했습니다. 경기 후 결과는 참가자 누구든 입력할 수 있습니다.'
 }

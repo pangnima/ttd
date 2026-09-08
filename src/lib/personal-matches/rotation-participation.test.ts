@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import type { RotationSession, RotationSessionSeat } from '@/types'
 import {
-    canEnterRotationResult, canManageRotationPool, classifyRotationSession, pendingSeats, poolMemberIds,
+    canEnterRotationResult, canManageRotationPool, classifyRotationSession, hasUnansweredSeats,
+    pendingSeats, poolMemberIds,
     rejectedSeats, requiresSessionConsent,
 } from '@/lib/personal-matches/rotation-participation'
 
@@ -115,5 +116,58 @@ describe('좌석 요약', () => {
     it('응답 대기·거절을 갈라 준다', () => {
         expect(pendingSeats(seats).map((s) => s.userId)).toEqual(['a'])
         expect(rejectedSeats(seats).map((s) => s.userId)).toEqual(['c'])
+    })
+})
+
+describe('전원 수락 게이트 (0064)', () => {
+    const pendingSession = (over: Partial<RotationSession> = {}) =>
+        session({ seats: [seat(ME, 'accepted'), seat('other-1', 'pending')], ...over })
+
+    it('미응답 좌석이 하나라도 남으면 소유자도 결과를 입력할 수 없다', () => {
+        expect(canEnterRotationResult(pendingSession(), OWNER, NO_ROOMS)).toBe(false)
+    })
+
+    it('수락한 참가자도 마찬가지다 — 규칙이 좌석마다 갈리지 않는다', () => {
+        expect(canEnterRotationResult(pendingSession({ viewerParticipation: 'accepted' }), ME, NO_ROOMS)).toBe(false)
+    })
+
+    it('전원이 응답하면 종전대로 열린다 — 거절·제외도 응답이다', () => {
+        const answered = session({ seats: [seat(ME, 'accepted'), seat('other-1', 'rejected')] })
+        expect(canEnterRotationResult(answered, OWNER, NO_ROOMS)).toBe(true)
+        expect(canEnterRotationResult({ ...answered, viewerParticipation: 'accepted' }, ME, NO_ROOMS)).toBe(true)
+    })
+
+    it('방 세션은 이 게이트 밖이다 — 비밀번호 입장이 곧 동의(0048)', () => {
+        const room = pendingSession({ roomId: 'r1' })
+        expect(hasUnansweredSeats(room)).toBe(false)
+        expect(canEnterRotationResult(room, OWNER, NO_ROOMS)).toBe(true)
+        expect(canEnterRotationResult(room, ME, new Set(['r1']))).toBe(true)
+    })
+
+    it('⚠ 소유자의 세션이 큐에서 사라지지 않는다 — awaitSeats가 그 자리다', () => {
+        // 소유자는 좌석 행이 없어 viewerParticipation이 undefined다.
+        // 이 레인이 없으면 respond도 awaitOwner도 아니라 'none'으로 떨어져 허브에서 통째로 증발한다.
+        expect(classifyRotationSession(pendingSession(), OWNER, NO_ROOMS)).toBe('awaitSeats')
+    })
+
+    it('이미 수락한 참가자도 awaitSeats에서 남은 사람을 기다린다', () => {
+        const s = pendingSession({ viewerParticipation: 'accepted' })
+        expect(classifyRotationSession(s, ME, NO_ROOMS)).toBe('awaitSeats')
+    })
+
+    it('내 좌석이 아직 미응답이면 awaitSeats보다 respond가 먼저다 — 내 차례가 우선', () => {
+        const s = session({ seats: [seat(ME, 'pending')], viewerParticipation: 'pending' })
+        expect(classifyRotationSession(s, ME, NO_ROOMS)).toBe('respond')
+    })
+
+    it('거절한 사람은 남은 좌석과 무관하게 큐에서 빠진다', () => {
+        const s = pendingSession({ viewerParticipation: 'rejected' })
+        expect(classifyRotationSession(s, ME, NO_ROOMS)).toBe('none')
+    })
+
+    it('전원 수락 후에는 소유자·수락자 모두 enter로 돌아온다', () => {
+        const s = session({ seats: [seat(ME, 'accepted'), seat('other-1', 'accepted')] })
+        expect(classifyRotationSession(s, OWNER, NO_ROOMS)).toBe('enter')
+        expect(classifyRotationSession({ ...s, viewerParticipation: 'accepted' }, ME, NO_ROOMS)).toBe('enter')
     })
 })

@@ -5,7 +5,9 @@ import type { AdLabels } from '@/lib/personal-matches/labels'
 import {
     confirmMatchResultAction, disputeMatchResultAction, proposeMatchResultAction,
 } from '@/lib/actions/match-results'
-import { canRespondToProposal, formatConfirmProgress, hasDisputeHistory } from '@/lib/personal-matches/confirmation'
+import {
+    canRespondToProposal, disputerTitleOf, formatConfirmProgress, hasDisputeHistory,
+} from '@/lib/personal-matches/confirmation'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import type { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -29,8 +31,8 @@ type Props = {
  * 검토/제안의 갈림은 canRespondToProposal 하나다(0060 만장일치) — 화면과 RPC의 자격이 같은 문장이어야 한다.
  */
 export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, dialog: d }: Props) {
-    // 이의자 호칭 — '내 이의 사유' / 'OOO님 이의 사유' / '상대 이의 사유'(미상 폴백)
-    const disputer = disputerName === '나' ? '내' : disputerName ? `${disputerName}님` : '상대'
+    // 이의자 호칭은 카드의 사유 줄과 같은 출처를 쓴다 — 인라인하면 화면마다 다른 사람 것으로 보일 수 있다
+    const disputer = disputerTitleOf(disputerName)
 
     if (canRespondToProposal(c)) {
         // 이의를 거친 재제안이면 직전 사유를 함께 보여준다(0062) — 승인 판단에 필요한 유일한 정보다

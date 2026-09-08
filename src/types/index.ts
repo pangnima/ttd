@@ -182,9 +182,19 @@ export type PersonalMatchConfirmation = {
     // 내 좌석이 이미 확인했는가 (0060). 제안자는 제안 시점에 자동으로 확인한 것이 된다.
     // 검토 모드·큐 버킷 판정은 이 값과 proposedByMe를 함께 본다(canRespondToProposal).
     confirmedByMe: boolean
-    // 확인 진행도 — 분모는 user_id가 있는 좌석 수(단식 2·복식 최대 4). DB 분모는 활성 회원이라
-    // 탈퇴자가 끼면 1 차이가 날 수 있다(표시 전용).
+    // 확인 진행도 — 분모는 **활성** 회원 좌석 수(단식 2·복식 최대 4). DB request_result_seats와 같은 규칙이다.
     confirmProgress: { confirmed: number; total: number }
+    // 이 제안을 확인한 좌석의 user_id (0060 confirmed_by). 제안자는 제안 시점에 들어간다.
+    // 숫자 진행도만으로는 "누가 확인했는지"를 말할 수 없어 배열째 싣는다 — 화면은 이 값을 좌석 이름과
+    // 대조한다(seat-status.ts confirmSeatStatuses). 부착을 빠뜨리면 빈 배열 = 아무도 확인 안 함으로
+    // 떨어져 표시가 **과소**로 무너진다(confirmedByMe와 같은 안전 방향).
+    confirmedUserIds: string[]
+    // 제안자 user_id — 좌석 명단에서 '제안'을 구분하는 데만 쓴다. 제안자는 confirmedUserIds에도 있으므로
+    // 이 값이 없어도 '확인 완료'로는 보인다(표시 품질만 떨어진다).
+    proposedBy?: string
+    // 탈퇴(soft delete)한 좌석의 user_id — 확인 분모에서 빠진 사람들. 명단에서 '확인 대기'로 그리면
+    // 영영 오지 않을 확인을 기다리는 것처럼 보이므로 따로 구분한다.
+    inactiveUserIds: string[]
     proposedSets: PersonalMatchSetScore[]  // viewer 좌석 관점으로 변환 완료된 제안 세트
     disputeReason?: string  // 가장 최근 이의·정정의 사유 (0062부터 재제안·확정 후에도 남는다)
     // 이의(dispute)·정정(reopen)으로 disputed를 만든 **가장 최근** 좌석 (0061, 0062에서 의미 확장).
