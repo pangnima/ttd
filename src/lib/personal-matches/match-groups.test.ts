@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PersonalMatch } from '@/types'
-import { buildMatchGroups } from './match-groups'
+import { buildMatchGroups, splitGameCards } from './match-groups'
 
 type Over = Partial<PersonalMatch> & { id: string }
 
@@ -53,17 +53,18 @@ describe('buildMatchGroups — 로테이션 그룹', () => {
 })
 
 describe('buildMatchGroups — 레코드 그룹', () => {
-    it('세션 id가 없는 행은 각각 1그룹(헤더 없음), 세트 4개 → 4게임 전적', () => {
-        const a = pm({ id: 'a', matchType: 'singles', setScores: [{ me: 6, opp: 4 }, { me: 6, opp: 2 }, { me: 3, opp: 6 }, { me: 7, opp: 5 }] })
+    it('게임 1개짜리 행은 헤더 없는 record 그룹', () => {
         const b = pm({ id: 'b', matchType: 'singles', playedAt: '2026-06-05', setScores: [{ me: 4, opp: 6 }] })
-        const groups = buildMatchGroups([b, a])
-        expect(groups.map((g) => g.key)).toEqual(['record:a', 'record:b'])
-        expect(groups[0].kind).toBe('record')
-        expect(groups[0]).toMatchObject({ gameCount: 4, wins: 3, losses: 1, draws: 0 })
+        const [g] = buildMatchGroups([b])
+        expect(g.kind).toBe('record')
+        expect(g.key).toBe('record:b')
+        expect(g.matches).toHaveLength(1)
+        expect(g).toMatchObject({ gameCount: 1, wins: 0, losses: 1, draws: 0 })
     })
 
     it('미확정(세트 없음) 행은 카드 1장·게임 1개로 세되 전적 제외', () => {
         const [g] = buildMatchGroups([pm({ id: 'p', setScores: [] })])
+        expect(g.kind).toBe('record')
         expect(g).toMatchObject({ gameCount: 1, wins: 0, losses: 0, draws: 0 })
     })
 
@@ -72,6 +73,45 @@ describe('buildMatchGroups — 레코드 그룹', () => {
         const late = pm({ id: 'l', playedTime: '20:00' })
         const older = pm({ id: 'o', playedAt: '2026-06-01', playedTime: '23:00' })
         expect(buildMatchGroups([early, older, late]).map((g) => g.matches[0].id)).toEqual(['l', 'e', 'o'])
+    })
+})
+
+describe('buildMatchGroups — 멀티 게임 그룹', () => {
+    const a = pm({
+        id: 'a', matchType: 'singles', partnerName: undefined, opponent2Name: undefined,
+        setScores: [{ me: 6, opp: 4 }, { me: 6, opp: 2 }, { me: 3, opp: 6 }, { me: 7, opp: 5 }],
+    })
+
+    it('게임 2개 이상인 행은 multi 그룹 — 게임마다 카드 1장, 각 카드는 게임 1개만 갖는다', () => {
+        const [g] = buildMatchGroups([a])
+        expect(g.kind).toBe('multi')
+        expect(g.key).toBe('record:a')
+        expect(g.matches).toHaveLength(4)
+        expect(g.matches.map((m) => m.id)).toEqual(['a#0', 'a#1', 'a#2', 'a#3'])
+        expect(g.matches.every((m) => m.setScores.length === 1)).toBe(true)
+        expect(g.matches[2].setScores[0]).toEqual({ me: 3, opp: 6 })
+        expect(g).toMatchObject({ gameCount: 4, wins: 3, losses: 1, draws: 0, matchType: 'singles' })
+    })
+
+    it('액션 기준인 sourceMatch는 원본 행 — 가상 카드 id가 새어 나가지 않는다', () => {
+        const [g] = buildMatchGroups([a])
+        expect(g.sourceMatch.id).toBe('a')
+        expect(g.sourceMatch.setScores).toHaveLength(4)
+        expect(g.matches.some((m) => m.id === g.sourceMatch.id)).toBe(false)
+    })
+
+    it('record·rotation 그룹의 sourceMatch는 자기 행', () => {
+        const one = pm({ id: 'one', setScores: [{ me: 6, opp: 3 }] })
+        const rot = pm({ id: 'r1', rotationSessionId: 's', groupSeq: 1 })
+        const [gr, gRot] = buildMatchGroups([one, rot])
+        expect([gr.sourceMatch.id, gRot.sourceMatch.id].sort()).toEqual(['one', 'r1'])
+    })
+
+    it('splitGameCards는 원본을 건드리지 않는다', () => {
+        const cards = splitGameCards(a)
+        expect(cards).toHaveLength(4)
+        expect(a.setScores).toHaveLength(4)
+        expect(cards[0]).toMatchObject({ id: 'a#0', matchType: 'singles', courtName: '목동' })
     })
 })
 

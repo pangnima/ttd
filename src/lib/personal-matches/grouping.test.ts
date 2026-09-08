@@ -30,8 +30,8 @@ describe('groupByMonth', () => {
         expect(idsOf(june)).toEqual(['d', 'a', 'b'])
     })
 
-    it('멀티 세트는 세트(게임) 단위로 승패 집계하고 카드는 레코드 1건', () => {
-        // 4세트(3승 1패) 1건 + 1세트(1패) 1건 → 게임 합산 3승 2패, 그룹(카드)은 2건
+    it('멀티 게임은 게임 단위로 승패 집계하고 카드도 게임마다 1장', () => {
+        // 4게임(3승 1패) 1건 + 1게임(1패) 1건 → 게임 합산 3승 2패, 그룹(박스)은 2건
         const a: PersonalMatch = {
             id: 'a', userId: 'me', opponentName: 'X', playedAt: '2026-06-10', matchType: 'singles',
             setScores: [{ me: 6, opp: 4 }, { me: 6, opp: 2 }, { me: 3, opp: 6 }, { me: 7, opp: 5 }],
@@ -45,7 +45,8 @@ describe('groupByMonth', () => {
         expect(june).toMatchObject({ wins: 3, losses: 2, winRate: 60 })
         expect(june.groups).toHaveLength(2)
         expect(june.groups[0].gameCount).toBe(4)
-        expect(idsOf(june)).toEqual(['a', 'b'])
+        expect(june.groups.map((g) => g.sourceMatch.id)).toEqual(['a', 'b'])
+        expect(idsOf(june)).toEqual(['a#0', 'a#1', 'a#2', 'a#3', 'b'])
     })
 
     it('결과 미확정(세트 없음) 행은 월 전적에서 제외하되 카드에는 남긴다', () => {

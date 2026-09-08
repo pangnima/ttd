@@ -2,12 +2,15 @@ import type { PersonalMatch } from '@/types'
 import { hasResult, tallySets, type SetTally } from '@/lib/personal-matches/winner'
 
 /**
- * 개인 경기 목록의 표시 그룹 — 카드(경기 1건)는 그대로 두고, 같은 로테이션 세션에서 분해된 게임 카드들을
- * 헤더 행(일시·코트명·참여 멤버·전적)으로 한 번 감싸기 위한 묶음. 그 외 레코드는 행마다 1그룹(헤더 없음).
- * 통계 경로의 explodePersonalMatchSets와 무관한 표시 전용 모듈.
+ * 개인 경기 목록의 표시 그룹 — 카드(게임 1건)는 그대로 두고, 같은 묶음에 속한 카드들을
+ * 헤더 행(일시·코트명·참여 멤버·전적)으로 한 번 감싸기 위한 단위. 묶음은 두 가지다:
+ *  - rotation: 같은 로테이션 세션에서 분해된 행 N개 (행 = 카드)
+ *  - multi:    게임(세트) 2개 이상인 행 1개 → 표시용 게임 카드 N장 (로테이션과 같은 관용구)
+ * 게임 1개짜리 행은 record — 헤더 없이 카드 1장.
+ * 통계 경로의 explodePersonalMatchSets와 무관한 표시 전용 모듈이다.
  */
 
-export type MatchGroupKind = 'rotation' | 'record'
+export type MatchGroupKind = 'rotation' | 'multi' | 'record'
 
 export type MatchGroup = SetTally & {
     key: string
@@ -16,13 +19,29 @@ export type MatchGroup = SetTally & {
     playedTime?: string
     courtName?: string
     notes?: string
-    matches: PersonalMatch[]     // 로테이션은 groupSeq(입력 순), record는 1개
+    matchType: PersonalMatch['matchType']
+    matches: PersonalMatch[]     // 표시 카드 — rotation은 groupSeq(입력 순) 행들, multi는 가상 게임 카드, record는 1개
+    sourceMatch: PersonalMatch   // 액션(수정·삭제·정정)·링크가 기준으로 삼는 원본 행. 가상 카드 id가 새어 나가면 안 된다
     participantNames: string[]   // 나 제외 참여 멤버 — 파트너/상대1/상대2 이름을 첫 등장 순으로 중복 제거
     gameCount: number            // 세트(게임) 수 합 — 세트 1개 = 게임 1개
 }
 
 export function isRotationMatch(m: PersonalMatch): boolean {
     return !!m.rotationSessionId || m.sourceType === 'rotation'
+}
+
+/**
+ * 표시용 게임 분해 — 게임(세트) 2개 이상인 행 1개를 게임마다 카드 1장으로 편다.
+ * 통계용 explodePersonalMatchSets와 id 규약(`원본id#세트인덱스`)만 공유하고 경로는 분리한다:
+ * 저쪽은 winner를 붙인 집계 입력, 이쪽은 화면에 그릴 카드다. 원본 행은 그룹의 sourceMatch가 들고 있다.
+ */
+export function splitGameCards(m: PersonalMatch): PersonalMatch[] {
+    return m.setScores.map((s, i) => ({ ...m, id: `${m.id}#${i}`, setScores: [s] }))
+}
+
+function kindOf(m: PersonalMatch): MatchGroupKind {
+    if (m.rotationSessionId) return 'rotation'
+    return m.setScores.length > 1 ? 'multi' : 'record'
 }
 
 // 최신 경기 먼저, 같은 일시면 로테이션 게임 순번(입력 순) → id로 결정적 정렬
@@ -64,15 +83,18 @@ export function buildMatchGroups(matches: PersonalMatch[]): MatchGroup[] {
         let g = byKey.get(key)
         if (!g) {
             g = {
-                key, kind: m.rotationSessionId ? 'rotation' : 'record',
+                key, kind: kindOf(m),
                 playedAt: m.playedAt, playedTime: m.playedTime, courtName: m.courtName, notes: m.notes,
+                matchType: m.matchType, sourceMatch: m,
                 matches: [], participantNames: [], gameCount: 0, wins: 0, losses: 0, draws: 0,
             }
             byKey.set(key, g)
             groups.push(g)
         }
         const t = tallyMatch(m)
-        g.matches.push(m)
+        // multi 그룹만 카드를 편다 — 로테이션은 행이 곧 게임이라 그대로 두고(레거시 멀티세트 행 포함, 0044),
+        // 카드마다 액션이 붙는 유일한 종류라 가상 카드를 섞으면 액션이 없는 id를 가리키게 된다.
+        g.matches.push(...(g.kind === 'multi' ? splitGameCards(m) : [m]))
         addParticipants(g.participantNames, m)
         g.gameCount += Math.max(1, m.setScores.length)
         g.wins += t.wins

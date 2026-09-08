@@ -1,55 +1,36 @@
 import type { ReactNode } from 'react'
 import type { PersonalMatch } from '@/types'
-import {
-    formatGameSummary, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL,
-} from '@/lib/dashboard/outcome'
-import { hasResult, resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
+import { PENDING_BADGE, resolveResultBadge } from '@/lib/personal-matches/result-badge'
 import { formatOpponents } from '@/lib/personal-matches/labels'
 import { isRecruiting } from '@/lib/personal-matches/lineup'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
+import { GameScoreChips } from '@/components/personal-matches/set-score-chips'
 import { RoomLink } from '@/components/match-rooms/room-link'
 
 type Props = {
     match: PersonalMatch
     actions?: ReactNode
-    // 로테이션 그룹 안의 카드 — 시각·코트명·메모는 그룹 헤더가 보여주므로 숨긴다
+    // 그룹(로테이션·멀티 게임) 안의 카드 — 시각·코트명·메모는 그룹 헤더가 보여주므로 숨긴다
     hideMeta?: boolean
+    // 멀티 게임 그룹에서 카드끼리 구분되도록 붙이는 순번('1게임'). 같은 상대와 반복되는 게임이라 순번이 없으면 구별되지 않는다.
+    gameLabel?: string
 }
 
-const RESULT = {
-    me: { bar: 'bg-win-solid', badge: 'bg-win text-win-foreground', label: 'WIN' },
-    opponent: { bar: 'bg-loss-solid', badge: 'bg-loss text-loss-foreground', label: 'LOSS' },
-    draw: { bar: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground', label: '무' },
-    // 결과 미확정 — 게임 스코어 미등록. 통계에는 반영되지 않는다.
-    pending: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: PENDING_RESULT_LABEL },
-    // 매칭 리스트에 노출했지만 참가자가 아직 미정 — 방에서 모으는 중
-    recruiting: { bar: PENDING_RESULT_BAR, badge: PENDING_RESULT_BADGE, label: '모집 중' },
-} as const
-// 게임(세트) 2개 이상 — 게임마다 승패가 다르므로 다수결 색을 쓰지 않고 중립 바 + 'N승 M패' 전적
-const MULTI = { bar: 'bg-border', badge: 'bg-muted text-muted-foreground' } as const
+// 매칭 리스트에 노출했지만 참가자가 아직 미정 — 방에서 모으는 중
+const RECRUITING_BADGE = { ...PENDING_BADGE, label: '모집 중' }
 
-// 개인 경기 1건 카드. 동호인 경기: 세트 1개 = 게임 1개.
-// 게임 1개는 WIN/LOSS, 2개 이상은 'N승 M패' 전적, 세트가 없는 미확정 경기는 '미확정' 배지.
-export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props) {
+// 개인 경기 카드. 동호인 경기: 세트 1개 = 게임 1개.
+// 배지·색 바 규칙은 resolveResultBadge 단일 출처(게임 1개 WIN/LOSS·2개 이상 전적·없으면 미확정).
+export function PersonalMatchCard({ match: m, actions, hideMeta = false, gameLabel }: Props) {
     const isDoubles = m.matchType !== 'singles'
     const opponentLabel = formatOpponents(m)
-    const isMulti = m.setScores.length > 1
 
-    const result = isRecruiting(m)
-        ? RESULT.recruiting
-        : !hasResult(m)
-        ? RESULT.pending
-        : isMulti
-            ? (() => {
-                const t = tallySets(m.setScores)
-                return { ...MULTI, label: formatGameSummary(m.setScores.length, t.wins, t.losses, t.draws) }
-            })()
-            : RESULT[resolveSetWinner(m.setScores[0])]
+    const result = isRecruiting(m) ? RECRUITING_BADGE : resolveResultBadge(m.setScores)
 
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
-            <span className={`w-1 self-stretch rounded-full ${result.bar}`} aria-hidden />
+            <span className={`w-1 self-stretch rounded-full ${result.barClass}`} aria-hidden />
             <MatchDateColumn playedAt={m.playedAt} matchType={m.matchType} surface={m.surface} />
 
             <div className="flex-1 min-w-0">
@@ -65,7 +46,7 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
                             <span className="text-muted-foreground">vs </span>{opponentLabel}
                         </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 whitespace-nowrap tabular-nums ${result.badge}`}>
+                    <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 whitespace-nowrap tabular-nums ${result.badgeClass}`}>
                         {result.label}
                     </span>
                 </div>
@@ -87,16 +68,8 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false }: Props
                 {(m.setScores.length > 0 || actions) && (
                     <div className="flex items-end justify-between gap-2 mt-2">
                         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                            {m.setScores.map((s, i) => (
-                                <span
-                                    key={i}
-                                    className={`px-1.5 py-1 rounded-[4px] text-caption font-semibold tabular-nums ${
-                                        s.me > s.opp ? 'bg-win/15 text-win' : 'bg-muted text-muted-foreground'
-                                    }`}
-                                >
-                                    {s.me}-{s.opp}
-                                </span>
-                            ))}
+                            {gameLabel && <span className="text-caption text-muted-foreground shrink-0">{gameLabel}</span>}
+                            <GameScoreChips sets={m.setScores} />
                         </div>
                         {actions && <div className="shrink-0 self-center">{actions}</div>}
                     </div>
