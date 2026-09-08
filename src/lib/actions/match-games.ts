@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { recalculateClubRatings } from './ratings'
 import type { Court, Match, MatchType, Round } from '@/types'
+import { resolveGameWinner } from '@/lib/match-games/match-view-helpers'
 
 // player1Id/player2Id(단식)·team1/team2(복식)+ad 플레이어 id를 참가자 배열({user_id, side, is_ad})로 변환.
 // match_game_matches는 더 이상 이 컬럼들을 갖지 않고 match_game_participants로 정규화되어 있다.
@@ -120,23 +121,30 @@ export async function deleteMatchGameAction(
 
 // winner_id는 외래키가 아닌 사이드 식별자 리터럴 ('team1' | 'team2' | 'draw').
 // 단식에서 player1 = team1, player2 = team2 로 매핑되는 규약에 따름.
+//
+// 대진표는 경기 1건 = 게임 1개다(입력 UI가 스코어 한 줄만 받는다). 승자는 클라이언트가 보낸 값을 믿지 않고
+// 서버에서 스코어로 파생하고, 게임 개수도 여기서 막는다 — 로테이션(0044)이 쓰는 클라·액션·DB 3중 방어의 서버 축.
 export async function saveMatchResultAction(
     clubId: string,
     matchGameId: string,
     matchId: string,
-    sets: Array<{ team1: number; team2: number }>,
-    winnerId: 'team1' | 'team2' | 'draw'
+    games: Array<{ team1: number; team2: number }>
 ): Promise<ActionResult> {
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { ok: false, error: '로그인이 필요합니다.' }
 
+    if (games.length !== 1) return { ok: false, error: '경기 결과는 게임 1개만 저장할 수 있습니다.' }
+    const [game] = games
+    const isScore = (n: number) => Number.isInteger(n) && n >= 0 && n <= 99
+    if (!isScore(game.team1) || !isScore(game.team2)) return { ok: false, error: '게임 스코어를 올바르게 입력해주세요.' }
+
     const { error } = await supabase
         .from('match_game_matches')
         .update({
             status: 'finished',
-            result_sets: sets,
-            winner_id: winnerId,
+            result_sets: games,
+            winner_id: resolveGameWinner(game),
         })
         .eq('id', matchId)
 

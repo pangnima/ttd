@@ -8,7 +8,7 @@ import { MatchCardItem } from '@/components/match-games/match-card-item'
 import { matchPlayerIds } from '@/lib/match-games/attendance-stats'
 import { isCloseMatch } from '@/lib/match-games/special-match'
 import {
-    buildSlotGroups, getWinnerSide,
+    buildSlotGroups, resolveInputWinner,
     SLOT_TIME_CLASS, SELF_ROW_CLASS,
     type MatchViewProps,
 } from '@/lib/match-games/match-view-helpers'
@@ -52,7 +52,7 @@ export function MatchListView({
                             </tr>,
                             ...group.matches.map((match, idx) => {
                                 const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
-                                const winner = state.confirmed ? getWinnerSide(state.sets) : null
+                                const winner = state.confirmed ? resolveInputWinner(state.sets[0]) : null
                                 const sides = courtSides[match.id]
                                 const isLastInGroup = idx === group.matches.length - 1
                                 const isSelfRow = !!currentUserId && matchPlayerIds(match).includes(currentUserId)
@@ -164,7 +164,7 @@ export function MatchListView({
                         <div className="space-y-2">
                             {group.matches.map((match) => {
                                 const state = matchStates[match.id] ?? { sets: [{ team1: '', team2: '' }], confirmed: false }
-                                const winner = state.confirmed ? getWinnerSide(state.sets) : null
+                                const winner = state.confirmed ? resolveInputWinner(state.sets[0]) : null
                                 const isSelfRow = !!currentUserId && matchPlayerIds(match).includes(currentUserId)
                                 return (
                                     <MatchCardItem

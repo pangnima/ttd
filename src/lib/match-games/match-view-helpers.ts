@@ -49,22 +49,24 @@ export const SELF_CARD_CLASS = 'border-spot-solid/50 bg-spot-solid/10'
 
 // ── 순수 함수 ────────────────────────────────
 
-// 세트 카운트 다수결로 승자 결정.
-// 반환값: null = 아직 아무 점수도 입력되지 않음, 'draw' = 세트 수 동률.
-// NaN(빈 입력)은 0으로 처리하되, 양쪽 모두 NaN이면 미입력으로 판단.
-export function getWinnerSide(sets: SetScore[]): WinnerSide {
-    let t1 = 0, t2 = 0, hasInput = false
-    for (const set of sets) {
-        const s1 = parseInt(set.team1)
-        const s2 = parseInt(set.team2)
-        if (!Number.isNaN(s1) || !Number.isNaN(s2)) hasInput = true
-        if ((isNaN(s1) ? 0 : s1) > (isNaN(s2) ? 0 : s2)) t1++
-        else if ((isNaN(s2) ? 0 : s2) > (isNaN(s1) ? 0 : s1)) t2++
-    }
-    if (!hasInput) return null
-    if (t1 > t2) return 'team1'
-    if (t2 > t1) return 'team2'
+// 대진표는 경기 1건 = 게임 1개다 — 입력 UI(ScoreCell)가 스코어 한 줄만 받고 저장·복원도 그 한 줄이다.
+// 그래서 승자는 그 게임의 점수 비교로 정해진다. 세트 다수결(여러 세트 중 더 많이 이긴 쪽)은 쓰지 않는다:
+// 개인 경기가 0045에서 폐기한 규칙과 같은 것으로, 게임마다 승패를 따로 보는 이 프로젝트의 규칙에 맞지 않는다.
+export type GameScore = { team1: number; team2: number }
+
+export function resolveGameWinner(game: GameScore): 'team1' | 'team2' | 'draw' {
+    if (game.team1 > game.team2) return 'team1'
+    if (game.team2 > game.team1) return 'team2'
     return 'draw'
+}
+
+// 폼 입력(문자열) 한 줄 → 승자. 양쪽 모두 비어 있으면 null(미입력), 한쪽만 비면 0으로 본다.
+export function resolveInputWinner(game: SetScore | undefined): WinnerSide {
+    if (!game) return null
+    const s1 = parseInt(game.team1)
+    const s2 = parseInt(game.team2)
+    if (Number.isNaN(s1) && Number.isNaN(s2)) return null
+    return resolveGameWinner({ team1: Number.isNaN(s1) ? 0 : s1, team2: Number.isNaN(s2) ? 0 : s2 })
 }
 
 // timeSlotId → "08:05 ~ 08:30" 라벨. 매칭 실패 시 id를 그대로 반환.

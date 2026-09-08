@@ -98,7 +98,7 @@ const fixedMatches: Match[] = [
         player1Id: 'u-owner',
         player2Id: 'u-6',
         status: 'finished',
-        result: { sets: [{ team1: 6, team2: 3 }, { team1: 6, team2: 4 }], winnerId: 'team1' },
+        result: { sets: [{ team1: 6, team2: 3 }], winnerId: 'team1' },
     },
     {
         id: 'm-4',
@@ -110,7 +110,7 @@ const fixedMatches: Match[] = [
         team1: ['u-4', 'u-5'],
         team2: ['u-7', 'u-8'],
         status: 'finished',
-        result: { sets: [{ team1: 4, team2: 6 }, { team1: 6, team2: 2 }, { team1: 10, team2: 8 }], winnerId: 'team1' },
+        result: { sets: [{ team1: 6, team2: 4 }], winnerId: 'team1' },
     },
 ]
 

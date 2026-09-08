@@ -11,7 +11,7 @@ import { MatchViewToggle, readViewMode } from '@/components/match-games/match-vi
 import { matchPlayerIds, restingIdsBySlot, gameCountsByPlayer } from '@/lib/match-games/attendance-stats'
 import { sortByGender } from '@/lib/match-games/form-mapping'
 import {
-    buildSlotGroups, getWinnerSide,
+    buildSlotGroups, resolveInputWinner,
     type MatchStates, type CourtSideState, type MatchViewProps,
 } from '@/lib/match-games/match-view-helpers'
 import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
@@ -106,11 +106,12 @@ export function MatchGameTable({ matchGame, members, clubId, isOwner = false, ra
 
     function confirmScore(matchId: string) {
         const state = matchStates[matchId]
-        const winnerSide = getWinnerSide(state.sets)
-        if (winnerSide === null) return
-        const sets = state.sets.map((s) => ({ team1: parseInt(s.team1) || 0, team2: parseInt(s.team2) || 0 }))
+        // 미입력이면 저장하지 않는다. 승자는 서버가 스코어에서 파생하므로 여기서 보내지 않는다.
+        if (resolveInputWinner(state.sets[0]) === null) return
+        // 경기 1건 = 게임 1개 — 첫 줄만 보낸다(액션도 길이 1을 강제한다)
+        const games = state.sets.slice(0, 1).map((s) => ({ team1: parseInt(s.team1) || 0, team2: parseInt(s.team2) || 0 }))
         setMatchStates((prev) => ({ ...prev, [matchId]: { ...prev[matchId], confirmed: true } }))
-        startTransition(async () => { await saveMatchResultAction(clubId, matchGame.id, matchId, sets, winnerSide) })
+        startTransition(async () => { await saveMatchResultAction(clubId, matchGame.id, matchId, games) })
     }
 
     function editScore(matchId: string) {

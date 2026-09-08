@@ -6,7 +6,7 @@ import { SpecialMatchBadge } from '@/components/match-games/special-match-badge'
 import { matchPlayerIds } from '@/lib/match-games/attendance-stats'
 import { isCloseMatch } from '@/lib/match-games/special-match'
 import {
-    getWinnerSide, SELF_CARD_CLASS,
+    resolveInputWinner, SELF_CARD_CLASS,
     type MatchState, type CourtSideState,
 } from '@/lib/match-games/match-view-helpers'
 import { cn } from '@/lib/utils'
@@ -37,7 +37,7 @@ export function MatchGridCell({
     match, matchGame, state, courtSides, isPending, canEdit, currentUserId,
     getName, isFormerMember, deltas, ratingByUser, isRival, toggleAdSide, updateScore, confirmScore, editScore,
 }: MatchGridCellProps) {
-    const winner = state.confirmed ? getWinnerSide(state.sets) : null
+    const winner = state.confirmed ? resolveInputWinner(state.sets[0]) : null
     const sides = courtSides[match.id]
     const isSelf = !!currentUserId && matchPlayerIds(match).includes(currentUserId)
     const isClose = state.confirmed && isCloseMatch(state.sets, winner)
