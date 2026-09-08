@@ -17,21 +17,10 @@ import {
  *   1. 탭·섹션에 적히는 숫자는 **그 자리에 실제로 그려지는 카드 수**와 같다.
  *   2. '내 차례가 있다'는 신호는 숫자가 아니라 **강조(emphasis)** 가 전달한다.
  *
- * 2단 탭(Week 38)에서 두 숫자의 차이는 하위 탭 하나에만 남는다 — 「경기 결과 확정」의 세션 카드
- * (enteredSessions)만이 '보이지만 내 차례가 아닌' 카드다. 초대·이의 신청은 카드 수 = 내 차례다.
+ * 2단 탭(Week 38)에서 허브는 승인 전용이라 승인 요청의 세 하위 탭은 카드 수 = 내 차례다.
+ * 결과 입력 대기(enterResult·입력 가능한 세션)는 허브를 떠나 개인 경기 결과 목록에 있다.
  * 사이드바·모바일 뱃지는 여기가 아니라 `myTurnTotal`을 계속 쓴다.
  */
-
-/**
- * 「결과 입력 대기」 섹션에 그려지는 카드 수.
- *
- * 미확정 행(enterResult 버킷) + **로테이션 세션 카드 전량**이다. 세션 카드는 이미 게임을 넣었어도
- * 계속 보인다 — 참가자가 게임을 더 넣을 수 있어 빈 상태로 덮으면 안 된다(0050·0064).
- * 그 '이미 넣은' 몫이 `enteredSessions`이고, 내 차례에서는 빠지지만 목록에서는 빠지지 않는다.
- */
-export function enterResultCards(c: MatchQueueCounts): number {
-    return c.enterResult + c.enteredSessions
-}
 
 /**
  * 탭별 목록 건수. 접힌 이력(「종료된 요청」)은 세지 않는다 — 처리 대상이 아니고
@@ -43,7 +32,7 @@ export function enterResultCards(c: MatchQueueCounts): number {
 export function hubTabTotals(c: MatchQueueCounts): Record<HubTab, number> {
     return {
         invite: c.participation,
-        result: c.confirmResult + enterResultCards(c) + c.fillLineup,
+        result: c.confirmResult + c.fillLineup,
         dispute: disputeMyTurnTotal(c),
         waiting: c.waiting + c.disputeWaiting + c.reentryWaiting,
     }

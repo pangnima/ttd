@@ -51,10 +51,11 @@ export type MatchQueue = {
     awaitingSeatSessions: RotationSession[]
     // ── B축 ──
     pendingMatches: PendingMatchEntry[]
-    /** 내가 지금 결과를 입력할 수 있는 세션만 — 수락 전 세션이 섞이면 눌리지 않는 버튼이 뜬다 */
+    /**
+     * 내가 지금 결과를 입력할 수 있는 세션만 — 수락 전 세션이 섞이면 눌리지 않는 버튼이 뜬다.
+     * Week 38부터 허브가 아니라 **개인 경기 결과** 목록이 그린다(전원 수락 = 승인할 것이 없다).
+     */
     rotationSessions: RotationSession[]
-    /** 이미 게임이 등록된 세션 id — 카드는 계속 보이되 뱃지 카운트에서만 제외 */
-    enteredSessionIds: string[]
     /**
      * 세션 id → **등록된 게임 전량**(0063, 0064에서 '내가 넣은 것'→'누가 넣었든'으로 확대).
      * 카드 배지·빌더의 '등록된 게임'이 이걸 읽어 같은 게임을 두 번 넣는 것을 막는다.
@@ -66,7 +67,7 @@ export type MatchQueue = {
 const EMPTY_QUEUE: MatchQueue = {
     receivedRequests: [], sentRequests: [], awaitingMemberRequests: [], closedRequests: [], roomInvites: [],
     sessionInvites: [], awaitingOwnerSessions: [], awaitingSeatSessions: [],
-    pendingMatches: [], rotationSessions: [], enteredSessionIds: [],
+    pendingMatches: [], rotationSessions: [],
     enteredGamesBySession: new Map(), counts: EMPTY_QUEUE_COUNTS,
 }
 
@@ -106,11 +107,6 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     const enteredGamesBySession = await fetchRotationSessionGamesBatch(
         [...rotationSessions, ...awaitingSeatSessions].map((s) => s.id),
     )
-    // 뱃지에서 빼는 것은 **입력 가능한** 세션만이다 — awaitSeats는 애초에 enterResult로 세지 않는다
-    const enteredSessionIds = rotationSessions
-        .filter((s) => (enteredGamesBySession.get(s.id) ?? []).length > 0)
-        .map((s) => s.id)
-
     const pendingMatches: PendingMatchEntry[] = pending.map((match) => ({
         match, bucket: classifyPendingMatch(match),
     }))
@@ -130,8 +126,6 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
         } else if (status === 'rejected' || status === 'canceled') closedRequests.push(item)
     }
 
-    const entered = new Set(enteredSessionIds)
-    const unenteredSessions = rotationSessions.filter((s) => !entered.has(s.id)).length
     const tallied = tallyBuckets(pendingMatches.map((p) => p.bucket))
 
     // 같은 세션을 두 장으로 그리지 않는다(0063). 주최자가 수락을 기다리지 않고 결과를 먼저 넣으면
@@ -145,14 +139,15 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
         receivedRequests, sentRequests, awaitingMemberRequests, closedRequests,
         roomInvites: memberships.invites,
         sessionInvites: dedupedInvites, awaitingOwnerSessions, awaitingSeatSessions,
-        pendingMatches, rotationSessions, enteredSessionIds,
+        pendingMatches, rotationSessions,
         enteredGamesBySession,
         counts: {
             // 참여 동의의 단위는 게임이 아니라 세션이다(0056) — 3게임 세션은 카드 한 장이므로 1건으로 센다
             participation: grouped.sessions.length + grouped.singles.length
                 + memberships.invites.length + dedupedInvites.length,
             confirmResult: tallied.confirmResult,
-            enterResult: tallied.enterResult + unenteredSessions,
+            // 결과 입력 대기 행 — 뱃지 밖(Week 38). 입력 가능한 세션은 rotationSessions 배열이 따로 말한다
+            enterResult: tallied.enterResult,
             fillLineup: tallied.fillLineup,
             waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length
                 + awaitingOwnerSessions.length + awaitingSeatSessions.length,
@@ -161,8 +156,6 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
             disputeWaiting: tallied.disputeWaiting,
             reentryReview: tallied.reentryReview,
             reentryWaiting: tallied.reentryWaiting,
-            // 카드는 보이지만 내 차례가 아닌 세션 — 뱃지에서는 빠지고 목록 건수에만 더해진다(hub-totals.ts)
-            enteredSessions: enteredSessionIds.length,
         },
     }
 })

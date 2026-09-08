@@ -32,7 +32,7 @@ src/
 │   ├── clubs/ club-dashboard/ match-games/ profile/ onboarding/ stats/ auth/ landing/ theme/
 │   ├── personal-matches/         # PersonalMatchForm(= use-personal-match-form-state + use-personal-match-submit), PlayerPicker, PersonalMatchCard + MatchGroupList/Header,
 │   │                             #   MatchActions(확정) / MutualResultActions·ConfirmedSeatActions·DisputedResultActions(미확정 협상 — 허브·룸 공용), NegotiationDialog + MatchResultDialog + use-result-dialog,
-│   │                             #   RotationSessionCard + RotationGamesDialog + rotation/(풀·게임 빌더, pool-seat-actions 게스트 대체), result-badge 단일 출처
+│   │                             #   RotationSessionCard + RotationGamesDialog + rotation/(풀·게임 빌더, pool-seat-actions 게스트 대체), PendingResultsSection(개인 결과 상단 「결과 입력 대기」), result-badge 단일 출처
 │   ├── match-requests/           # 허브: HubTabBars(2단 탭) + InvitePanel/ResultPanel/DisputePanel/WaitingPanel(+ WaitingRequestGroup·WaitingResultGroup),
 │   │                             #   QueueSection(count = 실제 카드 수, attention = '승인 필요' 필) / PendingMatchSection / HubSectionGroup / ParticipationSection, 요청·초대 카드류, QueueSummaryBanner
 │   └── match-rooms/              # MatchRoomCard, RoomPasswordGate, RoomMembersSection, RoomGamesSection + RoomGameActions/RoomFreeGameActions, RoomGameDialog, RoomRotationBuilder, RoomHostActions
@@ -42,7 +42,7 @@ src/
 │   ├── queries/                  # read-only — match-queue.ts(fetchMatchQueue, React cache: 허브·배너·뱃지 단일 소스), match-requests, personal-matches, rotation-sessions, match-rooms, rotation-builder-context, analytics, player-profile, club-dashboard, ratings, stats, users
 │   ├── match-requests/           # 순수(vitest): queue.ts(버킷 분류·myTurnTotal) / hub-totals.ts(탭 배지·그룹 건수) / tabs.ts(2단 탭 메타·레거시 폴백) / participants.ts(좌석 규칙)
 │   ├── personal-matches/         # 순수: lineup, map/explode/grouping/winner, match-groups, confirmation(협상 관점·자격 술어), perspective, confirm-flow, labels, validate-input,
-│   │                             #   rotation·rotation-pool·rotation-rep·rotation-participation·rotation-entered, request-prefill(취소 요청 → 초안), schedule-conflict, player-suggestions, seat-status
+│   │                             #   rotation·rotation-pool·rotation-rep·rotation-participation·rotation-entered, session-visibility(입력 가능한 일정 카드 숨김), request-prefill(취소 요청 → 초안), schedule-conflict, player-suggestions, seat-status
 │   ├── match-rooms/              # 순수 + server-only: password, title/split/headcount/members-view, parse-detail, room-context, game-status, game-labels, tabs, room-cursor, revalidate, create-room
 │   ├── match-games/              # form-mapping, auto-generate, special-match, former-members, match-view-helpers, attendance-stats
 │   ├── analytics/                # 순수 집계 (toQuadStats = AnalyticsBundle.stats 단일 출처)
@@ -61,8 +61,8 @@ src/
 /clubs · /clubs/new · /clubs/join/[token] · /clubs/[clubId]{ , dashboard→홈, members, match-games, match-games/new, match-games/[id], settings(owner)}
 /profile/[userId]                   개인 통계 허브 (본인 = 개인/클럽/통합 탭 스캐폴드 — 개인만 동작 + AI 코칭 / 타인 = 공개 요약)
 /profile/settings · /me/analytics → /profile/[내id]?scope=personal
-/me/personal-matches                개인 경기 결과 (확정 전적만 + 상단 미확정 요약 배너) · /new (?from=<취소한 요청 id> 초안) · /[id]/edit
-/me/match-requests                  경기 확인 요청 허브 — 2단 탭: 「승인 요청」(하위 초대(기본) / 경기 결과 확정 ?tab=result / 이의 신청 ?tab=dispute) · 「상대 승인 대기」 ?tab=waiting
+/me/personal-matches                개인 경기 결과 = 내 경기 목록: 상단 「결과 입력 대기」(전원 수락됐지만 스코어 없는 경기·로테이션 일정) + 확정 전적 · /new (?from=<취소한 요청 id> 초안) · /[id]/edit
+/me/match-requests                  경기 확인 요청 허브(승인 전용) — 2단 탭: 「승인 요청」(하위 초대(기본) / 경기 결과 확정 ?tab=result / 이의 신청 ?tab=dispute) · 「상대 승인 대기」 ?tab=waiting
                                     옛 키 mine·settle·disputed는 폴백. 미확정 행 하나는 정확히 한 자리에만
 /match-rooms                        매칭 리스트 (진행 중 / ?tab=mine 내가 참여한 / ?tab=past 종료된) · /[roomId] 매칭 룸 상세
 /me/personal-matches/new?room=      → /match-rooms/[roomId] 리다이렉트
@@ -88,7 +88,7 @@ src/
 | 32–33 | 0059~0060 | 결과 협상 자격을 좌석 넷 전원으로, 확정을 좌석별 만장일치(`confirmed_by`)로, 취소한 초대 재초대(`removed`) |
 | 34–36 | 0061~0063 | 이의 제기자 기록·허브 이의 탭, 협상 이력 보존(`dispute_count`), 로테이션 참여 동의 대칭(두 수락 RPC + backfill, 방 밖 요청 스코어 금지 CHECK) |
 | 37 | 0064 | 로테이션 결과 입력 「전원 수락」 게이트(소유자 예외 없음), 세션 게임 공유 RPC·낙관적 선점, 좌석 명단화, 게스트 대체 탈출구 |
-| 38 | — | 허브 2단 탭(승인 요청›초대/경기 결과 확정/이의 신청 · 상대 승인 대기), 승인 악센트, stale 새로고침, 확인한 좌석의 이의, 페어 고정 게스트 재요청 |
+| 38 | — | 허브 2단 탭(승인 요청›초대/경기 결과 확정/이의 신청 · 상대 승인 대기), **허브는 승인 전용 — 결과 입력 대기는 개인 경기 결과로**, 승인 악센트, stale 새로고침, 확인한 좌석의 이의, 페어 고정 게스트 재요청 |
 
 ### 남은 일 (백로그)
 - **배포**: Vercel + 환경변수(`NEXT_PUBLIC_SUPABASE_URL`·`_ANON_KEY`·`ANTHROPIC_API_KEY`), leaked password protection + URL 화이트리스트(`/auth/confirm`), 재설정 메일 템플릿, `metadataBase` 환경변수화
@@ -144,19 +144,19 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 | **NTRP 3종 / 티어** | 자가선언 `users.ntrp`(가입 1회, 불변) / 클럽 ELO `club_player_ratings`(2.5 시작) / 개인 `users.personal_ntrp`(개인 경기 온더플라이). 티어 = 클럽 레이팅 8계급 밴딩(`TIER_BANDS`) |
 | **명승부 / 라이벌 / 초대 토큰** | 대진표 특별매치 판정(`special-match.ts`) / 비공개 클럽 가입 토큰(RPC 전용) |
 | **게임(세트)** | 세트 1개 = 게임 1개. `set_scores` 원소 하나가 게임 하나, 통계·표시 모두 게임 단위(`resolveSetWinner`·`tallySets`). 행 단위 승자 없음. 목록은 게임 2개 이상이면 헤더 + 게임 카드 N장, 배지·색은 `result-badge.ts` 단일 출처 |
-| **결과 미확정 / 집합 분할** | `set_scores` 빈 배열(`hasResult` false) = 통계 제외. `has_result` 하나로 **개인 경기 결과(확정) ↔ 확인 요청 허브(미확정)**가 갈린다 — 조건문이 아니라 집합 분할. `personal_matches` 행이 없는 단계(pending 요청·방 초대·미입력 세션)는 허브 전용 |
+| **결과 미확정 / 집합 분할** | `set_scores` 빈 배열(`hasResult` false) = 통계 제외. `has_result`가 확정 목록의 술어이고, 미확정 행은 버킷으로 갈린다 — **승인이 필요한 것(confirmResult·이의·fillLineup)은 허브, 결과 입력 대기(enterResult)와 입력 가능한 로테이션 일정은 개인 경기 결과 상단**(Week 38: "전원 승인 → 개인 경기 결과"는 초대 수락에도 적용된다. 허브는 승인 전용). 입력 가능한 일정 카드는 게임이 전부 확정되고 경기일이 지나면 숨긴다(`isDormantSession`), 주최자는 그 전에도 [삭제] 가능 |
 | **확인 요청 / 상호 확인 경기** | 회원 간 단식·페어 고정 복식 요청(`match_requests`). 복식은 상대팀 회원 1명이 **대표**(`resolveConfirmRep`: 상대1→상대2). **방 밖 요청은 회원 좌석 전원이 수락해야 기록이 생기고 한 명의 거절이 요청을 끝낸다**(경계 = `requiresAllMembers` = `!roomId`). 방 안은 입장=동의라 대표 1명 모델. 전원 수락 순간 회원 참가자 전원의 관점 행 생성(`source_type='confirmation'`, 잠금) |
 | **결과 제안 / 확인** | 협상 권한 = 회원 참가자 전원, 확정 = **좌석별 만장일치**(제안이 곧 제안자의 확인, 단식 1명·복식 3명). 재제안·이의·정정은 확인 초기화. 앱 술어: `canRespondToProposal`(확인: 제안자 아님 ∧ 미확인) / `canDisputeProposal`(이의: 제안자만 아니면 — 확인한 좌석도 정산 전이면 가능) / `isReentryTurn`(이의 후 다시 입력할 차례 = 제안자 — ⚠ `!disputedByMe`를 넣으면 reopen에서 교착) / `canReopenResult`(confirmed ∧ 좌석). 제안자 본인 수정 허용(타인 확인 초기화). 동시 입력은 RPC가 막고(`result_already_proposed`·`session_games_changed`) 앱은 `ActionResult.stale`로 팝업을 열어 둔 채 `router.refresh()` |
 | **이의 / 이의 이력** | `dispute_count > 0`이 '이의를 거쳤다'의 권위 술어(이의자 탈퇴에도 남는다). 재제안 뒤에도 사유·이의자 보존 → 카드 `ReentryContextBadge`·`DisputeReasonLine`이 맥락을 말한다. 탭 위치는 **차례 축**을 따른다(내 차례 = 승인 요청 › 이의 신청, 상대 차례 = 상대 승인 대기) — 0062의 "확정까지 이의 탭"은 Week 38에 철회 |
 | **로테이션 복식 / 세션** | 4명 이상 파트너 교대. **복식 신규 등록 기본 모드**. 등록 시 풀만 `rotation_sessions`에 저장, 빌더에서 게임(파트너·상대1·상대2 + 스코어 1줄)을 구성하면 finalize가 게임별 `personal_matches`로 분해(`rotation_session_id`·`group_seq`) |
-| **로테이션 일정 / 세션 참여 동의** | 세션 = 경기 전 일정, 요청 = 경기 후 기록. 방 밖 세션은 풀의 회원 전원에게 참여 요청(좌석). **거절은 그 사람만 풀에서 뺀다**(세션 유지). **세션 수락 = 게임 참여 동의**(게임별 재수락 없음). 주최자·수락자가 회원을 초대할 수 있고(제거는 주최자만) 재초대하면 pending 복귀. **초대한 회원이 전원 응답해야 결과 입력 가능**(앱 `hasUnansweredSeats` = DB `session_seats_pending`, 소유자 예외 없음) — 0057~0063의 '선입력 후 선적립'은 사용자에게 이중 승인 화면이라 철회됐다. 무응답 탈출구 = 주최자가 명단에서 빼고 게스트로 기록(「상대 승인 대기」 세션 카드 → 참가자 편집 → [게스트로 대체], 명단에서 뺀 **뒤** 로컬 행 교체). 세션 게임은 좌석 보유자 전원이 `get_rotation_session_games`로 보고 저장 시 `p_expected_seq`로 선점 감지. 앱 경계 = `canEnterRotationResult`·`classifyRotationSession`(enter/respond/awaitSeats/awaitOwner/none)·`canManageRotationPool` |
+| **로테이션 일정 / 세션 참여 동의** | 세션 = 경기 전 일정, 요청 = 경기 후 기록. 방 밖 세션은 풀의 회원 전원에게 참여 요청(좌석). **거절은 그 사람만 풀에서 뺀다**(세션 유지). **세션 수락 = 게임 참여 동의**(게임별 재수락 없음). 주최자·수락자가 회원을 초대할 수 있고(제거는 주최자만) 재초대하면 pending 복귀. **초대한 회원이 전원 응답해야 결과 입력 가능**(앱 `hasUnansweredSeats` = DB `session_seats_pending`, 소유자 예외 없음) — 0057~0063의 '선입력 후 선적립'은 사용자에게 이중 승인 화면이라 철회됐다. 무응답 탈출구 = 주최자가 명단에서 빼고 게스트로 기록(「상대 승인 대기」 세션 카드 → 참가자 편집 → [게스트로 대체], 명단에서 뺀 **뒤** 로컬 행 교체). **전원 수락된 일정은 허브를 떠나 개인 경기 결과 상단에서 입력한다**(Week 38). 세션 게임은 좌석 보유자 전원이 `get_rotation_session_games`로 보고 저장 시 `p_expected_seq`로 선점 감지. 앱 경계 = `canEnterRotationResult`·`classifyRotationSession`(enter/respond/awaitSeats/awaitOwner/none)·`canManageRotationPool` |
 | **페어 고정 게스트 재요청** | 요청은 불변이라 미응답자를 바꾸려면 [게스트로 바꿔 다시 요청] = 취소 후 `/new?from=`에 프리필(`prefillFromRequest`: 미응답·거절 좌석의 `userId` 제거). 조회는 요청자 본인 ∧ canceled만(pending이면 dedup 유니크에 걸린다). `PersonalMatchForm.prefill`은 `initialData`(수정 모드 스위치)와 별개 |
 | **코트명 / 경기 시각** | `court_name` ≤40자 선택(최근 코트 재선택) / `played_time` 시 단위 `HH:00` |
 | **매칭 리스트 / 매칭 룸** | '매칭 리스트에 노출'을 켠 기록 = 방(`match_rooms`) 1개. 비밀번호(4~20자, bcrypt)를 아는 회원만 입장(= 참가). 정원 없음, 제목 없음(자동). 3탭(진행 중/내가 참여한/종료된), 진행/종료 = `is_settled` ∨ 날짜 경과, 서버 필터 + keyset 커서 |
 | **방 게임 / 모집 중 / 관점 행 / 정산** | 방 참가자 누구나 룸 안 다이얼로그로 게임 추가 — 회원 상대면 상호 확인 게임(수락 단계 없음), 비회원 상대는 자유 기록. 모집 중 = 노출 + 참가자 비움(결과 입력 불가, "세트가 있으면 라인업 완성"이 불변식). 복식 상호 확인은 회원 참가자 전원에게 관점 행(대표 `invert`, 파트너 `swap_partner`, 상대2 합성). 방 상세는 `is_perspective=false` 대표 게임만. `is_settled` = 대표 게임 전부 확정 + 대기 없음 |
 | **방 초대 / 참가** | 기록에 입력된 회원은 방 생성 시 자동 초대(허브 초대 탭에서 수락 → joined). 비밀번호 입장자도 곧바로 참가, 미확정 로테이션 방이면 풀에 자동 추가 |
-| **작업 큐 / 내 차례 / 허브 2단 탭** | 허브가 미확정 전량의 단일 작업 큐. `classifyPendingMatch`가 미확정 행을 8버킷(confirmResult/enterResult/fillLineup/awaitingCounterpart/reenterResult/awaitingReentry/reentryReview/awaitingReentryConfirm)으로, `classifyPendingRequest`가 pending 요청을 respond/mine/awaitMembers로. **최상위 「승인 요청」(내 차례) / 「상대 승인 대기」**, 승인 요청 안 **「초대」(participation) / 「경기 결과 확정」(confirmResult + enterResult·세션 + fillLineup) / 「이의 신청」(reentryReview + reenterResult)**. 이의 대기 둘은 상대 승인 대기 › 경기 결과. **한 행은 정확히 한 자리에만.** URL 키 `invite`(기본)/`result`/`dispute`/`waiting`, 옛 키 폴백. 승인 필요 섹션(참여 확인·결과 확인·재입력 확인·다시 입력)에만 `attention` '승인 필요' 필 |
-| **⚠ 숫자가 두 개다** | `myTurnTotal`(queue.ts) = **알림**(사이드바·모바일 뱃지) = `inviteMyTurn + resultMyTurn + disputeMyTurnTotal`(뺄셈으로 정의하지 않는다). `hubTabTotals`·`hubTopTotals`(hub-totals.ts) = **목차**(탭 배지 = 그 자리에 실제로 그려지는 카드 수). '내 차례 있음'은 숫자가 아니라 강조색(`LinkTabs emphasis`)이 전달. `QueueSection.count`는 반드시 실제 카드 수(0이면 children까지 사라진다 — `enterResultCards`가 세션 카드 몫 `enteredSessions`를 더한다). `HubSectionGroup`은 count 0이어도 children을 감추지 않는다. 각 탭은 그 탭이 가르지 않은 축으로 안에서 묶는다 |
+| **작업 큐 / 내 차례 / 허브 2단 탭** | 허브가 미확정 전량의 단일 작업 큐. `classifyPendingMatch`가 미확정 행을 8버킷(confirmResult/enterResult/fillLineup/awaitingCounterpart/reenterResult/awaitingReentry/reentryReview/awaitingReentryConfirm)으로, `classifyPendingRequest`가 pending 요청을 respond/mine/awaitMembers로. **최상위 「승인 요청」(내 차례) / 「상대 승인 대기」**, 승인 요청 안 **「초대」(participation) / 「경기 결과 확정」(confirmResult + fillLineup) / 「이의 신청」(reentryReview + reenterResult)**. 이의 대기 둘은 상대 승인 대기 › 경기 결과. **enterResult(결과 입력 대기)와 입력 가능한 로테이션 일정(`rotationSessions`)은 허브에 없다 — 개인 경기 결과 상단 `PendingResultsSection`이 그린다.** **한 행은 정확히 한 자리에만.** URL 키 `invite`(기본)/`result`/`dispute`/`waiting`, 옛 키 폴백. 승인 필요 섹션(참여 확인·결과 확인·재입력 확인·다시 입력)에만 `attention` '승인 필요' 필 |
+| **⚠ 숫자가 두 개다** | `myTurnTotal`(queue.ts) = **알림**(사이드바·모바일 뱃지) = `inviteMyTurn + resultMyTurn + disputeMyTurnTotal`(뺄셈으로 정의하지 않는다, enterResult는 뱃지 밖). `hubTabTotals`·`hubTopTotals`(hub-totals.ts) = **목차**(탭 배지 = 그 자리에 실제로 그려지는 카드 수 — 허브에서는 카드 수 = 내 차례). '내 차례 있음'은 숫자가 아니라 강조색(`LinkTabs emphasis`)이 전달. `QueueSection.count`는 반드시 실제 카드 수(0이면 children까지 사라진다). `HubSectionGroup`은 count 0이어도 children을 감추지 않는다. 각 탭은 그 탭이 가르지 않은 축으로 안에서 묶는다 |
 
 ## 코딩 규칙
 - TypeScript strict, `any` 금지. named export만(default export 금지). 파일 kebab-case, 컴포넌트 PascalCase, 함수 camelCase

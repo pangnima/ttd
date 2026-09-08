@@ -41,9 +41,7 @@ export default async function MatchRequestsPage({ searchParams }: Props) {
             <HubTabBars activeTab={activeTab} counts={queue.counts} />
 
             {activeTab === 'invite' && <InvitePanel queue={queue} viewerId={user.id} />}
-            {activeTab === 'result' && (
-                <ResultPanel queue={queue} viewerId={user.id} picker={builder.picker} roomParticipants={builder.roomParticipants} />
-            )}
+            {activeTab === 'result' && <ResultPanel queue={queue} />}
             {activeTab === 'dispute' && <DisputePanel queue={queue} />}
             {activeTab === 'waiting' && (
                 <WaitingPanel queue={queue} viewerId={user.id} picker={builder.picker} roomParticipants={builder.roomParticipants} />

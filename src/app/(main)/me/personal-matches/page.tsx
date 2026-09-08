@@ -3,8 +3,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchSettledPersonalMatches } from '@/lib/queries/personal-matches'
 import { fetchMatchQueue } from '@/lib/queries/match-queue'
+import { fetchRotationBuilderContext } from '@/lib/queries/rotation-builder-context'
 import { hubTopTotals } from '@/lib/match-requests/hub-totals'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
+import { PendingResultsSection } from '@/components/personal-matches/pending-results-section'
 import { QueueSummaryBanner } from '@/components/match-requests/queue-summary-banner'
 import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
@@ -13,8 +15,8 @@ import { PageContainer } from '@/components/common/page-container'
 export const metadata = { title: '개인 경기 결과' }
 
 /**
- * 내 확정 전적 아카이브 — 결과가 들어간 경기(has_result)만 보여준다.
- * 미확정(결과 입력 대기·모집 중·로테이션 미입력)은 확인 요청 허브가 담당하고 여기서는 배너로만 알린다.
+ * 내 경기 목록 — 위에 「결과 입력 대기」(전원 수락이 끝났지만 스코어가 없는 경기·로테이션 일정, Week 38),
+ * 아래에 확정 전적(has_result). 승인이 필요한 것(초대·결과 확인·이의)은 확인 요청 허브가 담당하고 여기서는 배너로만 알린다.
  */
 export default async function PersonalMatchesPage() {
     const supabase = await createClient()
@@ -25,17 +27,16 @@ export default async function PersonalMatchesPage() {
         fetchSettledPersonalMatches(user.id),
         fetchMatchQueue(user.id),
     ])
-    // 허브로 유도할 미확정 전량 = 두 최상위 탭에 그려지는 카드 수의 합 (hub-totals.ts 단일 출처).
-    // 종전에는 counts를 손으로 더해 '이미 게임이 등록된 세션' 몫이 빠져 있었다 —
-    // 허브에는 그 카드가 보이는데 배너 숫자에는 없었다.
+    const builder = await fetchRotationBuilderContext(queue, user.id)
+    // 허브로 유도할 승인 건수 = 두 최상위 탭에 그려지는 카드 수의 합 (hub-totals.ts 단일 출처)
     const topTotals = hubTopTotals(queue.counts)
-    const pendingTotal = topTotals.mine + topTotals.waiting
+    const hubTotal = topTotals.mine + topTotals.waiting
 
     return (
         <PageContainer>
             <PageHeader
                 title="개인 경기 결과"
-                description="결과가 확정된 클럽 외부 경기 기록입니다"
+                description="클럽 외부 경기 — 결과를 입력하고, 확정된 전적을 봅니다"
                 actions={
                     <Link
                         href="/me/personal-matches/new"
@@ -48,6 +49,8 @@ export default async function PersonalMatchesPage() {
 
             <QueueSummaryBanner counts={queue.counts} />
 
+            <PendingResultsSection queue={queue} viewerId={user.id} builder={builder} />
+
             {matches.length > 0 ? (
                 <PersonalMatchList matches={matches} />
             ) : (
@@ -55,11 +58,11 @@ export default async function PersonalMatchesPage() {
                     {/* 정적 SVG 장식 (내 전적 > 개인 빈 상태와 통일) */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
-                    {pendingTotal > 0 ? (
+                    {hubTotal > 0 ? (
                         <span>
                             아직 확정된 경기가 없습니다.{' '}
                             <Link href="/me/match-requests" className="text-primary hover:underline">
-                                확인 요청에서 결과를 입력해보세요
+                                확인 요청에서 승인을 마치면 여기로 옵니다
                             </Link>
                         </span>
                     ) : (

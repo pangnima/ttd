@@ -201,16 +201,15 @@ describe('myTurnTotal / inviteMyTurn / resultMyTurn / disputeMyTurnTotal', () =>
     const counts = {
         participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99,
         reenterResult: 2, disputeWaiting: 5, reentryReview: 4, reentryWaiting: 6,
-        enteredSessions: 8,
     }
 
-    it('뱃지 = 승인 요청 탭의 내 차례. 상대 대기·이의 대기·등록된 세션은 뺀다', () => {
-        expect(myTurnTotal(counts)).toBe(13)
+    it('뱃지 = 승인 요청 탭의 내 차례. 결과 입력·상대 대기·이의 대기는 뺀다', () => {
+        expect(myTurnTotal(counts)).toBe(10)
     })
 
     it('하위 탭별 내 차례 — 초대 / 경기 결과 확정 / 이의 신청', () => {
         expect(inviteMyTurn(counts)).toBe(2)        // 참여 확인
-        expect(resultMyTurn(counts)).toBe(5)        // 결과 확인 1 + 결과 입력 3 + 라인업 1
+        expect(resultMyTurn(counts)).toBe(2)        // 결과 확인 1 + 라인업 1 (결과 입력 3은 허브 밖)
         expect(disputeMyTurnTotal(counts)).toBe(6)  // 다시 입력 2 + 재입력 확인 4
     })
 
@@ -219,14 +218,9 @@ describe('myTurnTotal / inviteMyTurn / resultMyTurn / disputeMyTurnTotal', () =>
             .toBe(myTurnTotal(counts))
     })
 
-    it('4탭이 2단 탭으로 바뀌어도 뱃지 총량은 그대로다 — 라우팅만 이동했다', () => {
-        // 0064의 4탭 정의(mine 3 + settle 4 + dispute 6)와 같은 값
-        expect(myTurnTotal(counts)).toBe(13)
-    })
-
-    it('enteredSessions는 뱃지에 들어가지 않는다 — 카드는 보이지만 내 차례가 아니다', () => {
-        // 방 세션은 finalize 후에도 남으므로(0050) 이걸 세면 영영 안 사라지는 뱃지가 된다
-        expect(myTurnTotal({ ...counts, enteredSessions: 99 })).toBe(myTurnTotal(counts))
+    it('enterResult는 뱃지에 들어가지 않는다 — 전원 수락이 끝난 경기는 승인할 것이 없다(Week 38)', () => {
+        // 결과 입력 대기는 개인 경기 결과 목록이 그린다. 입력은 알림이 아니라 내 기록 관리다.
+        expect(myTurnTotal({ ...counts, enterResult: 99 })).toBe(myTurnTotal(counts))
     })
 
     it('빈 큐는 0 — 배너·뱃지가 렌더되지 않는 조건', () => {

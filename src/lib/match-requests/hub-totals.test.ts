@@ -1,29 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_QUEUE_COUNTS, myTurnTotal, type MatchQueueCounts } from '@/lib/match-requests/queue'
 import {
-    enterResultCards, firstMyTurnTab, hubTabHasMyTurn, hubTabMyTurn, hubTabTotals,
+    firstMyTurnTab, hubTabHasMyTurn, hubTabMyTurn, hubTabTotals,
     hubTopHasMyTurn, hubTopTotals, waitingGroupTotals,
 } from '@/lib/match-requests/hub-totals'
 
 const c = (over: Partial<MatchQueueCounts> = {}): MatchQueueCounts => ({ ...EMPTY_QUEUE_COUNTS, ...over })
 
-describe('enterResultCards — 「결과 입력 대기」에 그려지는 카드 수', () => {
-    it('미확정 행 + 로테이션 세션 카드 전량', () => {
-        expect(enterResultCards(c({ enterResult: 2, enteredSessions: 3 }))).toBe(5)
-    })
-
-    it('⚠ 회귀: 내 차례가 0이어도 이미 등록된 세션이 있으면 카드가 있다', () => {
-        // 이 값이 0으로 떨어지면 QueueSection의 0-게이트가 세션 카드까지 삼켜
-        // 그 탭이 배지·카드·빈 상태 문구 없는 백지가 된다(0064까지의 실제 결함).
-        const counts = c({ enterResult: 0, enteredSessions: 2 })
-        expect(enterResultCards(counts)).toBe(2)
-        expect(hubTabTotals(counts).result).toBe(2)
-    })
-})
-
 describe('hubTabTotals — 탭 배지는 그 탭의 카드 수와 같다', () => {
     const counts = c({
-        participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4, enteredSessions: 5,
+        participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4,
         waiting: 6, reenterResult: 7, reentryReview: 8, disputeWaiting: 9, reentryWaiting: 10,
     })
 
@@ -31,8 +17,8 @@ describe('hubTabTotals — 탭 배지는 그 탭의 카드 수와 같다', () =>
         expect(hubTabTotals(counts).invite).toBe(1)
     })
 
-    it('경기 결과 확정 = 결과 확인 + 결과 입력(세션 포함) + 참가자 채우기', () => {
-        expect(hubTabTotals(counts).result).toBe(2 + 3 + 5 + 4)
+    it('경기 결과 확정 = 결과 확인 + 참가자 채우기 — 결과 입력(enterResult)은 허브 밖이다(Week 38)', () => {
+        expect(hubTabTotals(counts).result).toBe(2 + 4)
     })
 
     it('이의 신청 = 내 차례 둘만 — 카드 수가 곧 내 차례다', () => {
@@ -54,11 +40,10 @@ describe('hubTabMyTurn / hubTabHasMyTurn — 강조는 숫자와 별개다', () 
         expect(hubTabHasMyTurn(c({ waiting: 99 })).waiting).toBe(false)
     })
 
-    it('경기 결과 확정은 확인·입력·라인업 중 하나라도 있으면 true — 등록만 된 세션은 내 차례가 아니다', () => {
+    it('경기 결과 확정은 확인·라인업 중 하나라도 있으면 true — 결과 입력 대기는 허브의 내 차례가 아니다', () => {
         expect(hubTabHasMyTurn(c({ confirmResult: 1 })).result).toBe(true)
-        expect(hubTabHasMyTurn(c({ enterResult: 1 })).result).toBe(true)
         expect(hubTabHasMyTurn(c({ fillLineup: 1 })).result).toBe(true)
-        expect(hubTabHasMyTurn(c({ enteredSessions: 9 })).result).toBe(false)
+        expect(hubTabHasMyTurn(c({ enterResult: 9 })).result).toBe(false)
     })
 
     it('이의 신청은 내 차례 둘 중 하나라도 있으면 true — 이의 대기만으로는 아니다', () => {
@@ -70,24 +55,24 @@ describe('hubTabMyTurn / hubTabHasMyTurn — 강조는 숫자와 별개다', () 
     it('사이드바 뱃지 = 하위 세 탭의 내 차례 합 (알림의 항등식)', () => {
         const counts = c({
             participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4,
-            reenterResult: 5, reentryReview: 6, enteredSessions: 7,
+            reenterResult: 5, reentryReview: 6,
         })
         const mine = hubTabMyTurn(counts)
         expect(mine.invite + mine.result + mine.dispute).toBe(myTurnTotal(counts))
-        expect(myTurnTotal(counts)).toBe(21)
+        expect(myTurnTotal(counts)).toBe(18)
     })
 })
 
 describe('hubTopTotals / hubTopHasMyTurn — 최상위 배지는 하위 합', () => {
     it('승인 요청 = 초대 + 경기 결과 확정 + 이의 신청', () => {
-        const counts = c({ participation: 1, confirmResult: 2, enteredSessions: 3, reentryReview: 4, waiting: 5 })
+        const counts = c({ participation: 1, confirmResult: 2, fillLineup: 3, reentryReview: 4, waiting: 5 })
         const t = hubTabTotals(counts)
         expect(hubTopTotals(counts)).toEqual({ mine: t.invite + t.result + t.dispute, waiting: 5 })
     })
 
     it('승인 요청 강조 = 하위 셋 중 하나라도 내 차례', () => {
         expect(hubTopHasMyTurn(c({ reentryReview: 1 })).mine).toBe(true)
-        expect(hubTopHasMyTurn(c({ enteredSessions: 5 })).mine).toBe(false)
+        expect(hubTopHasMyTurn(c({ enterResult: 5 })).mine).toBe(false)
         expect(hubTopHasMyTurn(c({ waiting: 5, disputeWaiting: 2 })).waiting).toBe(false)
     })
 })
@@ -95,12 +80,12 @@ describe('hubTopTotals / hubTopHasMyTurn — 최상위 배지는 하위 합', ()
 describe('firstMyTurnTab — 배너 링크의 착지', () => {
     it('생애 순서로 첫 내 차례 탭', () => {
         expect(firstMyTurnTab(c({ participation: 1, reentryReview: 1 }))).toBe('invite')
-        expect(firstMyTurnTab(c({ enterResult: 1, reenterResult: 1 }))).toBe('result')
+        expect(firstMyTurnTab(c({ confirmResult: 1, reenterResult: 1 }))).toBe('result')
         expect(firstMyTurnTab(c({ reenterResult: 1 }))).toBe('dispute')
     })
 
     it('내 차례가 없으면 기본 탭', () => {
-        expect(firstMyTurnTab(c({ enteredSessions: 3, waiting: 9 }))).toBe('invite')
+        expect(firstMyTurnTab(c({ enterResult: 3, waiting: 9 }))).toBe('invite')
     })
 })
 
