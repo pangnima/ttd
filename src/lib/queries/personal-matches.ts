@@ -27,6 +27,8 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
  * 복식 파트너·상대2도 자기 경기의 협상을 읽고, 0059부터 좌석 넷 전원이 협상에 참여한다).
  * confirmed_by(0060)까지 실어야 '내가 이미 확인했는가'와 진행도가 나온다 — 빠뜨리면 권한이 과소로 무너진다.
  * disputed_by(0061)는 이의 탭의 섹션 분할·배지 이름용 — 빠뜨리면 이의자 미상 폴백 문구로만 떨어진다.
+ * dispute_count(0062)는 이의를 거친 협상을 확정까지 이의 탭에 붙잡아 두는 술어 — 빠뜨리면 재제안된 건이
+ * 종전처럼 내 차례 탭으로 새어 이의자가 자기 분쟁을 추적할 수 없게 된다.
  * 개인 경기 결과 화면(확정)·확인 요청 허브(미확정)·매칭 룸 상세가 공용한다.
  */
 export async function attachConfirmations(matches: PersonalMatch[], userId: string): Promise<PersonalMatch[]> {
@@ -36,7 +38,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_requests')
-        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, confirmed_by)')
+        .select('id, requester_id, opponent_user_id, participants:match_request_participants(role, user_id), negotiation:match_result_negotiations(result_status, proposed_by, proposed_set_scores, dispute_reason, disputed_by, dispute_count, confirmed_by)')
         .in('id', requestIds)
     if (error || !data) return matches
 
@@ -56,6 +58,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
                 proposed_set_scores: neg?.proposed_set_scores ?? [],
                 dispute_reason: neg?.dispute_reason ?? null,
                 disputed_by: neg?.disputed_by ?? null,
+                dispute_count: neg?.dispute_count ?? 0,
                 participants: row.participants ?? [],
                 confirmed_by: neg?.confirmed_by ?? [],
             }, userId),

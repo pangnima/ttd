@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
     buildConfirmation, bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf,
-    formatConfirmProgress, isReentryTurn,
+    formatConfirmProgress, hasDisputeHistory, isReentryTurn, reentryBadge,
     type ConfirmationSourceRow,
 } from './confirmation'
 import { invertSetScores } from './perspective'
@@ -92,8 +92,10 @@ describe('buildConfirmation', () => {
 
 describe('이의 제기자 (0061)', () => {
     // bob이 제안, dave(상대2)가 이의
+    // dispute_count는 dispute RPC가 올린다(0062) — 실제 disputed 행은 언제나 1 이상이다
     const DISPUTED: ConfirmationSourceRow = {
-        ...DOUBLES, result_status: 'disputed', dispute_reason: '2게임 6-3', confirmed_by: [], disputed_by: 'dave',
+        ...DOUBLES, result_status: 'disputed', dispute_reason: '2게임 6-3', confirmed_by: [],
+        disputed_by: 'dave', dispute_count: 1,
     }
     const seats = [
         { userId: 'carol', name: '캐롤' }, { userId: 'bob', name: '밥' }, { userId: 'dave', name: '데이브' },
@@ -135,8 +137,15 @@ describe('이의 제기자 (0061)', () => {
         expect(disputerNameOf(buildConfirmation({ ...DISPUTED, disputed_by: null }, 'bob'), seats)).toBeUndefined()
         // userId 없는 비회원 슬롯은 건너뛴다 / 좌석 목록에 없는 id도 미상
         expect(disputerNameOf(buildConfirmation(DISPUTED, 'bob'), [{ name: '비회원' }])).toBeUndefined()
-        expect(disputerNameOf(buildConfirmation(DOUBLES, 'bob'), seats)).toBeUndefined()  // proposed
+        expect(disputerNameOf(buildConfirmation(DOUBLES, 'bob'), seats)).toBeUndefined()  // 이의 이력 없음
         expect(disputerNameOf(undefined, seats)).toBeUndefined()
+    })
+
+    it('disputerNameOf — 재제안으로 proposed가 되어도 이름이 해석된다 (0062)', () => {
+        // dispute → propose 왕복 후의 실제 행: 상태는 proposed, 이의자·사유·카운터는 남아 있다
+        const reproposed = { ...DISPUTED, result_status: 'proposed', proposed_by: 'bob', confirmed_by: ['bob'] }
+        expect(disputerNameOf(buildConfirmation(reproposed, 'alice'), seats)).toBe('데이브')
+        expect(disputerNameOf(buildConfirmation(reproposed, 'dave'), seats)).toBe('나')
     })
 
     it('disputeBadge — 세 문구 + 툴팁은 사유(없으면 폴백)', () => {
@@ -146,6 +155,33 @@ describe('이의 제기자 (0061)', () => {
         expect(disputeBadge(c, undefined).label).toBe('이의 제기됨')
         expect(disputeBadge(buildConfirmation({ ...DISPUTED, dispute_reason: null }, 'bob')).title)
             .toBe('제안 결과에 이의가 제기됐습니다')
+    })
+
+    it('hasDisputeHistory — 상태가 아니라 누적 횟수를 본다 (0062)', () => {
+        expect(hasDisputeHistory(buildConfirmation(DISPUTED, 'bob'))).toBe(true)
+        expect(hasDisputeHistory(buildConfirmation(DOUBLES, 'bob'))).toBe(false)
+        // 재제안으로 proposed가 되어도 참 — 이 값이 「이의 처리」 탭 라우팅을 붙잡는다
+        const reproposed = { ...DISPUTED, result_status: 'proposed' }
+        expect(hasDisputeHistory(buildConfirmation(reproposed, 'bob'))).toBe(true)
+        // 이의자가 탈퇴해 disputed_by가 null이 되어도 사실은 남는다
+        const orphan = { ...reproposed, disputed_by: null }
+        expect(hasDisputeHistory(buildConfirmation(orphan, 'bob'))).toBe(true)
+        // 부착 누락·0061 이전 행은 0 → 종전 라우팅(표시 과소)
+        expect(hasDisputeHistory(buildConfirmation({ ...DISPUTED, dispute_count: undefined }, 'bob'))).toBe(false)
+        expect(hasDisputeHistory(undefined)).toBe(false)
+    })
+
+    it('reentryBadge — 세 문구 + 2차 이상은 라운드 표시, 툴팁은 직전 사유', () => {
+        const c = buildConfirmation({ ...DISPUTED, result_status: 'proposed' }, 'bob')
+        expect(reentryBadge(c, '나')).toEqual({ label: '내 이의 후 재입력', title: '직전 이의 사유: 2게임 6-3' })
+        expect(reentryBadge(c, '데이브').label).toBe('데이브님 이의 후 재입력')
+        expect(reentryBadge(c, undefined).label).toBe('이의 후 재입력')
+
+        const second = buildConfirmation({ ...DISPUTED, result_status: 'proposed', dispute_count: 2 }, 'bob')
+        expect(reentryBadge(second, '데이브').label).toBe('데이브님 이의 후 재입력 (2차)')
+
+        const noReason = buildConfirmation({ ...DISPUTED, result_status: 'proposed', dispute_reason: null }, 'bob')
+        expect(reentryBadge(noReason, '나').title).toBe('이의가 제기된 뒤 다시 입력된 결과입니다')
     })
 })
 

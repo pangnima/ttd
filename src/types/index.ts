@@ -186,11 +186,16 @@ export type PersonalMatchConfirmation = {
     // 탈퇴자가 끼면 1 차이가 날 수 있다(표시 전용).
     confirmProgress: { confirmed: number; total: number }
     proposedSets: PersonalMatchSetScore[]  // viewer 좌석 관점으로 변환 완료된 제안 세트
-    disputeReason?: string
-    // 이의(dispute)·정정(reopen)으로 disputed를 만든 좌석 (0061). disputed 밖에서는 항상 false/undefined.
+    disputeReason?: string  // 가장 최근 이의·정정의 사유 (0062부터 재제안·확정 후에도 남는다)
+    // 이의(dispute)·정정(reopen)으로 disputed를 만든 **가장 최근** 좌석 (0061, 0062에서 의미 확장).
+    // 재제안으로 proposed가 되어도 남는다 — "누구의 이의에 대한 재입력인가"를 화면이 말해야 하기 때문.
     // '다시 입력할 차례' 판정에는 쓰지 않는다(isReentryTurn은 proposedByMe만 본다) — 섹션 분할·배지 문구 전용.
     disputedByMe: boolean
     disputedBy?: string   // user_id — 이름은 화면이 참가자 스냅샷과 대조한다(disputerNameOf). 0061 이전 행은 undefined
+    // dispute/reopen 누적 횟수 (0062, match_result_negotiations.dispute_count).
+    // >0 이면 이 협상은 이의를 거쳤다 — 확정될 때까지 「이의 처리」 탭에 머문다(hasDisputeHistory).
+    // 이의자가 탈퇴해 disputedBy가 사라져도 이 값은 남으므로 라우팅의 권위 있는 술어다.
+    disputeRound: number
     // viewer가 이 요청의 **좌석 넷**(요청자·파트너·대표·상대2) 중 하나인가 — 제안·확인·이의·정정
     // 4종 RPC의 통과 조건과 같다(0059). false면 협상 자격이 없어 배지만 본다.
     viewerIsParty: boolean

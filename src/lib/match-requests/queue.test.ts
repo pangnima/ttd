@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchResultStatus, PersonalMatch, PersonalMatchConfirmation } from '@/types'
 import {
-    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeTotal, myTurnTotal, tallyBuckets,
+    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeMyTurnTotal, disputeTotal, myTurnTotal, tallyBuckets,
 } from './queue'
 
 /**
@@ -23,9 +23,11 @@ function base(over: Partial<PersonalMatch> = {}): PersonalMatch {
     }
 }
 
-function conf(status: MatchResultStatus, proposedByMe = false, confirmedByMe = proposedByMe): PersonalMatchConfirmation {
+function conf(
+    status: MatchResultStatus, proposedByMe = false, confirmedByMe = proposedByMe, disputeRound = 0,
+): PersonalMatchConfirmation {
     return {
-        requestId: 'r1', status, proposedByMe, confirmedByMe, disputedByMe: false,
+        requestId: 'r1', status, proposedByMe, confirmedByMe, disputedByMe: false, disputeRound,
         confirmProgress: { confirmed: confirmedByMe ? 2 : 1, total: 4 },
         proposedSets: [], viewerIsParty: true,
     }
@@ -127,43 +129,98 @@ describe('classifyPendingMatch — 상호 확인 경기', () => {
     })
 })
 
+describe('classifyPendingMatch — 이의를 거친 뒤 재제안 (0062)', () => {
+    const mutual = (c?: PersonalMatchConfirmation) =>
+        base({ sourceRequestId: 'r1', sourceType: 'confirmation', confirmation: c })
+
+    it('상대가 다시 입력했고 내가 아직 확인하지 않았다 — 이의 탭 · 재입력된 결과 확인', () => {
+        expect(classifyPendingMatch(mutual(conf('proposed', false, false, 1)))).toBe('reentryReview')
+    })
+
+    it('이의를 낸 사람도 같은 버킷이다 — 자기가 시작한 분쟁을 여기서 끝낸다', () => {
+        const disputer = { ...conf('proposed', false, false, 1), disputedByMe: true, disputedBy: 'me' }
+        expect(classifyPendingMatch(mutual(disputer))).toBe('reentryReview')
+    })
+
+    it('내가 다시 입력한 쪽이면 남은 좌석을 기다린다 — 상대 대기 탭이 아니라 이의 탭에서', () => {
+        expect(classifyPendingMatch(mutual(conf('proposed', true, true, 1)))).toBe('awaitingReentryConfirm')
+    })
+
+    it('재입력된 결과를 내가 이미 확인했으면 이의 탭에서 대기', () => {
+        expect(classifyPendingMatch(mutual(conf('proposed', false, true, 1)))).toBe('awaitingReentryConfirm')
+    })
+
+    it('좌석 판정 실패 폴백도 이의 탭에 남는다 — 판정이 viewerIsParty보다 앞이라 상호배타가 유지된다', () => {
+        const notParty = { ...conf('proposed', false, false, 2), viewerIsParty: false }
+        expect(classifyPendingMatch(mutual(notParty))).toBe('awaitingReentryConfirm')
+    })
+
+    it('이의 이력이 없으면 종전대로 내 차례 탭이다 — 0062가 기존 흐름을 건드리지 않는다', () => {
+        expect(classifyPendingMatch(mutual(conf('proposed', false, false, 0)))).toBe('confirmResult')
+        expect(classifyPendingMatch(mutual(conf('proposed', true, true, 0)))).toBe('awaitingCounterpart')
+    })
+
+    it('다시 이의가 들어오면 disputed 분기가 먼저다 — 왕복해도 같은 탭', () => {
+        expect(classifyPendingMatch(mutual(conf('disputed', true, false, 2)))).toBe('reenterResult')
+        expect(classifyPendingMatch(mutual(conf('disputed', false, false, 2)))).toBe('awaitingReentry')
+    })
+
+    it('이의 이력이 있어도 모집 중·none이 각자 자기 자리로 간다', () => {
+        expect(classifyPendingMatch(base({
+            sourceRequestId: 'r1', roomId: 'room1', opponentName: '', confirmation: conf('proposed', false, false, 1),
+        }))).toBe('fillLineup')
+        expect(classifyPendingMatch(mutual(conf('none', false, false, 1)))).toBe('enterResult')
+    })
+})
+
 describe('tallyBuckets', () => {
-    it('버킷별로 집계하고 awaitingCounterpart→waiting, awaitingReentry→disputeWaiting으로 접는다', () => {
+    it('버킷별로 집계하고 대기 계열을 waiting/disputeWaiting/reentryWaiting으로 접는다', () => {
         expect(tallyBuckets([
             'confirmResult', 'enterResult', 'enterResult', 'fillLineup',
             'awaitingCounterpart', 'awaitingCounterpart',
             'reenterResult', 'awaitingReentry', 'awaitingReentry', 'awaitingReentry',
-        ])).toEqual({ confirmResult: 1, enterResult: 2, fillLineup: 1, waiting: 2, reenterResult: 1, disputeWaiting: 3 })
+            'reentryReview', 'reentryReview', 'awaitingReentryConfirm',
+        ])).toEqual({
+            confirmResult: 1, enterResult: 2, fillLineup: 1, waiting: 2,
+            reenterResult: 1, disputeWaiting: 3, reentryReview: 2, reentryWaiting: 1,
+        })
     })
 
     it('빈 목록은 전부 0', () => {
         expect(tallyBuckets([])).toEqual({
-            confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0, reenterResult: 0, disputeWaiting: 0,
+            confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0,
+            reenterResult: 0, disputeWaiting: 0, reentryReview: 0, reentryWaiting: 0,
         })
     })
 })
 
-describe('myTurnTotal / disputeTotal', () => {
+describe('myTurnTotal / disputeTotal / disputeMyTurnTotal', () => {
     const counts = {
-        participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99, reenterResult: 2, disputeWaiting: 5,
+        participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99,
+        reenterResult: 2, disputeWaiting: 5, reentryReview: 4, reentryWaiting: 6,
     }
 
-    it('뱃지 = 내 차례 네 섹션 + 이의 재입력. 상대 대기·이의 대기는 뺀다', () => {
-        expect(myTurnTotal(counts)).toBe(9)
+    it('뱃지 = 내 차례 네 섹션 + 이의 탭의 내 차례 둘. 상대 대기·이의 대기는 뺀다', () => {
+        expect(myTurnTotal(counts)).toBe(13)
     })
 
-    it('이의 탭 총건수 = 재입력 차례 + 재입력 대기', () => {
-        expect(disputeTotal(counts)).toBe(7)
+    it('이의 탭 총건수 = 네 버킷 전부', () => {
+        expect(disputeTotal(counts)).toBe(17)
+    })
+
+    it('이의 탭 배지 = 다시 입력할 차례 + 재입력된 결과 확인', () => {
+        expect(disputeMyTurnTotal(counts)).toBe(6)
     })
 
     it('뱃지 = 내 차례 탭 배지 + 이의 탭 배지 — 탭 배지 두 개를 더하면 사이드바와 같다', () => {
-        const mineTab = myTurnTotal(counts) - counts.reenterResult
-        const disputedTab = counts.reenterResult
-        expect(mineTab + disputedTab).toBe(myTurnTotal(counts))
+        const mineTab = myTurnTotal(counts) - disputeMyTurnTotal(counts)
+        expect(mineTab).toBe(7)
+        expect(mineTab + disputeMyTurnTotal(counts)).toBe(myTurnTotal(counts))
     })
 
     it('빈 큐는 0 — 배너·뱃지가 렌더되지 않는 조건', () => {
         expect(myTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
         expect(disputeTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
+        expect(disputeMyTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
     })
 })

@@ -15,7 +15,7 @@ type Props = {
 /**
  * 확인 요청 허브 「상대 대기」 탭 — 공이 상대에게 넘어가 있는 것들(뱃지에 세지 않는다).
  * 남은 참가자 확인 대기 / 상대 수락 대기 / 열람 전용 대기 + 종료된 요청 이력.
- * 이의 상태는 여기 오지 않는다 — 「이의 제기」 탭 전용이다(0061).
+ * 이의를 거친 협상은 여기 오지 않는다 — 재제안된 뒤에도 「이의 처리」 탭 전용이다(0061·0062).
  */
 export function WaitingPanel({ queue, viewerId }: Props) {
     const waiting = queue.pendingMatches.filter((p) => p.bucket === 'awaitingCounterpart')

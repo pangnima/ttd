@@ -1,21 +1,19 @@
 'use client'
 
-import Link from 'next/link'
 import type { MatchRoomGame, PersonalMatchConfirmation } from '@/types'
 import { Button } from '@/components/ui/button'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
-import { updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
 import { buildRoomGameLabels } from '@/lib/match-rooms/game-labels'
-import { canEditRoomGame, isRoomGameParty } from '@/lib/match-rooms/game-status'
+import { isRoomGameParty } from '@/lib/match-rooms/game-status'
 import {
     bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputerNameOf,
 } from '@/lib/personal-matches/confirmation'
 import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
 import { ReopenResultButton } from '@/components/personal-matches/reopen-result-button'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
-import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
-import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
+import { RoomFreeGameActions } from '@/components/match-rooms/room-free-game-actions'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
+import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
 import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -33,9 +31,10 @@ const WAITING_BADGE = `${PILL_BASE} border-dashed border-border text-muted-foreg
 const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정됩니다'
 
 /**
- * 매칭 룸 게임 행의 액션 — 룸을 떠나지 않고 결과를 입력·확인한다.
- * 분기 규칙은 개인 경기 카드의 MutualResultActions/FreeMatchActions를 그대로 이식한 것이고,
+ * 매칭 룸 게임 행의 **상호 확인** 액션 — 룸을 떠나지 않고 결과를 입력·확인한다.
+ * 분기 규칙은 개인 경기 카드의 MutualResultActions를 그대로 이식한 것이고,
  * 팀 라벨만 buildRoomGameLabels로 뷰어 관점을 맞춘다(세트 반전은 propose RPC가 서버에서 한다).
+ * 자유 기록 갈래는 RoomFreeGameActions로 분리했다(0062) — 공유 상태가 없어 잘라도 규칙이 갈라지지 않는다.
  */
 export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
     const d = useResultDialog()
@@ -52,34 +51,9 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
         return <ReopenResultButton requestId={settledRequestId} description={teams} />
     }
 
-    // 자유 기록 — 작성자만 손댈 수 있고, 라인업이 차면 즉시 확정된다
+    // 자유 기록 — 협상이 없어 작성자가 즉시 확정한다(별 컴포넌트)
     if (game.sourceType !== 'confirmation') {
-        if (!canEditRoomGame(game, viewerId)) return null
-        const lineupReady = isLineupCompleteByRoles(game.matchType, game.participants.map((p) => p.role))
-        if (!lineupReady) {
-            return (
-                <Link href={`/me/personal-matches/${game.id}/edit`} className="text-caption text-primary hover:underline">
-                    참가자 채우기
-                </Link>
-            )
-        }
-        return (
-            <>
-                <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>결과 입력</Button>
-                <MatchResultDialog
-                    mode="propose"
-                    open={d.open}
-                    onOpenChange={d.setOpen}
-                    opponentName={opponentName}
-                    title="경기 결과 입력"
-                    description={teams}
-                    adLabels={buildAdLabels(labels)}
-                    onSubmit={(sets) => d.run(() => updatePersonalMatchSetsAction(game.id, sets))}
-                    isPending={d.isPending}
-                    error={d.error}
-                />
-            </>
-        )
+        return <RoomFreeGameActions game={game} viewerId={viewerId} />
     }
 
     const requestId = game.sourceRequestId
@@ -90,9 +64,11 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
         return <span className={WAITING_BADGE} title={badge.title}>{badge.label}</span>
     }
 
-    // 이의(0061) — 개인 경기 카드와 같은 컴포넌트. 이름 해석용 좌석은 작성자 + 라인업 회원
+    // 이름 해석용 좌석은 작성자 + 라인업 회원 (0061)
+    const disputerName = disputerNameOf(c, [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants])
+
+    // 이의(0061) — 개인 경기 카드와 같은 컴포넌트
     if (c.status === 'disputed') {
-        const seats = [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]
         return (
             <DisputedResultActions
                 requestId={requestId}
@@ -100,7 +76,7 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
                 opponentName={opponentName}
                 teams={teams}
                 adLabels={buildAdLabels(labels)}
-                disputerName={disputerNameOf(c, seats)}
+                disputerName={disputerName}
                 badgeClassName={WAITING_BADGE}
             />
         )
@@ -108,11 +84,14 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
 
     const reviewMode = canRespondToProposal(c)
     const editingOwn = c.status === 'proposed' && c.proposedByMe
+    // 이의를 거친 재제안이면 어느 분기든 "무엇에 대한 답인가"를 먼저 말한다(0062)
+    const reentry = <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={WAITING_BADGE} />
 
     // 내 확인은 끝났고 남은 좌석을 기다린다(0060) — 버튼 없이 배지만
     if (c.status === 'proposed' && !reviewMode && !editingOwn) {
         return (
             <span className="flex items-center gap-2">
+                {reentry}
                 <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
                 <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
             </span>
@@ -121,6 +100,7 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
 
     return (
         <span className="flex items-center gap-2">
+            {reentry}
             {editingOwn && (
                 <>
                     <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
@@ -136,6 +116,7 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
                 opponentName={opponentName}
                 teams={teams}
                 adLabels={buildAdLabels(labels)}
+                disputerName={disputerName}
                 dialog={d}
             />
         </span>

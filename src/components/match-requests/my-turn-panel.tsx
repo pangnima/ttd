@@ -19,7 +19,7 @@ type Props = {
 /**
  * 확인 요청 허브 「내 차례」 탭 — 지금 내가 처리해야 할 것만 모은다.
  * 섹션 순서 = 처리 우선순위: 참여 확인 → 결과 확인 → 결과 입력 → 참가자 채우기.
- * 이의 재입력은 「이의 제기」 탭이 담당한다(0061) — 사이드바 뱃지 = 이 탭 배지 + 이의 탭 배지.
+ * 이의를 거친 협상은 「이의 처리」 탭이 담당한다(0061·0062) — 사이드바 뱃지 = 이 탭 배지 + 이의 탭 배지.
  */
 export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props) {
     const { counts, pendingMatches, rotationSessions, enteredSessionIds } = queue

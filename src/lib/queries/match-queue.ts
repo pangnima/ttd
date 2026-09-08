@@ -124,9 +124,11 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
             fillLineup: tallied.fillLineup,
             waiting: tallied.waiting + sentRequests.length + awaitingMemberRequests.length
                 + awaitingOwnerSessions.length,
-            // 이의 탭(0061) — 둘 다 B축 행뿐이라 조립 단계에서 더할 것이 없다
+            // 이의 탭(0061·0062) — 넷 다 B축 행뿐이라 조립 단계에서 더할 것이 없다
             reenterResult: tallied.reenterResult,
             disputeWaiting: tallied.disputeWaiting,
+            reentryReview: tallied.reentryReview,
+            reentryWaiting: tallied.reentryWaiting,
         },
     }
 })

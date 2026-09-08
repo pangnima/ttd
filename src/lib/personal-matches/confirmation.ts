@@ -27,6 +27,11 @@ export type ConfirmationSourceRow = {
      * `disputedByMe=false`·이름 미상으로 떨어져 배지가 '이의 제기됨' 폴백 문구를 쓸 뿐, 차례 판정은 흔들리지 않는다.
      */
     disputed_by?: string | null
+    /**
+     * dispute/reopen 누적 횟수 (0062). optional인 이유는 위와 같다 — 빠뜨리면 `disputeRound=0`,
+     * 즉 '이의를 거치지 않은 협상'으로 떨어져 종전 라우팅(내 차례 탭)이 되므로 실수가 **표시 과소**로 무너진다.
+     */
+    dispute_count?: number | null
 }
 
 /** 결과 협상 축의 좌석 — DB `request_seat_of`(0059)의 앱쪽 거울. 판정 순서까지 같아야 한다. */
@@ -89,8 +94,20 @@ export function buildConfirmation(row: ConfirmationSourceRow, viewerId: string):
         disputeReason: row.dispute_reason ?? undefined,
         disputedByMe: row.disputed_by === viewerId,
         disputedBy: row.disputed_by ?? undefined,
+        disputeRound: row.dispute_count ?? 0,
         viewerIsParty: seat !== null,
     }
+}
+
+/**
+ * 이 협상이 이의를 거쳤는가 — 「이의 처리」 탭 라우팅(queue.ts)과 재입력 맥락 배지의 단일 출처.
+ *
+ * `disputedBy`로 대신하지 않는다: `disputed_by`는 `on delete set null`이라 이의자가 탈퇴하면 표식이 사라져
+ * 그 경기가 조용히 이의 탭에서 빠져나간다. 누적 카운터는 그 구멍을 막는다(0062).
+ * 0061 이전에 이미 확정된 행은 카운터가 0이라 종전대로 취급된다(소급 없음).
+ */
+export function hasDisputeHistory(c?: PersonalMatchConfirmation): boolean {
+    return (c?.disputeRound ?? 0) > 0
 }
 
 /**
@@ -119,9 +136,14 @@ export function isReentryTurn(c?: PersonalMatchConfirmation): boolean {
 /** 이름 해석용 좌석 — 관점 행의 참가자 스냅샷(파트너·상대1·상대2)에서 만든다(labels.ts namedSeatsOf) */
 export type NamedSeat = { userId?: string; name: string }
 
-/** 이의 제기자의 표시 이름 — 나면 '나', 좌석에서 찾으면 그 이름, 미상(0061 이전 행·좌석 밖)이면 undefined */
+/**
+ * 이의 제기자의 표시 이름 — 나면 '나', 좌석에서 찾으면 그 이름, 미상(0061 이전 행·좌석 밖)이면 undefined.
+ *
+ * 가드가 `status === 'disputed'`가 아니라 이의 **이력**인 것이 0062의 변경점이다 — 재제안으로 proposed가
+ * 되어도 "누구의 이의에 대한 재입력인가"를 말해야 하므로 그 뒤에도 이름이 해석돼야 한다.
+ */
 export function disputerNameOf(c: PersonalMatchConfirmation | undefined, seats: NamedSeat[]): string | undefined {
-    if (!c || c.status !== 'disputed') return undefined
+    if (!c || !hasDisputeHistory(c)) return undefined
     if (c.disputedByMe) return '나'
     if (!c.disputedBy) return undefined
     return seats.find((s) => s.userId && s.userId === c.disputedBy)?.name.trim() || undefined
@@ -131,6 +153,22 @@ export function disputerNameOf(c: PersonalMatchConfirmation | undefined, seats: 
 export function disputeBadge(c: PersonalMatchConfirmation, disputerName?: string): BystanderWaitingBadge {
     const label = disputerName === '나' ? '내가 이의 제기' : disputerName ? `${disputerName}님 이의` : '이의 제기됨'
     return { label, title: c.disputeReason ?? '제안 결과에 이의가 제기됐습니다' }
+}
+
+/**
+ * 이의를 거친 뒤 다시 제안된 결과에 붙는 맥락 배지 (0062) — '내 이의 후 재입력' / 'OOO님 이의 후 재입력' /
+ * '이의 후 재입력'(이의자 미상 폴백). 왕복이 두 번 이상이면 ' (N차)'를 붙여 몇 번째 재입력인지 말한다.
+ * 툴팁은 직전 이의 사유 — 승인을 판단하는 데 필요한 유일한 정보다.
+ */
+export function reentryBadge(c: PersonalMatchConfirmation, disputerName?: string): BystanderWaitingBadge {
+    const who = disputerName === '나' ? '내 이의' : disputerName ? `${disputerName}님 이의` : '이의'
+    const round = c.disputeRound >= 2 ? ` (${c.disputeRound}차)` : ''
+    return {
+        label: `${who} 후 재입력${round}`,
+        title: c.disputeReason
+            ? `직전 이의 사유: ${c.disputeReason}`
+            : '이의가 제기된 뒤 다시 입력된 결과입니다',
+    }
 }
 
 /**

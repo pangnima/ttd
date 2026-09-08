@@ -24,8 +24,10 @@ export function PendingMatchActions({ match, bucket }: Props) {
         case 'awaitingCounterpart':
         case 'reenterResult':
         case 'awaitingReentry':
+        case 'reentryReview':
+        case 'awaitingReentryConfirm':
             // 상호 확인 경기는 제안/확인/이의 상태 분기를, 자유 기록은 즉시 확정 입력을 각각 담당한다
-            // (이의 두 버킷은 언제나 상호 확인 경기다 — 자유 기록에는 협상이 없다)
+            // (이의 네 버킷은 언제나 상호 확인 경기다 — 자유 기록에는 협상이 없다)
             return match.sourceRequestId ? (
                 <MutualResultActions match={match} />
             ) : (

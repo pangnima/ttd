@@ -5,7 +5,7 @@ import type { AdLabels } from '@/lib/personal-matches/labels'
 import {
     confirmMatchResultAction, disputeMatchResultAction, proposeMatchResultAction,
 } from '@/lib/actions/match-results'
-import { canRespondToProposal, formatConfirmProgress } from '@/lib/personal-matches/confirmation'
+import { canRespondToProposal, formatConfirmProgress, hasDisputeHistory } from '@/lib/personal-matches/confirmation'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import type { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
@@ -15,7 +15,10 @@ type Props = {
     opponentName: string
     teams: string
     adLabels?: AdLabels
-    /** 이의 제기자 표시 이름(disputerNameOf) — disputed 상태의 설명줄에만 쓴다 */
+    /**
+     * 이의 제기자 표시 이름(disputerNameOf) — 설명줄의 이의 사유 호칭에 쓴다.
+     * 0062부터 검토 모드에서도 필요하다: 이의를 거친 재제안을 확인하는 사람이 무엇에 대한 답인지 알아야 한다.
+     */
     disputerName?: string
     dialog: ReturnType<typeof useResultDialog>
 }
@@ -26,7 +29,14 @@ type Props = {
  * 검토/제안의 갈림은 canRespondToProposal 하나다(0060 만장일치) — 화면과 RPC의 자격이 같은 문장이어야 한다.
  */
 export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, dialog: d }: Props) {
+    // 이의자 호칭 — '내 이의 사유' / 'OOO님 이의 사유' / '상대 이의 사유'(미상 폴백)
+    const disputer = disputerName === '나' ? '내' : disputerName ? `${disputerName}님` : '상대'
+
     if (canRespondToProposal(c)) {
+        // 이의를 거친 재제안이면 직전 사유를 함께 보여준다(0062) — 승인 판단에 필요한 유일한 정보다
+        const reviewDescription = hasDisputeHistory(c) && c.disputeReason
+            ? `${teams} · ${disputer} 직전 이의 사유: ${c.disputeReason}`
+            : teams
         return (
             <MatchResultDialog
                 mode="review"
@@ -34,7 +44,7 @@ export function NegotiationDialog({ requestId, confirmation: c, opponentName, te
                 onOpenChange={d.setOpen}
                 opponentName={opponentName}
                 title="경기 결과 확인"
-                description={teams}
+                description={reviewDescription}
                 proposedSets={c.proposedSets}
                 progressLabel={formatConfirmProgress(c)}
                 onConfirm={() => d.run(() => confirmMatchResultAction(requestId))}
@@ -47,8 +57,6 @@ export function NegotiationDialog({ requestId, confirmation: c, opponentName, te
 
     const editingOwn = c.status === 'proposed' && c.proposedByMe
     const disputed = c.status === 'disputed'
-    // 이의자 호칭 — '내 이의 사유' / 'OOO님 이의 사유' / '상대 이의 사유'(미상 폴백)
-    const disputer = disputerName === '나' ? '내' : disputerName ? `${disputerName}님` : '상대'
     const description = disputed && c.disputeReason
         ? `${teams} · ${disputer} 이의 사유: ${c.disputeReason}`
         : editingOwn

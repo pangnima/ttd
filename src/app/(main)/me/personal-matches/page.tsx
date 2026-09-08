@@ -25,8 +25,9 @@ export default async function PersonalMatchesPage() {
         fetchSettledPersonalMatches(user.id),
         fetchMatchQueue(user.id),
     ])
-    // 허브로 유도할 미확정 전량 — 뱃지(내 차례 + 이의 재입력) + 상대 대기 + 이의 대기
-    const pendingTotal = myTurnTotal(queue.counts) + queue.counts.waiting + queue.counts.disputeWaiting
+    // 허브로 유도할 미확정 전량 — 뱃지(내 차례 + 이의 탭의 내 차례 둘) + 상대 대기 + 이의 대기 둘
+    const pendingTotal = myTurnTotal(queue.counts) + queue.counts.waiting
+        + queue.counts.disputeWaiting + queue.counts.reentryWaiting
 
     return (
         <PageContainer>

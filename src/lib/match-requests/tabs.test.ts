@@ -25,4 +25,9 @@ describe('HUB_TABS / hubTabHref', () => {
         expect(hubTabHref('waiting')).toBe('/me/match-requests?tab=waiting')
         expect(hubTabHref('disputed')).toBe('/me/match-requests?tab=disputed')
     })
+
+    it("이의 탭 라벨은 '이의 처리' — 이의를 거친 협상의 생애 전체를 담는다(0062). 키는 유지해 기존 URL이 산다", () => {
+        const disputed = HUB_TABS.find((t) => t.key === 'disputed')
+        expect(disputed?.label).toBe('이의 처리')
+    })
 })

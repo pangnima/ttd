@@ -653,6 +653,7 @@ export type Database = {
       match_result_negotiations: {
         Row: {
           confirmed_by: string[]
+          dispute_count: number
           dispute_reason: string | null
           disputed_by: string | null
           proposed_at: string | null
@@ -664,6 +665,7 @@ export type Database = {
         }
         Insert: {
           confirmed_by?: string[]
+          dispute_count?: number
           dispute_reason?: string | null
           disputed_by?: string | null
           proposed_at?: string | null
@@ -675,6 +677,7 @@ export type Database = {
         }
         Update: {
           confirmed_by?: string[]
+          dispute_count?: number
           dispute_reason?: string | null
           disputed_by?: string | null
           proposed_at?: string | null
