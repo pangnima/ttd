@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-    buildConfirmation, bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf,
+    buildConfirmation, bystanderWaitingBadge, canDisputeProposal, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf,
     formatConfirmProgress, hasDisputeHistory, isReentryTurn, reentryBadge,
     type ConfirmationSourceRow,
 } from './confirmation'
@@ -271,5 +271,21 @@ describe('canReopenResult', () => {
 
     it('협상 행을 못 읽으면 false', () => {
         expect(canReopenResult(undefined)).toBe(false)
+    })
+})
+
+describe('canDisputeProposal — 이의는 확인보다 넓다 (0060 §7)', () => {
+    it('제안자가 아닌 좌석은 이미 확인했어도 이의할 수 있다', () => {
+        const partial = { ...DOUBLES, confirmed_by: ['bob', 'carol'] }
+        expect(canDisputeProposal(buildConfirmation(partial, 'carol'))).toBe(true)   // 확인 완료 좌석
+        expect(canRespondToProposal(buildConfirmation(partial, 'carol'))).toBe(false) // 확인은 다시 못 한다
+        expect(canDisputeProposal(buildConfirmation(partial, 'alice'))).toBe(true)
+    })
+
+    it('제안자 본인·비좌석·proposed 아님은 false — RPC cannot_dispute_own_proposal·not_request_party·result_not_proposed의 거울', () => {
+        expect(canDisputeProposal(buildConfirmation(DOUBLES, 'bob'))).toBe(false)
+        expect(canDisputeProposal(buildConfirmation(DOUBLES, 'eve'))).toBe(false)
+        expect(canDisputeProposal(buildConfirmation({ ...DOUBLES, result_status: 'disputed' }, 'alice'))).toBe(false)
+        expect(canDisputeProposal(undefined)).toBe(false)
     })
 })

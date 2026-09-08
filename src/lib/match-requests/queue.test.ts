@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { MatchResultStatus, PersonalMatch, PersonalMatchConfirmation } from '@/types'
 import type { MatchQueueCounts } from './queue'
 import {
-    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeMyTurnTotal, disputeTotal, mineTabMyTurn,
-    myTurnTotal, settleTabMyTurn, tallyBuckets,
+    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeMyTurnTotal, inviteMyTurn,
+    myTurnTotal, resultMyTurn, tallyBuckets,
 } from './queue'
 
 /**
@@ -197,33 +197,30 @@ describe('tallyBuckets', () => {
     })
 })
 
-describe('myTurnTotal / disputeTotal / disputeMyTurnTotal', () => {
+describe('myTurnTotal / inviteMyTurn / resultMyTurn / disputeMyTurnTotal', () => {
     const counts = {
         participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99,
         reenterResult: 2, disputeWaiting: 5, reentryReview: 4, reentryWaiting: 6,
         enteredSessions: 8,
     }
 
-    it('뱃지 = 내 차례 네 섹션 + 이의 탭의 내 차례 둘. 상대 대기·이의 대기는 뺀다', () => {
+    it('뱃지 = 승인 요청 탭의 내 차례. 상대 대기·이의 대기·등록된 세션은 뺀다', () => {
         expect(myTurnTotal(counts)).toBe(13)
     })
 
-    it('이의 탭 총건수 = 네 버킷 전부', () => {
-        expect(disputeTotal(counts)).toBe(17)
+    it('하위 탭별 내 차례 — 초대 / 경기 결과 확정 / 이의 신청', () => {
+        expect(inviteMyTurn(counts)).toBe(2)        // 참여 확인
+        expect(resultMyTurn(counts)).toBe(5)        // 결과 확인 1 + 결과 입력 3 + 라인업 1
+        expect(disputeMyTurnTotal(counts)).toBe(6)  // 다시 입력 2 + 재입력 확인 4
     })
 
-    it('이의 탭 배지 = 다시 입력할 차례 + 재입력된 결과 확인', () => {
-        expect(disputeMyTurnTotal(counts)).toBe(6)
-    })
-
-    it('뱃지 = 내 차례인 세 탭을 더한 것 (뺄셈이 아니라 합산이 정의다)', () => {
-        expect(mineTabMyTurn(counts)).toBe(3)      // 승인 요청 = 참여 2 + 결과 확인 1
-        expect(settleTabMyTurn(counts)).toBe(4)    // 경기 확정 대기 = 결과 입력 3 + 라인업 1
-        expect(mineTabMyTurn(counts) + settleTabMyTurn(counts) + disputeMyTurnTotal(counts))
+    it('뱃지 = 하위 세 탭을 더한 것 (뺄셈이 아니라 합산이 정의다)', () => {
+        expect(inviteMyTurn(counts) + resultMyTurn(counts) + disputeMyTurnTotal(counts))
             .toBe(myTurnTotal(counts))
     })
 
-    it('탭이 넷으로 갈려도 뱃지 총량은 그대로다 — 라우팅만 이동했다', () => {
+    it('4탭이 2단 탭으로 바뀌어도 뱃지 총량은 그대로다 — 라우팅만 이동했다', () => {
+        // 0064의 4탭 정의(mine 3 + settle 4 + dispute 6)와 같은 값
         expect(myTurnTotal(counts)).toBe(13)
     })
 
@@ -234,30 +231,25 @@ describe('myTurnTotal / disputeTotal / disputeMyTurnTotal', () => {
 
     it('빈 큐는 0 — 배너·뱃지가 렌더되지 않는 조건', () => {
         expect(myTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
-        expect(disputeTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
         expect(disputeMyTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
     })
 })
 
-describe('뱃지 = 두 탭의 내 차례 합', () => {
+describe('이의 대기는 뱃지 밖이다', () => {
     const counts = (over: Partial<MatchQueueCounts>): MatchQueueCounts => ({
         ...EMPTY_QUEUE_COUNTS, ...over,
     })
 
-    it('이의 탭의 내 차례 = 다시 입력할 차례 + 재입력된 결과 확인', () => {
+    it('이의 신청 탭의 내 차례 = 다시 입력할 차례 + 재입력된 결과 확인', () => {
         const c = counts({ reenterResult: 2, reentryReview: 3, disputeWaiting: 5, reentryWaiting: 7 })
         expect(disputeMyTurnTotal(c)).toBe(5)
+        expect(myTurnTotal(c)).toBe(5)
     })
 
-    it('두 탭의 내 차례를 더하면 사이드바 뱃지다', () => {
-        const c = counts({ participation: 1, confirmResult: 2, reenterResult: 1, reentryReview: 1 })
-        expect(mineTabMyTurn(c)).toBe(3)
-        expect(mineTabMyTurn(c) + disputeMyTurnTotal(c)).toBe(myTurnTotal(c))
-    })
-
-    it('이의 탭에만 할 일이 있으면 내 차례 탭의 내 차례는 0이다', () => {
+    it('이의 신청에만 할 일이 있으면 초대·결과 확정의 내 차례는 0이다', () => {
         const c = counts({ reentryReview: 2 })
-        expect(mineTabMyTurn(c)).toBe(0)
+        expect(inviteMyTurn(c)).toBe(0)
+        expect(resultMyTurn(c)).toBe(0)
         expect(myTurnTotal(c)).toBe(2)
     })
 })

@@ -150,6 +150,17 @@ export function canRespondToProposal(c?: PersonalMatchConfirmation): boolean {
 }
 
 /**
+ * 제안된 결과에 **이의**를 제기할 수 있는가 — 확인보다 넓다. 이미 확인한 좌석도 정산 전이면 이의할 수 있다
+ * (DB `dispute_match_result`는 제안자 본인만 거부하고 `confirmed_by`를 보지 않는다, 0060 §7).
+ * 요구 "경기에 참여한 사람 모두 이의 신청 가능"의 앱쪽 거울이다. 확인 완료 카드의 [이의 제기] 버튼과
+ * 협상 팝업의 검토 모드 진입이 이 술어를 본다(확인 버튼 노출은 여전히 canRespondToProposal).
+ */
+export function canDisputeProposal(c?: PersonalMatchConfirmation): boolean {
+    if (!c) return false
+    return c.status === 'proposed' && c.viewerIsParty && !c.proposedByMe
+}
+
+/**
  * 이의(disputed) 상태에서 '다시 입력할 차례'인가 — 큐 버킷(reenterResult)·이의 탭 섹션·카드 버튼 강조가
  * 이 한 문장을 본다. 차례는 **제안자**다: 제안이 곧 제안자의 확인이므로 틀린 제안을 한 사람이 고친다.
  * ⚠ `!disputedByMe`를 넣지 않는다 — dispute RPC가 제안자의 이의를 막아 그 조건은 이의 경로에서 항상 참이고,

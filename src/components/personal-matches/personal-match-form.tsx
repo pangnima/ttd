@@ -13,6 +13,8 @@ import { usePersonalMatchSubmit, type SubmitNavigation } from '@/components/pers
 
 type Props = {
     initialData?: PersonalMatch
+    // 신규 등록의 초안 — 취소한 확인 요청을 되살릴 때(Week 38). 수정 모드를 켜지 않는다
+    prefill?: Partial<PersonalMatch>
     opponentCandidates?: OpponentCandidate[]
     pastOpponents?: PastOpponent[]
     // 코트명 '최근 코트' 자동완성 후보 (본인이 이전에 입력한 코트명)
@@ -38,10 +40,10 @@ type Props = {
  * 방 게임(roomContext)은 방장이 방 참가자로 게임을 구성하는 경로 — 같은 폼에 참가자만 입력한다.
  */
 export function PersonalMatchForm({
-    initialData, opponentCandidates = [], pastOpponents = [], recentCourtNames = [], selfUserId, roomParticipants, roomContext,
+    initialData, prefill, opponentCandidates = [], pastOpponents = [], recentCourtNames = [], selfUserId, roomParticipants, roomContext,
     variant = 'page', nav, scheduleSlots,
 }: Props) {
-    const s = usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId, roomContext })
+    const s = usePersonalMatchFormState({ initialData, prefill, opponentCandidates, selfUserId, roomContext })
     const submit = usePersonalMatchSubmit(s, initialData?.id, nav)
     // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049).
     // 로테이션도 풀의 회원에게 참여 요청이 나가므로 그 사실을 라벨이 말한다 (0057).

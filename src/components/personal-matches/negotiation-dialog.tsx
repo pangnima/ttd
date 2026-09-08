@@ -6,7 +6,7 @@ import {
     confirmMatchResultAction, disputeMatchResultAction, proposeMatchResultAction,
 } from '@/lib/actions/match-results'
 import {
-    canRespondToProposal, disputerTitleOf, formatConfirmProgress, hasDisputeHistory,
+    canDisputeProposal, canRespondToProposal, disputerTitleOf, formatConfirmProgress, hasDisputeHistory,
 } from '@/lib/personal-matches/confirmation'
 import { MatchResultDialog } from '@/components/personal-matches/match-result-dialog'
 import type { useResultDialog } from '@/components/personal-matches/use-result-dialog'
@@ -28,27 +28,30 @@ type Props = {
 /**
  * 상호 확인 경기의 협상 팝업 — 검토(확인/이의) 또는 제안(입력/수정) 중 하나를 고른다.
  * 개인 경기 카드(MutualResultActions)와 룸 게임 행(RoomGameActions)이 같은 분기를 공유한다.
- * 검토/제안의 갈림은 canRespondToProposal 하나다(0060 만장일치) — 화면과 RPC의 자격이 같은 문장이어야 한다.
+ * 검토 모드 진입은 canDisputeProposal(제안자 아닌 좌석 전원), 그 안의 [결과 확인] 노출은 canRespondToProposal
+ * (아직 미확인)이다 — 이미 확인한 좌석도 정산 전이면 이의만 낼 수 있다(0060 §7). 화면과 RPC의 자격이 같은 문장이어야 한다.
  */
 export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, dialog: d }: Props) {
     // 이의자 호칭은 카드의 사유 줄과 같은 출처를 쓴다 — 인라인하면 화면마다 다른 사람 것으로 보일 수 있다
     const disputer = disputerTitleOf(disputerName)
 
-    if (canRespondToProposal(c)) {
+    if (canDisputeProposal(c)) {
+        const confirmable = canRespondToProposal(c)
         // 이의를 거친 재제안이면 직전 사유를 함께 보여준다(0062) — 승인 판단에 필요한 유일한 정보다
         const reviewDescription = hasDisputeHistory(c) && c.disputeReason
             ? `${teams} · ${disputer} 직전 이의 사유: ${c.disputeReason}`
-            : teams
+            : confirmable ? teams : `${teams} · 이미 확인했습니다 — 확정 전까지는 이의를 제기할 수 있습니다`
         return (
             <MatchResultDialog
                 mode="review"
                 open={d.open}
                 onOpenChange={d.setOpen}
                 opponentName={opponentName}
-                title="경기 결과 확인"
+                title={confirmable ? '경기 결과 확인' : '경기 결과 이의 제기'}
                 description={reviewDescription}
                 proposedSets={c.proposedSets}
                 progressLabel={formatConfirmProgress(c)}
+                confirmable={confirmable}
                 onConfirm={() => d.run(() => confirmMatchResultAction(requestId))}
                 onDispute={(reason) => d.run(() => disputeMatchResultAction(requestId, reason))}
                 isPending={d.isPending}

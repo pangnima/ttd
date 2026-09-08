@@ -13,6 +13,8 @@ type Props = {
     /** 섹션 건수. 기본은 entries 길이 — '결과 입력 대기'처럼 세션 수를 더한 값이 필요하면 명시한다 */
     count?: number
     entries: PendingMatchEntry[]
+    /** 카드가 전부 내 승인을 기다리는 섹션 — QueueSection에 그대로 넘긴다 */
+    attention?: boolean
     /** 미확정 행이 아닌 카드(로테이션 세션 카드 등) — 그룹 박스들 뒤에 별도 박스로 이어 붙는다 */
     children?: ReactNode
 }
@@ -21,15 +23,15 @@ type Props = {
  * 허브 섹션 공용 — 미확정 행들을 표시 그룹(buildMatchGroups)으로 묶어, 같은 로테이션 세션의 게임은
  * 헤더 한 줄 + '게임 N'(group_seq = 입력 순) 카드로, 나머지는 카드 1장씩 그린다.
  * 허브의 행은 세트가 비어 있어 kind가 record/rotation뿐이고(가상 카드 없음), 카드가 곧 실제 행이라
- * id로 버킷을 되찾아 액션을 붙인다. 네 패널(승인 요청·경기 확정 대기·상대 승인 대기·이의 처리)이 같은 컴포넌트를 쓴다.
+ * id로 버킷을 되찾아 액션을 붙인다. 허브의 패널 전부(경기 결과 확정·이의 신청·상대 승인 대기)가 같은 컴포넌트를 쓴다.
  */
-export function PendingMatchSection({ title, hint, count, entries, children }: Props) {
+export function PendingMatchSection({ title, hint, count, entries, attention, children }: Props) {
     const bucketById = new Map<string, MatchQueueBucket>(entries.map((e) => [e.match.id, e.bucket]))
     const groups = buildMatchGroups(entries.map((e) => e.match))
     const hasChildren = Children.count(children) > 0
 
     return (
-        <QueueSection title={title} hint={hint} count={count ?? entries.length} unboxed>
+        <QueueSection title={title} hint={hint} count={count ?? entries.length} attention={attention} unboxed>
             {groups.length > 0 && (
                 <MatchGroupList
                     groups={groups}

@@ -15,7 +15,7 @@ import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/reval
  * 세션 자체는 어떤 통계에도 잡히지 않는다.
  */
 
-type ActionResult = { error: string | null }
+type ActionResult = { error: string | null; stale?: boolean }
 
 export type RotationSessionInput = {
     playedAt: string
@@ -271,7 +271,9 @@ export async function finalizeRotationSessionAction(
     })
     if (error) {
         const known = FINALIZE_ERROR_MESSAGES.find(([key]) => error.message.includes(key))
-        return { error: known ? known[1] : '게임 저장에 실패했습니다.' }
+        // 선점(0064)에 밀린 것은 내 화면이 낡은 것이다 — 팝업 훅이 refresh해 '등록된 게임' 목록을 갱신한다
+        const stale = known?.[0] === 'session_games_changed'
+        return { error: known ? known[1] : '게임 저장에 실패했습니다.', ...(stale ? { stale } : {}) }
     }
 
     await recomputePersonalNtrp(user.id)

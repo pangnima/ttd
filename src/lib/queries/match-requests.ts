@@ -177,3 +177,21 @@ async function fetchSeatedRequestIds(
     if (error || !data) return []
     return [...new Set(data.map((r) => r.request_id))]
 }
+
+/**
+ * 요청 1건 — 취소한 요청을 등록 폼 초안으로 되살릴 때(Week 38, request-prefill.ts).
+ * **요청자 본인 + canceled**만 돌려준다. pending을 허용하면 새 요청이 0056의 pending 중복 유니크에 걸리고,
+ * 남의 요청은 RLS가 이미 막지만 앱 게이트도 같은 문장으로 둔다. 조건에 안 맞으면 null(호출부는 빈 폼).
+ */
+export async function fetchMatchRequestById(id: string, viewerId: string): Promise<MatchRequestWithUser | null> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_requests')
+        .select(`*, requester:users!match_requests_requester_id_fkey(${COUNTERPART_COLUMNS}), opponent:users!match_requests_opponent_user_id_fkey(${COUNTERPART_COLUMNS}), ${REQUEST_JOINS}`)
+        .eq('id', id)
+        .eq('requester_id', viewerId)
+        .eq('status', 'canceled')
+        .maybeSingle()
+    if (error || !data) return null
+    return { request: mapMatchRequestRow(data, viewerId), counterpart: mapCounterpart(data.opponent) }
+}

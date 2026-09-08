@@ -39,6 +39,11 @@ function usePlayerSlot(userId?: string, name?: string, hand?: 'right' | 'left', 
 
 type Args = {
     initialData?: PersonalMatch
+    /**
+     * 신규 등록의 초안(Week 38) — 취소한 확인 요청을 되살릴 때. initialData와 달리 **수정 모드가 아니다**:
+     * isEdit·seedFill·제출 경로(update)는 initialData만 보고, 이쪽은 초기값만 채운다. 둘 다 있으면 initialData가 이긴다.
+     */
+    prefill?: Partial<PersonalMatch>
     opponentCandidates: OpponentCandidate[]
     selfUserId?: string
     // 방 게임 추가(0048) — 메타를 방 값으로 고정하고 자유 기록으로만 저장한다
@@ -49,8 +54,8 @@ type Args = {
  * 개인 경기 등록/수정 폼의 state 묶음 + 파생값(isDoubles/isRotation/확인 요청 대표/유효성/페이로드).
  * 렌더와 제출은 personal-match-form.tsx / use-personal-match-submit.ts가 담당한다.
  */
-export function usePersonalMatchFormState({ initialData, opponentCandidates, selfUserId, roomContext }: Args) {
-    const d = initialData
+export function usePersonalMatchFormState({ initialData, prefill, opponentCandidates, selfUserId, roomContext }: Args) {
+    const d: Partial<PersonalMatch> | undefined = initialData ?? prefill
     const ctx = roomContext
     const opponent = usePlayerSlot(d?.opponentUserId, d?.opponentName, d?.opponentDominantHand, d?.opponentNtrp)
     const partner = usePlayerSlot(d?.partnerUserId, d?.partnerName, d?.partnerDominantHand, d?.partnerNtrp)
@@ -65,7 +70,8 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
     const [courtName, setCourtName] = useState(ctx?.courtName ?? d?.courtName ?? '')
     const [notes, setNotes] = useState(ctx?.notes ?? d?.notes ?? '')
     // 복식 입력 방식 — 로테이션(기본, 선수 풀만 등록) vs 페어 고정. 로테이션은 신규 등록에서만 지원(수정·방 게임은 페어 고정).
-    const [doublesMode, setDoublesMode] = useState<DoublesMode>(ctx ? 'fixed' : 'rotation')
+    // 요청 초안(prefill)은 페어 고정 요청에서 왔으므로 페어 고정으로 연다 — 로테이션으로 열면 채운 슬롯이 보이지 않는다.
+    const [doublesMode, setDoublesMode] = useState<DoublesMode>(ctx || prefill ? 'fixed' : 'rotation')
     const rotation = useRotationGames()
     // 매칭 리스트 노출 — 신규 등록에서만. 켜면 비밀번호(4~20자) 필수. 기록 저장 후 액션이 create_match_room RPC로 방을 만든다.
     const [listed, setListedState] = useState(false)
@@ -78,7 +84,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
 
     // 모집형(리스트에 노출)은 참가자를 비운 채 저장할 수 있다.
     // 수정 모드는 이미 리스트에 올라간 기록이면서 결과가 없을 때만 — 결과가 있으면 라인업을 비울 수 없다.
-    const allowEmptyPlayers = (!isEdit && listed) || (isEdit && !!d?.roomId && (d?.setScores.length ?? 0) === 0)
+    const allowEmptyPlayers = (!isEdit && listed) || (isEdit && !!d?.roomId && (d?.setScores?.length ?? 0) === 0)
 
     // 모집형에서 화면에 펼쳐진 슬롯(0048) — 빈 슬롯은 미리 그리지 않고 '참가자 추가'로만 연다.
     // 열린 슬롯은 완전 입력(이름·손잡이·NTRP)이 필수이고, 닫힌 슬롯만 '모집 중'으로 비워 둘 수 있다.
@@ -109,7 +115,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
         && (!isDoubles || (isPlayerFilled(partner.player) && isPlayerFilled(opponent2.player)))
 
     // 모집 중이던 노출 기록의 빈 자리를 채우는 수정 — 이때도 회원 상대면 상호 확인 게임으로 승격한다(0049)
-    const seedFill = isEdit && !!d?.roomId && !d?.sourceRequestId && (d?.setScores.length ?? 0) === 0
+    const seedFill = isEdit && !!d?.roomId && !d?.sourceRequestId && (d?.setScores?.length ?? 0) === 0
     // 방 게임(신규·seed 채우기)이면 방 id — 회원 상대일 때 createRoomGameAction으로 보낸다
     const roomId = ctx?.roomId ?? (seedFill ? d?.roomId : undefined)
 
@@ -186,7 +192,7 @@ export function usePersonalMatchFormState({ initialData, opponentCandidates, sel
             isRotation, hasRep: !!rep, roomId, allowEmptyPlayers, allFilled,
         }),
         // 저장 후 목적지 판정용 — 폼은 세트를 받지 않으므로 '수정 전 결과 유무'가 곧 저장 후 결과 유무다
-        initialHasResult: (d?.setScores.length ?? 0) > 0,
+        initialHasResult: (d?.setScores?.length ?? 0) > 0,
     }
 }
 

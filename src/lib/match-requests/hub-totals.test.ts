@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_QUEUE_COUNTS, myTurnTotal, type MatchQueueCounts } from '@/lib/match-requests/queue'
 import {
-    disputedGroupTotals, enterResultCards, hubTabHasMyTurn, hubTabTotals,
-    settleTabTotal, waitingGroupTotals,
+    enterResultCards, firstMyTurnTab, hubTabHasMyTurn, hubTabMyTurn, hubTabTotals,
+    hubTopHasMyTurn, hubTopTotals, waitingGroupTotals,
 } from '@/lib/match-requests/hub-totals'
 
 const c = (over: Partial<MatchQueueCounts> = {}): MatchQueueCounts => ({ ...EMPTY_QUEUE_COUNTS, ...over })
@@ -17,91 +17,108 @@ describe('enterResultCards — 「결과 입력 대기」에 그려지는 카드
         // 그 탭이 배지·카드·빈 상태 문구 없는 백지가 된다(0064까지의 실제 결함).
         const counts = c({ enterResult: 0, enteredSessions: 2 })
         expect(enterResultCards(counts)).toBe(2)
-        expect(settleTabTotal(counts)).toBe(2)
-        expect(hubTabTotals(counts).settle).toBe(2)
+        expect(hubTabTotals(counts).result).toBe(2)
     })
 })
 
 describe('hubTabTotals — 탭 배지는 그 탭의 카드 수와 같다', () => {
-    it('승인 요청 = 참여 확인 + 결과 확인 (내가 승인할 것만)', () => {
-        const counts = c({ participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4, enteredSessions: 5 })
-        expect(hubTabTotals(counts).mine).toBe(3)
+    const counts = c({
+        participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4, enteredSessions: 5,
+        waiting: 6, reenterResult: 7, reentryReview: 8, disputeWaiting: 9, reentryWaiting: 10,
     })
 
-    it('경기 확정 대기 = 결과 입력(세션 포함) + 참가자 채우기 (내가 채워 넣을 것만)', () => {
-        const counts = c({ participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4, enteredSessions: 5 })
-        expect(hubTabTotals(counts).settle).toBe(12)
+    it('초대 = 참여 확인', () => {
+        expect(hubTabTotals(counts).invite).toBe(1)
     })
 
-    it('두 내 차례 탭이 종전 「내 차례」 한 탭의 합과 같다 — 총량은 그대로, 라우팅만 갈렸다', () => {
-        const counts = c({ participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4, enteredSessions: 5 })
-        expect(hubTabTotals(counts).mine + hubTabTotals(counts).settle).toBe(15)
+    it('경기 결과 확정 = 결과 확인 + 결과 입력(세션 포함) + 참가자 채우기', () => {
+        expect(hubTabTotals(counts).result).toBe(2 + 3 + 5 + 4)
     })
 
-    it('상대 대기 = counts.waiting (이미 6섹션 합과 같다)', () => {
-        expect(hubTabTotals(c({ waiting: 6 })).waiting).toBe(6)
+    it('이의 신청 = 내 차례 둘만 — 카드 수가 곧 내 차례다', () => {
+        expect(hubTabTotals(counts).dispute).toBe(15)
     })
 
-    it('이의 처리 = 네 버킷 전부 — 내 차례 둘만 세던 종전과 다르다', () => {
-        const counts = c({ reenterResult: 1, reentryReview: 2, disputeWaiting: 3, reentryWaiting: 4 })
-        expect(hubTabTotals(counts).disputed).toBe(10)
+    it('상대 승인 대기 = counts.waiting + 이의 대기 둘 (이의 대기가 이 탭으로 왔다, Week 38)', () => {
+        expect(hubTabTotals(counts).waiting).toBe(6 + 9 + 10)
     })
 
-    it('⚠ 회귀: 대기 항목만 있어도 이의 탭 배지가 사라지지 않는다', () => {
-        // 내가 이의를 제기하고 상대의 재입력을 기다리는 동안 배지가 0이 되어(LinkTabs가 0을 숨긴다)
-        // 카드는 보이는데 숫자만 없는 상태였다.
-        const counts = c({ disputeWaiting: 3 })
-        expect(hubTabTotals(counts).disputed).toBe(3)
-        expect(hubTabHasMyTurn(counts).disputed).toBe(false)
-    })
-
-    it('빈 큐는 네 탭 모두 0', () => {
-        expect(hubTabTotals(EMPTY_QUEUE_COUNTS)).toEqual({ mine: 0, settle: 0, waiting: 0, disputed: 0 })
+    it('빈 큐는 네 자리 모두 0', () => {
+        expect(hubTabTotals(EMPTY_QUEUE_COUNTS)).toEqual({ invite: 0, result: 0, dispute: 0, waiting: 0 })
     })
 })
 
-describe('hubTabHasMyTurn — 강조는 숫자와 별개다', () => {
-    it('상대 대기는 정의상 언제나 false', () => {
+describe('hubTabMyTurn / hubTabHasMyTurn — 강조는 숫자와 별개다', () => {
+    it('상대 승인 대기는 정의상 언제나 0·false', () => {
+        expect(hubTabMyTurn(c({ waiting: 99, disputeWaiting: 3 })).waiting).toBe(0)
         expect(hubTabHasMyTurn(c({ waiting: 99 })).waiting).toBe(false)
     })
 
-    it('승인 요청은 참여 확인·결과 확인 중 하나라도 있으면 true', () => {
-        expect(hubTabHasMyTurn(c({ participation: 1 })).mine).toBe(true)
-        expect(hubTabHasMyTurn(c({ confirmResult: 1 })).mine).toBe(true)
-        expect(hubTabHasMyTurn(c({ fillLineup: 1 })).mine).toBe(false)
+    it('경기 결과 확정은 확인·입력·라인업 중 하나라도 있으면 true — 등록만 된 세션은 내 차례가 아니다', () => {
+        expect(hubTabHasMyTurn(c({ confirmResult: 1 })).result).toBe(true)
+        expect(hubTabHasMyTurn(c({ enterResult: 1 })).result).toBe(true)
+        expect(hubTabHasMyTurn(c({ fillLineup: 1 })).result).toBe(true)
+        expect(hubTabHasMyTurn(c({ enteredSessions: 9 })).result).toBe(false)
     })
 
-    it('경기 확정 대기는 입력·라인업 중 하나라도 있으면 true — 등록만 된 세션은 내 차례가 아니다', () => {
-        expect(hubTabHasMyTurn(c({ enterResult: 1 })).settle).toBe(true)
-        expect(hubTabHasMyTurn(c({ fillLineup: 1 })).settle).toBe(true)
-        expect(hubTabHasMyTurn(c({ enteredSessions: 9 })).settle).toBe(false)
+    it('이의 신청은 내 차례 둘 중 하나라도 있으면 true — 이의 대기만으로는 아니다', () => {
+        expect(hubTabHasMyTurn(c({ reenterResult: 1 })).dispute).toBe(true)
+        expect(hubTabHasMyTurn(c({ reentryReview: 1 })).dispute).toBe(true)
+        expect(hubTabHasMyTurn(c({ reentryWaiting: 9, disputeWaiting: 9 })).dispute).toBe(false)
     })
 
-    it('이의 탭은 내 차례 둘 중 하나라도 있으면 true', () => {
-        expect(hubTabHasMyTurn(c({ reenterResult: 1 })).disputed).toBe(true)
-        expect(hubTabHasMyTurn(c({ reentryReview: 1 })).disputed).toBe(true)
-        expect(hubTabHasMyTurn(c({ reentryWaiting: 9 })).disputed).toBe(false)
-    })
-
-    it('강조가 켜지면 사이드바 뱃지도 0이 아니다 — 두 신호가 모순되지 않는다', () => {
-        const counts = c({ reentryReview: 2 })
-        expect(hubTabHasMyTurn(counts).disputed).toBe(true)
-        expect(myTurnTotal(counts)).toBeGreaterThan(0)
+    it('사이드바 뱃지 = 하위 세 탭의 내 차례 합 (알림의 항등식)', () => {
+        const counts = c({
+            participation: 1, confirmResult: 2, enterResult: 3, fillLineup: 4,
+            reenterResult: 5, reentryReview: 6, enteredSessions: 7,
+        })
+        const mine = hubTabMyTurn(counts)
+        expect(mine.invite + mine.result + mine.dispute).toBe(myTurnTotal(counts))
+        expect(myTurnTotal(counts)).toBe(21)
     })
 })
 
-describe('그룹 건수 — 합이 탭 총합과 같다', () => {
-    it('상대 대기: 참여 3섹션 / 결과 3섹션으로 갈린다', () => {
-        const g = waitingGroupTotals({
-            myConfirmed: 1, repWaiting: 2, sentRequests: 3, awaitingMembers: 4, awaitingSeats: 5, awaitingOwner: 6,
-        })
-        expect(g).toEqual({ request: 12, result: 9 })
+describe('hubTopTotals / hubTopHasMyTurn — 최상위 배지는 하위 합', () => {
+    it('승인 요청 = 초대 + 경기 결과 확정 + 이의 신청', () => {
+        const counts = c({ participation: 1, confirmResult: 2, enteredSessions: 3, reentryReview: 4, waiting: 5 })
+        const t = hubTabTotals(counts)
+        expect(hubTopTotals(counts)).toEqual({ mine: t.invite + t.result + t.dispute, waiting: 5 })
     })
 
-    it('이의 처리: 지금 처리할 것 + 응답 대기 중 = 탭 총합', () => {
-        const counts = c({ reenterResult: 1, reentryReview: 2, disputeWaiting: 3, reentryWaiting: 4 })
-        const g = disputedGroupTotals(counts)
-        expect(g).toEqual({ myTurn: 3, waiting: 7 })
-        expect(g.myTurn + g.waiting).toBe(hubTabTotals(counts).disputed)
+    it('승인 요청 강조 = 하위 셋 중 하나라도 내 차례', () => {
+        expect(hubTopHasMyTurn(c({ reentryReview: 1 })).mine).toBe(true)
+        expect(hubTopHasMyTurn(c({ enteredSessions: 5 })).mine).toBe(false)
+        expect(hubTopHasMyTurn(c({ waiting: 5, disputeWaiting: 2 })).waiting).toBe(false)
+    })
+})
+
+describe('firstMyTurnTab — 배너 링크의 착지', () => {
+    it('생애 순서로 첫 내 차례 탭', () => {
+        expect(firstMyTurnTab(c({ participation: 1, reentryReview: 1 }))).toBe('invite')
+        expect(firstMyTurnTab(c({ enterResult: 1, reenterResult: 1 }))).toBe('result')
+        expect(firstMyTurnTab(c({ reenterResult: 1 }))).toBe('dispute')
+    })
+
+    it('내 차례가 없으면 기본 탭', () => {
+        expect(firstMyTurnTab(c({ enteredSessions: 3, waiting: 9 }))).toBe('invite')
+    })
+})
+
+describe('waitingGroupTotals — 패널의 배열 길이와 탭 배지가 같은 값이어야 한다', () => {
+    const parts = {
+        sentRequests: 1, awaitingMembers: 2, awaitingSeats: 3,
+        myConfirmed: 4, awaitingOwner: 5, repWaiting: 6, awaitingReentry: 7, awaitingReentryConfirm: 8,
+    }
+
+    it('참여 요청 3섹션 / 경기 결과 5섹션(이의 대기 둘 포함)', () => {
+        expect(waitingGroupTotals(parts)).toEqual({ request: 6, result: 30 })
+    })
+
+    it('두 출처 일치 — 그룹 합 = hubTabTotals(c).waiting', () => {
+        // counts.waiting = tallied.waiting(myConfirmed + repWaiting) + sentRequests + awaitingMembers
+        //                  + awaitingOwner + awaitingSeats (match-queue.ts 조립)
+        const counts = c({ waiting: 1 + 2 + 3 + 4 + 5 + 6, disputeWaiting: 7, reentryWaiting: 8 })
+        const g = waitingGroupTotals(parts)
+        expect(g.request + g.result).toBe(hubTabTotals(counts).waiting)
     })
 })

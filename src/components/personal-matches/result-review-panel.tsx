@@ -15,6 +15,8 @@ type Props = {
     onConfirm: () => void
     onDispute: (reason: string) => void
     progressLabel?: string  // '2/4명 확인' — 있으면 만장일치 진행도를 안내에 붙인다
+    /** false면 이의 입력으로 바로 시작하고 [결과 확인]·[돌아가기]가 없다 — 이미 확인한 좌석 */
+    confirmable?: boolean
     isPending: boolean
     error: string | null
 }
@@ -23,8 +25,10 @@ type Props = {
  * 결과 검토 패널 — 제안된 게임 스코어를 내 관점으로 보여주고 [확인] 또는 [이의 제기(사유 선택)]를 받는다.
  * 내 확인은 한 표다(0060) — 회원 좌석 전원이 확인한 순간 모두의 기록이 확정되어 이후 수정할 수 없다.
  */
-export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, progressLabel, isPending, error }: Props) {
-    const [disputing, setDisputing] = useState(false)
+export function ResultReviewPanel({
+    opponentName, sets, onConfirm, onDispute, progressLabel, confirmable = true, isPending, error,
+}: Props) {
+    const [disputing, setDisputing] = useState(!confirmable)
     const [reason, setReason] = useState('')
 
     return (
@@ -62,9 +66,11 @@ export function ResultReviewPanel({ opponentName, sets, onConfirm, onDispute, pr
             <DialogFooter showCloseButton>
                 {disputing ? (
                     <>
-                        <Button type="button" variant="ghost" disabled={isPending} onClick={() => setDisputing(false)}>
-                            돌아가기
-                        </Button>
+                        {confirmable && (
+                            <Button type="button" variant="ghost" disabled={isPending} onClick={() => setDisputing(false)}>
+                                돌아가기
+                            </Button>
+                        )}
                         <Button type="button" variant="destructive" disabled={isPending} onClick={() => onDispute(reason)}>
                             {isPending ? '처리 중...' : '이의 제기'}
                         </Button>

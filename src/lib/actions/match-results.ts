@@ -17,16 +17,26 @@ import type { Database } from '@/types/supabase'
  *   dispute  — 제안자가 아닌 좌석이 이의 제기 → 확인 초기화, 재제안 가능
  */
 
-type ActionResult = { error: string | null }
+/**
+ * `stale` = 내 화면이 본 협상 상태가 서버와 달라서 거부됐다(그 사이에 다른 참가자가 제안·확인·이의했다).
+ * 팝업 훅(useResultDialog)이 이 플래그를 보고 router.refresh()로 카드를 최신 상태로 바꾼다 —
+ * 팝업은 닫지 않고 에러 문구를 남겨 "왜 내 입력이 거부됐는가"를 읽을 수 있게 한다.
+ */
+type ActionResult = { error: string | null; stale?: boolean }
 
-/** RPC가 raise하는 식별자 → 사용자 안내 문구 (acceptMatchRequestAction과 동일 패턴) */
-const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
+/**
+ * RPC가 raise하는 식별자 → 사용자 안내 문구 (acceptMatchRequestAction과 동일 패턴).
+ * ⚠ 매칭은 `includes`라 한 키가 다른 키의 접두이면(`result_already_confirmed` ⊂ `…_by_seat`) 짧은 쪽이 먼저
+ * 걸린다. 그래서 목록을 **키 길이 내림차순**으로 정렬해 둔다 — 항목을 추가할 때 순서를 신경 쓰지 않아도 된다.
+ */
+const RESULT_ERROR_MESSAGES: Array<[string, string]> = ([
     ['request_not_found', '존재하지 않는 경기입니다.'],
     ['request_not_accepted', '수락된 상호 확인 경기에만 결과를 등록할 수 있습니다.'],
     ['not_request_party', '이 경기에 참가한 회원만 결과를 등록할 수 있습니다.'],
+    ['negotiation_not_found', '결과 협상 정보를 찾을 수 없습니다. 화면을 새로고침해주세요.'],
     ['result_already_confirmed', '이미 확정된 결과입니다.'],
     ['result_already_proposed', '다른 참가자가 먼저 결과를 제안했습니다. 제안된 결과를 확인해주세요.'],
-    ['result_not_proposed', '확인할 결과 제안이 없습니다.'],
+    ['result_not_proposed', '확인할 결과 제안이 없습니다. 다른 참가자가 이의를 제기했거나 다시 입력했을 수 있습니다.'],
     ['cannot_confirm_own_proposal', '본인이 제안한 결과는 이미 확인한 것으로 칩니다. 남은 참가자의 확인을 기다려주세요.'],
     ['result_already_confirmed_by_seat', '이미 확인한 결과입니다. 남은 참가자의 확인을 기다려주세요.'],
     ['cannot_dispute_own_proposal', '본인이 제안한 결과에는 이의를 제기할 수 없습니다. 제안을 수정해주세요.'],
@@ -36,11 +46,18 @@ const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
     ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
     ['perspective_row_missing', '참가자 기록 일부가 없어 확정하지 못했습니다.'],
     ['result_not_confirmed', '아직 확정되지 않은 결과입니다.'],
-]
+] as Array<[string, string]>).sort((a, b) => b[0].length - a[0].length)
 
-function mapRpcError(message: string, fallback: string): string {
+/** 내 화면이 낡아서 거부된 코드들 — 동시 입력의 다른 한쪽이 먼저 도착했을 때 */
+const STALE_KEYS = new Set([
+    'result_already_proposed', 'result_not_proposed', 'result_already_confirmed',
+    'result_already_confirmed_by_seat', 'negotiation_not_found',
+])
+
+function mapRpcError(message: string, fallback: string): ActionResult {
     const known = RESULT_ERROR_MESSAGES.find(([key]) => message.includes(key))
-    return known ? known[1] : fallback
+    if (!known) return { error: fallback }
+    return { error: known[1], stale: STALE_KEYS.has(known[0]) }
 }
 
 function revalidateResultPaths(viewerId: string, roomId?: string | null) {
@@ -91,7 +108,7 @@ export async function proposeMatchResultAction(
         p_request_id: requestId,
         p_set_scores: payload,
     })
-    if (error) return { error: mapRpcError(error.message, '결과 제안에 실패했습니다.') }
+    if (error) return mapRpcError(error.message, '결과 제안에 실패했습니다.')
 
     revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }
@@ -107,7 +124,7 @@ export async function confirmMatchResultAction(requestId: string): Promise<Actio
     if (!user) return { error: '로그인이 필요합니다.' }
 
     const { data: settled, error } = await supabase.rpc('confirm_match_result', { p_request_id: requestId })
-    if (error) return { error: mapRpcError(error.message, '결과 확인에 실패했습니다.') }
+    if (error) return mapRpcError(error.message, '결과 확인에 실패했습니다.')
 
     // 정산된 경기만 통계·레이팅에 반영되므로 마지막 확인일 때만 본인 캐시 재계산 (나머지 좌석은 다음 CUD에서 갱신)
     if (settled) await recomputePersonalNtrp(user.id)
@@ -128,7 +145,7 @@ export async function disputeMatchResultAction(requestId: string, reason?: strin
         p_request_id: requestId,
         p_reason: trimmed || undefined,
     })
-    if (error) return { error: mapRpcError(error.message, '이의 제기에 실패했습니다.') }
+    if (error) return mapRpcError(error.message, '이의 제기에 실패했습니다.')
 
     revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }
@@ -152,7 +169,7 @@ export async function reopenMatchResultAction(requestId: string, reason?: string
         p_request_id: requestId,
         p_reason: trimmed || undefined,
     })
-    if (error) return { error: mapRpcError(error.message, '결과 정정에 실패했습니다.') }
+    if (error) return mapRpcError(error.message, '결과 정정에 실패했습니다.')
 
     revalidateResultPaths(user.id, await resolveRequestRoomId(supabase, requestId))
     return { error: null }

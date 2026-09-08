@@ -9,6 +9,7 @@ import {
     bystanderWaitingBadge, canReopenResult, canRespondToProposal, disputerNameOf,
 } from '@/lib/personal-matches/confirmation'
 import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
+import { ConfirmedSeatActions } from '@/components/personal-matches/confirmed-seat-actions'
 import { ReopenResultButton } from '@/components/personal-matches/reopen-result-button'
 import { buildAdLabels, formatOpponents, formatTeams } from '@/lib/personal-matches/labels'
 import { RoomFreeGameActions } from '@/components/match-rooms/room-free-game-actions'
@@ -66,7 +67,6 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
         return <span className={WAITING_BADGE} title={badge.title}>{badge.label}</span>
     }
 
-    // 이름 해석용 좌석은 작성자 + 라인업 회원 (0061)
     const disputerName = disputerNameOf(c, [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants])
 
     // 이의(0061) — 개인 경기 카드와 같은 컴포넌트
@@ -84,31 +84,27 @@ export function RoomGameActions({ game, viewerId, confirmation: c }: Props) {
         )
     }
 
+    // 이름 해석·남은 확인자 명단의 좌석 = 작성자 + 라인업 회원 (0061)
+    const seats = [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]
     const reviewMode = canRespondToProposal(c)
     const editingOwn = c.status === 'proposed' && c.proposedByMe
     // 이의를 거친 재제안이면 어느 분기든 "무엇에 대한 답인가"를 먼저 말한다(0062)
     const reentry = <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={WAITING_BADGE} />
-    // 남은 확인자를 이름으로 말한다 — 좌석 이름은 이의자 해석과 같은 출처(작성자 + 라인업 회원)를 쓴다
-    const seatLine = (
-        <SeatConfirmStatusLine
-            confirmation={c}
-            seats={[{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]}
-            className="text-right"
-        />
-    )
+    const seatLine = <SeatConfirmStatusLine confirmation={c} seats={seats} className="text-right" />
 
-    // 내 확인은 끝났고 남은 좌석을 기다린다(0060) — 버튼 없이 배지만
+    // 내 확인은 끝났고 남은 좌석을 기다린다(0060) — [이의 제기]만 남는다(개인 경기 카드와 공용 컴포넌트)
     if (c.status === 'proposed' && !reviewMode && !editingOwn) {
         return (
-            <span className="flex flex-col items-end gap-1">
-                <span className="flex items-center gap-2">
-                    {reentry}
-                    <span className={WAITING_BADGE} title={REMAINING_TITLE}>확인 완료</span>
-                    <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
-                </span>
-                <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
-                {seatLine}
-            </span>
+            <ConfirmedSeatActions
+                requestId={requestId}
+                confirmation={c}
+                opponentName={opponentName}
+                teams={teams}
+                adLabels={buildAdLabels(labels)}
+                disputerName={disputerName}
+                seats={seats}
+                badgeClassName={WAITING_BADGE}
+            />
         )
     }
 

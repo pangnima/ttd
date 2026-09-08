@@ -21,6 +21,8 @@ type ReviewProps = {
     onConfirm: () => void
     onDispute: (reason: string) => void
     progressLabel?: string  // '2/4명 확인' — 복식 만장일치 진행도(0060). 단식은 생략
+    /** false면 [결과 확인] 없이 이의만 — 이미 확인한 좌석(정산 전에는 이의만 남는다, 0060 §7). 기본 true */
+    confirmable?: boolean
 }
 
 type Props = (ProposeProps | ReviewProps) & {
@@ -68,6 +70,7 @@ export function MatchResultDialog(props: Props) {
                         onConfirm={props.onConfirm}
                         onDispute={props.onDispute}
                         progressLabel={props.progressLabel}
+                        confirmable={props.confirmable}
                         isPending={isPending}
                         error={error}
                     />

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchSettledPersonalMatches } from '@/lib/queries/personal-matches'
 import { fetchMatchQueue } from '@/lib/queries/match-queue'
-import { hubTabTotals } from '@/lib/match-requests/hub-totals'
+import { hubTopTotals } from '@/lib/match-requests/hub-totals'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { QueueSummaryBanner } from '@/components/match-requests/queue-summary-banner'
 import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
@@ -25,11 +25,11 @@ export default async function PersonalMatchesPage() {
         fetchSettledPersonalMatches(user.id),
         fetchMatchQueue(user.id),
     ])
-    // 허브로 유도할 미확정 전량 = 세 탭에 그려지는 카드 수의 합 (hub-totals.ts 단일 출처).
+    // 허브로 유도할 미확정 전량 = 두 최상위 탭에 그려지는 카드 수의 합 (hub-totals.ts 단일 출처).
     // 종전에는 counts를 손으로 더해 '이미 게임이 등록된 세션' 몫이 빠져 있었다 —
     // 허브에는 그 카드가 보이는데 배너 숫자에는 없었다.
-    const tabTotals = hubTabTotals(queue.counts)
-    const pendingTotal = tabTotals.mine + tabTotals.waiting + tabTotals.disputed
+    const topTotals = hubTopTotals(queue.counts)
+    const pendingTotal = topTotals.mine + topTotals.waiting
 
     return (
         <PageContainer>

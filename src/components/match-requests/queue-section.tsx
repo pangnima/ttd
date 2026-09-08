@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 
 type Props = {
     title: string
@@ -18,17 +18,26 @@ type Props = {
     count: number
     /** true면 카드 리스트 컨테이너를 씌우지 않는다 — 자식이 박스를 스스로 소유할 때(MatchGroupList) */
     unboxed?: boolean
+    /**
+     * 이 섹션의 카드가 전부 **내 승인**을 기다리는가(참여 수락·결과 확인·이의 재입력). 헤더에 '승인 필요' 필을 단다.
+     * 섹션 단위인 이유: 섹션은 버킷 단위로 균질하고, 카드 박스는 MatchGroupList가 소유해 카드 레벨 테두리는
+     * 닿지 않는 자리가 더 많다. 결과 입력·참가자 채우기는 내 차례지만 승인이 아니라 달지 않는다.
+     */
+    attention?: boolean
     children: ReactNode
 }
 
 /** 확인 요청 허브의 섹션 껍데기 — 제목 + 카드 리스트 컨테이너 */
-export function QueueSection({ title, hint, count, unboxed = false, children }: Props) {
+export function QueueSection({ title, hint, count, unboxed = false, attention = false, children }: Props) {
     if (count === 0) return null
     return (
         <section className="space-y-2">
             <div className="flex items-baseline gap-2 flex-wrap">
                 <h2 className={TYPO.h3}>{title}</h2>
-                <span className="text-caption text-muted-foreground">{count}건{hint && ` · ${hint}`}</span>
+                {attention && <span className={ATTENTION_PILL}>승인 필요</span>}
+                <span className={`text-caption ${attention ? 'text-spot' : 'text-muted-foreground'}`}>
+                    {count}건{hint && ` · ${hint}`}
+                </span>
             </div>
             {unboxed
                 ? <div className="space-y-2">{children}</div>

@@ -37,6 +37,8 @@ export const TYPO = {
 
 // 칩 radius 4px(rounded-sm)
 export const PILL_BASE = 'inline-flex items-center text-caption px-2 py-0.5 rounded-sm border'
+// '승인 필요' 같은 주의 필 — 대기·주의는 spot(docs/color-system.md §4). 클릭 가능한 것에는 쓰지 않는다
+export const ATTENTION_PILL = `${PILL_BASE} border-spot/50 text-spot`
 // 빈 상태도 데이터 카드(CARD_BASE)와 동일한 채워진 surface로 표시 — 라이트 모드 시인성.
 // break-keep: 한글이 글자 단위가 아닌 어절(띄어쓰기) 단위로 줄바꿈되도록.
 export const EMPTY_BLOCK =
