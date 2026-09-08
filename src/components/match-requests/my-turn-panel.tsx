@@ -22,8 +22,7 @@ type Props = {
  * 이의를 거친 협상은 「이의 처리」 탭이 담당한다(0061·0062) — 사이드바 뱃지 = 이 탭 배지 + 이의 탭 배지.
  */
 export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props) {
-    const { counts, pendingMatches, rotationSessions, enteredSessionIds } = queue
-    const entered = new Set(enteredSessionIds)
+    const { counts, pendingMatches, rotationSessions, enteredGamesBySession } = queue
     const byBucket = (bucket: MatchQueueBucket) => pendingMatches.filter((p) => p.bucket === bucket)
 
     // 이미 게임을 넣은 방 세션은 뱃지에서 빠지지만(enteredSessionIds) 카드는 계속 노출한다 —
@@ -64,7 +63,7 @@ export function MyTurnPanel({ queue, viewerId, picker, roomParticipants }: Props
                         picker={picker}
                         viewerId={viewerId}
                         roomParticipants={roomParticipants[s.id] ?? []}
-                        entered={entered.has(s.id)}
+                        enteredGames={enteredGamesBySession.get(s.id) ?? []}
                     />
                 ))}
             </PendingMatchSection>

@@ -32,6 +32,7 @@ export function SaveOutcomeNotice({ outcome, memberCount, listed }: Props) {
                         저장하면 참가자로 넣은 <b className="text-foreground font-medium">회원 {memberCount}명</b>에게
                         참여 요청이 전송됩니다. 수락하면 이 일정이 그분들 화면에도 표시되고, 경기 후에는 누구든 결과를
                         입력할 수 있습니다. 게임을 입력할 때 다시 수락받지는 않습니다.
+                        {' '}수락을 기다리지 않고 결과를 먼저 넣어 둘 수도 있습니다 — 그 스코어는 수락 시점에 이어집니다.
                     </>
                 )}
             </Notice>

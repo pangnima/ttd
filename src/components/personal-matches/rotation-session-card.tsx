@@ -14,28 +14,37 @@ import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
 import { SeatProgressBadge } from '@/components/match-requests/request-acceptance-note'
 import { canManageRotationPool, pendingSeats, poolMemberIds, rejectedSeats } from '@/lib/personal-matches/rotation-participation'
+import {
+    awaitingConsentNote, enteredBadgeLabel, type EnteredRotationGame,
+} from '@/lib/personal-matches/rotation-entered'
 
 type Props = {
     session: RotationSession
     picker: PoolPickerProps
     viewerId: string
     roomParticipants: RoomParticipant[]
-    /** 내가 이미 이 세션에 게임을 넣었는가 (0050 방 세션은 finalize 후에도 남는다) — 라벨만 바뀐다 */
-    entered?: boolean
+    /**
+     * 내가 이미 이 세션에 넣은 게임들 (0063). 종전에는 boolean이었고 판정도 personal_matches만
+     * 봐서, 미수락 회원이 낀 게임은 finalize가 성공해도 '게임 미입력'으로 남았다 —
+     * 사용자가 다시 넣으면 중복 요청이 쌓인다. 이제 목록을 받아 무엇이 들어갔는지 직접 말한다.
+     */
+    enteredGames?: EnteredRotationGame[]
 }
 
 /**
  * 결과 입력 대기 로테이션 세션 카드 — 참가자 요약 + 시각·코트명·메모 + [결과 입력](게임 빌더 Dialog).
  * 방 세션은 참가자 누구에게나 보이고 누구나 게임을 입력할 수 있다(0050). 세션 삭제는 만든 사람만.
  */
-export function RotationSessionCard({ session: s, picker, viewerId, roomParticipants, entered = false }: Props) {
+export function RotationSessionCard({ session: s, picker, viewerId, roomParticipants, enteredGames = [] }: Props) {
     const d = useResultDialog()
     const [isDeleting, startDelete] = useTransition()
     const isOwner = s.userId === viewerId
+    const entered = enteredGames.length > 0
     // 빌더의 '나' = 입력자이므로 카드의 참가자 요약도 같은 풀(세션 풀 ∪ 방 참가자 − 나)로 보여준다
     const pool = useMemo(() => buildBuilderPool(s.players, roomParticipants, viewerId), [s.players, roomParticipants, viewerId])
     const waitingNames = pendingSeats(s.seats).map((seat) => seat.name)
     const declinedNames = rejectedSeats(s.seats).map((seat) => seat.name)
+    const consentNote = awaitingConsentNote(enteredGames, waitingNames.length)
     // 명부 편집은 방 밖 세션에서만 — 방은 '비밀번호 공유 = 초대'라 명단의 권위가 match_room_members다(0058)
     const poolAdmin = canManageRotationPool(s, viewerId)
         ? {
@@ -72,7 +81,7 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                         {/* 참여 진행도(0057) — 주최자가 "누가 아직 답을 안 했는지"를 여기서 본다 */}
                         <SeatProgressBadge seats={s.seats} />
                         <span className={`px-2 py-1 rounded-[4px] text-caption font-bold ${PENDING_RESULT_BADGE}`}>
-                            {entered ? '입력함' : '게임 미입력'}
+                            {enteredBadgeLabel(enteredGames)}
                         </span>
                     </div>
                 </div>
@@ -82,6 +91,9 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                 {declinedNames.length > 0 && (
                     <p className="text-caption text-muted-foreground truncate">거절: {declinedNames.join(' · ')}</p>
                 )}
+                {/* 입력은 됐지만 아직 아무의 기록도 아닌 상태를 화면이 직접 말한다(0063) —
+                    종전에는 저장 후에도 카드가 그대로라 사용자가 실패로 읽고 다시 넣었다 */}
+                {consentNote && <p className="text-caption text-muted-foreground">{consentNote}</p>}
                 <MatchMetaLine playedTime={s.playedTime} courtName={s.courtName} notes={s.notes} className="mt-1 space-y-0.5" />
                 {s.roomId && <RoomLink roomId={s.roomId} className="mt-1 inline-block" />}
                 <div className="flex items-center justify-end gap-2 mt-2">
@@ -103,6 +115,7 @@ export function RotationSessionCard({ session: s, picker, viewerId, roomParticip
                 picker={picker}
                 onSubmit={(games) => d.run(() => finalizeRotationSessionAction(s.id, games))}
                 poolAdmin={poolAdmin}
+                enteredGames={enteredGames}
                 isPending={d.isPending}
                 error={d.error}
             />

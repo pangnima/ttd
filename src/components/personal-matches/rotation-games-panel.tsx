@@ -9,6 +9,8 @@ import { isImmediateGame } from '@/lib/personal-matches/rotation-rep'
 import { GameBuilderSection } from '@/components/personal-matches/rotation/game-builder-section'
 import { PoolEditorBlock, type PoolAdmin, type PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
+import { EnteredGamesBlock } from '@/components/personal-matches/rotation/entered-games-block'
+import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
 type Props = {
     /** 빌더 풀 — 세션 풀 ∪ 방 참가자 − 나. '나'는 로그인한 참가자다(0050) */
@@ -21,6 +23,8 @@ type Props = {
     error: string | null
     /** 세션 명부를 실제로 바꿀 수 있는 화면일 때만 온다 — 방 밖 세션 + 소유자/수락자 (0058) */
     poolAdmin?: Omit<PoolAdmin, 'onLocalAdd'>
+    /** 내가 이미 넣은 게임 — 중복 입력을 막기 위해 상단에 읽기 전용으로 보여준다 (0063) */
+    enteredGames?: EnteredRotationGame[]
 }
 
 /**
@@ -31,7 +35,7 @@ type Props = {
  * 상대팀에 회원이 있는 게임은 상호 확인 경기가 되어 '결과 확인 대기'로 저장되고(입력자의 제안 = 입력자의 확인,
  * 나머지 회원 참가자 전원이 확인해야 확정 — 0060), 상대팀이 전원 비회원인 게임만 즉시 확정된다(0050).
  */
-export function RotationGamesPanel({ pool: initialPool, picker, onSubmit, isPending, error, poolAdmin }: Props) {
+export function RotationGamesPanel({ pool: initialPool, picker, onSubmit, isPending, error, poolAdmin, enteredGames = [] }: Props) {
     const r = useRotationGames(playersToPool(initialPool))
 
     // 0057부터 방 밖 세션도 상대팀에 회원이 있으면 제안 → 회원 참가자 확인을 거친다 —
@@ -50,6 +54,8 @@ export function RotationGamesPanel({ pool: initialPool, picker, onSubmit, isPend
 
     return (
         <div className="space-y-4">
+            {/* 무엇이 이미 들어갔는지 먼저 말한다 — 안 보이면 같은 게임을 다시 넣게 된다(0063) */}
+            <EnteredGamesBlock games={enteredGames} />
             <p className="text-caption text-muted-foreground break-keep">
                 {r.pool.length === 0
                     ? '참가자가 아직 없습니다. 아래에서 추가한 뒤 게임을 구성하세요.'

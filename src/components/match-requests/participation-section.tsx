@@ -29,7 +29,9 @@ export function ParticipationSection({ queue, viewerId }: Props) {
             {received.singles.map((item) => (
                 <ReceivedRequestCard key={item.request.id} item={item} />
             ))}
-            {/* 로테이션 '일정' 초대 — 아직 게임이 없어 요청도 기록도 없는 단계다(0057) */}
+            {/* 로테이션 '일정' 초대 — 게임이 아직 없거나, 있어도 내 좌석이 요청에 없는 세션.
+                주최자가 수락 전에 결과를 먼저 넣으면 같은 세션이 위 묶음 카드와 겹치므로
+                fetchMatchQueue가 상류에서 중복을 걷어낸다(0063) — 여기서는 조건을 두지 않는다 */}
             {queue.sessionInvites.map((s) => (
                 <RotationSessionInviteCard key={s.id} session={s} viewerId={viewerId} />
             ))}

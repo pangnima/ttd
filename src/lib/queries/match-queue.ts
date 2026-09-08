@@ -10,10 +10,16 @@ import {
     EMPTY_QUEUE_COUNTS, classifyPendingMatch, tallyBuckets,
     type MatchQueueBucket, type MatchQueueCounts,
 } from '@/lib/match-requests/queue'
-import { classifyPendingRequest } from '@/lib/match-requests/participants'
+import { classifyPendingRequest, groupRotationRequests } from '@/lib/match-requests/participants'
 import { classifyRotationSession } from '@/lib/personal-matches/rotation-participation'
+import {
+    buildEnteredGames,
+    type EnteredRotationGame, type EnteredRotationSource,
+} from '@/lib/personal-matches/rotation-entered'
 import type { ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
-import type { MatchRoomInvite, PersonalMatch, RotationSession } from '@/types'
+import type {
+    MatchRoomInvite, MatchType, PersonalMatch, PersonalMatchSetScore, RotationSession,
+} from '@/types'
 
 /**
  * 확인 요청 허브 · 개인 경기 결과 요약 배너 · 사이드바 뱃지의 **단일 데이터 소스**.
@@ -49,13 +55,20 @@ export type MatchQueue = {
     rotationSessions: RotationSession[]
     /** 내가 이미 게임을 넣은 방 세션 id — 카드는 계속 보이되 뱃지 카운트에서만 제외 */
     enteredSessionIds: string[]
+    /**
+     * 세션 id → 내가 넣은 게임 목록 (0063). 카드 배지·빌더의 '이미 입력한 게임'이 이걸 읽어
+     * 같은 게임을 두 번 넣는 것을 막는다. 미수락 회원이 낀 게임은 personal_matches가 없어
+     * 요청·협상 행에서 온다 — awaitingConsent가 그 갈래를 표시한다.
+     */
+    enteredGamesBySession: Map<string, EnteredRotationGame[]>
     counts: MatchQueueCounts
 }
 
 const EMPTY_QUEUE: MatchQueue = {
     receivedRequests: [], sentRequests: [], awaitingMemberRequests: [], closedRequests: [], roomInvites: [],
     sessionInvites: [], awaitingOwnerSessions: [],
-    pendingMatches: [], rotationSessions: [], enteredSessionIds: [], counts: EMPTY_QUEUE_COUNTS,
+    pendingMatches: [], rotationSessions: [], enteredSessionIds: [],
+    enteredGamesBySession: new Map(), counts: EMPTY_QUEUE_COUNTS,
 }
 
 /**
@@ -87,7 +100,8 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     }
 
     // 웨이브 3 — 내가 이미 게임을 넣은 세션(0050 이후 방 세션은 finalize 후에도 남는다)
-    const enteredSessionIds = await fetchEnteredSessionIds(userId, rotationSessions.map((s) => s.id))
+    const enteredGames = await fetchEnteredRotationGames(userId, rotationSessions.map((s) => s.id))
+    const enteredSessionIds = enteredGames.ids
 
     const pendingMatches: PendingMatchEntry[] = pending.map((match) => ({
         match, bucket: classifyPendingMatch(match),
@@ -112,13 +126,23 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
     const unenteredSessions = rotationSessions.filter((s) => !entered.has(s.id)).length
     const tallied = tallyBuckets(pendingMatches.map((p) => p.bucket))
 
+    // 같은 세션을 두 장으로 그리지 않는다(0063). 주최자가 수락을 기다리지 않고 결과를 먼저 넣으면
+    // 한 세션이 「게임 참여 확인」(요청)과 「일정 초대」(좌석) 양쪽에 동시에 존재한다 —
+    // 남기는 쪽은 게임 묶음 카드다(스코어·게임 수까지 보여주고, 그 [전체 수락]이 좌석까지 처리한다).
+    const grouped = groupRotationRequests(receivedRequests)
+    const requestedSessionIds = new Set(grouped.sessions.map((s) => s.sessionId))
+    const dedupedInvites = sessionInvites.filter((s) => !requestedSessionIds.has(s.id))
+
     return {
         receivedRequests, sentRequests, awaitingMemberRequests, closedRequests,
         roomInvites: memberships.invites,
-        sessionInvites, awaitingOwnerSessions,
+        sessionInvites: dedupedInvites, awaitingOwnerSessions,
         pendingMatches, rotationSessions, enteredSessionIds,
+        enteredGamesBySession: buildEnteredGames(enteredGames.rows),
         counts: {
-            participation: receivedRequests.length + memberships.invites.length + sessionInvites.length,
+            // 참여 동의의 단위는 게임이 아니라 세션이다(0056) — 3게임 세션은 카드 한 장이므로 1건으로 센다
+            participation: grouped.sessions.length + grouped.singles.length
+                + memberships.invites.length + dedupedInvites.length,
             confirmResult: tallied.confirmResult,
             enterResult: tallied.enterResult + unenteredSessions,
             fillLineup: tallied.fillLineup,
@@ -164,17 +188,72 @@ export function scheduleSlotsOf(queue: MatchQueue): ScheduleSlot[] {
 }
 
 /**
- * 주어진 세션들 중 내 기록이 이미 들어간 세션 id.
+ * 주어진 세션들 중 내가 이미 게임을 넣은 것 — **두 출처를 합친다**(0063).
+ *
  * 확정/미확정을 가리지 않으므로 has_result 필터를 걸지 않는다(즉시 확정된 게임도 '입력함'이다).
+ * personal_matches만 세면 미수락 회원이 낀 게임을 놓친다 — 그 게임은 요청과 협상 행에만 살기
+ * 때문에(0057 §7b), finalize가 성공해도 카드가 '게임 미입력'이라 말하고 사용자가 다시 넣어
+ * 중복 요청이 쌓였다. 요청 쪽은 내가 만든 것(requester_id)만 센다 — '내가 입력했는가'가 질문이다.
  */
-async function fetchEnteredSessionIds(userId: string, sessionIds: string[]): Promise<string[]> {
-    if (sessionIds.length === 0) return []
+async function fetchEnteredRotationGames(
+    userId: string,
+    sessionIds: string[],
+): Promise<{ ids: string[]; rows: EnteredRotationSource[] }> {
+    if (sessionIds.length === 0) return { ids: [], rows: [] }
     const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('personal_matches')
-        .select('rotation_session_id')
-        .eq('user_id', userId)
-        .in('rotation_session_id', sessionIds)
-    if (error || !data) return []
-    return [...new Set(data.map((row) => row.rotation_session_id).filter((id): id is string => !!id))]
+
+    const [matches, requests] = await Promise.all([
+        supabase
+            .from('personal_matches')
+            .select('rotation_session_id, group_seq, match_type, set_scores, participants:personal_match_participants(role, name)')
+            .eq('user_id', userId)
+            .eq('is_perspective', false)
+            .in('rotation_session_id', sessionIds),
+        supabase
+            .from('match_requests')
+            .select('rotation_session_id, group_seq, match_type, opponent:users!match_requests_opponent_user_id_fkey(name), participants:match_request_participants(role, name), negotiation:match_result_negotiations(proposed_set_scores)')
+            .eq('requester_id', userId)
+            .eq('status', 'pending')
+            .in('rotation_session_id', sessionIds),
+    ])
+
+    const rows: EnteredRotationSource[] = []
+
+    for (const row of matches.data ?? []) {
+        if (!row.rotation_session_id) continue
+        const seat = (role: string) => row.participants?.find((p) => p.role === role)?.name ?? ''
+        rows.push({
+            sessionId: row.rotation_session_id,
+            game: {
+                groupSeq: row.group_seq ?? 0,
+                matchType: row.match_type as MatchType,
+                partnerName: seat('partner'),
+                opponentName: seat('opponent'),
+                opponent2Name: seat('opponent2'),
+                sets: (row.set_scores ?? []) as PersonalMatchSetScore[],
+                awaitingConsent: false,
+            },
+        })
+    }
+
+    for (const row of requests.data ?? []) {
+        if (!row.rotation_session_id) continue
+        const seat = (role: string) => row.participants?.find((p) => p.role === role)?.name ?? ''
+        rows.push({
+            sessionId: row.rotation_session_id,
+            game: {
+                groupSeq: row.group_seq ?? 0,
+                matchType: row.match_type as MatchType,
+                partnerName: seat('partner'),
+                // 요청 행은 스코어를 갖지 않는다(0063 §4) — 입력한 값은 협상 행의 제안값에 있다
+                opponentName: row.opponent?.name ?? '',
+                opponent2Name: seat('opponent2'),
+                sets: (row.negotiation?.proposed_set_scores ?? []) as PersonalMatchSetScore[],
+                awaitingConsent: true,
+            },
+        })
+    }
+
+    const ids = [...new Set(rows.map((r) => r.sessionId))]
+    return { ids, rows }
 }
