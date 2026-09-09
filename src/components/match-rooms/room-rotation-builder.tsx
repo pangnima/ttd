@@ -36,7 +36,7 @@ export function RoomRotationBuilder({ session, participants, viewerId, picker, e
 
     return (
         <>
-            <Button variant="ghost" size="sm" className="h-7 text-body2 font-medium text-primary px-0 hover:bg-transparent hover:underline" onClick={d.openDialog}>
+            <Button size="sm" variant="outline" className="h-7 text-caption gap-1" onClick={d.openDialog}>
                 게임 입력
             </Button>
             <RotationGamesDialog

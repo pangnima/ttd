@@ -47,33 +47,36 @@ export function RoomGamesSection({
         <section className="space-y-2">
             <div className="flex items-center justify-between gap-3">
                 <h2 className={TYPO.h3}>게임</h2>
-                {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066) */}
-                {lineupCandidates && lineupCandidates.length > 0 && (
-                    <RoomLineupButton
-                        roomId={detail.room.id}
-                        matchType={detail.room.matchType}
-                        candidates={lineupCandidates}
-                        existingGames={detail.games.length}
-                    />
-                )}
-                {/* 미확정 로테이션 방은 참가자 누구나 자기 기준으로 게임을 넣는다 (0050) */}
-                {isPendingRotation && isMember && rotationSession && picker && (
-                    <RoomRotationBuilder
-                        session={rotationSession}
-                        participants={participants}
-                        viewerId={viewerId}
-                        picker={picker}
-                        enteredGames={sessionGames}
-                    />
-                )}
-                {gameCtx && (
-                    <RoomGameDialog
-                        ctx={gameCtx}
-                        opponentCandidates={opponentCandidates}
-                        pastOpponents={pastOpponents}
-                        selfUserId={viewerId}
-                    />
-                )}
+                {/* 로테이션 방장에게는 버튼 3개가 한꺼번에 보인다 — 좁은 화면에서 제목을 밀지 않도록 감싼다 */}
+                <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
+                    {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066) */}
+                    {lineupCandidates && lineupCandidates.length > 0 && (
+                        <RoomLineupButton
+                            roomId={detail.room.id}
+                            matchType={detail.room.matchType}
+                            candidates={lineupCandidates}
+                            existingGames={detail.games.length}
+                        />
+                    )}
+                    {/* 미확정 로테이션 방은 참가자 누구나 자기 기준으로 게임을 넣는다 (0050) */}
+                    {isPendingRotation && isMember && rotationSession && picker && (
+                        <RoomRotationBuilder
+                            session={rotationSession}
+                            participants={participants}
+                            viewerId={viewerId}
+                            picker={picker}
+                            enteredGames={sessionGames}
+                        />
+                    )}
+                    {gameCtx && (
+                        <RoomGameDialog
+                            ctx={gameCtx}
+                            opponentCandidates={opponentCandidates}
+                            pastOpponents={pastOpponents}
+                            selfUserId={viewerId}
+                        />
+                    )}
+                </div>
             </div>
             {detail.games.length === 0 ? (
                 <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail)}</div>

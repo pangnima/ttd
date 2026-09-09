@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail, MatchRoomGame, MatchRoomSource } from '@/types'
-import { canEditRoomGame, isRoomGameParty, roomGameStatusLabel, roomGamesEmptyMessage } from './game-status'
+import { canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage } from './game-status'
 
 const base: MatchRoomGame = {
     id: 'g1',
@@ -12,21 +12,27 @@ const base: MatchRoomGame = {
     sourceType: 'direct',
 }
 
-describe('roomGameStatusLabel', () => {
-    it('결과가 있으면 칩 없음', () => {
-        expect(roomGameStatusLabel({ ...base, setScores: [{ me: 6, opp: 3 }] })).toBeNull()
+describe('roomGameStatusBadge', () => {
+    it('결과가 있으면 배지 없음 — 그 자리는 결과 배지(WIN/LOSS)가 쓴다', () => {
+        expect(roomGameStatusBadge({ ...base, setScores: [{ me: 6, opp: 3 }] })).toBeNull()
     })
 
     it('자유 기록은 라인업 완성 여부로 갈린다', () => {
-        expect(roomGameStatusLabel(base)).toBe('결과 미입력')
-        expect(roomGameStatusLabel({ ...base, participants: [] })).toBe('모집 중')
+        expect(roomGameStatusBadge(base)).toEqual({ label: '결과 미입력', tone: 'attention' })
+        expect(roomGameStatusBadge({ ...base, participants: [] })).toEqual({ label: '모집 중', tone: 'pending' })
     })
 
     it('상호 확인 게임은 협상 상태를 말한다', () => {
         const mutual: MatchRoomGame = { ...base, sourceType: 'confirmation', sourceRequestId: 'r1' }
-        expect(roomGameStatusLabel({ ...mutual, resultStatus: 'none' })).toBe('결과 미입력')
-        expect(roomGameStatusLabel({ ...mutual, resultStatus: 'proposed' })).toBe('결과 확인 대기')
-        expect(roomGameStatusLabel({ ...mutual, resultStatus: 'disputed' })).toBe('이의 제기')
+        expect(roomGameStatusBadge({ ...mutual, resultStatus: 'none' })?.label).toBe('결과 미입력')
+        expect(roomGameStatusBadge({ ...mutual, resultStatus: 'proposed' })?.label).toBe('결과 확인 대기')
+        expect(roomGameStatusBadge({ ...mutual, resultStatus: 'disputed' })?.label).toBe('이의 제기')
+    })
+
+    it('모집 중만 pending — 나머지는 누군가 손댈 차례라 주의 톤이다', () => {
+        const mutual: MatchRoomGame = { ...base, sourceType: 'confirmation', sourceRequestId: 'r1' }
+        expect(roomGameStatusBadge({ ...mutual, resultStatus: 'proposed' })?.tone).toBe('attention')
+        expect(roomGameStatusBadge({ ...mutual, resultStatus: 'disputed' })?.tone).toBe('attention')
     })
 })
 

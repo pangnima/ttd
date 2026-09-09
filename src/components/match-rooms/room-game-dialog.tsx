@@ -25,14 +25,14 @@ type Props = {
  * 룸을 떠나지 않고 입력을 끝내기 위한 것이므로, 저장·취소 모두 룸에 머문다.
  */
 export function RoomGameDialog({
-    ctx, opponentCandidates, pastOpponents, selfUserId, initialData, triggerLabel = '+ 게임 추가',
+    ctx, opponentCandidates, pastOpponents, selfUserId, initialData, triggerLabel = '게임 추가',
 }: Props) {
     const [open, setOpen] = useState(false)
     const router = useRouter()
 
     return (
         <>
-            <Button variant="ghost" size="sm" className="h-7 text-body2 font-medium text-primary px-0 hover:bg-transparent hover:underline" onClick={() => setOpen(true)}>
+            <Button size="sm" variant="outline" className="h-7 text-caption gap-1" onClick={() => setOpen(true)}>
                 {triggerLabel}
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>

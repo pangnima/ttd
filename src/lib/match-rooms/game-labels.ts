@@ -51,29 +51,39 @@ export function buildRoomGameLabels(game: MatchRoomGame, viewerId: string): Team
     return ownerView
 }
 
+/** 게임 행의 두 팀 — 카드가 팀마다 한 줄을 그리므로 문자열 하나로 뭉치지 않는다 */
+export type RoomGameTeams = { mine: string; theirs: string }
+
 /**
- * 방 상세 게임 행에 찍히는 팀 라인.
+ * 방 상세 게임 행에 찍히는 두 팀.
  *
  * **'나'는 이 게임의 당사자에게만 쓴다.** 방에는 이 게임과 무관한 참가자도 들어와 있고
  * (정원이 없어 한 방에서 여러 조합이 돈다, 0048), 그들에게까지 작성자 자리를 '나'로 바꾸면
  * 남의 게임이 자기 게임처럼 보인다. 제3자에게는 작성자 관점 이름을 그대로 보여준다.
  */
-export function buildRoomGameLine(game: MatchRoomGame, viewerId: string): string {
+export function buildRoomGameTeams(game: MatchRoomGame, viewerId: string): RoomGameTeams {
     const by = (role: string) => game.participants.find((p) => p.role === role)?.name
 
     if (game.ownerUserId === viewerId || !isRoomGameParty(game, viewerId)) {
-        const mine = [game.ownerName, by('partner')].filter(Boolean).join(' · ')
-        return joinTeams(mine, [by('opponent'), by('opponent2')])
+        return joinTeams([game.ownerName, by('partner')], [by('opponent'), by('opponent2')])
     }
 
     const labels = buildRoomGameLabels(game, viewerId)
-    const mine = ['나', labels.partnerName].filter(Boolean).join(' · ')
-    return joinTeams(mine, [labels.opponentName, labels.opponent2Name])
+    return joinTeams(['나', labels.partnerName], [labels.opponentName, labels.opponent2Name])
 }
 
-function joinTeams(mine: string, opponents: Array<string | undefined>): string {
-    const theirs = opponents.filter(Boolean).join(' · ')
-    return `${mine} vs ${theirs || '(참가자 미정)'}`
+/** 한 줄로 뭉친 팀 라인 — 팀을 두 줄로 가르지 않는 자리(요약 문구 등)에서 쓴다 */
+export function buildRoomGameLine(game: MatchRoomGame, viewerId: string): string {
+    const { mine, theirs } = buildRoomGameTeams(game, viewerId)
+    return `${mine} vs ${theirs}`
+}
+
+function joinTeams(mine: Array<string | undefined>, opponents: Array<string | undefined>): RoomGameTeams {
+    return {
+        mine: mine.filter(Boolean).join(' · '),
+        // 모집 중(참가자 미정) 게임도 목록에 오르므로 빈 팀이 공백으로 보이지 않게 문구를 남긴다
+        theirs: opponents.filter(Boolean).join(' · ') || '(참가자 미정)',
+    }
 }
 
 /** 뷰어가 이 게임에서 상대팀(작성자 반대편)에 서 있는가 — 라벨·스코어를 함께 뒤집는 기준 */

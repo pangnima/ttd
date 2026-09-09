@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomGame } from '@/types'
-import { buildRoomGameLabels, buildRoomGameLine, buildRoomGameSets } from './game-labels'
+import { buildRoomGameLabels, buildRoomGameLine, buildRoomGameSets, buildRoomGameTeams } from './game-labels'
 
 const OWNER = 'u-owner'
 const OPP = 'u-opp'
@@ -83,6 +83,34 @@ describe('buildRoomGameLabels — 참가자 미정(모집 중)', () => {
     it('상대 슬롯이 비어 있으면 빈 문자열 (labels.ts가 "미정"으로 렌더)', () => {
         const g: MatchRoomGame = { ...singles(), participants: [] }
         expect(buildRoomGameLabels(g, OWNER).opponentName).toBe('')
+    })
+})
+
+describe('buildRoomGameTeams', () => {
+    it('작성자는 자기 팀이 작성자 관점 그대로다', () => {
+        expect(buildRoomGameTeams(doubles(), OWNER)).toEqual({ mine: '작성자 · 내파트너', theirs: '상대1 · 상대2' })
+    })
+
+    it('상대팀 회원은 팀을 가로질러 나 기준으로 본다', () => {
+        expect(buildRoomGameTeams(doubles(), OPP)).toEqual({ mine: '나 · 상대2', theirs: '작성자 · 내파트너' })
+    })
+
+    it('작성자의 파트너는 팀 안쪽만 바뀐다', () => {
+        expect(buildRoomGameTeams(doubles(), PARTNER)).toEqual({ mine: '나 · 작성자', theirs: '상대1 · 상대2' })
+    })
+
+    it('이 게임과 무관한 방 참가자에게는 나를 쓰지 않는다', () => {
+        // 정원 없는 방(0048)에는 다른 조합의 참가자도 들어와 있다 — 남의 게임이 내 게임처럼 보이면 안 된다
+        expect(buildRoomGameTeams(doubles(), 'u-bystander')).toEqual({ mine: '작성자 · 내파트너', theirs: '상대1 · 상대2' })
+    })
+
+    it('단식 당사자의 내 팀은 나 한 명 — 카드가 그 줄을 접는 기준이다', () => {
+        expect(buildRoomGameTeams(singles(), OPP)).toEqual({ mine: '나', theirs: '작성자' })
+    })
+
+    it('상대가 아직 비어 있으면 모집 문구', () => {
+        const seed: MatchRoomGame = { ...doubles(), participants: [], sourceType: 'direct' }
+        expect(buildRoomGameTeams(seed, OWNER)).toEqual({ mine: '작성자', theirs: '(참가자 미정)' })
     })
 })
 
