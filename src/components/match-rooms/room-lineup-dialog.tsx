@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import type { MatchType } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { createRoomLineupAction } from '@/lib/actions/match-rooms'
-import { TYPO } from '@/lib/dashboard/tokens'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { LineupOptions } from '@/components/match-rooms/form-sections/lineup-options'
+import { RoomLineupNotices } from '@/components/match-rooms/room-lineup-notices'
 import { RoomLineupPreview } from '@/components/match-rooms/room-lineup-preview'
 import { useRoomLineup } from '@/components/match-rooms/use-room-lineup'
 
@@ -18,18 +18,22 @@ type Props = {
     roomId: string
     matchType: MatchType
     candidates: OpponentCandidate[]
-    /** 이미 저장된 게임 수 — 대진은 덮어쓰지 않고 이어붙이므로 미리 알린다 */
+    /** 이미 저장된 게임 수 — 대진은 덮어쓰지 않고 이어붙인다 */
     existingGames: number
 }
 
 /**
  * 자동 대진표 다이얼로그 — 옵션을 바꾸면 미리보기가 즉시 다시 그려지고, [저장]에서만 방에 반영된다.
  * 저장된 대진은 스코어가 없는 게임들이므로 그대로 방 게임 목록에 뜨고, 결과 입력부터는 기존 경로다.
+ *
+ * 골격은 헤더·푸터 고정 + 본문만 스크롤이다. 옵션이 길어 결과와 [저장]이 스크롤 아래로 묻히던 것을
+ * DialogFooter(구분선 + bg-muted/50)로 바닥에 붙였다.
  */
 export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candidates, existingGames }: Props) {
     const lineup = useRoomLineup({ candidates, matchType })
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [optionsOpen, setOptionsOpen] = useState(true)
     const router = useRouter()
 
     async function handleSave() {
@@ -51,40 +55,40 @@ export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candid
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>자동 대진표</DialogTitle>
                 </DialogHeader>
 
-                {existingGames > 0 && (
-                    <p className={`${TYPO.caption} text-spot break-keep`}>
-                        이미 게임 {existingGames}개가 있습니다. 새 대진은 덮어쓰지 않고 이어서 추가됩니다.
-                    </p>
-                )}
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+                    <LineupOptions
+                        candidates={candidates}
+                        included={lineup.included}
+                        onToggle={lineup.toggle}
+                        perPlayer={lineup.perPlayer}
+                        onPerPlayerChange={lineup.setPerPlayer}
+                        preset={lineup.preset}
+                        onPresetChange={lineup.setPreset}
+                        gameCount={lineup.gameCount}
+                        open={optionsOpen}
+                        onOpenChange={setOptionsOpen}
+                    />
+                    <RoomLineupNotices
+                        existingGames={existingGames}
+                        warnings={lineup.result.warnings}
+                        error={error}
+                    />
+                    <RoomLineupPreview result={lineup.result} nameOf={lineup.nameOf} />
+                </div>
 
-                <LineupOptions
-                    candidates={candidates}
-                    included={lineup.included}
-                    onToggle={lineup.toggle}
-                    perPlayer={lineup.perPlayer}
-                    onPerPlayerChange={lineup.setPerPlayer}
-                    preset={lineup.preset}
-                    onPresetChange={lineup.setPreset}
-                    gameCount={lineup.gameCount}
-                />
-
-                <RoomLineupPreview result={lineup.result} nameOf={lineup.nameOf} />
-
-                {error && <p className={`${TYPO.caption} text-destructive break-keep`}>{error}</p>}
-
-                <div className="flex justify-end gap-2">
+                <DialogFooter>
                     <Button variant="outline" onClick={lineup.reroll} disabled={saving}>
                         다시 뽑기
                     </Button>
                     <Button onClick={handleSave} disabled={saving || lineup.result.games.length === 0}>
                         {saving ? '저장 중…' : `${lineup.result.games.length}경기 저장`}
                     </Button>
-                </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

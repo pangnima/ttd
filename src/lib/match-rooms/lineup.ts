@@ -1,4 +1,5 @@
 import type { MatchType } from '@/types'
+import { derivePublicNtrp } from '@/lib/personal-matches/ntrp'
 import {
     commitLineup,
     courtNeed,
@@ -27,6 +28,7 @@ export type LineupCandidate = {
     name: string
     ntrp?: number
     personalNtrp?: number
+    statsHidden?: boolean
     gender?: 'male' | 'female'
     isGuest: boolean
 }
@@ -36,11 +38,13 @@ const FALLBACK_NTRP = 3.0
 
 /**
  * 방 참가자 → 배치 대상.
- * NTRP는 룸 규칙(`personalNtrp ?? ntrp`, rotation-pool.ts와 같은 우선순위)을 따르고,
- * 둘 다 없으면 아는 사람들의 평균으로 채운다 — 평점이 없다고 대진에서 빠지면 안 되기 때문.
+ * NTRP는 `derivePublicNtrp`(DB `derive_public_ntrp`의 미러)를 따른다 — **화면에 보이는 값과 같아야 한다**.
+ * 옵션 칩이 통계 비공개 회원의 자가선언 값을 보여주는데 배치는 개인 NTRP로 하면,
+ * 3.0이라고 써 놓고 3.42로 균형을 맞추는 셈이 된다.
+ * 값이 없으면 아는 사람들의 평균으로 채운다 — 평점이 없다고 대진에서 빠지면 안 되기 때문.
  */
 export function toLineupPlayers(candidates: LineupCandidate[]): LineupPlayer[] {
-    const ntrpOf = (c: LineupCandidate) => c.personalNtrp ?? c.ntrp
+    const ntrpOf = (c: LineupCandidate) => derivePublicNtrp(c)
     const known = candidates.map(ntrpOf).filter((n): n is number => typeof n === 'number' && n > 0)
     const fallback = known.length > 0 ? known.reduce((sum, n) => sum + n, 0) / known.length : FALLBACK_NTRP
     return candidates.map((c) => ({
@@ -60,10 +64,11 @@ export const LINEUP_PRESET_WEIGHTS: Record<LineupPreset, LineupWeights> = {
     variety: { skill: 0.5, fairness: 1, variety: 2 },
 }
 
+// 라벨은 짧게 — 토글이 좁은 열에 들어가므로 길면 줄바꿈된다. 자세한 설명은 hint가 아래 줄에서 한다
 export const LINEUP_PRESETS: { value: LineupPreset; label: string; hint: string }[] = [
     { value: 'balanced', label: '균형', hint: '실력 차이와 파트너 섞기를 고르게 반영합니다.' },
-    { value: 'skill', label: '실력 균형 우선', hint: '팀 전력 차이를 가장 먼저 줄입니다. 접전 위주.' },
-    { value: 'variety', label: '골고루 섞기 우선', hint: '같은 파트너·상대가 반복되지 않게 합니다.' },
+    { value: 'skill', label: '실력 우선', hint: '팀 전력 차이를 가장 먼저 줄입니다. 접전 위주.' },
+    { value: 'variety', label: '섞기 우선', hint: '같은 파트너·상대가 반복되지 않게 합니다.' },
 ]
 
 /** 방 하나에 만들 수 있는 게임 수 상한 — 로테이션 finalize(MAX_GAMES)와 같은 값 */

@@ -27,13 +27,20 @@ const SIX = [
 const keysOf = (g: LineupGame) => [...g.team1, ...g.team2].map((x) => x.key)
 
 describe('toLineupPlayers — 방 참가자를 배치 대상으로', () => {
-    it('NTRP는 personalNtrp ?? ntrp — 룸 풀(rotation-pool)과 같은 우선순위다', () => {
+    it('NTRP는 derivePublicNtrp — 개인 NTRP가 있으면 그것을 쓴다', () => {
         const [a, b] = toLineupPlayers([
             { id: 'a', name: 'A', ntrp: 3.0, personalNtrp: 4.2, isGuest: false },
             { id: 'b', name: 'B', ntrp: 2.5, isGuest: false },
         ])
         expect(a.ntrp).toBe(4.2)
         expect(b.ntrp).toBe(2.5)
+    })
+
+    it('통계 비공개 회원은 자가선언 값으로 배치된다 — 칩에 보이는 숫자와 같아야 한다', () => {
+        const [a] = toLineupPlayers([
+            { id: 'a', name: 'A', ntrp: 3.0, personalNtrp: 4.2, statsHidden: true, isGuest: false },
+        ])
+        expect(a.ntrp).toBe(3.0)
     })
 
     it('평점이 없는 참가자는 아는 사람들의 평균으로 채운다 — 평점이 없다고 빠지면 안 된다', () => {
