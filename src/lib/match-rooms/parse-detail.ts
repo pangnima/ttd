@@ -49,6 +49,10 @@ function toMember(v: unknown): MatchRoomMember | null {
         role: (str(v.role) ?? 'player') as MatchRoomMemberRole,
         status: (str(v.status) ?? 'joined') as MatchRoomMemberStatus,
         sourceRole: str(v.sourceRole) as MatchRoomSourceRole | undefined,
+        ntrp: num(v.ntrp),
+        hand: v.hand === 'right' || v.hand === 'left' ? v.hand : undefined,
+        racketBrand: str(v.racketBrand),
+        racketModel: str(v.racketModel),
     }
 }
 

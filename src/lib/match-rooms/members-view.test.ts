@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail } from '@/types'
-import { buildMemberRows } from './members-view'
+import { buildMemberRows, memberMetaLine, type MemberRowView } from './members-view'
 
 const base: MatchRoomDetail = {
     room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', isSettled: false, createdAt: '' },
@@ -44,5 +44,37 @@ describe('buildMemberRows', () => {
             ],
         })
         expect(rows.filter((r) => r.name === '외부상대')).toHaveLength(1)
+    })
+})
+
+describe('memberMetaLine — 행 2줄째의 부가 정보', () => {
+    const row = (extra: Partial<MemberRowView>): MemberRowView => ({
+        key: 'm:x', name: 'X', statusLabel: '참가', ...extra,
+    })
+
+    it('닉네임 · 주력손 · 라켓을 잇는다', () => {
+        expect(memberMetaLine(row({
+            nickname: '길동이', hand: 'right', racketBrand: '윌슨', racketModel: '프로스태프',
+        }))).toBe('길동이 · 오른손 · 윌슨 · 프로스태프')
+    })
+
+    it('빈 항목은 통째로 빠진다 — 자리 표시자를 남기지 않는다', () => {
+        expect(memberMetaLine(row({ hand: 'left' }))).toBe('왼손')
+        expect(memberMetaLine(row({ racketBrand: '바볼랏' }))).toBe('바볼랏')
+        expect(memberMetaLine(row({ nickname: '닉' }))).toBe('닉')
+    })
+
+    it("라켓이 없으면 '미입력'이 새어 나오지 않는다 — 명단에 미입력이 늘어서면 소음이다", () => {
+        const line = memberMetaLine(row({ nickname: '닉', hand: 'right' }))
+        expect(line).toBe('닉 · 오른손')
+        expect(line).not.toContain('미입력')
+    })
+
+    it('메타가 하나도 없는 비회원 행은 빈 문자열 — 컴포넌트가 줄을 통째로 생략한다', () => {
+        expect(memberMetaLine(row({ key: 'g:게스트' }))).toBe('')
+    })
+
+    it('모르는 손잡이 값은 버린다', () => {
+        expect(memberMetaLine(row({ hand: 'both' as unknown as 'right', nickname: '닉' }))).toBe('닉')
     })
 })

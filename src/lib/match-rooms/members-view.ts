@@ -1,4 +1,5 @@
 import type { MatchRoomDetail, MatchRoomMember } from '@/types'
+import { formatDominantHand, formatRacket } from '@/lib/profile/signup-fields'
 
 /**
  * 방 상세 참가자 명단 행 — 멤버 테이블(회원) + 출처 기록의 비회원 참가자 + 수락 전 대표 확인자를 한 목록으로 합친다.
@@ -13,6 +14,25 @@ export type MemberRowView = {
     userId?: string
     deleted?: boolean
     statusLabel: string
+    /** 프로필 메타(0067) — 회원 행에만 있다. 비회원은 users 행이 없어 전부 undefined */
+    ntrp?: number
+    hand?: 'right' | 'left'
+    racketBrand?: string
+    racketModel?: string
+}
+
+/**
+ * 행 2줄째에 붙는 부가 정보 한 줄 — 닉네임 · 주력손 · 라켓.
+ *
+ * 비어 있는 항목은 통째로 빠진다. 특히 라켓은 formatRacket이 '미입력'을 반환하지만
+ * 여기서는 그 경우 항목 자체를 넣지 않는다 — 명단에 '미입력'이 다섯 줄 늘어서면 소음이다.
+ * NTRP는 이 줄에 넣지 않는다(배지로 따로 그려 어떤 폭에서도 잘리지 않게 한다).
+ */
+export function memberMetaLine(row: MemberRowView): string {
+    const racket = formatRacket(row.racketBrand, row.racketModel)
+    return [row.nickname, formatDominantHand(row.hand), racket === '미입력' ? undefined : racket]
+        .filter(Boolean)
+        .join(' · ')
 }
 
 const ORDER: Record<string, number> = {
@@ -37,6 +57,10 @@ function memberRow(m: MatchRoomMember): MemberRowView | null {
         userId: m.userId,
         deleted: m.deleted,
         statusLabel,
+        ntrp: m.ntrp,
+        hand: m.hand,
+        racketBrand: m.racketBrand,
+        racketModel: m.racketModel,
     }
 }
 

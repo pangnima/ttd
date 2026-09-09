@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
+import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
 
 type Props = { row: MemberRowView }
 
@@ -12,7 +13,7 @@ const STATUS_CLASS: Record<string, string> = {
     '확인 대기': 'border-spot/50 text-spot',
 }
 
-/** 명단 1행 — 아바타·이름(회원이면 프로필 링크)·상태 칩 */
+/** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·상태 칩 / 2줄: NTRP·주력손·라켓 */
 export function RoomMemberRow({ row }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
@@ -30,7 +31,7 @@ export function RoomMemberRow({ row }: Props) {
                 {row.userId && !row.deleted ? (
                     <ProfileLink userId={row.userId} isGuest={false} className="hover:underline">{name}</ProfileLink>
                 ) : name}
-                {row.nickname && <p className="text-caption text-muted-foreground truncate">{row.nickname}</p>}
+                <MemberMetaLine row={row} />
             </div>
             <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
                 {row.statusLabel}

@@ -315,6 +315,12 @@ export type MatchRoomMember = {
     role: MatchRoomMemberRole
     status: MatchRoomMemberStatus
     sourceRole?: MatchRoomSourceRole
+    // 명단 표시용 프로필 메타 (0067). ntrp는 derive_public_ntrp를 통과한 공개값이라
+    // 통계 비공개 회원의 개인 NTRP가 들어오지 않는다 — 앱은 값이 오면 그릴 뿐이다
+    ntrp?: number
+    hand?: 'right' | 'left'
+    racketBrand?: string
+    racketModel?: string
 }
 
 export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }

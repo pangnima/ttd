@@ -87,3 +87,11 @@ export function formatRacket(brand: string | null | undefined, model: string | n
     if (!brand && !model) return '미입력'
     return [brand, model].filter(Boolean).join(' · ')
 }
+
+/**
+ * 표시용 손잡이 라벨 — 값이 없거나 모르는 값이면 undefined(항목을 통째로 빼라는 뜻).
+ * HAND_OPTIONS가 정본이므로 라벨을 여기서 파생한다.
+ */
+export function formatDominantHand(v: string | null | undefined): string | undefined {
+    return HAND_OPTIONS.find((o) => o.value === v)?.label
+}
