@@ -222,68 +222,20 @@ function canSatisfyMemberRule(players: LineupPlayer[], type: MatchType, opts: Li
     return members >= 2
 }
 
-/** 한 자리(코트·게임)에 채울 선수 묶음 선택. 채울 수 없으면 null. */
-export function selectPlayers(
-    type: MatchType,
-    available: LineupPlayer[],
-    state: LineupState,
-    opts: LineupOptions,
-): LineupPlayer[] | null {
+/**
+ * 성별 구성이 요구와 얼마나 어긋나는가. hard 모드에서는 풀을 이미 성별로 걸러 언제나 0이고,
+ * soft 모드에서는 이 값이 비용의 최우선 항이 되어 "가능하면 맞추되 사람을 빼지는 않는다"가 된다.
+ */
+function genderPenalty(group: LineupPlayer[], type: MatchType): number {
+    if (type === 'singles') return 0
     const need = courtNeed(type)
-
-    // 적게 뛴 선수 우선 + 같은 조건이면 NTRP로 1차 정렬 (스킬 밴드 형성용)
-    const byFairness = (a: LineupPlayer, b: LineupPlayer) => {
-        const d = getCount(state.playCount, a.key) - getCount(state.playCount, b.key)
-        if (d !== 0) return d
-        return a.ntrp - b.ntrp
-    }
-
-    const pickBest = (groups: LineupPlayer[][]): LineupPlayer[] | null => {
-        let best: LineupPlayer[] | null = null
-        let bestCost = Infinity
-        for (const group of groups) {
-            if (!canSatisfyMemberRule(group, type, opts)) continue
-            const cost = groupCost(group, type, state, opts)
-            if (cost < bestCost) {
-                bestCost = cost
-                best = group
-            }
-        }
-        return best
-    }
-
-    if (type === 'mixed_doubles') {
-        const males = available.filter((p) => p.gender === 'male').sort(byFairness)
-        const females = available.filter((p) => p.gender === 'female').sort(byFairness)
-        if (males.length >= 2 && females.length >= 2) {
-            // 공평성 상위 shortlist에서만 조합 탐색 (남2 + 여2)
-            const mShort = males.slice(0, Math.min(males.length, 4))
-            const fShort = females.slice(0, Math.min(females.length, 4))
-            const groups: LineupPlayer[][] = []
-            for (const m of combinations(mShort, 2)) {
-                for (const f of combinations(fShort, 2)) groups.push([...m, ...f])
-            }
-            const best = pickBest(groups)
-            if (best || opts.genderMode === 'hard') return best
-        } else if (opts.genderMode === 'hard') {
-            return null
-        }
-        // soft: 성별 구성을 맞출 수 없으면 성별을 가리지 않고 4명을 뽑는다(참가자가 누락되지 않게)
-    } else if (type === 'men_doubles' || type === 'women_doubles') {
-        const wanted = type === 'men_doubles' ? 'male' : 'female'
-        const pool = available.filter((p) => p.gender === wanted)
-        if (pool.length >= need.size) {
-            const best = pickBest(shortlistCombos(pool, need.size, byFairness))
-            if (best || opts.genderMode === 'hard') return best
-        } else if (opts.genderMode === 'hard') {
-            return null
-        }
-        // soft: 같은 성별로 못 채우면 전체 풀에서 채운다
-    }
-
-    if (available.length < need.size) return null
-    return pickBest(shortlistCombos(available, need.size, byFairness))
+    const males = group.filter((p) => p.gender === 'male').length
+    const females = group.filter((p) => p.gender === 'female').length
+    return Math.abs(males - need.male) + Math.abs(females - need.female)
 }
+
+/** 성별 불일치는 실력·공평성·다양성 어떤 비용보다 우선한다 */
+const GENDER_PENALTY_WEIGHT = 1000
 
 /** 공평성 상위 shortlist(size + 3명)로 좁힌 뒤 size 조합 전수 */
 function shortlistCombos(
@@ -293,6 +245,81 @@ function shortlistCombos(
 ): LineupPlayer[][] {
     const shortlist = [...pool].sort(byFairness).slice(0, Math.min(pool.length, size + 3))
     return combinations(shortlist, size)
+}
+
+/**
+ * 한 자리(코트·게임)에 채울 선수 묶음 선택. 채울 수 없으면 null.
+ *
+ * `mandatory`는 **반드시 들어가야 하는 선수**다 — 룸이 "덜 뛴 사람은 무조건 다음 게임에" 규칙으로
+ * 출전 편차를 1 이내로 묶을 때 쓴다. 격자(클럽)는 빈 배열이라 경로가 달라지지 않는다.
+ */
+export function selectPlayers(
+    type: MatchType,
+    available: LineupPlayer[],
+    state: LineupState,
+    opts: LineupOptions,
+    mandatory: LineupPlayer[] = [],
+): LineupPlayer[] | null {
+    const need = courtNeed(type)
+    const take = need.size - mandatory.length
+    if (take < 0) return null
+
+    const fixed = new Set(mandatory.map((p) => p.key))
+    const rest = mandatory.length > 0 ? available.filter((p) => !fixed.has(p.key)) : available
+
+    // 적게 뛴 선수 우선 + 같은 조건이면 NTRP로 1차 정렬 (스킬 밴드 형성용)
+    const byFairness = (a: LineupPlayer, b: LineupPlayer) => {
+        const d = getCount(state.playCount, a.key) - getCount(state.playCount, b.key)
+        if (d !== 0) return d
+        return a.ntrp - b.ntrp
+    }
+
+    const pickBest = (combos: LineupPlayer[][]): LineupPlayer[] | null => {
+        let best: LineupPlayer[] | null = null
+        let bestCost = Infinity
+        for (const combo of combos) {
+            const group = mandatory.length > 0 ? [...mandatory, ...combo] : combo
+            if (group.length !== need.size) continue
+            if (!canSatisfyMemberRule(group, type, opts)) continue
+            const cost =
+                GENDER_PENALTY_WEIGHT * genderPenalty(group, type) + groupCost(group, type, state, opts)
+            if (cost < bestCost) {
+                bestCost = cost
+                best = group
+            }
+        }
+        return best
+    }
+
+    if (opts.genderMode === 'soft') {
+        // 룸: 모인 사람은 다 뛴다. 성별은 걸러 내지 않고 비용의 최우선 항으로만 반영한다
+        if (rest.length < take) return null
+        return pickBest(shortlistCombos(rest, take, byFairness))
+    }
+
+    // 격자(hard): 성별이 안 맞는 사람은 후보에서 제외한다
+    if (type === 'mixed_doubles') {
+        const males = rest.filter((p) => p.gender === 'male').sort(byFairness)
+        const females = rest.filter((p) => p.gender === 'female').sort(byFairness)
+        if (males.length < 2 || females.length < 2) return null
+        // 공평성 상위 shortlist에서만 조합 탐색 (남2 + 여2)
+        const mShort = males.slice(0, Math.min(males.length, 4))
+        const fShort = females.slice(0, Math.min(females.length, 4))
+        const combos: LineupPlayer[][] = []
+        for (const m of combinations(mShort, 2)) {
+            for (const f of combinations(fShort, 2)) combos.push([...m, ...f])
+        }
+        return pickBest(combos)
+    }
+
+    const pool =
+        type === 'men_doubles'
+            ? rest.filter((p) => p.gender === 'male')
+            : type === 'women_doubles'
+              ? rest.filter((p) => p.gender === 'female')
+              : rest // singles: 성별 무관
+    if (pool.length < take) return null
+    return pickBest(shortlistCombos(pool, take, byFairness))
 }
 
 /** 배치 확정 후 누적 상태(경기 수·파트너·상대) 갱신 */
