@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { MatchRoomSummary } from '@/types'
 import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import type { RoomTurnSummary } from '@/lib/match-rooms/room-turn'
 import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
 
 type Props = {
@@ -11,10 +12,12 @@ type Props = {
     emptyHint?: string
     /** 빈 상태에서 유도할 링크 — 문구는 emptyHint */
     emptyHref?: string
+    /** roomId → 내 차례 (매칭 리스트 작업 큐, Week 39) */
+    turns?: Map<string, RoomTurnSummary>
 }
 
 /** 매칭 리스트의 방 목록 한 덩어리 — 빈 상태 문구까지 포함한다 */
-export function RoomListSection({ rooms, title, emptyTitle, emptyHint, emptyHref }: Props) {
+export function RoomListSection({ rooms, title, emptyTitle, emptyHint, emptyHref, turns }: Props) {
     if (rooms.length === 0 && !emptyTitle) return null
 
     return (
@@ -39,7 +42,7 @@ export function RoomListSection({ rooms, title, emptyTitle, emptyHint, emptyHref
                 </div>
             ) : (
                 <div className={`${CARD_BASE} divide-y divide-border`}>
-                    {rooms.map((room) => <MatchRoomCard key={room.id} room={room} />)}
+                    {rooms.map((room) => <MatchRoomCard key={room.id} room={room} turn={turns?.get(room.id)} />)}
                 </div>
             )}
         </section>

@@ -2,7 +2,7 @@ import type { MatchQueue } from '@/lib/queries/match-queue'
 import { groupRotationRequests } from '@/lib/match-requests/participants'
 import { QueueSection } from '@/components/match-requests/queue-section'
 import { ReceivedRequestCard } from '@/components/match-requests/received-request-card'
-import { RoomInviteCard } from '@/components/match-requests/room-invite-card'
+import { RoomInviteCard } from '@/components/match-rooms/room-invite-card'
 import { RotationRequestGroupCard } from '@/components/match-requests/rotation-request-group-card'
 import { RotationSessionInviteCard } from '@/components/match-requests/rotation-session-invite-card'
 

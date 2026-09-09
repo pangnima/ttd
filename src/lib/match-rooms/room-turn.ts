@@ -1,4 +1,5 @@
 import type { MatchRoomGame, PersonalMatchConfirmation } from '@/types'
+import type { MatchQueueBucket } from '@/lib/match-requests/queue'
 import { isLineupCompleteByRoles } from '@/lib/personal-matches/lineup'
 import { canRespondToProposal, hasDisputeHistory, isReentryTurn } from '@/lib/personal-matches/confirmation'
 import { isRoomGameParty, canEditRoomGame } from '@/lib/match-rooms/game-status'
@@ -79,6 +80,15 @@ export function classifyRoomGameTurn(
 
 export type RoomTurnSummary = { turn: Exclude<RoomGameTurn, 'none'>; count: number }
 
+/** 여러 차례 중 가장 급한 하나 + 그 건수. 'none'은 세지 않는다 */
+function pickTurn(turns: RoomGameTurn[]): RoomTurnSummary | null {
+    for (const turn of TURN_PRIORITY) {
+        const count = turns.filter((t) => t === turn).length
+        if (count > 0) return { turn: turn as Exclude<RoomGameTurn, 'none'>, count }
+    }
+    return null
+}
+
 /**
  * 룸 전체에서 뷰어가 지금 할 일 하나 — 없으면 null(할 일도 기다릴 것도 없다).
  * 같은 차례가 여러 건이면 건수를 함께 돌려 "N건"을 말할 수 있게 한다.
@@ -88,12 +98,58 @@ export function viewerRoomTurn(
     viewerId: string,
     confirmations: Record<string, PersonalMatchConfirmation>,
 ): RoomTurnSummary | null {
-    const turns = games.map((g) =>
-        classifyRoomGameTurn(g, viewerId, g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined))
+    return pickTurn(games.map((g) =>
+        classifyRoomGameTurn(g, viewerId, g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined)))
+}
 
-    for (const turn of TURN_PRIORITY) {
-        const count = turns.filter((t) => t === turn).length
-        if (count > 0) return { turn: turn as Exclude<RoomGameTurn, 'none'>, count }
+// ── 매칭 리스트 롤업 ──
+//
+// 룸 상세는 방의 **대표 게임**(get_match_room_detail)을 보지만, 목록은 그 방들을 다 열어 볼 수 없다.
+// 대신 이미 한 벌 조회해 둔 내 미확정 행(fetchMatchQueue의 B축)을 room_id로 접는다 —
+// 버킷은 같은 규칙(classifyPendingMatch)에서 나왔으므로 어휘만 맞추면 된다.
+
+const BUCKET_TO_TURN: Record<MatchQueueBucket, RoomGameTurn> = {
+    confirmResult: 'confirmResult',
+    enterResult: 'enterResult',
+    fillLineup: 'fillLineup',
+    reenterResult: 'reenterResult',
+    reentryReview: 'reentryReview',
+    awaitingCounterpart: 'waiting',
+    awaitingReentry: 'waiting',
+    awaitingReentryConfirm: 'waiting',
+}
+
+/** 허브 버킷 → 룸 차례. 대기 3종은 목록에서 구분할 이유가 없어 하나로 접는다 */
+export function turnOfBucket(bucket: MatchQueueBucket): RoomGameTurn {
+    return BUCKET_TO_TURN[bucket]
+}
+
+/** 룸 카드에 붙는 짧은 필 — 배너 문장(ROOM_TURN_LABEL)과 같은 판정, 다른 길이 */
+export const ROOM_TURN_PILL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
+    reenterResult: '다시 입력',
+    reentryReview: '결과 확인',
+    confirmResult: '결과 확인',
+    enterResult: '결과 입력',
+    fillLineup: '참가자 채우기',
+    waiting: '상대 대기',
+}
+
+/** 미확정 행들을 방 단위로 접는다 — roomId가 없는 행(방 밖 기록)은 버린다 */
+export function rollUpRoomTurns(
+    rows: ReadonlyArray<{ roomId?: string; turn: RoomGameTurn }>,
+): Map<string, RoomTurnSummary> {
+    const byRoom = new Map<string, RoomGameTurn[]>()
+    for (const row of rows) {
+        if (!row.roomId) continue
+        const list = byRoom.get(row.roomId)
+        if (list) list.push(row.turn)
+        else byRoom.set(row.roomId, [row.turn])
     }
-    return null
+
+    const result = new Map<string, RoomTurnSummary>()
+    for (const [roomId, turns] of byRoom) {
+        const summary = pickTurn(turns)
+        if (summary) result.set(roomId, summary)
+    }
+    return result
 }

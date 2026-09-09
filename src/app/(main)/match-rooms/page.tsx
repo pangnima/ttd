@@ -2,11 +2,14 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyRoomIds, fetchOpenRoomCount, fetchRoomPage, type RoomPage } from '@/lib/queries/match-rooms'
+import { fetchRoomQueue } from '@/lib/queries/room-queue'
 import { todayIsoKst } from '@/lib/match-rooms/split'
 import { parseRoomCursor } from '@/lib/match-rooms/room-cursor'
 import { resolveRoomListTab, roomListTabMeta, ROOM_LIST_TABS } from '@/lib/match-rooms/tabs'
+import { isMyRoomTurn } from '@/lib/match-rooms/room-turn'
 import { LinkTabs } from '@/components/common/link-tabs'
-import { RoomListSection } from '@/components/match-rooms/room-list-section'
+import { RoomInvitesSection } from '@/components/match-rooms/room-invites-section'
+import { RoomListBody } from '@/components/match-rooms/room-list-body'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
@@ -36,7 +39,10 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
     const todayIso = todayIsoKst()
     const meta = roomListTabMeta(activeTab)
 
-    const [myRoomIds, openCount] = await Promise.all([fetchMyRoomIds(user.id), fetchOpenRoomCount(todayIso)])
+    // 작업 큐(Week 39) — fetchMatchQueue는 React cache라 레이아웃 뱃지와 쿼리를 공유한다
+    const [myRoomIds, openCount, roomQueue] = await Promise.all([
+        fetchMyRoomIds(user.id), fetchOpenRoomCount(todayIso), fetchRoomQueue(user.id),
+    ])
 
     // '내가 참여한'은 커서를 넘기는 동안 종료 섹션만 보여준다(진행 중은 첫 페이지 전용)
     const [mineUpcoming, page] = await Promise.all([
@@ -48,8 +54,8 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
             : fetchRoomPage(user.id, activeTab, todayIso, { cursor }),
     ])
 
-    const mineEmpty = activeTab === 'mine' && !cursor
-        && (mineUpcoming?.rooms.length ?? 0) === 0 && page.rooms.length === 0
+    const hasMyTurn = roomQueue.invites.length > 0
+        || [...roomQueue.turns.values()].some((t) => isMyRoomTurn(t.turn))
 
     return (
         <PageContainer>
@@ -70,27 +76,21 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 items={ROOM_LIST_TABS.map((t) => ({
                     ...t,
                     count: t.key === 'open' ? openCount : t.key === 'mine' ? myRoomIds.length : undefined,
-                    emphasis: t.key === 'mine',
+                    // '내 차례 있음'은 숫자가 아니라 강조색이 전달한다 — 실제로 할 일이 있을 때만 켠다
+                    emphasis: t.key === 'mine' && hasMyTurn,
                 }))}
             />
 
-            {activeTab === 'mine' ? (
-                mineEmpty ? (
-                    <RoomListSection rooms={[]} emptyTitle={meta.emptyTitle} emptyHint={meta.emptyHint} emptyHref="/match-rooms" />
-                ) : (
-                    <>
-                        {mineUpcoming && <RoomListSection rooms={mineUpcoming.rooms} title="진행 중" />}
-                        <RoomListSection rooms={page.rooms} title="종료됨" />
-                    </>
-                )
-            ) : (
-                <RoomListSection
-                    rooms={page.rooms}
-                    emptyTitle={meta.emptyTitle}
-                    emptyHint={meta.emptyHint}
-                    emptyHref={activeTab === 'open' ? '/match-rooms/new' : undefined}
-                />
-            )}
+            {/* 초대는 고르는 것이 아니라 답해야 하는 것이라 탭 뒤에 숨기지 않는다 */}
+            <RoomInvitesSection invites={roomQueue.invites} />
+
+            <RoomListBody
+                tab={activeTab}
+                meta={meta}
+                page={page}
+                mineUpcoming={mineUpcoming}
+                turns={roomQueue.turns}
+            />
 
             <RoomListPager tab={activeTab} cursor={rawCursor} nextCursor={page.nextCursor} />
         </PageContainer>

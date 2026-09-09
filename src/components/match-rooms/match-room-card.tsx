@@ -2,17 +2,26 @@ import Link from 'next/link'
 import type { MatchRoomSummary } from '@/types'
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { formatHeadcount, viewerStatusLabel } from '@/lib/match-rooms/headcount'
+import { ROOM_TURN_PILL, isMyRoomTurn, type RoomTurnSummary } from '@/lib/match-rooms/room-turn'
 import { formatHourLabel } from '@/lib/format'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
-import { CARD_HOVER, PILL_BASE } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, CARD_HOVER, PILL_BASE } from '@/lib/dashboard/tokens'
 
-type Props = { room: MatchRoomSummary }
+type Props = {
+    room: MatchRoomSummary
+    /** 이 방에서 내가 지금 할 일 — 없으면 필을 달지 않는다 */
+    turn?: RoomTurnSummary
+}
 
-/** 매칭 리스트 1행 — 날짜 컬럼 + 시각·코트명 + 방장 + 참가 인원 + 내 상태 칩. 클릭하면 상세(미입장이면 비밀번호 게이트) */
-export function MatchRoomCard({ room }: Props) {
+/**
+ * 매칭 리스트 1행 — 날짜 컬럼 + 시각·코트명 + 방장 + 참가 인원 + 내 상태 칩.
+ * 내 차례가 있으면 주의 필을 함께 단다(Week 39) — 목록이 곧 작업 큐다.
+ */
+export function MatchRoomCard({ room, turn }: Props) {
     const when = room.playedTime ? formatHourLabel(room.playedTime) : null
     const title = [when, room.courtName].filter(Boolean).join(' · ') || `${MATCH_TYPE_LABELS[room.matchType]} 경기`
     const status = viewerStatusLabel(room.viewer)
+    const myTurn = turn && isMyRoomTurn(turn.turn) ? turn : undefined
 
     return (
         <Link href={`/match-rooms/${room.id}`} className={`flex items-stretch gap-3 px-3 py-3 ${CARD_HOVER}`}>
@@ -30,6 +39,12 @@ export function MatchRoomCard({ room }: Props) {
                     {room.host.nickname && ` · ${room.host.nickname}`}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {myTurn && (
+                        <span className={ATTENTION_PILL}>
+                            {ROOM_TURN_PILL[myTurn.turn]}
+                            {myTurn.count > 1 && <span className="ml-1 tabular-nums">{myTurn.count}</span>}
+                        </span>
+                    )}
                     {status ? (
                         <span className={`${PILL_BASE} border-primary/40 text-primary`}>{status}</span>
                     ) : (

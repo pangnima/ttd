@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { MatchRoomGame, PersonalMatchConfirmation } from '@/types'
-import { classifyRoomGameTurn, isMyRoomTurn, viewerRoomTurn } from './room-turn'
+import { classifyRoomGameTurn, isMyRoomTurn, rollUpRoomTurns, turnOfBucket, viewerRoomTurn } from './room-turn'
 
 const ME = 'me'
 const OTHER = 'other'
@@ -122,6 +122,37 @@ describe('viewerRoomTurn — 룸 전체에서 가장 급한 하나', () => {
         const games = [game({ id: 'a', sourceRequestId: 'ra' })]
         expect(viewerRoomTurn(games, ME, { ra: conf({ status: 'proposed', proposedByMe: true }) }))
             .toEqual({ turn: 'waiting', count: 1 })
+    })
+})
+
+describe('turnOfBucket / rollUpRoomTurns — 매칭 리스트 롤업', () => {
+    it('대기 3종은 하나로 접힌다 — 목록에서 구분할 이유가 없다', () => {
+        expect(turnOfBucket('awaitingCounterpart')).toBe('waiting')
+        expect(turnOfBucket('awaitingReentry')).toBe('waiting')
+        expect(turnOfBucket('awaitingReentryConfirm')).toBe('waiting')
+    })
+
+    it('내 차례 버킷은 어휘만 바뀌고 그대로 남는다', () => {
+        expect(turnOfBucket('confirmResult')).toBe('confirmResult')
+        expect(turnOfBucket('enterResult')).toBe('enterResult')
+        expect(turnOfBucket('fillLineup')).toBe('fillLineup')
+        expect(turnOfBucket('reenterResult')).toBe('reenterResult')
+        expect(turnOfBucket('reentryReview')).toBe('reentryReview')
+    })
+
+    it('roomId가 없는 행(방 밖 기록)은 버린다', () => {
+        expect(rollUpRoomTurns([{ turn: 'confirmResult' }, { roomId: undefined, turn: 'enterResult' }]).size).toBe(0)
+    })
+
+    it('방마다 가장 급한 차례 하나로 접고 건수를 센다', () => {
+        const map = rollUpRoomTurns([
+            { roomId: 'A', turn: 'enterResult' },
+            { roomId: 'A', turn: 'confirmResult' },
+            { roomId: 'A', turn: 'confirmResult' },
+            { roomId: 'B', turn: 'waiting' },
+        ])
+        expect(map.get('A')).toEqual({ turn: 'confirmResult', count: 2 })
+        expect(map.get('B')).toEqual({ turn: 'waiting', count: 1 })
     })
 })
 
