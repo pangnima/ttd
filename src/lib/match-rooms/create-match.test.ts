@@ -22,13 +22,14 @@ function input(over: Partial<CreateMatchRoomInput> = {}): CreateMatchRoomInput {
 }
 
 describe('sourceKindOf — 방식이 seed 종류를 정한다', () => {
-    it('로테이션만 rotation_sessions를 seed로 쓴다', () => {
-        expect(sourceKindOf('rotation')).toBe('rotation')
+    // 복식은 곧 로테이션이다 — 페어 고정은 "매 게임 같은 파트너"라는 빌더의 특수 케이스일 뿐이라
+    // 별도 방식으로 두지 않는다.
+    it('복식은 rotation_sessions를 seed로 쓴다', () => {
+        expect(sourceKindOf('doubles')).toBe('rotation')
     })
 
-    it('단식·페어 복식은 참가자 없는 direct 기록이 seed다', () => {
+    it('단식은 참가자 없는 direct 기록이 seed다', () => {
         expect(sourceKindOf('singles')).toBe('direct')
-        expect(sourceKindOf('doubles')).toBe('direct')
     })
 })
 
@@ -38,17 +39,15 @@ describe('isMatchTypeAllowed / defaultMatchTypeOf', () => {
         expect(isMatchTypeAllowed('singles', 'men_doubles')).toBe(false)
     })
 
-    it('복식·로테이션은 복식 3종만 허용한다', () => {
-        for (const format of ['doubles', 'rotation'] as const) {
-            expect(isMatchTypeAllowed(format, 'men_doubles')).toBe(true)
-            expect(isMatchTypeAllowed(format, 'women_doubles')).toBe(true)
-            expect(isMatchTypeAllowed(format, 'mixed_doubles')).toBe(true)
-            expect(isMatchTypeAllowed(format, 'singles')).toBe(false)
-        }
+    it('복식은 복식 3종만 허용한다', () => {
+        expect(isMatchTypeAllowed('doubles', 'men_doubles')).toBe(true)
+        expect(isMatchTypeAllowed('doubles', 'women_doubles')).toBe(true)
+        expect(isMatchTypeAllowed('doubles', 'mixed_doubles')).toBe(true)
+        expect(isMatchTypeAllowed('doubles', 'singles')).toBe(false)
     })
 
     it('기본 경기 타입은 방식과 항상 정합한다', () => {
-        for (const format of ['singles', 'doubles', 'rotation'] as const) {
+        for (const format of ['singles', 'doubles'] as const) {
             expect(isMatchTypeAllowed(format, defaultMatchTypeOf(format))).toBe(true)
         }
     })
@@ -61,7 +60,7 @@ describe('validateCreateMatchRoomInput', () => {
 
     it('방식과 종목이 어긋나면 거부한다', () => {
         expect(validateCreateMatchRoomInput(input({ format: 'singles', matchType: 'men_doubles' }))).not.toBeNull()
-        expect(validateCreateMatchRoomInput(input({ format: 'rotation', matchType: 'singles' }))).not.toBeNull()
+        expect(validateCreateMatchRoomInput(input({ format: 'doubles', matchType: 'singles' }))).not.toBeNull()
     })
 
     it('날짜·시각·표면은 필수다', () => {

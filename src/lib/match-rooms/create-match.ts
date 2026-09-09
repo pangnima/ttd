@@ -15,13 +15,18 @@ import { validateCourtName } from '@/lib/personal-matches/validate-input'
  * seed로 삼아 create_match_room에 넘긴다.
  */
 
-/** 경기 방식 — DB의 source_kind(direct/rotation)와 match_type(단식/복식 3종)을 사용자 어휘로 합친 축 */
-export type MatchRoomFormat = 'singles' | 'doubles' | 'rotation'
+/**
+ * 경기 방식 — DB의 source_kind(direct/rotation)와 match_type(단식/복식 3종)을 사용자 어휘로 합친 축.
+ *
+ * **복식은 곧 로테이션이다.** 페어를 고정한 복식을 따로 두지 않는 이유는, 빌더가 게임마다
+ * 파트너·상대를 고르게 하므로 "매 게임 같은 파트너"가 그 특수 케이스이기 때문이다 —
+ * 방식을 하나 더 두면 사용자는 시작 전에 페어를 바꿀지 말지부터 정해야 한다.
+ */
+export type MatchRoomFormat = 'singles' | 'doubles'
 
 export const MATCH_ROOM_FORMATS: { value: MatchRoomFormat; label: string }[] = [
     { value: 'singles', label: '단식' },
     { value: 'doubles', label: '복식' },
-    { value: 'rotation', label: '로테이션' },
 ]
 
 export const DOUBLES_MATCH_TYPE_OPTIONS: { value: MatchType; label: string }[] = [
@@ -49,9 +54,9 @@ export type CreateMatchRoomInput = {
     inviteUserIds: string[]
 }
 
-/** 방식 → create_match_room의 출처 종류. 로테이션만 세션을 seed로 쓴다 */
+/** 방식 → create_match_room의 출처 종류. 복식(=로테이션)만 세션을 seed로 쓴다 */
 export function sourceKindOf(format: MatchRoomFormat): MatchRoomSourceKind {
-    return format === 'rotation' ? 'rotation' : 'direct'
+    return format === 'doubles' ? 'rotation' : 'direct'
 }
 
 /** 방식을 바꿨을 때 기본으로 잡을 경기 타입 */
@@ -59,7 +64,7 @@ export function defaultMatchTypeOf(format: MatchRoomFormat): MatchType {
     return format === 'singles' ? 'singles' : 'men_doubles'
 }
 
-/** 방식과 경기 타입의 정합 — 단식은 singles 하나, 복식·로테이션은 복식 3종 */
+/** 방식과 경기 타입의 정합 — 단식은 singles 하나, 복식은 복식 3종 */
 export function isMatchTypeAllowed(format: MatchRoomFormat, matchType: MatchType): boolean {
     return format === 'singles' ? matchType === 'singles' : DOUBLES_TYPES.includes(matchType)
 }

@@ -17,11 +17,10 @@ type Props = {
 
 const FORMAT_HINT: Record<MatchRoomFormat, string> = {
     singles: '1대1. 룸에서 상대를 골라 게임을 등록합니다.',
-    doubles: '페어를 고정하고 칩니다. 룸에서 파트너·상대팀을 지정해 게임을 등록합니다.',
-    rotation: '파트너를 바꿔 가며 칩니다. 참가자가 모이면 룸에서 게임을 한 번에 구성합니다.',
+    doubles: '참가자가 모이면 룸에서 게임마다 파트너·상대를 골라 한 번에 구성합니다. 매 게임 같은 파트너로 쳐도 됩니다.',
 }
 
-/** 경기 방식 — 방식이 곧 방의 출처 종류(direct/rotation)와 종목을 정한다 */
+/** 경기 방식 — 방식이 곧 방의 출처 종류(direct/rotation)와 종목을 정한다. 복식은 곧 로테이션이다 */
 export function RoomFormatSection({ format, onFormatChange, matchType, onMatchTypeChange }: Props) {
     return (
         <div className="space-y-4">

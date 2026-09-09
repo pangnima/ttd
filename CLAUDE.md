@@ -43,7 +43,7 @@ src/
 │   ├── match-requests/           # 순수(vitest): queue.ts(미확정 8버킷 분류) / participants.ts(좌석 규칙)
 │   ├── personal-matches/         # 순수: lineup, map/explode/grouping/winner, match-groups, confirmation(협상 관점·자격 술어), perspective, confirm-flow, labels, validate-input,
 │   │                             #   rotation·rotation-pool·rotation-rep·rotation-participation·rotation-entered, session-visibility, direct-record(회원이 끼면 매칭 룸), schedule-conflict, player-suggestions, seat-status
-│   ├── match-rooms/              # 순수 + server-only: create-match(매칭 만들기 규칙), room-stage(4단계), room-turn(내 차례·방 롤업·뱃지 총계), room-sort, password,
+│   ├── match-rooms/              # 순수 + server-only: create-match(매칭 만들기 규칙 — 복식 = 로테이션), room-stage(4단계), room-turn(내 차례·방 롤업·뱃지 총계), room-sort, password,
 │                                 #   title/split/headcount/members-view, parse-detail, room-context, game-status, game-labels, tabs, room-cursor, revalidate, create-room
 │   ├── match-games/              # form-mapping, auto-generate, special-match, former-members, match-view-helpers, attendance-stats
 │   ├── analytics/                # 순수 집계 (toQuadStats = AnalyticsBundle.stats 단일 출처)
@@ -64,7 +64,7 @@ src/
 /profile/settings · /me/analytics → /profile/[내id]?scope=personal
 /me/personal-matches                개인 경기 결과 = 확정 전적 + 상단 「결과 입력 대기」(**방 밖 직접 기록만**) · /new = 직접 기록(비회원 전용) · /[id]/edit
 /match-rooms                        매칭 리스트 = 작업 큐. 최상단 「나를 초대한 매칭」 + 3탭(진행 중 / ?tab=mine 내가 참여한 / ?tab=past 종료된), 카드에 내 차례 필
-/match-rooms/new                    매칭 만들기 (방식·일시·표면·코트·비밀번호·상대 초대 — 스코어 없음)
+/match-rooms/new                    매칭 만들기 (방식 단식/복식 · 일시·표면·코트·비밀번호·상대 초대 — 스코어 없음)
 /match-rooms/[roomId]               매칭 룸 상세 = 단일 작업 공간(단계 칩 · 「지금 할 일」 배너 · 참가자·초대 · 대진 · 결과/확인/이의/정정)
 /me/match-requests                  → /match-rooms 리다이렉트 (Week 39 허브 철거)
 /me/personal-matches/new?room=      → /match-rooms/[roomId] 리다이렉트
@@ -154,7 +154,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 | **로테이션 일정 / 세션 참여 동의** | 세션 = 경기 전 일정, 요청 = 경기 후 기록. 방 밖 세션은 풀의 회원 전원에게 참여 요청(좌석). **거절은 그 사람만 풀에서 뺀다**(세션 유지). **세션 수락 = 게임 참여 동의**(게임별 재수락 없음). 주최자·수락자가 회원을 초대할 수 있고(제거는 주최자만) 재초대하면 pending 복귀. **초대한 회원이 전원 응답해야 결과 입력 가능**(앱 `hasUnansweredSeats` = DB `session_seats_pending`, 소유자 예외 없음) — 0057~0063의 '선입력 후 선적립'은 사용자에게 이중 승인 화면이라 철회됐다. 무응답 탈출구 = 주최자가 명단에서 빼고 게스트로 기록(「상대 승인 대기」 세션 카드 → 참가자 편집 → [게스트로 대체], 명단에서 뺀 **뒤** 로컬 행 교체). **전원 수락된 일정은 허브를 떠나 개인 경기 결과 상단에서 입력한다**(Week 38). 세션 게임은 좌석 보유자 전원이 `get_rotation_session_games`로 보고 저장 시 `p_expected_seq`로 선점 감지. 앱 경계 = `canEnterRotationResult`·`classifyRotationSession`(enter/respond/awaitSeats/awaitOwner/none)·`canManageRotationPool` |
 | **페어 고정 게스트 재요청** | 요청은 불변이라 미응답자를 바꾸려면 [게스트로 바꿔 다시 요청] = 취소 후 `/new?from=`에 프리필(`prefillFromRequest`: 미응답·거절 좌석의 `userId` 제거). 조회는 요청자 본인 ∧ canceled만(pending이면 dedup 유니크에 걸린다). `PersonalMatchForm.prefill`은 `initialData`(수정 모드 스위치)와 별개 |
 | **코트명 / 경기 시각** | `court_name` ≤40자 선택(최근 코트 재선택) / `played_time` 시 단위 `HH:00` |
-| **매칭 리스트 / 매칭 룸** | **매칭(방)이 1급 객체다**(Week 39) — 「매칭 만들기」(`/match-rooms/new`)가 유일한 생성 경로이고, 만들면 언제나 리스트에 오른다. 방식(단식/복식/로테이션)이 seed를 정한다: 단식·복식은 참가자 없는 `personal_matches`, 로테이션은 빈 풀 `rotation_sessions`. 비밀번호(4~20자, bcrypt) 필수, 정원 없음, 제목 없음(자동). 3탭(진행 중/내가 참여한/종료된), 진행/종료 = `is_settled` ∨ 날짜 경과, 서버 필터 + keyset 커서(내 차례 우선 정렬은 **첫 페이지 안에서만**) |
+| **매칭 리스트 / 매칭 룸** | **매칭(방)이 1급 객체다**(Week 39) — 「매칭 만들기」(`/match-rooms/new`)가 유일한 생성 경로이고, 만들면 언제나 리스트에 오른다. 방식은 **단식/복식 둘뿐**이고 seed를 정한다: 단식은 참가자 없는 `personal_matches`, **복식은 곧 로테이션**이라 빈 풀 `rotation_sessions`. 페어 고정을 따로 두지 않는 이유는 빌더가 게임마다 파트너를 고르게 하므로 "매 게임 같은 파트너"가 그 특수 케이스이기 때문이다. 비밀번호(4~20자, bcrypt) 필수, 정원 없음, 제목 없음(자동). 3탭(진행 중/내가 참여한/종료된), 진행/종료 = `is_settled` ∨ 날짜 경과, 서버 필터 + keyset 커서(내 차례 우선 정렬은 **첫 페이지 안에서만**) |
 | **방 게임 / 모집 중 / 관점 행 / 정산** | 방 참가자 누구나 룸 안 다이얼로그로 게임 추가 — 회원 상대면 상호 확인 게임(수락 단계 없음), 비회원 상대는 자유 기록. 모집 중 = 노출 + 참가자 비움(결과 입력 불가, "세트가 있으면 라인업 완성"이 불변식). 복식 상호 확인은 회원 참가자 전원에게 관점 행(대표 `invert`, 파트너 `swap_partner`, 상대2 합성). 방 상세는 `is_perspective=false` 대표 게임만. `is_settled` = 대표 게임 전부 확정 + 대기 없음 |
 | **방 초대 / 참가** | 매칭 만들기에서 지목한 회원과 룸 안 [참가자 초대](`invite_room_members`, 0065)로 초대된다. 초대받은 사람은 **비밀번호 없이** 수락만으로 참가(`respond_room_invite`) — 초대 카드는 매칭 리스트 최상단 「나를 초대한 매칭」과 룸 안 배너 두 곳에서 받는다. 비밀번호 입장자도 곧바로 참가, 미확정 로테이션 방이면 풀에 자동 추가 |
 | **직접 기록 / 매칭 경계** | `requiresRoom(players)` — **회원이 한 명이라도 끼면 매칭 룸을 거친다**(Week 39). 상대에게도 남는 기록이라 참여 동의와 결과 확인이 필요하고 그 절차는 룸 안에만 있다. 방 없는 「직접 기록」(`/me/personal-matches/new`)은 비회원끼리의 경기 전용 — 확인해 줄 상대가 없어 스코어를 넣는 순간 확정된다. DB 가드가 없으므로 **폼과 서버 액션 양쪽**이 이 술어를 본다. `player-suggestions`는 회원과 이름이 겹치는 '만나본 사람' 항목을 버린다(그 오선택이 곧 우회로) |
