@@ -6,6 +6,7 @@ import { fetchPersonalMatchById, fetchPersonalMatchesByUser } from '@/lib/querie
 import { isLineupComplete } from '@/lib/personal-matches/lineup'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
+import { roundRating } from '@/lib/rating/elo'
 import {
     isDoublesMatchType,
     validatePersonalMatchInput,
@@ -105,7 +106,10 @@ export async function recomputePersonalNtrp(userId: string): Promise<void> {
 
         const games = explodePersonalMatchSets(matches)
         const snap = replayPersonalRatings(games, selfNtrp, (id) => ntrpById.get(id))
-        const personalNtrp = snap.matchesPlayed > 0 ? snap.rating : null
+        // 표시용 3자리로 반올림해 캐시한다(elo.ts와 같은 규칙). replay의 원값은 배정밀도 부동소수라
+        // 그대로 저장하면 `personal_ntrp`를 읽는 모든 곳 — 로테이션 빌더의 선수 라벨, 회원 슬롯의
+        // NTRP 입력칸, 요청 수락 시 굳는 `ntrp_snapshot` — 에 3.5379931389096955가 새어 나온다.
+        const personalNtrp = snap.matchesPlayed > 0 ? roundRating(snap.rating) : null
         await supabase.from('users').update({ personal_ntrp: personalNtrp }).eq('id', userId)
     } catch {
         // 캐시 갱신 실패는 본 작업 성공에 영향을 주지 않는다.
