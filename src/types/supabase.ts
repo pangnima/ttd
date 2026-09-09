@@ -1368,6 +1368,10 @@ export type Database = {
         }[]
       }
       invert_set_scores: { Args: { p_sets: Json }; Returns: Json }
+      invite_room_members: {
+        Args: { p_room_id: string; p_user_ids: string[] }
+        Returns: number
+      }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean

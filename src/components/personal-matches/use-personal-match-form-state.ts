@@ -12,7 +12,6 @@ import type { PlayerPickerValue } from '@/components/personal-matches/player-pic
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
 import { toHourValue } from '@/lib/format'
-import { validateRoomPassword, type RoomListingInput } from '@/lib/match-rooms/password'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 
 const DOUBLES_TYPES: MatchType[] = ['men_doubles', 'women_doubles', 'mixed_doubles']
@@ -73,34 +72,22 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
     // 요청 초안(prefill)은 페어 고정 요청에서 왔으므로 페어 고정으로 연다 — 로테이션으로 열면 채운 슬롯이 보이지 않는다.
     const [doublesMode, setDoublesMode] = useState<DoublesMode>(ctx || prefill ? 'fixed' : 'rotation')
     const rotation = useRotationGames()
-    // 매칭 리스트 노출 — 신규 등록에서만. 켜면 비밀번호(4~20자) 필수. 기록 저장 후 액션이 create_match_room RPC로 방을 만든다.
-    const [listed, setListedState] = useState(false)
-    const [roomPassword, setRoomPassword] = useState('')
 
     const isEdit = !!initialData
     const isRoomGame = !!ctx
     const isDoubles = DOUBLES_TYPES.includes(matchType)
     const isRotation = isDoubles && doublesMode === 'rotation' && !isEdit && !isRoomGame
 
-    // 모집형(리스트에 노출)은 참가자를 비운 채 저장할 수 있다.
-    // 수정 모드는 이미 리스트에 올라간 기록이면서 결과가 없을 때만 — 결과가 있으면 라인업을 비울 수 없다.
-    const allowEmptyPlayers = (!isEdit && listed) || (isEdit && !!d?.roomId && (d?.setScores?.length ?? 0) === 0)
+    // 모집형(참가자를 비운 채 저장)은 Week 39부터 **수정 모드에만** 남는다 —
+    // 신규 등록의 모집형 진입점이던 '리스트에 노출' 토글은 「매칭 만들기」로 대체됐다.
+    // 이미 리스트에 올라간 기록이면서 결과가 없을 때만 — 결과가 있으면 라인업을 비울 수 없다.
+    const allowEmptyPlayers = isEdit && !!d?.roomId && (d?.setScores?.length ?? 0) === 0
 
     // 모집형에서 화면에 펼쳐진 슬롯(0048) — 빈 슬롯은 미리 그리지 않고 '참가자 추가'로만 연다.
     // 열린 슬롯은 완전 입력(이름·손잡이·NTRP)이 필수이고, 닫힌 슬롯만 '모집 중'으로 비워 둘 수 있다.
     const filledKeys = () => SLOT_KEYS.filter((k) => !isSlotEmpty(slots[k].player))
     const [openSlots, setOpenSlots] = useState<NtrpField[]>(() => (allowEmptyPlayers ? filledKeys() : []))
 
-    function setListed(v: boolean) {
-        setListedState(v)
-        if (v) {
-            // 노출로 전환: 입력되지 않은 슬롯·풀 행은 전부 제거
-            setOpenSlots(filledKeys())
-            rotation.compactEmptyRows()
-        } else {
-            rotation.ensureMinRows(3)
-        }
-    }
     function openSlot(key: NtrpField) {
         setOpenSlots((prev) => (prev.includes(key) ? prev : [...prev, key]))
     }
@@ -146,9 +133,7 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
     const fixedValid =
         slotOk('opponent', opponent) &&
         (!isDoubles || (slotOk('partner', partner) && slotOk('opponent2', opponent2))) && metaOk
-    const listingOk = isEdit || !listed || validateRoomPassword(roomPassword) === null
-    const isValid = (isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid) && listingOk
-    const listing: RoomListingInput | undefined = listed && !isEdit ? { password: roomPassword } : undefined
+    const isValid = isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid
 
     const num = (s: string) => (s.trim() ? Number(s) : undefined)
     // 자유 기록 페이로드. 세트는 신규면 빈 배열(미확정), 수정이면 기존 세트를 그대로 보존한다.
@@ -179,7 +164,7 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
         courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
-        listed, setListed, roomPassword, setRoomPassword, listing, allowEmptyPlayers,
+        allowEmptyPlayers,
         openSlots, openSlot, closeSlot,
         roomContext: ctx, isRoomGame,
         roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined,

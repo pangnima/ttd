@@ -5,8 +5,6 @@ type Props = {
     outcome: SaveOutcome
     /** 로테이션 풀의 회원 수 — 참여 요청을 받을 사람 수 */
     memberCount: number
-    /** 매칭 리스트에 노출하는가 — 로테이션 초대가 방 초대로 대체된다 */
-    listed: boolean
 }
 
 /**
@@ -17,25 +15,16 @@ type Props = {
  * 특히 로테이션은 복식 신규 등록의 기본 모드라, 회원을 여럿 넣고도
  * 아무에게도 요청이 가지 않는 것을 알 방법이 없었다.
  */
-export function SaveOutcomeNotice({ outcome, memberCount, listed }: Props) {
+export function SaveOutcomeNotice({ outcome, memberCount }: Props) {
     if (outcome === 'rotationPlan') {
         if (memberCount === 0) return null
         return (
             <Notice icon={<Users className="w-4 h-4 text-primary shrink-0 mt-0.5" />}>
-                {listed ? (
-                    <>
-                        저장하면 참가자로 넣은 <b className="text-foreground font-medium">회원 {memberCount}명</b>에게
-                        매칭 리스트 방 초대가 전송됩니다. 수락한 사람은 이 경기를 자기 화면에서도 봅니다.
-                    </>
-                ) : (
-                    <>
-                        저장하면 참가자로 넣은 <b className="text-foreground font-medium">회원 {memberCount}명</b>에게
-                        참여 요청이 전송됩니다. 수락하면 이 일정이 그분들 화면에도 표시되고, 경기 후에는 누구든 결과를
-                        입력할 수 있습니다. 게임을 입력할 때 다시 수락받지는 않습니다.
-                        {' '}<b className="text-foreground font-medium">전원이 수락해야</b> 결과를 입력할 수 있습니다 —
-                        응답이 없으면 참가자 편집에서 명단에서 빼고 게스트로 기록할 수 있습니다.
-                    </>
-                )}
+                저장하면 참가자로 넣은 <b className="text-foreground font-medium">회원 {memberCount}명</b>에게
+                참여 요청이 전송됩니다. 수락하면 이 일정이 그분들 화면에도 표시되고, 경기 후에는 누구든 결과를
+                입력할 수 있습니다. 게임을 입력할 때 다시 수락받지는 않습니다.
+                {' '}<b className="text-foreground font-medium">전원이 수락해야</b> 결과를 입력할 수 있습니다 —
+                응답이 없으면 참가자 편집에서 명단에서 빼고 게스트로 기록할 수 있습니다.
             </Notice>
         )
     }

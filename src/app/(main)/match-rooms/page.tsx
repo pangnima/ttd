@@ -57,8 +57,8 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 title="매칭 리스트"
                 description="리스트에 노출된 경기입니다. 비밀번호를 입력하면 참가자·결과를 볼 수 있습니다"
                 actions={
-                    <Link href="/me/personal-matches/new" className="text-body2 font-medium text-primary hover:underline whitespace-nowrap">
-                        + 경기 추가
+                    <Link href="/match-rooms/new" className="text-body2 font-medium text-primary hover:underline whitespace-nowrap">
+                        + 매칭 만들기
                     </Link>
                 }
             />
@@ -88,7 +88,7 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                     rooms={page.rooms}
                     emptyTitle={meta.emptyTitle}
                     emptyHint={meta.emptyHint}
-                    emptyHref={activeTab === 'open' ? '/me/personal-matches/new' : undefined}
+                    emptyHref={activeTab === 'open' ? '/match-rooms/new' : undefined}
                 />
             )}
 

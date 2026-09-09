@@ -100,7 +100,7 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                     />
                 ) : (
                     // 대표가 없는 갈래(로테이션·전원 비회원·모집 중)에도 무슨 일이 일어날지 말해 준다(0057)
-                    <SaveOutcomeNotice outcome={s.saveOutcome} memberCount={s.rotationMemberCount} listed={s.listed} />
+                    <SaveOutcomeNotice outcome={s.saveOutcome} memberCount={s.rotationMemberCount} />
                 )}
             </FormSectionCard>
         </div>

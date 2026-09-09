@@ -36,7 +36,7 @@ type Props = {
 /**
  * 개인 경기 등록/수정 폼 — 단식·복식(페어 고정/로테이션) 동일 구성. 세트는 받지 않고(미확정 저장) 카드 '결과 입력'에서 등록한다.
  * 로테이션은 선수 풀만 세션으로 저장하고 게임(팀 구성+세트)도 '결과 입력'에서 만든다.
- * 신규 등록은 '리스트에 노출'(비밀번호)을 켜면 기록이 매칭 리스트의 방으로도 등록된다.
+ * 방을 만드는 경로는 여기가 아니다 — 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다(Week 39).
  * 방 게임(roomContext)은 방장이 방 참가자로 게임을 구성하는 경로 — 같은 폼에 참가자만 입력한다.
  */
 export function PersonalMatchForm({
@@ -51,7 +51,7 @@ export function PersonalMatchForm({
         : s.isConfirmFlow ? '확인 요청 보내기'
             : s.isEdit ? '수정 완료'
                 : s.isRoomGame ? '게임 저장'
-                    : s.saveOutcome === 'rotationPlan' && !s.listed && s.rotationMemberCount > 0
+                    : s.saveOutcome === 'rotationPlan' && s.rotationMemberCount > 0
                         ? '참여 요청 보내기'
                         : '경기 저장'
 

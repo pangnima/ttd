@@ -16,7 +16,7 @@ import { handOf, type PersonalMatchFormState } from '@/components/personal-match
  *  ② 방 게임(0049): 방 참가자끼리의 게임 — 수락 없이 참가자 전원 기록 생성, 결과는 제안·확인으로 확정
  *  ③ 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
  *  ④ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
- * 신규 등록은 s.listing('리스트에 노출')을 넘기면 액션이 기록 저장 후 매칭 리스트의 방을 만든다.
+ * 방을 만드는 일은 여기서 하지 않는다 — 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다(Week 39).
  *
  * 저장 후 목적지: 폼은 세트를 받지 않아 **신규 저장물은 전부 미확정**이므로 확인 요청 허브로 보낸다
  * (개인 경기 결과로 보내면 방금 저장한 기록이 없는 화면에 도착한다). 방 게임만 방 상세로 돌아간다.
@@ -56,7 +56,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 courtName: courtName.trim() || undefined,
                 // 빈 행은 제거하고 보낸다 (모집형은 0명도 허용)
                 players: poolToPlayers(compactPool(s.rotation.pool)),
-            }, s.listing), rotationLanding(s.rotation.pool))
+            }), rotationLanding(s.rotation.pool))
             return
         }
 
@@ -108,7 +108,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
                 playedAt, playedTime, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-            }, s.listing), hubTabHref('waiting'))
+            }), hubTabHref('waiting'))
             return
         }
 
@@ -118,7 +118,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         run(
             () => (initialId
                 ? updatePersonalMatchAction(initialId, input)
-                : createPersonalMatchesAction([input], s.listing, newRoomId ? { roomId: newRoomId } : undefined)),
+                : createPersonalMatchesAction([input], newRoomId ? { roomId: newRoomId } : undefined)),
             // 폼은 세트를 받지 않는다 — 신규는 언제나 미확정이므로 허브로 보내야 방금 저장한 기록이 보인다.
             // 수정은 원래 결과가 있었으면 확정 목록으로 돌아간다.
             s.roomId

@@ -3,12 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { validateRoomPassword } from '@/lib/match-rooms/password'
-import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { listRecordAsRoom } from '@/lib/match-rooms/create-room'
+import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput } from '@/lib/match-rooms/create-match'
 
 /**
- * 매칭 리스트(매칭 룸) 쓰기 — 입장·초대 응답·방장 관리·방 게임 등록.
- * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046·0048) 안에서 하고, 여기서는 사용자 문구로 번역만 한다.
- * 방 생성은 세 등록 액션이 lib/match-rooms/create-room.ts를 통해 한다.
+ * 매칭 리스트(매칭 룸) 쓰기 — 매칭 만들기·입장·초대 응답·방장 관리·방 게임 등록.
+ * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046·0048·0065) 안에서 하고,
+ * 여기서는 사용자 문구로 번역만 한다.
  */
 
 type ActionResult = { error: string | null }
@@ -46,6 +48,66 @@ async function requireUser() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     return { supabase, user }
+}
+
+/**
+ * 매칭 만들기(Week 39) — 방을 1급 객체로 만드는 유일한 진입점.
+ *
+ * create_match_room RPC는 언제나 출처 행을 요구하므로(source_not_found) 방식별 seed를 먼저 만든다.
+ * 참가자는 비운 채다 — 사람은 초대 수락(비밀번호 불필요)과 비밀번호 입장으로 채워진다.
+ *   · 단식·페어 복식 → 참가자 없는 personal_matches (기존 '모집형' 경로, 0047)
+ *   · 로테이션        → 빈 풀 rotation_sessions (입장자가 join_match_room_as_player로 풀에 append된다, 0056)
+ *
+ * 방 생성이 실패하면 seed를 지운다 — 리스트에도 없고 결과도 없는 빈 껍데기 기록을 남기지 않는다.
+ * 반대로 초대만 실패하면 방은 그대로 둔다(룸 안에서 다시 부를 수 있다).
+ */
+export async function createMatchRoomAction(
+    input: CreateMatchRoomInput,
+): Promise<{ error: string | null; roomId?: string }> {
+    const validationError = validateCreateMatchRoomInput(input)
+    if (validationError) return { error: validationError }
+
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const kind = sourceKindOf(input.format)
+    const meta = {
+        played_at: input.playedAt,
+        played_time: input.playedTime,
+        match_type: input.matchType,
+        surface: input.surface,
+        court_name: input.courtName?.trim() || null,
+        notes: input.notes?.trim() || null,
+    }
+
+    const seed = kind === 'rotation'
+        ? await supabase.from('rotation_sessions')
+            .insert({ user_id: user.id, players: [], ...meta }).select('id').single()
+        : await supabase.from('personal_matches')
+            .insert({ user_id: user.id, source_type: 'direct', set_scores: [], ...meta }).select('id').single()
+    if (seed.error || !seed.data) return { error: '매칭을 만들지 못했습니다.' }
+    const sourceId = seed.data.id
+
+    const room = await listRecordAsRoom(kind, sourceId, input.password)
+    if (room.error || !room.roomId) {
+        if (kind === 'rotation') await supabase.from('rotation_sessions').delete().eq('id', sourceId)
+        else await supabase.from('personal_matches').delete().eq('id', sourceId)
+        return { error: '매칭을 만들지 못했습니다. 잠시 후 다시 시도해주세요.' }
+    }
+
+    // 초대 실패는 방을 되돌릴 이유가 못 된다 — 방은 살아 있고 룸 안에서 다시 초대할 수 있다
+    let inviteError: string | null = null
+    if (input.inviteUserIds.length > 0) {
+        const { error } = await supabase.rpc('invite_room_members', {
+            p_room_id: room.roomId,
+            p_user_ids: input.inviteUserIds,
+        })
+        if (error) inviteError = '매칭은 만들어졌지만 초대에 실패했습니다. 매칭 룸에서 다시 초대해주세요.'
+    }
+
+    revalidateRoomList()
+    revalidatePath('/me/personal-matches')
+    return { error: inviteError, roomId: room.roomId }
 }
 
 /**

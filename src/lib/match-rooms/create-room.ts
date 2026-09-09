@@ -3,9 +3,6 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import type { MatchRoomSourceKind } from '@/types'
 
-// 세 등록 액션이 출처 저장 후 이 헬퍼로 방을 만든다. 페이로드 타입은 클라이언트 훅과 공유하므로 password.ts(순수)에 둔다.
-export type { RoomListingInput } from '@/lib/match-rooms/password'
-
 const CREATE_ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['already_listed', '이미 매칭 리스트에 등록된 기록입니다.'],

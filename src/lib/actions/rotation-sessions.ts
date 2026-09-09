@@ -6,8 +6,7 @@ import type { CourtSurface, MatchType, RotationPoolPlayer } from '@/types'
 import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
-import { listRecordAsRoom, type RoomListingInput } from '@/lib/match-rooms/create-room'
-import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * 로테이션(파트너 교체) 복식 세션 — 등록 시 선수 풀만 저장(rotation_sessions),
@@ -48,16 +47,16 @@ function cleanPlayer(p: RotationPoolPlayer): RotationPoolPlayer {
     }
 }
 
-/** 세션 저장. listing(리스트에 노출)이 있으면 세션을 매칭 리스트의 방으로 등록한다(풀 회원 자동 초대). */
-export async function createRotationSessionAction(input: RotationSessionInput, listing?: RoomListingInput): Promise<ActionResult> {
+/** 세션 저장(방 밖 일정). 방에 올리는 일은 하지 않는다 — 매칭은 createMatchRoomAction이 연다(Week 39). */
+export async function createRotationSessionAction(input: RotationSessionInput): Promise<ActionResult> {
     if (!isDoublesMatchType(input.matchType)) return { error: '로테이션은 복식에서만 등록할 수 있습니다.' }
     if (!input.playedAt) return { error: '경기 날짜를 입력해주세요.' }
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return { error: '경기 시각을 입력해주세요.' }
     if (!input.surface) return { error: '코트 표면을 선택해주세요.' }
     const courtNameError = validateCourtName(input.courtName)
     if (courtNameError) return { error: courtNameError }
-    // 리스트에 노출(모집형)이면 참가자 없이도 세션을 열 수 있다 — 방에서 모으고 결과 입력 때 게임을 구성한다
-    if (!listing && input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
+    // 방 밖 세션은 풀이 곧 참가자 명단이다 — 빈 풀 세션은 매칭(방)의 몫이므로 여기서는 3명을 요구한다
+    if (input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
     for (const p of input.players) {
         const err = validatePlayer(p)
         if (err) return { error: err }
@@ -80,12 +79,6 @@ export async function createRotationSessionAction(input: RotationSessionInput, l
     if (error || !inserted) return { error: '로테이션 세션 저장에 실패했습니다.' }
 
     revalidatePath('/me/personal-matches')
-
-    if (listing) {
-        const room = await listRecordAsRoom('rotation', inserted.id, listing.password)
-        if (room.error) return { error: room.error }
-        revalidateRoomList()
-    }
     return { error: null }
 }
 
