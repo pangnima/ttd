@@ -1205,6 +1205,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_room_lineup: {
+        Args: { p_games: Json; p_room_id: string }
+        Returns: number
+      }
       close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
       leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
       reopen_match_result: {
