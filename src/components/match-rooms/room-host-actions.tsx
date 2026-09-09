@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { FormActions } from '@/components/common/form-actions'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { ROOM_PASSWORD_MAX, ROOM_PASSWORD_MIN } from '@/lib/match-rooms/password'
 import { closeRotationRoomAction, deleteMatchRoomAction, updateRoomPasswordAction } from '@/lib/actions/match-rooms'
@@ -88,10 +89,15 @@ export function RoomHostActions({ roomId, canCloseRotation = false }: Props) {
                         </div>
                         {error && <p className="text-caption text-destructive">{error}</p>}
                         {saved && <p className="text-caption text-win">비밀번호를 변경했습니다.</p>}
-                        <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setOpen(false)}>닫기</Button>
-                            <Button type="submit" disabled={isPending || !password}>변경</Button>
-                        </div>
+                        <DialogFooter>
+                            <FormActions
+                                submitLabel="변경"
+                                pendingLabel="변경 중…"
+                                onCancel={() => setOpen(false)}
+                                isPending={isPending}
+                                disabled={!password}
+                            />
+                        </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>

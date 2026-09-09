@@ -7,7 +7,8 @@ import {
     GENDER_OPTIONS, HAND_OPTIONS, SIGNUP_NTRP_OPTIONS,
     type GenderValue, type HandValue, type SignupNtrp,
 } from '@/lib/profile/signup-fields'
-import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
+import { FormActions } from '@/components/common/form-actions'
 import { Input } from '@/components/ui/input'
 import { FieldToggle } from '@/components/common/field-toggle'
 
@@ -71,14 +72,15 @@ export function RoomGuestForm({ roomId, onDone }: Props) {
                 손잡이·성별·NTRP는 자동 대진표의 균형에만 쓰입니다. 몰라도 그냥 두세요.
             </p>
             {error && <p className="text-caption text-destructive break-keep">{error}</p>}
-            <div className="flex items-center gap-2">
-                <Button size="sm" onClick={handleSubmit} disabled={isPending}>
-                    {isPending ? '추가하는 중…' : '참가자로 추가'}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={onDone} disabled={isPending}>
-                    취소
-                </Button>
-            </div>
+            <DialogFooter>
+                <FormActions
+                    submitLabel="참가자로 추가"
+                    pendingLabel="추가하는 중…"
+                    onSubmit={handleSubmit}
+                    onCancel={onDone}
+                    isPending={isPending}
+                />
+            </DialogFooter>
         </div>
     )
 }

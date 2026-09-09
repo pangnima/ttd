@@ -70,6 +70,15 @@ export const MATCH_FORM_INPUT =
     'w-full rounded-lg border border-input bg-background dark:bg-input/30 px-3 py-3 text-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
 export const MATCH_FORM_LABEL = 'text-body font-medium text-foreground block mb-2'
 
+/**
+ * 폼·팝업 하단 액션 줄 — 저장(라임) 왼쪽 / 취소 오른쪽, 우측 정렬.
+ * 직접 기록 폼의 치수가 정본이고 모든 저장형 팝업과 매칭 만들기가 이것을 그대로 쓴다.
+ * 좁은 화면에서는 저장이 폭을 채우고(flex-1), lg부터 고정 폭으로 우측에 붙는다.
+ */
+export const FORM_ACTION_ROW = 'flex w-full gap-3 lg:justify-end'
+export const FORM_SUBMIT = 'h-11 flex-1 lg:flex-none lg:min-w-44'
+export const FORM_CANCEL = 'h-11 lg:min-w-24'
+
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
     strength: 'text-win', // 강점 → 민트

@@ -2,8 +2,8 @@
 
 import type { PersonalMatchSetScore } from '@/types'
 import type { AdLabels } from '@/lib/personal-matches/labels'
-import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
+import { FormActions } from '@/components/common/form-actions'
 import { SetsSection } from '@/components/personal-matches/form-sections/sets-section'
 import { SetScoreChips } from '@/components/personal-matches/set-score-chips'
 import { useSetScores, MAX_SETS } from '@/components/personal-matches/use-set-scores'
@@ -12,6 +12,8 @@ type Props = {
     opponentName: string  // 단식 상대 또는 "상대1 · 상대2"
     initialSets?: PersonalMatchSetScore[]
     onSubmit: (sets: PersonalMatchSetScore[]) => void
+    /** 팝업 닫기 — 하단 [취소] */
+    onCancel: () => void
     isPending: boolean
     error: string | null
     submitLabel?: string
@@ -25,7 +27,7 @@ type Props = {
  * 복식이면 adLabels로 게임별 애드/듀스 토글이 켜진다(doubles-court 통계 입력).
  */
 export function ResultProposePanel({
-    opponentName, initialSets, onSubmit, isPending, error, submitLabel = '결과 저장', adLabels,
+    opponentName, initialSets, onSubmit, onCancel, isPending, error, submitLabel = '결과 저장', adLabels,
 }: Props) {
     const s = useSetScores(initialSets)
 
@@ -56,14 +58,14 @@ export function ResultProposePanel({
 
             {error && <p className="text-caption text-destructive">{error}</p>}
 
-            <DialogFooter showCloseButton>
-                <Button
-                    type="button"
-                    disabled={!s.isValid || isPending}
-                    onClick={() => onSubmit(s.cleanSets())}
-                >
-                    {isPending ? '저장 중...' : submitLabel}
-                </Button>
+            <DialogFooter>
+                <FormActions
+                    submitLabel={submitLabel}
+                    onSubmit={() => onSubmit(s.cleanSets())}
+                    onCancel={onCancel}
+                    isPending={isPending}
+                    disabled={!s.isValid}
+                />
             </DialogFooter>
         </div>
     )

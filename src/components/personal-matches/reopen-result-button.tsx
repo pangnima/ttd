@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { FormActions } from '@/components/common/form-actions'
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { reopenMatchResultAction } from '@/lib/actions/match-results'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
@@ -58,12 +58,12 @@ export function ReopenResultButton({ requestId, description }: Props) {
                         </div>
                         {d.error && <p className="text-caption text-destructive">{d.error}</p>}
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => d.setOpen(false)} disabled={d.isPending}>
-                                취소
-                            </Button>
-                            <Button type="submit" disabled={d.isPending}>
-                                {d.isPending ? '처리 중…' : '정정 요청'}
-                            </Button>
+                            <FormActions
+                                submitLabel="정정 요청"
+                                pendingLabel="처리 중…"
+                                onCancel={() => d.setOpen(false)}
+                                isPending={d.isPending}
+                            />
                         </DialogFooter>
                     </form>
                 </DialogContent>

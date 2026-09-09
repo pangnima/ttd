@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { UserX } from 'lucide-react'
 import { deleteAccountAction } from '@/lib/actions/auth'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, FORM_ACTION_ROW, FORM_CANCEL, FORM_SUBMIT } from '@/lib/dashboard/tokens'
 
 // 계정(서비스) 탈퇴 — soft delete(익명화). 확인 다이얼로그 후 deleteAccountAction 호출.
 export function DeleteAccountButton() {
@@ -64,15 +64,21 @@ export function DeleteAccountButton() {
 
                     {error && <p className="text-caption text-destructive">{error}</p>}
 
-                    <DialogFooter showCloseButton>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={isPending}
-                        >
-                            {isPending ? '탈퇴 중...' : '탈퇴하기'}
-                        </Button>
+                    <DialogFooter>
+                        <div className={FORM_ACTION_ROW}>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                className={FORM_SUBMIT}
+                                onClick={handleDelete}
+                                disabled={isPending}
+                            >
+                                {isPending ? '탈퇴 중...' : '탈퇴하기'}
+                            </Button>
+                            <Button type="button" variant="outline" className={FORM_CANCEL} onClick={() => setOpen(false)}>
+                                취소
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

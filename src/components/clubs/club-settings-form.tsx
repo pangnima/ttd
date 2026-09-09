@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { FORM_ACTION_ROW, FORM_CANCEL, FORM_SUBMIT } from '@/lib/dashboard/tokens'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { updateClubAction, deleteClubAction } from '@/lib/actions/clubs'
@@ -228,15 +229,21 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                         )}
                     </div>
 
-                    <DialogFooter showCloseButton>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={isDeleting || deletePassword.length === 0}
-                        >
-                            {isDeleting ? '삭제 중...' : '영구 삭제'}
-                        </Button>
+                    <DialogFooter>
+                        <div className={FORM_ACTION_ROW}>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                className={FORM_SUBMIT}
+                                onClick={handleDelete}
+                                disabled={isDeleting || deletePassword.length === 0}
+                            >
+                                {isDeleting ? '삭제 중...' : '영구 삭제'}
+                            </Button>
+                            <Button type="button" variant="outline" className={FORM_CANCEL} onClick={() => setDeleteOpen(false)}>
+                                취소
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

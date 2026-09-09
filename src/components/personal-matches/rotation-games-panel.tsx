@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react'
 import type { RotationPoolPlayer } from '@/types'
-import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
+import { FormActions } from '@/components/common/form-actions'
 import { playersToPool, poolPlayerToJson, type RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isImmediateGame } from '@/lib/personal-matches/rotation-rep'
 import { GameBuilderSection } from '@/components/personal-matches/rotation/game-builder-section'
@@ -19,6 +19,8 @@ type Props = {
     // 참가자 편집용 자동완성 후보 (모집형으로 풀을 비운 채 연 세션에서 여기서 채운다)
     picker: PoolPickerProps
     onSubmit: (games: RotationGamePayload[]) => void
+    /** 팝업 닫기 — 하단 [취소] */
+    onCancel: () => void
     isPending: boolean
     error: string | null
     /** 세션 명부를 실제로 바꿀 수 있는 화면일 때만 온다 — 방 밖 세션 + 소유자/수락자 (0058) */
@@ -42,7 +44,7 @@ type Props = {
  * 나머지 회원 참가자 전원이 확인해야 확정 — 0060), 상대팀이 전원 비회원인 게임만 즉시 확정된다(0050).
  */
 export function RotationGamesPanel({
-    pool: initialPool, picker, onSubmit, isPending, error, poolAdmin, enteredGames = [], blockedReason,
+    pool: initialPool, picker, onSubmit, onCancel, isPending, error, poolAdmin, enteredGames = [], blockedReason,
 }: Props) {
     const r = useRotationGames(playersToPool(initialPool))
 
@@ -101,14 +103,14 @@ export function RotationGamesPanel({
             )}
             {error && <p className="text-caption text-destructive">{error}</p>}
 
-            <DialogFooter showCloseButton>
-                <Button
-                    type="button"
-                    disabled={!r.isGamesValid || isPending || !!blockedReason}
-                    onClick={() => onSubmit(r.buildPayloads())}
-                >
-                    {isPending ? '저장 중...' : `게임 ${r.games.length}개 저장`}
-                </Button>
+            <DialogFooter>
+                <FormActions
+                    submitLabel={`게임 ${r.games.length}개 저장`}
+                    onSubmit={() => onSubmit(r.buildPayloads())}
+                    onCancel={onCancel}
+                    isPending={isPending}
+                    disabled={!r.isGamesValid || !!blockedReason}
+                />
             </DialogFooter>
         </div>
     )

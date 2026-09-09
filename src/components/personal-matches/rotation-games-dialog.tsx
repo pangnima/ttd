@@ -43,7 +43,7 @@ export function RotationGamesDialog({ open, onOpenChange, session, pool, isRoomS
                         {session.playedAt.replaceAll('-', '.')} {formatHourLabel(session.playedTime)} · 게임마다 파트너·상대를 고르고 스코어를 입력하면 게임별 경기로 저장됩니다.
                     </DialogDescription>
                 </DialogHeader>
-                <RotationGamesPanel pool={pool} isRoomSession={isRoomSession} picker={picker} onSubmit={onSubmit} isPending={isPending} error={error} poolAdmin={poolAdmin} enteredGames={enteredGames} blockedReason={blockedReason} />
+                <RotationGamesPanel onCancel={() => onOpenChange(false)} pool={pool} isRoomSession={isRoomSession} picker={picker} onSubmit={onSubmit} isPending={isPending} error={error} poolAdmin={poolAdmin} enteredGames={enteredGames} blockedReason={blockedReason} />
             </DialogContent>
         </Dialog>
     )

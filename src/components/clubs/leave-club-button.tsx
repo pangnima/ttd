@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { FORM_ACTION_ROW, FORM_CANCEL, FORM_SUBMIT } from '@/lib/dashboard/tokens'
 import { LogOut } from 'lucide-react'
 import { leaveClubAction } from '@/lib/actions/club-members'
 
@@ -62,15 +63,21 @@ export function LeaveClubButton({ clubId, clubName }: Props) {
 
                     {error && <p className="text-caption text-destructive">{error}</p>}
 
-                    <DialogFooter showCloseButton>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={handleLeave}
-                            disabled={isPending}
-                        >
-                            {isPending ? '탈퇴 중...' : '탈퇴하기'}
-                        </Button>
+                    <DialogFooter>
+                        <div className={FORM_ACTION_ROW}>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                className={FORM_SUBMIT}
+                                onClick={handleLeave}
+                                disabled={isPending}
+                            >
+                                {isPending ? '탈퇴 중...' : '탈퇴하기'}
+                            </Button>
+                            <Button type="button" variant="outline" className={FORM_CANCEL} onClick={() => setOpen(false)}>
+                                취소
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

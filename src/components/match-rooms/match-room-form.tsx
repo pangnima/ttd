@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { CourtSurface } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { createMatchRoomAction } from '@/lib/actions/match-rooms'
-import { Button } from '@/components/ui/button'
+import { FormActions } from '@/components/common/form-actions'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
@@ -81,14 +81,13 @@ export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames
 
             {error && <p className="text-body2 text-destructive break-keep">{error}</p>}
 
-            <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isPending}>
-                    취소
-                </Button>
-                <Button type="submit" disabled={!s.isValid || isPending}>
-                    {isPending ? '만드는 중…' : '매칭 만들기'}
-                </Button>
-            </div>
+            <FormActions
+                submitLabel="매칭 만들기"
+                pendingLabel="만드는 중…"
+                onCancel={() => router.back()}
+                isPending={isPending}
+                disabled={!s.isValid}
+            />
         </form>
     )
 }

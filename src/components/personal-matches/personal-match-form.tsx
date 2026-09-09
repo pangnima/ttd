@@ -66,7 +66,14 @@ export function PersonalMatchForm({
                 <WhenColumn s={s} recentCourtNames={recentCourtNames} existingSets={initialData?.setScores} variant={variant} scheduleSlots={scheduleSlots} />
             </div>
 
-            <FormFooter error={submit.error} isPending={submit.isPending} isValid={s.isValid} submitLabel={submitLabel} onCancel={submit.cancel} />
+            <FormFooter
+                error={submit.error}
+                isPending={submit.isPending}
+                isValid={s.isValid}
+                submitLabel={submitLabel}
+                onCancel={submit.cancel}
+                variant={variant}
+            />
         </form>
     )
 }

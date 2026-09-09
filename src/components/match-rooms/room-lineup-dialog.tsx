@@ -6,6 +6,8 @@ import type { MatchType } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { createRoomLineupAction } from '@/lib/actions/match-rooms'
 import { Button } from '@/components/ui/button'
+import { FormActions } from '@/components/common/form-actions'
+import { FORM_CANCEL } from '@/lib/dashboard/tokens'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { LineupOptions } from '@/components/match-rooms/form-sections/lineup-options'
 import { RoomLineupNotices } from '@/components/match-rooms/room-lineup-notices'
@@ -82,12 +84,19 @@ export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candid
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={lineup.reroll} disabled={saving}>
-                        다시 뽑기
-                    </Button>
-                    <Button onClick={handleSave} disabled={saving || lineup.result.games.length === 0}>
-                        {saving ? '저장 중…' : `${lineup.result.games.length}경기 저장`}
-                    </Button>
+                    <FormActions
+                        submitLabel={`${lineup.result.games.length}경기 저장`}
+                        pendingLabel="저장 중…"
+                        onSubmit={handleSave}
+                        onCancel={() => onOpenChange(false)}
+                        isPending={saving}
+                        disabled={lineup.result.games.length === 0}
+                        secondary={(
+                            <Button variant="outline" className={FORM_CANCEL} onClick={lineup.reroll} disabled={saving}>
+                                다시 뽑기
+                            </Button>
+                        )}
+                    />
                 </DialogFooter>
             </DialogContent>
         </Dialog>

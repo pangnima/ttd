@@ -55,6 +55,7 @@ export function MatchResultDialog(props: Props) {
 
                 {props.mode === 'propose' ? (
                     <ResultProposePanel
+                        onCancel={() => onOpenChange(false)}
                         opponentName={opponentName}
                         initialSets={props.initialSets}
                         onSubmit={props.onSubmit}
@@ -65,6 +66,7 @@ export function MatchResultDialog(props: Props) {
                     />
                 ) : (
                     <ResultReviewPanel
+                        onCancel={() => onOpenChange(false)}
                         opponentName={opponentName}
                         sets={props.proposedSets}
                         onConfirm={props.onConfirm}
