@@ -1,6 +1,7 @@
 import type { MatchRoomDetail } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { buildMemberRows, inviteExcludedUserIds } from '@/lib/match-rooms/members-view'
+import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { countJoined, formatHeadcount } from '@/lib/match-rooms/headcount'
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { RoomMemberRow } from '@/components/match-rooms/room-member-row'
@@ -19,6 +20,8 @@ type Props = {
 export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
     const rows = buildMemberRows(detail)
     const joined = countJoined(detail.members)
+    // 경기에 배정된 회원은 내보낼 수 없다(0070) — DB 가드와 같은 집합을 보고 버튼을 감춘다
+    const playing = roomGameMemberIds(detail.games)
 
     return (
         <section className="space-y-2">
@@ -37,7 +40,15 @@ export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
             </div>
             <div className={`${CARD_BASE} divide-y divide-border`}>
                 {rows.map((row) => (
-                    <RoomMemberRow key={row.key} row={row} roomId={detail.room.id} viewerId={viewerId} host={host} isSettled={detail.room.isSettled} />
+                    <RoomMemberRow
+                        key={row.key}
+                        row={row}
+                        roomId={detail.room.id}
+                        viewerId={viewerId}
+                        host={host}
+                        isSettled={detail.room.isSettled}
+                        hasGames={!!row.userId && playing.has(row.userId)}
+                    />
                 ))}
             </div>
         </section>

@@ -13,6 +13,8 @@ type Props = {
     isSettled: boolean
     /** 보고 있는 사람 — 게스트 [빼기]는 방장이 아니어도 '등록한 본인'에게 열린다(0069) */
     viewerId: string
+    /** 이 방의 경기에 배정된 회원 — 내보내기 대상이 아니다(0070) */
+    hasGames?: boolean
     /** 방장에게만 넘어온다 — 내보내기·다시 초대 */
     host?: { viewerId: string }
 }
@@ -29,14 +31,14 @@ const STATUS_CLASS: Record<string, string> = {
 const NTRP_BADGE = `${PILL_BASE} ${TYPO.micro} shrink-0 border-border text-foreground tabular-nums`
 
 /** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·NTRP·상태 칩 / 2줄: 닉네임·주력손·라켓 */
-export function RoomMemberRow({ row, roomId, isSettled, viewerId, host }: Props) {
+export function RoomMemberRow({ row, roomId, isSettled, viewerId, hasGames = false, host }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
             {row.name}
             {row.deleted && <span className="ml-1 text-caption text-muted-foreground">(탈퇴)</span>}
         </span>
     )
-    const canKick = !!host && canKickRoomMember({ isHost: true, isSettled, row, viewerId: host.viewerId })
+    const canKick = !!host && canKickRoomMember({ isHost: true, isSettled, row, hasGames, viewerId: host.viewerId })
     const canRemoveGuest = canRemoveRoomGuest({ isHost: !!host, isSettled, viewerId, row })
 
     return (

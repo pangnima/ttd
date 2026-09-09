@@ -25,6 +25,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     // ⚠ translate는 includes 선형 탐색이라 더 긴 전용 키가 not_room_member보다 앞에 있어야 한다
     ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
     ['cannot_kick_host', '방장은 내보낼 수 없습니다.'],
+    ['member_has_games', '이미 배정된 경기가 있어 내보낼 수 없습니다.'],
     ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],
     ['not_room_host', '방장만 할 수 있습니다.'],
@@ -168,9 +169,10 @@ export async function inviteRoomMembersAction(roomId: string, userIds: string[])
 /**
  * 방장이 참가자를 내보낸다 (0068).
  *
- * 강퇴는 '차단'이다 — 비밀번호를 알아도 재입장할 수 없고 방장의 재초대(inviteRoomMembersAction)로만
- * 풀린다. 다만 이미 함께 뛴 경기의 기록과 그 결과를 확인·이의할 권한은 남는다.
- * 끊어 버리면 그 게임이 영영 확정되지 않아 방까지 정산 불가가 되기 때문이다.
+ * 강퇴는 '차단'이다 — 비밀번호를 알아도 재입장할 수 없고, 룸 상세도 더는 보이지 않으며(0070),
+ * 방장의 재초대(inviteRoomMembersAction)로만 풀린다.
+ * 그래서 **배정된 경기가 있는 사람은 내보낼 수 없다**(member_has_games): 방을 못 보게 하면
+ * 그 사람이 결과를 확인할 수 없고, 좌석 만장일치가 채워지지 않아 방이 영영 정산되지 않는다.
  */
 export async function kickRoomMemberAction(roomId: string, userId: string): Promise<ActionResult> {
     const { supabase, user } = await requireUser()

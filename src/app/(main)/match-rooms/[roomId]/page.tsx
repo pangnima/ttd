@@ -9,7 +9,6 @@ import { PageContainer } from '@/components/common/page-container'
 import { RoomGateView } from '@/components/match-rooms/room-gate-view'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
-import { RoomRemovedNotice } from '@/components/match-rooms/room-removed-notice'
 import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
 import { RoomSettledNotice } from '@/components/match-rooms/room-settled-notice'
 import { RoomMembersSection } from '@/components/match-rooms/room-members-section'
@@ -56,7 +55,6 @@ export default async function MatchRoomPage({ params }: Props) {
                 actions={x.isHost ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} /> : undefined}
             />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
-            {detail.viewer?.status === 'removed' && <RoomRemovedNotice />}
             {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection
                 detail={detail}

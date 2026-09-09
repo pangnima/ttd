@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail, MatchRoomGame, MatchRoomSource } from '@/types'
-import { canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage } from './game-status'
+import { canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage, roomGameMemberIds } from './game-status'
 
 const base: MatchRoomGame = {
     id: 'g1',
@@ -80,5 +80,29 @@ describe('roomGamesEmptyMessage', () => {
 
     it('자유 기록은 게임 추가 안내', () => {
         expect(roomGamesEmptyMessage(detailWith({ kind: 'direct' }))).toContain('게임을 추가하세요')
+    })
+})
+
+describe('roomGameMemberIds — 경기에 배정된 회원 (0070)', () => {
+    const game = (owner: string, players: Array<{ role: string; name: string; userId?: string }>) => ({
+        id: 'g', matchType: 'men_doubles' as const, setScores: [], participants: players,
+        ownerUserId: owner, ownerName: '작성자', sourceType: 'confirmation' as const,
+    })
+
+    it('작성자와 라인업의 회원을 모두 모은다', () => {
+        const ids = roomGameMemberIds([game('u1', [
+            { role: 'partner', name: '파트너', userId: 'u2' },
+            { role: 'opponent', name: '상대', userId: 'u3' },
+        ])])
+        expect([...ids].sort()).toEqual(['u1', 'u2', 'u3'])
+    })
+
+    it('비회원 슬롯은 세지 않는다 — 멤버 테이블에 없어 내보내기 대상이 아니다', () => {
+        const ids = roomGameMemberIds([game('u1', [{ role: 'opponent', name: '게스트' }])])
+        expect([...ids]).toEqual(['u1'])
+    })
+
+    it('게임이 없으면 빈 집합 — 아무나 내보낼 수 있다', () => {
+        expect(roomGameMemberIds([]).size).toBe(0)
     })
 })

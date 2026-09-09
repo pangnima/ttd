@@ -33,6 +33,20 @@ export function isRoomGameParty(game: MatchRoomGame, viewerId: string): boolean 
     return game.ownerUserId === viewerId || game.participants.some((p) => p.userId === viewerId)
 }
 
+/**
+ * 이 방의 게임에 배정된 회원 id (0070) — 작성자와 라인업의 회원 전부.
+ * DB 가드 kick_room_member의 `member_has_games`가 보는 집합과 같은 뜻이라,
+ * 이것이 참인 회원에게는 [내보내기]를 아예 그리지 않는다("눌러도 거절당하는 버튼"을 없앤다).
+ */
+export function roomGameMemberIds(games: MatchRoomGame[]): Set<string> {
+    const ids = new Set<string>()
+    for (const g of games) {
+        ids.add(g.ownerUserId)
+        for (const p of g.participants) if (p.userId) ids.add(p.userId)
+    }
+    return ids
+}
+
 /** 게임이 하나도 없을 때의 안내 — 출처별로 다음에 할 일이 다르다 */
 export function roomGamesEmptyMessage(detail: MatchRoomDetail): string {
     const s = detail.source

@@ -27,6 +27,11 @@ describe('canKickRoomMember — 방장이 참가자를 내보낼 수 있는가',
         expect(canKickRoomMember({ ...base, row: row('강퇴됨', 'p') })).toBe(false)
     })
 
+    it('경기에 배정된 회원은 내보낼 수 없다 — 방을 못 보게 되면 결과를 확인할 수 없다(0070)', () => {
+        expect(canKickRoomMember({ ...base, hasGames: true, row: row('참가', 'p') })).toBe(false)
+        expect(canKickRoomMember({ ...base, hasGames: false, row: row('참가', 'p') })).toBe(true)
+    })
+
     it('정산이 끝난 방에서는 명단을 바꿔도 결과가 달라지지 않는다', () => {
         expect(canKickRoomMember({ ...base, isSettled: true, row: row('참가', 'p') })).toBe(false)
     })
