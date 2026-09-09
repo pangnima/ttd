@@ -8,18 +8,16 @@ export function countJoined(members: MemberLike[]): number {
     return members.filter((m) => m.status === 'joined').length
 }
 
-/** 실제 참여 — '참가 인원'에 잡히는 상태(방장 포함). 게임 등록 자격 판정에 쓴다. */
+/**
+ * 실제 참여 — '참가 인원'에 잡히는 상태(방장 행도 joined다).
+ * 게임 등록 자격과 **'내가 참여한 경기' 탭**(fetchMyRoomIds)이 함께 보는 단일 술어다.
+ *
+ * ⚠ 초대 대기(invited)는 참여가 아니다(Week 39). 종전에는 "초대도 내 경기"라며 세었지만,
+ * 초대가 목록 최상단 「나를 초대한 매칭」으로 올라오면서 같은 방이 두 자리에 나오고
+ * 수락도 하지 않았는데 탭 숫자가 오르는 문제가 됐다. 수락하는 순간 이 술어가 참이 된다.
+ */
 export function isViewerJoined(viewer?: ViewerLike): boolean {
     return !!viewer && viewer.status === 'joined'
-}
-
-/**
- * '내가 참여한 경기' 탭 술어 — 초대 대기(invited)도 내 경기로 본다.
- * 초대는 방장이 기록에 내 이름을 넣은 상태라 이미 내 경기이고, 목록 카드가 '초대됨' 칩으로 구분해 준다.
- * 거절(declined)만 제외한다.
- */
-export function isViewerInvolved(viewer?: ViewerLike): boolean {
-    return !!viewer && viewer.status !== 'declined'
 }
 
 /** "참가 3명" 표기 */

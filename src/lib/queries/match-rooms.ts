@@ -148,8 +148,12 @@ export async function fetchRoomPage(
 }
 
 /**
- * 내가 얽힌 방 id — 거절(declined)만 제외한다(`isViewerInvolved`와 같은 술어).
+ * 내가 **참가한** 방 id — `joined`만(방장 행도 joined다). 앱 술어 `isViewerJoined`의 거울이다.
  * '내가 참여한' 탭의 2단 조회 1단계이자 그 탭 배지 숫자의 출처다.
+ *
+ * ⚠ 초대 대기(invited)는 세지 않는다(Week 39). 아직 수락하지 않은 매칭까지 '내가 참여한 경기'로
+ * 세면 수락 전인데 숫자가 오르고, 같은 방이 「나를 초대한 매칭」과 이 탭에 두 번 나온다.
+ * 초대는 목록 최상단 초대 섹션이 담당하고, 수락하는 순간 이 탭으로 넘어온다.
  */
 export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
     const supabase = await createClient()
@@ -157,7 +161,7 @@ export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
         .from('match_room_members')
         .select('room_id')
         .eq('user_id', viewerId)
-        .neq('status', 'declined')
+        .eq('status', 'joined')
         .order('created_at', { ascending: false })
         .limit(MY_ROOM_ID_LIMIT)
     if (error || !data) return []

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countJoined, formatHeadcount, isViewerInvolved, isViewerJoined, viewerStatusLabel } from './headcount'
+import { countJoined, formatHeadcount, isViewerJoined, viewerStatusLabel } from './headcount'
 
 describe('countJoined', () => {
     it('방장·참가자 joined만 세고 초대 대기·거절은 제외', () => {
@@ -18,23 +18,16 @@ describe('formatHeadcount', () => {
     })
 })
 
-describe('isViewerJoined', () => {
-    it('joined만 true — 초대 대기·거절·미입장은 false', () => {
-        expect(isViewerJoined(undefined)).toBe(false)
+describe("isViewerJoined — 게임 등록 자격 · '내가 참여한 경기' 탭 술어", () => {
+    it('수락 전(invited)은 참여가 아니다 — 초대는 초대 섹션이 담당한다(Week 39)', () => {
+        expect(isViewerJoined({ role: 'player', status: 'invited' })).toBe(false)
+    })
+
+    it('수락하면(joined) 참여다. 방장 행도 joined이고, 거절·미입장은 아니다', () => {
         expect(isViewerJoined({ role: 'host', status: 'joined' })).toBe(true)
         expect(isViewerJoined({ role: 'player', status: 'joined' })).toBe(true)
-        expect(isViewerJoined({ role: 'player', status: 'invited' })).toBe(false)
         expect(isViewerJoined({ role: 'player', status: 'declined' })).toBe(false)
-    })
-})
-
-describe('isViewerInvolved', () => {
-    it('초대 대기도 내 경기 — 거절과 미입장만 제외', () => {
-        expect(isViewerInvolved(undefined)).toBe(false)
-        expect(isViewerInvolved({ role: 'host', status: 'joined' })).toBe(true)
-        expect(isViewerInvolved({ role: 'player', status: 'joined' })).toBe(true)
-        expect(isViewerInvolved({ role: 'player', status: 'invited' })).toBe(true)
-        expect(isViewerInvolved({ role: 'player', status: 'declined' })).toBe(false)
+        expect(isViewerJoined(undefined)).toBe(false)
     })
 })
 
