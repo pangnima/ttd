@@ -45,15 +45,10 @@ export function PersonalMatchForm({
 }: Props) {
     const s = usePersonalMatchFormState({ initialData, prefill, opponentCandidates, selfUserId, roomContext })
     const submit = usePersonalMatchSubmit(s, initialData?.id, nav)
-    // 방 게임은 확인 요청 없이 곧바로 참가자 기록에 남으므로 '요청' 문구를 쓰지 않는다 (0049).
-    // 로테이션도 풀의 회원에게 참여 요청이 나가므로 그 사실을 라벨이 말한다 (0057).
-    const submitLabel = s.roomId && s.isConfirmFlow ? '게임 저장'
-        : s.isConfirmFlow ? '확인 요청 보내기'
-            : s.isEdit ? '수정 완료'
-                : s.isRoomGame ? '게임 저장'
-                    : s.saveOutcome === 'rotationPlan' && s.rotationMemberCount > 0
-                        ? '참여 요청 보내기'
-                        : '경기 저장'
+    // 상호 확인은 이제 방 안에서만 일어난다(Week 39) — isConfirmFlow가 곧 방 게임이라 '확인 요청' 라벨은 없다
+    const submitLabel = s.isConfirmFlow || s.isRoomGame ? '게임 저장'
+        : s.isEdit ? '수정 완료'
+            : '경기 저장'
 
     const isDialog = variant === 'dialog'
 

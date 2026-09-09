@@ -107,9 +107,10 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
     // 방 게임(신규·seed 채우기)이면 방 id — 회원 상대일 때 createRoomGameAction으로 보낸다
     const roomId = ctx?.roomId ?? (seedFill ? d?.roomId : undefined)
 
-    // 상호 확인 요청 대표 — 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
-    // 게스트·직접 입력·로테이션·일반 수정 모드·모집 중(빈 슬롯)은 자유 기록으로 저장한다.
-    const rep = (!isEdit || seedFill) && !isRotation && selfUserId && allFilled
+    // 상호 확인 게임의 대표 — 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
+    // ⚠ **방 안에서만** 계산한다(Week 39): 방 밖 확인 요청 경로가 사라졌으므로 방 밖에서 대표를 잡으면
+    // 저장할 수 없는 흐름의 라벨('확인 요청 보내기')과 안내가 뜬다. 방 밖 회원 상대는 memberNeedsRoom이 막는다.
+    const rep = (!isEdit || seedFill) && !isRotation && selfUserId && allFilled && !!roomId
         ? resolveConfirmRep(
             { userId: opponent.player.userId, slot: opponent },
             { userId: opponent2.player.userId, slot: opponent2 },

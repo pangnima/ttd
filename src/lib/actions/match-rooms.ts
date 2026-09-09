@@ -95,6 +95,17 @@ export async function createMatchRoomAction(
         return { error: '매칭을 만들지 못했습니다. 잠시 후 다시 시도해주세요.' }
     }
 
+    // direct seed는 방을 만들기 위한 발판일 뿐이라 방이 생기면 떼어낸다.
+    // 남겨 두면 참가자도 스코어도 없는 행이 방의 대표 게임으로 잡혀 두 가지가 깨진다 —
+    // 목록에 만든 적 없는 유령 게임이 뜨고, `recompute_match_room_settled`의 "스코어 빈 게임 0건"이
+    // 영영 성립하지 않아 **방이 정산되지 않는다**.
+    // ⚠ 삭제 전에 room_id를 먼저 끊는다: cleanup 트리거가 `old.room_id`로 방을 지우기 때문이다(0048 §6).
+    // 로테이션 seed(rotation_sessions)는 방의 정체성 자체(미확정 세션)라 그대로 둔다.
+    if (kind === 'direct') {
+        await supabase.from('personal_matches').update({ room_id: null }).eq('id', sourceId)
+        await supabase.from('personal_matches').delete().eq('id', sourceId)
+    }
+
     // 초대 실패는 방을 되돌릴 이유가 못 된다 — 방은 살아 있고 룸 안에서 다시 초대할 수 있다
     let inviteError: string | null = null
     if (input.inviteUserIds.length > 0) {
