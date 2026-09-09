@@ -14,6 +14,7 @@ import {
 } from '@/lib/personal-matches/validate-input'
 import type { PersonalMatchSetScore } from '@/types'
 import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 
 /**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
@@ -133,6 +134,15 @@ export async function createPersonalMatchesAction(
     for (const input of inputs) {
         const validationError = validatePersonalMatchInput(input)
         if (validationError) return { error: validationError }
+        // 방 밖 기록에 회원을 넣을 수 없다(Week 39) — 폼 검증과 같은 술어를 서버에서도 본다.
+        // 방 게임(options.roomId)은 이미 참가 동의를 거쳤으므로 예외다.
+        if (!options.roomId && requiresRoom([
+            { userId: input.opponentUserId },
+            { userId: input.partnerUserId },
+            { userId: input.opponent2UserId },
+        ])) {
+            return { error: DIRECT_RECORD_MEMBER_ERROR }
+        }
     }
 
     const supabase = await createClient()

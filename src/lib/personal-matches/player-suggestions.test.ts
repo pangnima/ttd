@@ -62,6 +62,34 @@ describe('buildPlayerSuggestionGroups', () => {
         expect(buildPlayerSuggestionGroups('zzz', { pastOpponents, candidates, searchResults })).toEqual([])
     })
 
+    describe('회원↔게스트 혼동 방지 (Week 39)', () => {
+        // 예전에 게스트로 적어 둔 이름이 회원과 같으면, '만나본 사람'이 위에 떠 회원을 게스트로 기록하게 된다.
+        // 회원이 끼는 경기는 매칭 룸을 거쳐야 하므로 그 오선택은 곧 동의 절차 우회로다.
+        const past = [{ name: '김철수' }, { name: '박민수' }]
+
+        it('클럽 회원과 이름이 같은 만나본 사람은 버린다', () => {
+            const groups = buildPlayerSuggestionGroups('', { pastOpponents: past, candidates })
+            expect(groups[0].items.map((i) => i.label)).toEqual(['박민수'])
+        })
+
+        it('전체 회원 검색 결과와 이름이 같아도 버린다', () => {
+            const groups = buildPlayerSuggestionGroups('김철민', {
+                pastOpponents: [{ name: '김철민' }], candidates: [], searchResults,
+            })
+            expect(groups.map((g) => g.value)).toEqual(['전체 회원'])
+        })
+
+        it('공백·대소문자 차이는 같은 이름으로 본다', () => {
+            const groups = buildPlayerSuggestionGroups('', { pastOpponents: [{ name: ' 김 철 수 ' }], candidates })
+            expect(groups.map((g) => g.value)).toEqual(['클럽 회원'])
+        })
+
+        it('게스트 회원(is_guest)과 이름이 같은 것은 남긴다 — 둘 다 비회원이라 혼동이 없다', () => {
+            const groups = buildPlayerSuggestionGroups('', { pastOpponents: [{ name: '이영희' }], candidates })
+            expect(groups[0].items.map((i) => i.label)).toEqual(['이영희'])
+        })
+    })
+
     describe('방 참가자 그룹 (0048)', () => {
         const roomParticipants: OpponentCandidate[] = [
             { id: 'u1', name: '김철수', nickname: 'cheol', ntrp: 3, personalNtrp: 3.214, dominantHand: 'left', isGuest: false, clubNames: [] },

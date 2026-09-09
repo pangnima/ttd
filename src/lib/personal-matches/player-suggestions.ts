@@ -63,11 +63,20 @@ function fromCandidate(c: OpponentCandidate, source: 'room' | 'club' | 'search')
     }
 }
 
+/** 이름 비교용 정규화 — 공백·대소문자 차이는 같은 사람으로 본다 */
+function normalizeName(name: string): string {
+    return name.trim().toLowerCase().replace(/\s+/g, '')
+}
+
 /**
  * 후보 그룹 생성. 빈 항목 그룹은 제외한다.
  * - 방 참가자: 클라이언트 필터, 빈 입력이면 전체 노출. 같은 회원은 클럽·전체 회원 그룹에서 제외(방 그룹 우선).
  * - 만나본 사람·클럽 회원: 입력값으로 클라이언트 필터(이름·닉네임 부분 일치). 빈 입력이면 전체 노출.
  * - 전체 회원: 서버 검색 결과에서 클럽 후보와 겹치는 회원을 제외(클럽 그룹 우선)하고 입력값으로 재필터. 빈 입력이면 숨김.
+ *
+ * ⚠ '만나본 사람'은 회원과 **이름이 겹치면 버린다**(Week 39). 그 그룹은 목록 위쪽에 있고 userId가 없어서,
+ * 예전에 게스트로 적어 둔 이름이 회원 항목보다 먼저 보이면 회원을 게스트로 기록하게 된다 —
+ * 회원이 끼는 경기는 매칭 룸을 거쳐야 하므로(direct-record.ts) 그 오선택이 곧 동의 절차 우회로가 된다.
  */
 export function buildPlayerSuggestionGroups(
     rawQuery: string,
@@ -80,8 +89,15 @@ export function buildPlayerSuggestionGroups(
         .map((c) => fromCandidate(c, 'room'))
     const roomIds = new Set(roomParticipants.map((c) => c.id))
 
+    // 회원(비게스트) 이름 — 방 참가자·클럽 후보·검색 결과 전부에서 모은다
+    const memberNames = new Set(
+        [...roomParticipants, ...candidates, ...searchResults]
+            .filter((c) => !c.isGuest)
+            .map((c) => normalizeName(c.name)),
+    )
+
     const past: PlayerSuggestion[] = pastOpponents
-        .filter((p) => matchesQuery(query, p.name))
+        .filter((p) => !memberNames.has(normalizeName(p.name)) && matchesQuery(query, p.name))
         .map((p) => ({
             value: `past:${p.name}`,
             label: p.name,

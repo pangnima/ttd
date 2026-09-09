@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { CourtSurface, MatchType, RotationPoolPlayer } from '@/types'
 import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
+import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
@@ -57,6 +58,8 @@ export async function createRotationSessionAction(input: RotationSessionInput): 
     if (courtNameError) return { error: courtNameError }
     // 방 밖 세션은 풀이 곧 참가자 명단이다 — 빈 풀 세션은 매칭(방)의 몫이므로 여기서는 3명을 요구한다
     if (input.players.length < 3) return { error: '참가자를 3명 이상 등록해주세요.' }
+    // 회원이 끼면 매칭 룸에서 기록한다(Week 39) — 방 밖 세션은 비회원끼리의 로테이션 전용
+    if (requiresRoom(input.players)) return { error: DIRECT_RECORD_MEMBER_ERROR }
     for (const p of input.players) {
         const err = validatePlayer(p)
         if (err) return { error: err }

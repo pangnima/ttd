@@ -3,23 +3,19 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPersonalMatchesAction, updatePersonalMatchAction } from '@/lib/actions/personal-matches'
-import { createMatchRequestAction } from '@/lib/actions/match-requests'
 import { createRoomGameAction } from '@/lib/actions/match-rooms'
 import { createRotationSessionAction } from '@/lib/actions/rotation-sessions'
 import { compactPool, poolToPlayers } from '@/lib/personal-matches/rotation'
-import { hubTabHref } from '@/lib/match-requests/tabs'
 import { handOf, type PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 /**
- * 개인 경기 등록/수정 폼 제출 — 4갈래.
+ * 개인 경기 등록/수정 폼 제출 — 3갈래.
  *  ① 로테이션: 선수 풀만 세션으로 저장 (게임은 카드 '결과 입력'에서)
  *  ② 방 게임(0049): 방 참가자끼리의 게임 — 수락 없이 참가자 전원 기록 생성, 결과는 제안·확인으로 확정
- *  ③ 상호 확인 요청: 대표 확인자에게 요청 생성 (수락 시 양측 미확정 기록)
- *  ④ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
- * 방을 만드는 일은 여기서 하지 않는다 — 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다(Week 39).
+ *  ③ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
  *
- * 저장 후 목적지: 폼은 세트를 받지 않아 **신규 저장물은 전부 미확정**이므로 확인 요청 허브로 보낸다
- * (개인 경기 결과로 보내면 방금 저장한 기록이 없는 화면에 도착한다). 방 게임만 방 상세로 돌아간다.
+ * 방 밖 상호 확인 요청 갈래는 Week 39에 사라졌다 — **회원이 끼면 매칭 룸을 거친다**(direct-record.ts).
+ * 방을 만드는 일도 여기서 하지 않는다: 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다.
  */
 export type SubmitNavigation = {
     /** 저장 성공 후 — 다이얼로그를 닫고 새로고침한다. 주면 router.push(next)를 하지 않는다 */
@@ -54,9 +50,9 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             run(() => createRotationSessionAction({
                 playedAt, playedTime, matchType, surface, notes: notes || undefined,
                 courtName: courtName.trim() || undefined,
-                // 빈 행은 제거하고 보낸다 (모집형은 0명도 허용)
+                // 방 밖 세션은 전원 비회원이라(Week 39) 좌석·승인 없이 곧바로 결과를 입력할 수 있다
                 players: poolToPlayers(compactPool(s.rotation.pool)),
-            }), rotationLanding(s.rotation.pool))
+            }), '/me/personal-matches')
             return
         }
 
@@ -87,31 +83,6 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
             return
         }
 
-        if (s.rep && s.surface) {
-            // 대표가 상대2 칸에 있었다면 슬롯을 스왑해 opponent = 대표로 보낸다
-            const rep = s.rep.opponent.slot
-            const other = s.rep.opponent2.slot
-            const num = (v: string) => (v.trim() ? Number(v) : undefined)
-            const { playedAt, playedTime, matchType, surface, notes, courtName } = s
-            run(() => createMatchRequestAction({
-                matchType,
-                opponentUserId: s.rep!.repUserId,
-                opponentName: rep.player.name.trim(),
-                opponentDominantHand: handOf(rep.player),
-                partnerName: s.isDoubles ? s.partner.player.name.trim() || undefined : undefined,
-                partnerUserId: s.isDoubles ? s.partner.player.userId : undefined,
-                partnerDominantHand: s.isDoubles ? handOf(s.partner.player) : undefined,
-                partnerNtrp: s.isDoubles ? num(s.partner.ntrp) : undefined,
-                opponent2Name: s.isDoubles ? other.player.name.trim() || undefined : undefined,
-                opponent2UserId: s.isDoubles ? other.player.userId : undefined,
-                opponent2DominantHand: s.isDoubles ? handOf(other.player) : undefined,
-                opponent2Ntrp: s.isDoubles ? num(other.ntrp) : undefined,
-                playedAt, playedTime, surface, notes: notes || undefined,
-                courtName: courtName.trim() || undefined,
-            }), hubTabHref('waiting'))
-            return
-        }
-
         const input = s.buildInput()
         // 방 게임(0048)은 room_id를 붙여 저장하고 방 상세로 돌아간다 (신규 등록만 — 수정은 room_id를 옮기지 않는다)
         const newRoomId = s.roomContext?.roomId
@@ -134,13 +105,3 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
     return { handleSubmit, isPending, error, cancel: nav?.onCancel ?? (() => router.back()) }
 }
 
-/**
- * 로테이션 세션을 만든 뒤 어느 탭으로 보낼 것인가.
- *
- * 0064부터 풀에 **회원이 있으면** 좌석이 `pending`으로 태어나 그 세션은 결과 입력이 열리지 않는다 —
- * 「상대 승인 대기」의 '참가자 응답 대기'에 뜬다. 전원 비회원이면 좌석 자체가 없어 곧바로 입력할 수
- * 있으므로 개인 경기 결과의 「결과 입력 대기」다(Week 38). 한쪽으로 고정하면 방금 만든 일정이 없는 화면이 나온다.
- */
-function rotationLanding(pool: { player: { userId?: string } }[]): string {
-    return pool.some((row) => !!row.player.userId) ? hubTabHref('waiting') : '/me/personal-matches'
-}

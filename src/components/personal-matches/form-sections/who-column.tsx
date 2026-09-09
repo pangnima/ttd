@@ -7,6 +7,7 @@ import { FormSectionCard } from '@/components/common/form-section-card'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
 import { SaveOutcomeNotice } from '@/components/personal-matches/form-sections/save-outcome-notice'
+import { MemberNeedsRoomNotice } from '@/components/personal-matches/form-sections/member-needs-room-notice'
 import { PlayersSection } from '@/components/personal-matches/form-sections/players-section'
 import { RecruitingPlayersSection } from '@/components/personal-matches/form-sections/recruiting-players-section'
 import { DoublesModeToggle } from '@/components/personal-matches/doubles-mode-toggle'
@@ -90,7 +91,9 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         searchSelfUserId={searchSelfUserId}
                     />
                 )}
-                {s.rep ? (
+                {s.memberNeedsRoom ? (
+                    <MemberNeedsRoomNotice />
+                ) : s.rep ? (
                     <ConfirmFlowNotice
                         opponentName={s.rep.opponent.slot.player.name.trim() || '상대'}
                         isDoubles={s.isDoubles}

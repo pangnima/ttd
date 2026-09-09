@@ -8,6 +8,7 @@ import { isPlayerFilled } from '@/lib/personal-matches/validators'
 import { isSlotEmpty, isSlotOk } from '@/lib/personal-matches/lineup'
 import { isPlatformMember, resolveConfirmRep, resolveSaveOutcome } from '@/lib/personal-matches/confirm-flow'
 import { compactPool, type RotationSessionMeta } from '@/lib/personal-matches/rotation'
+import { requiresRoom } from '@/lib/personal-matches/direct-record'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
@@ -133,7 +134,15 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
     const fixedValid =
         slotOk('opponent', opponent) &&
         (!isDoubles || (slotOk('partner', partner) && slotOk('opponent2', opponent2))) && metaOk
-    const isValid = isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid
+    // 직접 기록은 비회원끼리의 경기 전용(Week 39) — 회원이 끼면 매칭 룸에서 기록해야 한다.
+    // 수정 모드와 방 게임은 이미 절차를 거친 기록이라 검사하지 않는다.
+    const directPlayers = isRotation
+        ? compactPool(rotation.pool).map((r) => ({ userId: r.player.userId }))
+        : SLOT_KEYS.map((k) => ({ userId: slots[k].player.userId }))
+    const memberNeedsRoom = !isEdit && !roomId && !isRoomGame && requiresRoom(directPlayers)
+
+    const isValid = (isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid)
+        && !memberNeedsRoom
 
     const num = (s: string) => (s.trim() ? Number(s) : undefined)
     // 자유 기록 페이로드. 세트는 신규면 빈 배열(미확정), 수정이면 기존 세트를 그대로 보존한다.
@@ -164,7 +173,7 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
         courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
-        allowEmptyPlayers,
+        allowEmptyPlayers, memberNeedsRoom,
         openSlots, openSlot, closeSlot,
         roomContext: ctx, isRoomGame,
         roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined,
