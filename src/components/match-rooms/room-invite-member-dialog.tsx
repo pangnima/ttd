@@ -1,0 +1,47 @@
+'use client'
+
+import { useState } from 'react'
+import { UserPlus } from 'lucide-react'
+import type { OpponentCandidate } from '@/lib/queries/users'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { RoomInviteMemberSearch } from '@/components/match-rooms/room-invite-member-search'
+
+type Props = {
+    roomId: string
+    selfUserId: string
+    candidates: OpponentCandidate[]
+    /** 후보에서 뺄 회원 — inviteExcludedUserIds가 계산한다 */
+    excludedUserIds: string[]
+}
+
+/**
+ * [회원 초대] — 지목한 회원은 비밀번호를 몰라도 초대 수락만으로 들어온다(0065).
+ * 방장이 열면 내보낸 회원도 후보에 다시 뜬다 — 강퇴를 되돌리는 유일한 경로다(0068 §5).
+ */
+export function RoomInviteMemberDialog({ roomId, selfUserId, candidates, excludedUserIds }: Props) {
+    const [open, setOpen] = useState(false)
+
+    return (
+        <>
+            <Button size="sm" variant="outline" className="h-7 text-caption gap-1" onClick={() => setOpen(true)}>
+                <UserPlus className="size-3.5" />
+                회원 초대
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>회원 초대</DialogTitle>
+                    </DialogHeader>
+                    <RoomInviteMemberSearch
+                        roomId={roomId}
+                        selfUserId={selfUserId}
+                        candidates={candidates}
+                        excludedUserIds={excludedUserIds}
+                        onDone={() => setOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+        </>
+    )
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail } from '@/types'
-import { buildMemberRows, memberMetaLine, type MemberRowView } from './members-view'
+import { buildMemberRows, inviteExcludedUserIds, memberMetaLine, type MemberRowView } from './members-view'
 
 const base: MatchRoomDetail = {
     room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', isSettled: false, createdAt: '' },
@@ -45,6 +45,41 @@ describe('buildMemberRows', () => {
             ],
         })
         expect(rows.filter((r) => r.name === '외부상대')).toHaveLength(1)
+    })
+})
+
+describe('buildMemberRows — 지금 방에 있는 사람만', () => {
+    const kicked = { userId: 'k', name: '강퇴자', nickname: '', deleted: false, role: 'player' as const, status: 'removed' as const }
+
+    it('내보낸 회원은 명단에서 빠진다 — 되돌리는 길은 [회원 초대]다', () => {
+        const rows = buildMemberRows({ ...base, members: [...base.members, kicked] })
+        expect(rows.map((r) => r.name)).not.toContain('강퇴자')
+    })
+
+    it('스스로 나간 사람과 같은 처리 — 라벨도 남지 않는다', () => {
+        const rows = buildMemberRows({ ...base, members: [...base.members, kicked] })
+        expect(rows.map((r) => r.statusLabel)).not.toContain('강퇴됨')
+    })
+})
+
+describe('inviteExcludedUserIds — [회원 초대] 후보에서 뺄 회원', () => {
+    const members = [
+        { userId: 'h', name: '호스트', nickname: '', deleted: false, role: 'host' as const, status: 'joined' as const },
+        { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player' as const, status: 'invited' as const },
+        { userId: 'd', name: '나간이', nickname: '', deleted: false, role: 'player' as const, status: 'declined' as const },
+        { userId: 'k', name: '강퇴자', nickname: '', deleted: false, role: 'player' as const, status: 'removed' as const },
+    ]
+
+    it('방장에게는 강퇴자가 후보로 남는다 — 그 사람을 다시 부를 유일한 경로', () => {
+        expect(inviteExcludedUserIds(members, true)).toEqual(['h', 'i', 'd'])
+    })
+
+    it('참가자에게는 강퇴자도 빠진다 — 눌러도 아무 일이 없는 헛 항목이기 때문', () => {
+        expect(inviteExcludedUserIds(members, false)).toEqual(['h', 'i', 'd', 'k'])
+    })
+
+    it('나간 사람(declined)은 누구에게도 되살아나지 않는다 — RPC가 on conflict do nothing이다', () => {
+        expect(inviteExcludedUserIds(members, true)).toContain('d')
     })
 })
 

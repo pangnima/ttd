@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
 import { PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
-import { canKickRoomMember, canReinviteRoomMember, canRemoveRoomGuest } from '@/lib/match-rooms/kick'
+import { canKickRoomMember, canRemoveRoomGuest } from '@/lib/match-rooms/kick'
 import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
 import { RoomMemberHostActions } from '@/components/match-rooms/room-member-host-actions'
 import { RoomGuestRemoveButton } from '@/components/match-rooms/room-guest-remove-button'
@@ -22,7 +22,6 @@ const STATUS_CLASS: Record<string, string> = {
     '참가': 'border-win/40 text-win',
     '초대 대기': 'border-spot/50 text-spot',
     '확인 대기': 'border-spot/50 text-spot',
-    '강퇴됨': 'border-border text-muted-foreground',
 }
 
 // NTRP는 이름 옆에 붙는다 — 실력이 곧 그 사람을 고르는 기준이라 이름과 한 덩어리로 읽혀야 한다.
@@ -37,11 +36,8 @@ export function RoomMemberRow({ row, roomId, isSettled, viewerId, host }: Props)
             {row.deleted && <span className="ml-1 text-caption text-muted-foreground">(탈퇴)</span>}
         </span>
     )
-    const args = { isHost: !!host, isSettled, row }
+    const canKick = !!host && canKickRoomMember({ isHost: true, isSettled, row, viewerId: host.viewerId })
     const canRemoveGuest = canRemoveRoomGuest({ isHost: !!host, isSettled, viewerId, row })
-    const mode = host && canKickRoomMember({ ...args, viewerId: host.viewerId })
-        ? 'kick' as const
-        : host && canReinviteRoomMember(args) ? 'reinvite' as const : null
 
     return (
         <div className="flex items-center gap-3 px-4 py-2.5">
@@ -64,8 +60,8 @@ export function RoomMemberRow({ row, roomId, isSettled, viewerId, host }: Props)
             <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
                 {row.statusLabel}
             </span>
-            {mode && row.userId && (
-                <RoomMemberHostActions roomId={roomId} userId={row.userId} name={row.name} mode={mode} />
+            {canKick && row.userId && (
+                <RoomMemberHostActions roomId={roomId} userId={row.userId} name={row.name} />
             )}
             {canRemoveGuest && row.guestId && (
                 <RoomGuestRemoveButton roomId={roomId} guestId={row.guestId} name={row.name} />

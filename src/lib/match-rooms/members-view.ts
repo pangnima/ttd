@@ -4,6 +4,10 @@ import { formatDominantHand, formatRacket } from '@/lib/profile/signup-fields'
 /**
  * 방 상세 참가자 명단 행 — 멤버 테이블(회원) + 출처 기록의 비회원 참가자 + 수락 전 대표 확인자를 한 목록으로 합친다.
  * 순수 함수(테스트 대상). 표시 순서: 방장 → 참가 → 초대 대기 → 비회원/확인 대기.
+ *
+ * **지금 방에 있는 사람만 뜬다** — 스스로 나간 사람(declined)도, 방장이 내보낸 사람(removed)도 없다.
+ * 강퇴 행을 남겨 [다시 초대]를 붙이던 방식(0068)은 철회했다: 명단은 "코트에 누가 있나"를 읽는 곳이고,
+ * 되돌릴 길은 [회원 초대] 검색이 대신한다(inviteExcludedUserIds가 방장에게만 강퇴자를 후보로 남긴다).
  * (열람·합류 신청 상태는 0048에서 폐지 — 비밀번호 입장이 곧 참가)
  */
 export type MemberRowView = {
@@ -40,15 +44,14 @@ export function memberMetaLine(row: MemberRowView): string {
 }
 
 const ORDER: Record<string, number> = {
-    '방장': 0, '참가': 1, '초대 대기': 2, '확인 대기': 3, '비회원': 4, '강퇴됨': 5,
+    '방장': 0, '참가': 1, '초대 대기': 2, '확인 대기': 3, '비회원': 4,
 }
 
 function memberStatusLabel(m: MatchRoomMember): string | null {
     if (m.role === 'host') return '방장'
-    if (m.status === 'declined') return null
+    // 나간 사람도 내보낸 사람도 명단에서 빠진다 — 남는 것은 지금 방에 있거나 올 사람뿐이다
+    if (m.status === 'declined' || m.status === 'removed') return null
     if (m.status === 'invited') return '초대 대기'
-    // 스스로 나간 사람(declined)과 달리 명단에 남긴다 — 방장이 누구를 뺐는지 보고 되돌릴 수 있어야 한다
-    if (m.status === 'removed') return '강퇴됨'
     return '참가'
 }
 
@@ -123,4 +126,18 @@ export function buildMemberRows(detail: MatchRoomDetail): MemberRowView[] {
     // 수락 전 대표가 이미 멤버(예: 비밀번호로 먼저 입장)면 중복 표시하지 않는다
     const guests = guestRows(detail, seen).filter((g) => !(detail.source.kind === 'confirmation' && g.statusLabel === '확인 대기' && detail.source.repUserId && memberIds.has(detail.source.repUserId)))
     return [...members, ...roomGuests, ...guests].sort((a, b) => (ORDER[a.statusLabel] ?? 9) - (ORDER[b.statusLabel] ?? 9))
+}
+
+/**
+ * [회원 초대] 검색에서 뺄 회원 id — 이미 방에 있거나 부를 수 없는 사람.
+ *
+ * 강퇴자(removed)만 예외다. `invite_room_members`(0068 §5)는 **방장이 부를 때만** 강퇴를 풀어 주므로,
+ * 명단에서 사라진 그 사람을 다시 부르는 길이 방장에게는 여기밖에 없다.
+ * 참가자에게 보이면 눌러도 아무 일이 없는 헛 항목이 되므로 그때는 함께 제외한다.
+ * 나간 사람(declined)은 어느 쪽도 되살릴 수 없다 — RPC가 `on conflict do nothing`이라 언제나 제외한다.
+ */
+export function inviteExcludedUserIds(members: MatchRoomMember[], canReinvite: boolean): string[] {
+    return members
+        .filter((m) => !(m.status === 'removed' && canReinvite))
+        .map((m) => m.userId)
 }

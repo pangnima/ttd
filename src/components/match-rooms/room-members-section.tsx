@@ -1,6 +1,6 @@
 import type { MatchRoomDetail } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
-import { buildMemberRows } from '@/lib/match-rooms/members-view'
+import { buildMemberRows, inviteExcludedUserIds } from '@/lib/match-rooms/members-view'
 import { countJoined, formatHeadcount } from '@/lib/match-rooms/headcount'
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { RoomMemberRow } from '@/components/match-rooms/room-member-row'
@@ -31,7 +31,7 @@ export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
                         roomId={detail.room.id}
                         selfUserId={invite.selfUserId}
                         candidates={invite.candidates}
-                        memberUserIds={detail.members.map((m) => m.userId)}
+                        excludedUserIds={inviteExcludedUserIds(detail.members, !!host)}
                     />
                 )}
             </div>
