@@ -2,7 +2,7 @@ import type { Json } from '@/types/supabase'
 import type {
     CourtSurface, MatchRequestStatus, MatchResultStatus, MatchRoomDetail, MatchRoomGame, MatchRoomHost, MatchRoomMember,
     MatchRoomMemberRole, MatchRoomMemberStatus, MatchRoomParticipantRef, MatchRoomSource, MatchRoomSourceKind,
-    MatchRoomSourceRole, MatchRoomViewer, MatchType, PersonalMatchSetScore, RotationPoolPlayer,
+    MatchRoomGuest, MatchRoomSourceRole, MatchRoomViewer, MatchType, PersonalMatchSetScore, RotationPoolPlayer,
 } from '@/types'
 
 /**
@@ -53,6 +53,21 @@ function toMember(v: unknown): MatchRoomMember | null {
         hand: v.hand === 'right' || v.hand === 'left' ? v.hand : undefined,
         racketBrand: str(v.racketBrand),
         racketModel: str(v.racketModel),
+    }
+}
+
+function toGuest(v: unknown): MatchRoomGuest | null {
+    if (!isRec(v)) return null
+    const id = str(v.id)
+    const name = str(v.name)
+    if (!id || !name) return null
+    return {
+        id,
+        name,
+        hand: v.hand === 'right' || v.hand === 'left' ? v.hand : undefined,
+        ntrp: num(v.ntrp),
+        gender: v.gender === 'male' || v.gender === 'female' ? v.gender : undefined,
+        createdBy: str(v.createdBy),
     }
 }
 
@@ -145,6 +160,8 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
         host,
         viewer: toViewer(json.viewer),
         members: arr(json.members).map(toMember).filter((m): m is MatchRoomMember => !!m),
+        // 마이그레이션보다 앱이 먼저 떠도 화면이 깨지지 않게 — 키가 없으면 빈 명단이다
+        guests: arr(json.guests).map(toGuest).filter((g): g is MatchRoomGuest => !!g),
         source: toSource(json.source),
         games: arr(json.games).map(toGame).filter((g): g is MatchRoomGame => !!g),
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { KICKED_LABEL, canKickRoomMember, canReinviteRoomMember } from './kick'
+import { KICKED_LABEL, canKickRoomMember, canReinviteRoomMember, canRemoveRoomGuest } from './kick'
 
 const HOST = 'h'
 const base = { isHost: true, viewerId: HOST, isSettled: false }
@@ -47,5 +47,29 @@ describe('canReinviteRoomMember — 강퇴를 되돌리는 유일한 경로', ()
 
     it('정산이 끝난 방에서는 막는다', () => {
         expect(canReinviteRoomMember({ isHost: true, isSettled: true, row: row(KICKED_LABEL, 'p') })).toBe(false)
+    })
+})
+
+describe('canRemoveRoomGuest — 방에 등록된 비회원 빼기 (0069)', () => {
+    const guestRow = { guestId: 'g1', guestCreatedBy: 'p' }
+
+    it('방장은 누가 부른 게스트든 뺄 수 있다', () => {
+        expect(canRemoveRoomGuest({ isHost: true, isSettled: false, viewerId: 'h', row: guestRow })).toBe(true)
+    })
+
+    it('내가 부른 게스트는 방장이 아니어도 뺀다 — 잘못 부른 것을 되돌릴 경로', () => {
+        expect(canRemoveRoomGuest({ isHost: false, isSettled: false, viewerId: 'p', row: guestRow })).toBe(true)
+    })
+
+    it('남이 부른 게스트는 방장만', () => {
+        expect(canRemoveRoomGuest({ isHost: false, isSettled: false, viewerId: 'x', row: guestRow })).toBe(false)
+    })
+
+    it('파생 비회원 행(등록되지 않은 이름)에는 빼기가 없다', () => {
+        expect(canRemoveRoomGuest({ isHost: true, isSettled: false, viewerId: 'h', row: {} })).toBe(false)
+    })
+
+    it('정산이 끝난 방에서는 막는다', () => {
+        expect(canRemoveRoomGuest({ isHost: true, isSettled: true, viewerId: 'h', row: guestRow })).toBe(false)
     })
 })

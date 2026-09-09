@@ -2,14 +2,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
 import { PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
-import { canKickRoomMember, canReinviteRoomMember } from '@/lib/match-rooms/kick'
+import { canKickRoomMember, canReinviteRoomMember, canRemoveRoomGuest } from '@/lib/match-rooms/kick'
 import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
 import { RoomMemberHostActions } from '@/components/match-rooms/room-member-host-actions'
+import { RoomGuestRemoveButton } from '@/components/match-rooms/room-guest-remove-button'
 
 type Props = {
     row: MemberRowView
     roomId: string
     isSettled: boolean
+    /** 보고 있는 사람 — 게스트 [빼기]는 방장이 아니어도 '등록한 본인'에게 열린다(0069) */
+    viewerId: string
     /** 방장에게만 넘어온다 — 내보내기·다시 초대 */
     host?: { viewerId: string }
 }
@@ -27,7 +30,7 @@ const STATUS_CLASS: Record<string, string> = {
 const NTRP_BADGE = `${PILL_BASE} ${TYPO.micro} shrink-0 border-border text-foreground tabular-nums`
 
 /** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·NTRP·상태 칩 / 2줄: 닉네임·주력손·라켓 */
-export function RoomMemberRow({ row, roomId, isSettled, host }: Props) {
+export function RoomMemberRow({ row, roomId, isSettled, viewerId, host }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
             {row.name}
@@ -35,6 +38,7 @@ export function RoomMemberRow({ row, roomId, isSettled, host }: Props) {
         </span>
     )
     const args = { isHost: !!host, isSettled, row }
+    const canRemoveGuest = canRemoveRoomGuest({ isHost: !!host, isSettled, viewerId, row })
     const mode = host && canKickRoomMember({ ...args, viewerId: host.viewerId })
         ? 'kick' as const
         : host && canReinviteRoomMember(args) ? 'reinvite' as const : null
@@ -62,6 +66,9 @@ export function RoomMemberRow({ row, roomId, isSettled, host }: Props) {
             </span>
             {mode && row.userId && (
                 <RoomMemberHostActions roomId={roomId} userId={row.userId} name={row.name} mode={mode} />
+            )}
+            {canRemoveGuest && row.guestId && (
+                <RoomGuestRemoveButton roomId={roomId} guestId={row.guestId} name={row.name} />
             )}
         </div>
     )

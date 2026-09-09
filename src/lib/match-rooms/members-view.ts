@@ -1,4 +1,4 @@
-import type { MatchRoomDetail, MatchRoomMember } from '@/types'
+import type { MatchRoomDetail, MatchRoomGuest, MatchRoomMember } from '@/types'
 import { formatDominantHand, formatRacket } from '@/lib/profile/signup-fields'
 
 /**
@@ -14,7 +14,11 @@ export type MemberRowView = {
     userId?: string
     deleted?: boolean
     statusLabel: string
-    /** 프로필 메타(0067) — 회원 행에만 있다. 비회원은 users 행이 없어 전부 undefined */
+    /** 방에 등록된 비회원(0069)의 행 id — [빼기]의 대상. 파생 비회원 행에는 없다 */
+    guestId?: string
+    /** 등록한 회원 — 방장이 아니어도 본인이 부른 게스트는 뺄 수 있다 */
+    guestCreatedBy?: string
+    /** 프로필 메타(0067) — 회원 행에만 있다. 파생 비회원은 users 행이 없어 전부 undefined */
     ntrp?: number
     hand?: 'right' | 'left'
     racketBrand?: string
@@ -66,10 +70,32 @@ function memberRow(m: MatchRoomMember): MemberRowView | null {
     }
 }
 
-/** 출처 기록에서 비회원(회원 id 없음) 참가자 이름을 뽑는다 — 멤버 테이블에 없으므로 이름만 표시 */
-function guestRows(detail: MatchRoomDetail): MemberRowView[] {
+/**
+ * 방에 등록된 비회원(0069) — 게임에 이름이 오르기 전부터 명단에 있다.
+ * 파생 비회원 행보다 먼저 놓아, 같은 사람이 게임에도 나오면 이름 dedupe가 그쪽을 흡수하게 한다.
+ */
+function roomGuestRows(guests: MatchRoomGuest[], seen: Set<string>): MemberRowView[] {
     const rows: MemberRowView[] = []
-    const seen = new Set<string>()
+    for (const g of guests) {
+        const name = g.name.trim()
+        if (!name || seen.has(name)) continue
+        seen.add(name)
+        rows.push({
+            key: `rg:${g.id}`,
+            name,
+            statusLabel: '비회원',
+            guestId: g.id,
+            guestCreatedBy: g.createdBy,
+            ntrp: g.ntrp,
+            hand: g.hand,
+        })
+    }
+    return rows
+}
+
+/** 출처 기록·게임에서 파생된 비회원 — 등록 절차 없이 이름만 남은 사람들 */
+function guestRows(detail: MatchRoomDetail, seen: Set<string>): MemberRowView[] {
+    const rows: MemberRowView[] = []
     const push = (name: string, statusLabel = '비회원') => {
         const trimmed = name.trim()
         if (!trimmed || seen.has(trimmed)) return
@@ -91,7 +117,10 @@ function guestRows(detail: MatchRoomDetail): MemberRowView[] {
 export function buildMemberRows(detail: MatchRoomDetail): MemberRowView[] {
     const members = detail.members.map(memberRow).filter((r): r is MemberRowView => !!r)
     const memberIds = new Set(members.map((r) => r.userId))
+    // 이름 집합은 등록 게스트 → 파생 비회원 순으로 이어진다(한 사람이 두 행이 되지 않는다)
+    const seen = new Set<string>()
+    const roomGuests = roomGuestRows(detail.guests, seen)
     // 수락 전 대표가 이미 멤버(예: 비밀번호로 먼저 입장)면 중복 표시하지 않는다
-    const guests = guestRows(detail).filter((g) => !(detail.source.kind === 'confirmation' && g.statusLabel === '확인 대기' && detail.source.repUserId && memberIds.has(detail.source.repUserId)))
-    return [...members, ...guests].sort((a, b) => (ORDER[a.statusLabel] ?? 9) - (ORDER[b.statusLabel] ?? 9))
+    const guests = guestRows(detail, seen).filter((g) => !(detail.source.kind === 'confirmation' && g.statusLabel === '확인 대기' && detail.source.repUserId && memberIds.has(detail.source.repUserId)))
+    return [...members, ...roomGuests, ...guests].sort((a, b) => (ORDER[a.statusLabel] ?? 9) - (ORDER[b.statusLabel] ?? 9))
 }

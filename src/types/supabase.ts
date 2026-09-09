@@ -711,6 +711,54 @@ export type Database = {
           },
         ]
       }
+      match_room_guests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dominant_hand: string | null
+          gender: string | null
+          id: string
+          name: string
+          ntrp: number | null
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dominant_hand?: string | null
+          gender?: string | null
+          id?: string
+          name: string
+          ntrp?: number | null
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dominant_hand?: string | null
+          gender?: string | null
+          id?: string
+          name?: string
+          ntrp?: number | null
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_room_guests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_room_guests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_room_members: {
         Row: {
           created_at: string
@@ -1157,6 +1205,16 @@ export type Database = {
             Args: { p_club_id: string; p_gender?: string; p_nickname: string }
             Returns: string
           }
+      add_room_guest: {
+        Args: {
+          p_gender?: string
+          p_hand?: string
+          p_name: string
+          p_ntrp?: number
+          p_room_id: string
+        }
+        Returns: string
+      }
       apply_club_rating_snapshot: {
         Args: { p_club_id: string; p_snapshot: Json }
         Returns: undefined
@@ -1242,6 +1300,10 @@ export type Database = {
       normalize_to_requester_perspective: {
         Args: { p_seat: string; p_sets: Json }
         Returns: Json
+      }
+      remove_room_guest: {
+        Args: { p_guest_id: string }
+        Returns: undefined
       }
       remove_rotation_session_player: {
         Args: { p_session_id: string; p_user_id: string }

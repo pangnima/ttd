@@ -13,6 +13,7 @@ const base: MatchRoomDetail = {
         { userId: 'p', name: '참가자', nickname: '', deleted: false, role: 'player', status: 'joined' },
         { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player', status: 'invited', sourceRole: 'pool' },
     ],
+    guests: [],
     source: { kind: 'rotation', isFinalized: false, pool: [{ name: '비회원A', ntrp: 3 }, { userId: 'p', name: '참가자' }] },
     games: [],
 }
@@ -44,6 +45,35 @@ describe('buildMemberRows', () => {
             ],
         })
         expect(rows.filter((r) => r.name === '외부상대')).toHaveLength(1)
+    })
+})
+
+describe('buildMemberRows — 방에 등록된 비회원(0069)', () => {
+    const guest = { id: 'g1', name: '게스트김', ntrp: 3.5, hand: 'left' as const, createdBy: 'p' }
+
+    it('게임에 오르기 전에도 명단에 비회원으로 뜨고 NTRP·손잡이를 갖는다', () => {
+        const rows = buildMemberRows({ ...base, source: { kind: 'direct' }, guests: [guest] })
+        const row = rows.find((r) => r.name === '게스트김')
+        expect(row).toMatchObject({ statusLabel: '비회원', guestId: 'g1', guestCreatedBy: 'p', ntrp: 3.5, hand: 'left' })
+    })
+
+    it('같은 이름이 게임에도 나오면 한 행뿐이다 — 등록 행이 이긴다', () => {
+        const rows = buildMemberRows({
+            ...base,
+            source: { kind: 'direct' },
+            guests: [guest],
+            games: [
+                { id: 'g', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '게스트김' }], ownerUserId: 'h', ownerName: '호스트', sourceType: 'direct' as const },
+            ],
+        })
+        const hits = rows.filter((r) => r.name === '게스트김')
+        expect(hits).toHaveLength(1)
+        expect(hits[0].guestId).toBe('g1')
+    })
+
+    it('로테이션 풀의 같은 이름도 두 줄이 되지 않는다', () => {
+        const rows = buildMemberRows({ ...base, guests: [{ id: 'g2', name: '비회원A' }] })
+        expect(rows.filter((r) => r.name === '비회원A')).toHaveLength(1)
     })
 })
 

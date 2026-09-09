@@ -1,4 +1,4 @@
-import type { RotationPoolPlayer } from '@/types'
+import type { MatchRoomGuest, RotationPoolPlayer } from '@/types'
 
 /**
  * 로테이션 게임 빌더의 선수 풀 파생 (순수 함수, 0050).
@@ -15,6 +15,8 @@ import type { RotationPoolPlayer } from '@/types'
 export type RoomParticipant = {
     id: string
     name: string
+    /** 방에 등록된 비회원(0069) — id는 게스트 행 id이지 회원 id가 아니다 */
+    isGuest?: boolean
     dominantHand?: 'right' | 'left'
     ntrp?: number
     personalNtrp?: number
@@ -22,6 +24,15 @@ export type RoomParticipant = {
 
 function fromParticipant(p: RoomParticipant): RotationPoolPlayer {
     const ntrp = p.personalNtrp ?? p.ntrp
+    // ⚠ 게스트의 id를 userId로 흘리면 finalize allowlist·resolve_rotation_player가 회원으로 오해한다.
+    //   비회원은 이름이 곧 정체성이다(keyOf도 이름으로 dedupe한다).
+    if (p.isGuest) {
+        return {
+            name: p.name,
+            ...(p.dominantHand ? { hand: p.dominantHand } : {}),
+            ...(ntrp != null ? { ntrp } : {}),
+        }
+    }
     return {
         userId: p.id,
         name: p.name,
@@ -66,4 +77,15 @@ export function buildBuilderPool(
         }
     }
     return out
+}
+
+/**
+ * 방에 등록된 비회원(0069) → 빌더 풀 참가자.
+ *
+ * 코트에 있는 사람은 대진에 들어가야 하므로 회원 참가자 뒤에 그대로 이어 붙인다.
+ * ⚠ 게임 추가 폼의 참가자 후보에는 넣지 않는다 — 상호 확인 게임의 상대(대표)는 방에 참가한
+ *   **회원**이어야 하고(create_room_game의 opponent_not_in_room), 고를 수 있게 두면 그것이 함정이다.
+ */
+export function guestParticipants(guests: MatchRoomGuest[]): RoomParticipant[] {
+    return guests.map((g) => ({ id: g.id, name: g.name, isGuest: true, dominantHand: g.hand, ntrp: g.ntrp }))
 }

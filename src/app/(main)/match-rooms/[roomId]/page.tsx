@@ -60,6 +60,7 @@ export default async function MatchRoomPage({ params }: Props) {
             {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection
                 detail={detail}
+                viewerId={user.id}
                 invite={x.isMember ? { selfUserId: user.id, candidates: x.opponentCandidates } : undefined}
                 host={x.isHost ? { viewerId: user.id } : undefined}
             />

@@ -8,7 +8,7 @@ import { RoomGameRow } from '@/components/match-rooms/room-game-row'
 import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
 import { RoomLineupButton } from '@/components/match-rooms/room-lineup-button'
 import { RoomRotationBuilder } from '@/components/match-rooms/room-rotation-builder'
-import type { RoomParticipant } from '@/lib/personal-matches/rotation-pool'
+import { guestParticipants, type RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
 import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
@@ -62,7 +62,7 @@ export function RoomGamesSection({
                     {isPendingRotation && isMember && rotationSession && picker && (
                         <RoomRotationBuilder
                             session={rotationSession}
-                            participants={participants}
+                            participants={[...participants, ...guestParticipants(detail.guests)]}
                             viewerId={viewerId}
                             picker={picker}
                             enteredGames={sessionGames}

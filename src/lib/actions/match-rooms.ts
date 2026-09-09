@@ -28,6 +28,9 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],
     ['not_room_host', '방장만 할 수 있습니다.'],
+    ['invalid_guest_name', '이름을 1~40자로 입력해주세요.'],
+    ['duplicate_guest_name', '이미 같은 이름의 참가자가 있습니다. 구별되는 이름으로 입력해주세요.'],
+    ['guest_not_found', '이미 명단에서 빠진 참가자입니다.'],
     ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
     ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
     ['host_cannot_leave', '방장은 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
@@ -175,6 +178,58 @@ export async function kickRoomMemberAction(roomId: string, userId: string): Prom
 
     const { error } = await supabase.rpc('kick_room_member', { p_room_id: roomId, p_target_user_id: userId })
     if (error) return { error: translate(error.message, '참가자를 내보내지 못했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/match-rooms')
+    return { error: null }
+}
+
+/** 룸에 등록하는 비회원 — 이름만 필수, 나머지는 대진 균형에 쓰이는 참고값이다 */
+export type RoomGuestInput = {
+    name: string
+    dominantHand?: 'right' | 'left'
+    ntrp?: number
+    gender?: 'male' | 'female'
+}
+
+/**
+ * 룸 명단에 비회원(게스트)을 등록한다 (0069).
+ *
+ * 회원 초대와 달리 '초대'가 아니다 — 수락할 계정이 없으므로 등록하는 순간 명단에 오른다.
+ * 그러면 게임에 이름을 적기 전부터 자동 대진표의 배치 대상이 된다(그게 이 경로의 이유다).
+ * 자격·중복·정산 가드는 전부 RPC 안에 있고 여기서는 이름 다듬기와 문구 번역만 한다.
+ */
+export async function addRoomGuestAction(roomId: string, input: RoomGuestInput): Promise<ActionResult> {
+    const name = input.name.trim()
+    if (!name) return { error: '이름을 입력해주세요.' }
+
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('add_room_guest', {
+        p_room_id: roomId,
+        p_name: name,
+        p_hand: input.dominantHand,
+        p_ntrp: input.ntrp,
+        p_gender: input.gender,
+    })
+    if (error) return { error: translate(error.message, '참가자를 추가하지 못했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/match-rooms')
+    return { error: null }
+}
+
+/**
+ * 룸 명단에서 비회원을 뺀다 (0069) — 방장 ∨ 등록한 본인.
+ * 이미 저장된 게임은 지워지지 않는다: 그 게임이 남아 있는 한 파생 '비회원' 행으로 계속 보인다.
+ */
+export async function removeRoomGuestAction(roomId: string, guestId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('remove_room_guest', { p_guest_id: guestId })
+    if (error) return { error: translate(error.message, '참가자를 빼지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
     revalidatePath('/match-rooms')

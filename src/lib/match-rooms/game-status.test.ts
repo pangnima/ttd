@@ -58,6 +58,7 @@ describe('roomGamesEmptyMessage', () => {
         },
         host: { id: 'u1', name: '방장', nickname: '', deleted: false },
         members: [],
+        guests: [],
         source,
         games: [],
     })

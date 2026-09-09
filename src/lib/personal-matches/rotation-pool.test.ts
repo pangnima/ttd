@@ -50,3 +50,19 @@ describe('buildBuilderPool', () => {
         expect(buildBuilderPool(pool, [me], 'me').some((p) => p.userId === 'me')).toBe(false)
     })
 })
+
+describe('buildBuilderPool — 방에 등록된 비회원 (0069)', () => {
+    const guest: RoomParticipant = { id: 'guest-row-uuid', name: '코트게스트', isGuest: true, dominantHand: 'left', ntrp: 3 }
+
+    it('게스트는 userId 없이 들어간다 — 행 id를 회원 id로 흘리면 finalize allowlist가 오해한다', () => {
+        const out = buildBuilderPool([], [guest], 'me')
+        expect(out).toEqual([{ name: '코트게스트', hand: 'left', ntrp: 3 }])
+        expect(out[0].userId).toBeUndefined()
+    })
+
+    it('세션 풀에 같은 이름이 이미 있으면 한 번만 나온다', () => {
+        const out = buildBuilderPool([{ name: '코트게스트', ntrp: 2.5 }], [guest], 'me')
+        expect(out).toHaveLength(1)
+        expect(out[0].ntrp).toBe(2.5)
+    })
+})

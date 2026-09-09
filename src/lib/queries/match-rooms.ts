@@ -8,7 +8,7 @@ import { toDominantHand, type OpponentCandidate } from '@/lib/queries/users'
 import { buildConfirmation } from '@/lib/personal-matches/confirmation'
 import type {
     CourtSurface, MatchRoomDetail, MatchRoomHost, MatchRoomInvite, MatchRoomMemberRole, MatchRoomMemberStatus,
-    MatchRoomSourceKind, MatchRoomSourceRole, MatchRoomSummary, MatchType, PersonalMatchConfirmation,
+    MatchRoomGuest, MatchRoomSourceKind, MatchRoomSourceRole, MatchRoomSummary, MatchType, PersonalMatchConfirmation,
 } from '@/types'
 
 /**
@@ -263,6 +263,8 @@ function toCandidates(data: unknown): OpponentCandidate[] {
 
 /**
  * 방에 참가(joined)한 회원 — 방장이 게임을 구성할 때 자동완성 '방 참가자' 그룹(0048).
+ * ⚠ 방 게스트(0069)는 여기 넣지 않는다 — create_room_game의 상대(대표)는 방에 참가한 **회원**이어야 하므로
+ *    (opponent_not_in_room) 고를 수 있게 두면 그것이 곧 함정이다. 게스트는 파트너·상대2 슬롯에 이름으로 들어간다.
  * 방장 본인·탈퇴 회원은 제외. 멤버 행은 전원 SELECT, users 프로필 컬럼은 전체 회원 검색과 같은 공개 컬럼이다.
  */
 export async function fetchRoomParticipantCandidates(roomId: string, excludeUserId: string): Promise<OpponentCandidate[]> {
@@ -280,16 +282,36 @@ export async function fetchRoomParticipantCandidates(roomId: string, excludeUser
 /**
  * 자동 대진표의 배치 대상 — 참가자 **전원**(방장 본인 포함, Week 40).
  * 게임 구성 자동완성과 달리 대진은 "모인 사람을 다 넣는" 것이라 뷰어를 빼면 안 된다.
+ *
+ * 방에 등록된 비회원(0069)도 함께 온다 — 코트에 있는 사람은 대진에 들어가야 한다.
+ * id는 게스트 행 id이고 isGuest가 참이라, toLineupPlayers가 isMember=false로 세우고
+ * 저장부는 user_id 없이 이름만 보낸다(resolve_room_player가 받는 슬롯). 추가 조회는 없다 —
+ * 게스트는 이미 룸 상세(detail.guests)로 와 있다.
  */
-export async function fetchRoomLineupCandidates(roomId: string): Promise<OpponentCandidate[]> {
+export async function fetchRoomLineupCandidates(
+    roomId: string, guests: MatchRoomGuest[] = [],
+): Promise<OpponentCandidate[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
         .select(PARTICIPANT_COLUMNS)
         .eq('room_id', roomId)
         .eq('status', 'joined')
-    if (error || !data) return []
-    return toCandidates(data)
+    const members = error || !data ? [] : toCandidates(data)
+    return [...members, ...guests.map(toGuestCandidate)]
+}
+
+/** 방 게스트 → 배치 후보. clubNames는 비고 회원 검색과 무관하다(자동완성 그룹에 쓰이지 않는다) */
+function toGuestCandidate(g: MatchRoomGuest): OpponentCandidate {
+    return {
+        id: g.id,
+        name: g.name,
+        ntrp: g.ntrp,
+        dominantHand: g.hand,
+        gender: g.gender,
+        isGuest: true,
+        clubNames: [],
+    }
 }
 
 function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): OpponentCandidate {

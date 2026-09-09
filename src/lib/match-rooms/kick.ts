@@ -35,3 +35,15 @@ export function canReinviteRoomMember({ isHost, isSettled, row }: Omit<KickArgs,
     if (!isHost || isSettled) return false
     return !!row.userId && row.statusLabel === KICKED_LABEL
 }
+
+/**
+ * [빼기] — 방에 등록된 비회원(0069)을 명단에서 제거할 수 있는가.
+ * DB 가드 remove_room_guest의 거울: 방장 ∨ 등록한 본인, 정산된 방이면 불가.
+ * 이미 저장된 게임은 지워지지 않는다 — 그 게임이 남아 있는 한 파생 '비회원' 행으로 계속 보인다.
+ */
+export function canRemoveRoomGuest(
+    { isHost, isSettled, viewerId, row }: { isHost: boolean; isSettled: boolean; viewerId: string; row: Pick<MemberRowView, 'guestId' | 'guestCreatedBy'> },
+): boolean {
+    if (isSettled || !row.guestId) return false
+    return isHost || row.guestCreatedBy === viewerId
+}

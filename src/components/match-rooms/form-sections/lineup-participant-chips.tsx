@@ -34,6 +34,8 @@ export function LineupParticipantChips({ candidates, included, onToggle }: Props
                                 className={`${PILL_BASE} transition-colors ${on ? CHIP_ON : CHIP_OFF}`}
                             >
                                 {c.name}
+                                {/* 방에 등록된 비회원(0069) — 회원과 같은 칩이되 누구인지는 구별돼야 한다 */}
+                                {c.isGuest && <span className="ml-1 opacity-70">비회원</span>}
                                 {ntrp != null && (
                                     <span className="ml-1 tabular-nums opacity-70">{ntrp.toFixed(1)}</span>
                                 )}

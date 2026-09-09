@@ -356,11 +356,25 @@ export type MatchRoomSource =
     }
     | { kind: 'rotation'; isFinalized: boolean; pool?: RotationPoolPlayer[] }
 
+/**
+ * 방에 등록된 비회원(게스트) 참가자 (0069) — users 행이 없으므로 이름이 곧 정체성이다.
+ * 회원 멤버(MatchRoomMember)와 나란히 '방에 있는 사람'을 이루고, 자동 대진표의 배치 대상이 된다.
+ */
+export type MatchRoomGuest = {
+    id: string
+    name: string
+    hand?: 'right' | 'left'
+    ntrp?: number
+    gender?: 'male' | 'female'
+    createdBy?: string   // 등록한 회원 — 방장이 아니어도 본인이 부른 게스트는 뺄 수 있다
+}
+
 export type MatchRoomDetail = {
     room: MatchRoomMeta & { notes?: string; createdAt: string }
     host: MatchRoomHost
     viewer?: MatchRoomViewer
     members: MatchRoomMember[]
+    guests: MatchRoomGuest[]
     source: MatchRoomSource
     games: MatchRoomGame[]
 }
