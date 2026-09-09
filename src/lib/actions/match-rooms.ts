@@ -127,6 +127,24 @@ export async function enterMatchRoomAction(roomId: string, password: string): Pr
     return { error: null }
 }
 
+/**
+ * 룸 안에서 회원을 추가로 부른다 (0065).
+ * 자격은 방장 또는 이미 참가한 회원 — 방에 들어와 있으면 사람을 부를 수 있다(게임 등록과 같은 눈높이).
+ * 초대받은 사람은 비밀번호 없이 수락만으로 참가한다.
+ */
+export async function inviteRoomMembersAction(roomId: string, userIds: string[]): Promise<ActionResult> {
+    if (userIds.length === 0) return { error: '초대할 회원을 선택해주세요.' }
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('invite_room_members', { p_room_id: roomId, p_user_ids: userIds })
+    if (error) return { error: translate(error.message, '초대에 실패했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/me/match-requests')
+    return { error: null }
+}
+
 /** 방 초대 수락/거절 (기록에 입력된 회원 — 확인 요청 대표는 요청 수락이 곧 참가라 여기를 거치지 않는다) */
 export async function respondRoomInviteAction(roomId: string, accept: boolean): Promise<ActionResult> {
     const { supabase, user } = await requireUser()

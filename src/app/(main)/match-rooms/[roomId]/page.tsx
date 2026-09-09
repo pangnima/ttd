@@ -1,19 +1,16 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import {
-    fetchMatchRoomDetail, fetchMatchRoomSummary, fetchRoomGameConfirmations, fetchRoomParticipantCandidates,
-} from '@/lib/queries/match-rooms'
-import { fetchRoomRotationSession, fetchRotationSessionGames } from '@/lib/queries/rotation-sessions'
-import { fetchOpponentCandidates } from '@/lib/queries/users'
-import { fetchPastOpponents } from '@/lib/queries/personal-matches'
-import { buildRoomGameContext, canViewerAddRoomGame } from '@/lib/match-rooms/room-context'
-import { buildRoomTitle } from '@/lib/match-rooms/title'
-import { formatHeadcount } from '@/lib/match-rooms/headcount'
-import { PageHeader } from '@/components/common/page-header'
+import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match-rooms'
+import { fetchRoomDetailExtras } from '@/lib/queries/room-detail-extras'
+import { buildRoomGameContext } from '@/lib/match-rooms/room-context'
+import { roomStage } from '@/lib/match-rooms/room-stage'
+import { viewerRoomTurn } from '@/lib/match-rooms/room-turn'
 import { PageContainer } from '@/components/common/page-container'
-import { RoomPasswordGate } from '@/components/match-rooms/room-password-gate'
+import { RoomGateView } from '@/components/match-rooms/room-gate-view'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
+import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
+import { RoomSettledNotice } from '@/components/match-rooms/room-settled-notice'
 import { RoomMembersSection } from '@/components/match-rooms/room-members-section'
 import { RoomGamesSection } from '@/components/match-rooms/room-games-section'
 import { RoomHostActions } from '@/components/match-rooms/room-host-actions'
@@ -24,8 +21,9 @@ export const metadata = { title: '매칭 룸' }
 type Props = { params: Promise<{ roomId: string }> }
 
 /**
- * 매칭 룸 상세 — 멤버(방장·초대 수락자·비밀번호 입장자)면 참가자·게임, 아니면 공개 메타 + 비밀번호 게이트.
- * 멤버십 판정은 get_match_room_detail RPC가 하고, 게이트 통과(enter_match_room = 참가) 후 router.refresh로 다시 그린다.
+ * 매칭 룸 상세 — 하나의 매칭이 시작해서 끝날 때까지의 단일 작업 공간(Week 39).
+ * 단계 칩과 「지금 할 일」 배너가 위에서 방향을 잡아 주고, 참가자 초대·대진·결과 입력·확인·이의가
+ * 전부 이 화면 안에서 끝난다. 멤버가 아니면 공개 메타 + 비밀번호 게이트만 보인다.
  */
 export default async function MatchRoomPage({ params }: Props) {
     const supabase = await createClient()
@@ -38,64 +36,44 @@ export default async function MatchRoomPage({ params }: Props) {
     if (!detail) {
         const summary = await fetchMatchRoomSummary(roomId, user.id)
         if (!summary) notFound()
-        return (
-            <PageContainer>
-                <PageHeader
-                    title={buildRoomTitle(summary)}
-                    description={`방장 ${summary.host.name} · ${formatHeadcount(summary.joinedCount)}`}
-                />
-                <RoomPasswordGate roomId={roomId} />
-            </PageContainer>
-        )
+        return <RoomGateView roomId={roomId} summary={summary} />
     }
 
-    const isHost = detail.room.hostUserId === user.id
-    const isMember = isHost || detail.viewer?.status === 'joined'
-    const canAdd = canViewerAddRoomGame(detail, user.id)
-    const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
-    // 게임 추가 폼과 로테이션 빌더가 같은 참가자 명단·자동완성 후보를 쓰므로 한 번만 조회한다
-    const needsPicker = canAdd || (isMember && isPendingRotation)
-    const requestIds = detail.games.map((g) => g.sourceRequestId).filter((id): id is string => !!id)
+    const x = await fetchRoomDetailExtras(detail, user.id)
+    const gameCtx = x.canAdd ? buildRoomGameContext(detail, x.participants) : undefined
+    const picker = x.canAdd || (x.isMember && x.isPendingRotation)
+        ? { candidates: x.opponentCandidates, pastOpponents: x.pastOpponents, selfUserId: user.id }
+        : undefined
 
-    const [participants, opponentCandidates, pastOpponents, confirmations, rotationSession] = await Promise.all([
-        needsPicker ? fetchRoomParticipantCandidates(roomId, user.id) : [],
-        needsPicker ? fetchOpponentCandidates(user.id) : [],
-        needsPicker ? fetchPastOpponents(user.id) : [],
-        // 협상 행이 오는 게임 = 내가 결과를 입력·확인할 수 있는 게임 (RLS가 당사자만 통과시킨다)
-        fetchRoomGameConfirmations(requestIds, user.id),
-        isMember && isPendingRotation ? fetchRoomRotationSession(roomId, user.id) : null,
-    ])
-    // 세션에 이미 등록된 게임(0064) — 세션 id를 알아야 해서 위 웨이브 뒤에 온다.
-    // 방은 참가자 여럿이 각자 넣어 중복 위험이 가장 크므로, 빌더가 목록을 보여 주고 선점 값을 만든다.
-    const sessionGames = rotationSession ? await fetchRotationSessionGames(rotationSession.id) : []
-    const gameCtx = canAdd ? buildRoomGameContext(detail, participants) : undefined
-    const picker = needsPicker ? { candidates: opponentCandidates, pastOpponents, selfUserId: user.id } : undefined
-
-    // 미확정 로테이션 방은 참가자 전원이 각자 게임을 넣는 중 — 세션을 닫는 건 방장만 한다(0050)
-    const canCloseRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
+    const stage = roomStage(detail)
+    const turn = x.isMember ? viewerRoomTurn(detail.games, user.id, x.confirmations) : null
 
     return (
         <PageContainer>
             <RoomDetailHeader
                 detail={detail}
-                actions={isHost ? <RoomHostActions roomId={roomId} canCloseRotation={canCloseRotation} /> : undefined}
+                actions={x.isHost ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} /> : undefined}
             />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
-            <RoomMembersSection detail={detail} />
+            {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
+            <RoomMembersSection
+                detail={detail}
+                invite={x.isMember ? { selfUserId: user.id, candidates: x.opponentCandidates } : undefined}
+            />
             <RoomGamesSection
                 detail={detail}
                 viewerId={user.id}
                 gameCtx={gameCtx}
-                opponentCandidates={opponentCandidates}
-                pastOpponents={pastOpponents}
-                confirmations={confirmations}
-                rotationSession={rotationSession}
-                participants={participants}
+                opponentCandidates={x.opponentCandidates}
+                pastOpponents={x.pastOpponents}
+                confirmations={x.confirmations}
+                rotationSession={x.rotationSession}
+                participants={x.participants}
                 picker={picker}
-                sessionGames={sessionGames}
+                sessionGames={x.sessionGames}
             />
             {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
-            {!isHost && detail.viewer && detail.viewer.status !== 'declined' && (
+            {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && (
                 <RoomLeaveButton roomId={roomId} />
             )}
         </PageContainer>

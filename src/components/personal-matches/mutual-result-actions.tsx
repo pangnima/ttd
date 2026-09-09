@@ -1,24 +1,17 @@
 'use client'
 
 import type { PersonalMatch } from '@/types'
-import { Button } from '@/components/ui/button'
 import { bystanderWaitingBadge, canRespondToProposal, disputerNameOf } from '@/lib/personal-matches/confirmation'
 import { buildAdLabels, formatOpponents, formatTeams, namedSeatsOf } from '@/lib/personal-matches/labels'
 import { hasResult } from '@/lib/personal-matches/winner'
 import { MutualLockedBadge } from '@/components/personal-matches/match-actions'
 import { DisputedResultActions } from '@/components/personal-matches/disputed-result-actions'
 import { ConfirmedSeatActions } from '@/components/personal-matches/confirmed-seat-actions'
-import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
-import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
-import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
-import { SeatConfirmStatusLine } from '@/components/personal-matches/seat-confirm-status-line'
-import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
-import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
+import { NegotiationTurnActions } from '@/components/personal-matches/negotiation-turn-actions'
 
 type Props = { match: PersonalMatch }
 
 const WAITING_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-dashed border-border text-muted-foreground'
-const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정됩니다'
 
 /**
  * 상호 확인 경기(source_request_id 보유)의 카드 액션 — 결과 제안/확인 상태별 분기.
@@ -29,7 +22,6 @@ const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정�
  *  - 이의를 거친 재제안이면 위 세 갈래 앞에 ReentryContextBadge를 붙여 "누구의 이의에 대한 답인가"를 말한다(0062)
  */
 export function MutualResultActions({ match }: Props) {
-    const d = useResultDialog()
     const c = match.confirmation
     const requestId = match.sourceRequestId
 
@@ -59,10 +51,6 @@ export function MutualResultActions({ match }: Props) {
 
     const reviewMode = canRespondToProposal(c)
     const editingOwn = c.status === 'proposed' && c.proposedByMe
-    const reentry = <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={WAITING_BADGE} />
-    // 배지가 '2/4명 확인'이라고만 말하면 남은 사람이 누구인지 알 수 없어 재촉할 대상을 특정할 수 없다.
-    // 스스로 렌더 여부를 판정하므로(제안 중일 때만) 아래 두 갈래에 조건문이 생기지 않는다.
-    const seatLine = <SeatConfirmStatusLine confirmation={c} seats={namedSeatsOf(match)} className="text-right" />
 
     // 내 확인은 끝났고 남은 좌석을 기다린다 — [결과 확인]은 없고 [이의 제기]만 남는다(룸 행과 공용 컴포넌트)
     if (c.status === 'proposed' && !reviewMode && !editingOwn) {
@@ -81,35 +69,15 @@ export function MutualResultActions({ match }: Props) {
     }
 
     return (
-        <span className="flex flex-col items-end gap-1">
-            <span className="flex items-center gap-2">
-                {reentry}
-                {editingOwn && (
-                    <>
-                        <span className={WAITING_BADGE} title={REMAINING_TITLE}>참가자 확인 대기</span>
-                        <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
-                    </>
-                )}
-                <Button
-                    size="sm"
-                    variant={reviewMode ? 'default' : 'outline'}
-                    className="h-7 text-caption"
-                    onClick={d.openDialog}
-                >
-                    {reviewMode ? '결과 확인' : editingOwn ? '제안 수정' : '결과 입력'}
-                </Button>
-                <NegotiationDialog
-                    requestId={requestId}
-                    confirmation={c}
-                    opponentName={formatOpponents(match)}
-                    teams={formatTeams(match)}
-                    adLabels={buildAdLabels(match)}
-                    disputerName={disputerName}
-                    dialog={d}
-                />
-            </span>
-            <DisputeReasonLine confirmation={c} disputerName={disputerName} className="text-right" />
-            {seatLine}
-        </span>
+        <NegotiationTurnActions
+            requestId={requestId}
+            confirmation={c}
+            opponentName={formatOpponents(match)}
+            teams={formatTeams(match)}
+            adLabels={buildAdLabels(match)}
+            disputerName={disputerName}
+            seats={namedSeatsOf(match)}
+            badgeClassName={WAITING_BADGE}
+        />
     )
 }

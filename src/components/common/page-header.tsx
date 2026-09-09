@@ -9,6 +9,8 @@ type PageHeaderProps = {
     description?: ReactNode
     /** 제목 위 소형 대문자 라벨 (eyebrow) */
     eyebrow?: ReactNode
+    /** 제목 옆 상태 칩 — eyebrow(정적 분류)와 달리 지금 상태를 말한다 (예: 매칭 룸 진행 단계) */
+    badge?: ReactNode
     /** 우측 액션 영역 (버튼 등) — 좁은 화면에서는 아래로 감싼다 */
     actions?: ReactNode
     className?: string
@@ -19,12 +21,15 @@ type PageHeaderProps = {
  * h1 = TYPO.h1(28→36px clamp)로 고정해 페이지별 사이즈·굵기 편차를 없앤다.
  * 레이아웃(PageContainer)과 역할을 분리 — 이 컴포넌트는 제목 블록만 담당.
  */
-export function PageHeader({ title, description, eyebrow, actions, className }: PageHeaderProps) {
+export function PageHeader({ title, description, eyebrow, badge, actions, className }: PageHeaderProps) {
     return (
         <div className={cn('flex flex-wrap items-start justify-between gap-3', className)}>
             <div className="min-w-0">
                 {eyebrow && <p className={TYPO.eyebrow}>{eyebrow}</p>}
-                <h1 className={cn(TYPO.h1, 'break-keep', eyebrow && 'mt-2')}>{title}</h1>
+                <div className={cn('flex flex-wrap items-center gap-2', eyebrow && 'mt-2')}>
+                    <h1 className={cn(TYPO.h1, 'break-keep')}>{title}</h1>
+                    {badge}
+                </div>
                 {description && <p className={cn(TYPO.body2Muted, 'mt-1 break-keep')}>{description}</p>}
             </div>
             {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
