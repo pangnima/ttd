@@ -20,7 +20,6 @@ type UserDisplay = {
 }
 
 type HeaderProps = {
-    clubs?: { id: string; name: string }[]
     userDisplay?: UserDisplay | null
     /** 로그인 사용자 id — 모바일 nav 개인 섹션용 (userDisplay는 프로필 행이 없으면 null일 수 있어 별도 전달) */
     userId?: string | null
@@ -28,12 +27,12 @@ type HeaderProps = {
     myTurnCount?: number
 }
 
-export function Header({ clubs = [], userDisplay = null, userId = null, myTurnCount = 0 }: HeaderProps) {
+export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: HeaderProps) {
     const { collapsed, toggle } = useSidebar()
 
     return (
         <header className="relative min-h-14 border-b border-foreground/5 dark:border-foreground/10 bg-card flex items-center px-4 md:px-6 shrink-0 gap-3 pt-[env(safe-area-inset-top)]">
-            <MobileNav clubs={clubs} userId={userId} myTurnCount={myTurnCount} />
+            <MobileNav userId={userId} myTurnCount={myTurnCount} />
             <button
                 type="button"
                 onClick={toggle}

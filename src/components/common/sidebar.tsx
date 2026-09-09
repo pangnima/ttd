@@ -4,24 +4,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-    topNavItems, myMatchNavItems, clubNavItems, buildPersonalNavItem, isPersonalNavActive,
+    myMatchNavItems, buildPersonalNavItem, isPersonalNavActive,
 } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
-import { ClubNavTree } from '@/components/common/club-nav-tree'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
 import { useSidebar } from '@/components/common/sidebar-context'
 
 type SidebarProps = {
     currentPath?: string
-    /** 가입한 클럽 목록 (layout에서 주입, 클럽 트리로 노출) */
-    clubs?: { id: string; name: string }[]
     /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
     /** 받은 확인 요청 pending + 결과 제안 + 매칭 리스트 방 초대 건수 (경기 확인 요청 메뉴 뱃지) */
     myTurnCount?: number
 }
 
-export function Sidebar({ currentPath, clubs = [], userId, myTurnCount = 0 }: SidebarProps) {
+export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) {
     const pathname = usePathname()
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
@@ -34,10 +31,6 @@ export function Sidebar({ currentPath, clubs = [], userId, myTurnCount = 0 }: Si
         if (href.startsWith('/me/match-requests')) return activePath.startsWith('/me/match-requests')
         return userId ? isPersonalNavActive(activePath, userId) : false
     }
-
-    // 메인 네비 active 판정 — /clubs는 탐색·생성 페이지에서만 켜고, 특정 클럽 하위(/clubs/[id]/...)는
-    // "내가 가입한 클럽" 트리가 담당하므로 prefix 매칭을 쓰지 않는다.
-    const mainActive = (href: string) => activePath === href || activePath === `${href}/new`
 
     // 단순 메뉴 항목 — rail/펼침 단일 마크업, 클래스만 토글해 폭과 함께 부드럽게 전환
     const rowClass = (active: boolean) =>
@@ -77,22 +70,9 @@ export function Sidebar({ currentPath, clubs = [], userId, myTurnCount = 0 }: Si
 
             {/* 메인 네비게이션 — rail에서는 플라이아웃이 사이드바 밖으로 나가야 하므로 overflow를 자르지 않는다 */}
             <nav className={cn('flex-1 min-h-0 p-3 space-y-0.5', collapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden')}>
-                {/* 사용 가이드 등 상단 단독 메뉴 */}
-                {topNavItems.map(({ href, label, icon: Icon }) => (
-                    <Link
-                        key={href}
-                        href={href}
-                        className={rowClass(mainActive(href))}
-                        aria-label={collapsed ? label : undefined}
-                    >
-                        <Icon className="w-4 h-4 shrink-0" />
-                        <span className={labelClass}>{label}</span>
-                    </Link>
-                ))}
-
                 {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 개인 경기 등록 + 경기 확인 요청 (로그인 시) */}
                 {myNavItems.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
+                    <div className="space-y-0.5">
                         {myNavItems.map(({ href, label, icon: Icon }) => {
                             const active = myNavActive(href)
                             const showBadge = href === '/me/match-requests' && myTurnCount > 0
@@ -118,24 +98,6 @@ export function Sidebar({ currentPath, clubs = [], userId, myTurnCount = 0 }: Si
                         })}
                     </div>
                 )}
-
-                {/* 클럽 찾기 — 개인 섹션 아래, 가입 클럽 트리 위 */}
-                <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
-                    {clubNavItems.map(({ href, label, icon: Icon }) => (
-                        <Link
-                            key={href}
-                            href={href}
-                            className={rowClass(mainActive(href))}
-                            aria-label={collapsed ? label : undefined}
-                        >
-                            <Icon className="w-4 h-4 shrink-0" />
-                            <span className={labelClass}>{label}</span>
-                        </Link>
-                    ))}
-
-                    {/* 내가 가입한 클럽: 클럽별로 홈·대진표를 아코디언으로 노출 */}
-                    <ClubNavTree clubs={clubs} variant="desktop" collapsed={collapsed} />
-                </div>
             </nav>
 
             {/* 테마 토글 — 하단 고정 */}

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, BookOpen } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 /**
  * 본인 프로필이 0경기일 때 헤더 카드 정보 영역('X 경기' 자리)에 인라인으로 노출되는
@@ -19,13 +19,6 @@ export function ProfileEmptyGuide() {
                 >
                     <Plus className="size-3.5" />
                     첫 경기 기록하기
-                </Link>
-                <Link
-                    href="/guide"
-                    className="inline-flex items-center gap-1.5 text-body2 rounded-md px-3 py-1.5 border border-border text-foreground hover:bg-muted hover:border-input transition-colors"
-                >
-                    <BookOpen className="size-3.5" />
-                    기록 방법 보기
                 </Link>
             </div>
         </div>

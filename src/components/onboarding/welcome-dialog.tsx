@@ -78,14 +78,6 @@ export function WelcomeDialog() {
 
                 <Progress value={pct} aria-label={`${STEPS.length}단계 중 ${step + 1}단계`} />
 
-                <Link
-                    href="/guide"
-                    onClick={close}
-                    className="w-fit text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                    사용 가이드 보기 →
-                </Link>
-
                 <DialogFooter>
                     {step > 0 && (
                         <Button variant="outline" onClick={() => setStep((s) => s - 1)}>

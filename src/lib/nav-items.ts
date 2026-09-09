@@ -1,15 +1,10 @@
-import { BarChart3, BookOpen, CalendarDays, ClipboardList, Inbox, Users } from 'lucide-react'
+import { BarChart3, CalendarDays, ClipboardList, Inbox } from 'lucide-react'
 
 export type NavItem = {
     href: string
     label: string
     icon: React.ElementType
 }
-
-// 상단 단독 메뉴 (개인 섹션 위에 노출)
-export const topNavItems: NavItem[] = [
-    { href: '/guide', label: '사용 가이드', icon: BookOpen },
-]
 
 /** '개인' 통계 허브 href. 개인/클럽/통합 하위 구분은 메뉴가 아니라 페이지 내부 탭(ProfileScopeTabs)이 담당한다. */
 export function personalNavHref(userId: string): string {
@@ -36,7 +31,5 @@ export const myMatchNavItems: NavItem[] = [
     { href: '/me/personal-matches', label: '개인 경기 결과', icon: ClipboardList },
 ]
 
-// 클럽 메뉴 (개인 경기 아래, 가입 클럽 트리 위에 노출)
-export const clubNavItems: NavItem[] = [
-    { href: '/clubs', label: '클럽 찾기', icon: Users },
-]
+// 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). 진입은 헤더 '클럽 찾기'와 로고 링크로만 남는다 —
+// 해동 시 clubNavItems + ClubNavTree(components/common/club-nav-tree.tsx)를 여기서 복원한다.
