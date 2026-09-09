@@ -22,6 +22,10 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
+    // ⚠ translate는 includes 선형 탐색이라 더 긴 전용 키가 not_room_member보다 앞에 있어야 한다
+    ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
+    ['cannot_kick_host', '방장은 내보낼 수 없습니다.'],
+    ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],
     ['not_room_host', '방장만 할 수 있습니다.'],
     ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
@@ -152,6 +156,25 @@ export async function inviteRoomMembersAction(roomId: string, userIds: string[])
 
     const { error } = await supabase.rpc('invite_room_members', { p_room_id: roomId, p_user_ids: userIds })
     if (error) return { error: translate(error.message, '초대에 실패했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/match-rooms')
+    return { error: null }
+}
+
+/**
+ * 방장이 참가자를 내보낸다 (0068).
+ *
+ * 강퇴는 '차단'이다 — 비밀번호를 알아도 재입장할 수 없고 방장의 재초대(inviteRoomMembersAction)로만
+ * 풀린다. 다만 이미 함께 뛴 경기의 기록과 그 결과를 확인·이의할 권한은 남는다.
+ * 끊어 버리면 그 게임이 영영 확정되지 않아 방까지 정산 불가가 되기 때문이다.
+ */
+export async function kickRoomMemberAction(roomId: string, userId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('kick_room_member', { p_room_id: roomId, p_target_user_id: userId })
+    if (error) return { error: translate(error.message, '참가자를 내보내지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
     revalidatePath('/match-rooms')

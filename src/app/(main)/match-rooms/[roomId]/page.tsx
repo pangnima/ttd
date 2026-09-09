@@ -9,6 +9,7 @@ import { PageContainer } from '@/components/common/page-container'
 import { RoomGateView } from '@/components/match-rooms/room-gate-view'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
+import { RoomRemovedNotice } from '@/components/match-rooms/room-removed-notice'
 import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
 import { RoomSettledNotice } from '@/components/match-rooms/room-settled-notice'
 import { RoomMembersSection } from '@/components/match-rooms/room-members-section'
@@ -55,10 +56,12 @@ export default async function MatchRoomPage({ params }: Props) {
                 actions={x.isHost ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} /> : undefined}
             />
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
+            {detail.viewer?.status === 'removed' && <RoomRemovedNotice />}
             {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection
                 detail={detail}
                 invite={x.isMember ? { selfUserId: user.id, candidates: x.opponentCandidates } : undefined}
+                host={x.isHost ? { viewerId: user.id } : undefined}
             />
             <RoomGamesSection
                 detail={detail}
@@ -74,7 +77,7 @@ export default async function MatchRoomPage({ params }: Props) {
                 lineupCandidates={x.isHost ? x.lineupCandidates : undefined}
             />
             {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
-            {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && (
+            {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && detail.viewer.status !== 'removed' && (
                 <RoomLeaveButton roomId={roomId} />
             )}
         </PageContainer>

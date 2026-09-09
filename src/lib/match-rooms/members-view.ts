@@ -36,13 +36,15 @@ export function memberMetaLine(row: MemberRowView): string {
 }
 
 const ORDER: Record<string, number> = {
-    '방장': 0, '참가': 1, '초대 대기': 2, '확인 대기': 3, '비회원': 4,
+    '방장': 0, '참가': 1, '초대 대기': 2, '확인 대기': 3, '비회원': 4, '강퇴됨': 5,
 }
 
 function memberStatusLabel(m: MatchRoomMember): string | null {
     if (m.role === 'host') return '방장'
     if (m.status === 'declined') return null
     if (m.status === 'invited') return '초대 대기'
+    // 스스로 나간 사람(declined)과 달리 명단에 남긴다 — 방장이 누구를 뺐는지 보고 되돌릴 수 있어야 한다
+    if (m.status === 'removed') return '강퇴됨'
     return '참가'
 }
 

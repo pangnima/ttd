@@ -31,5 +31,7 @@ export function viewerStatusLabel(viewer?: ViewerLike): string | null {
     if (viewer.role === 'host') return '방장'
     if (viewer.status === 'invited') return '초대됨'
     if (viewer.status === 'declined') return null
+    // 강퇴는 나간 것과 다르다 — 목록 카드가 '참가'라고 말하면 왜 아무것도 못 하는지 알 수 없다
+    if (viewer.status === 'removed') return '강퇴됨'
     return '참가'
 }

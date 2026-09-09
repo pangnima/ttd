@@ -1389,6 +1389,10 @@ export type Database = {
         Returns: boolean
       }
       join_club_via_invite: { Args: { p_token: string }; Returns: string }
+      kick_room_member: {
+        Args: { p_room_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
       normalize_set_scores: {
         Args: { p_keep_ad: boolean; p_sets: Json }
         Returns: Json

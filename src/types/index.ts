@@ -272,7 +272,8 @@ export type RotationSession = {
 export type MatchRoomSourceKind = 'direct' | 'confirmation' | 'rotation'
 export type MatchRoomMemberRole = 'host' | 'player'
 // invited → joined|declined (초대 응답) / 비밀번호 입장 = player·joined (거절했던 사람도 다시 들어오면 joined)
-export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined'
+// removed = 방장이 내보냄(0068). declined(본인이 나감)와 달리 재입장이 막히고 명단에 남는다
+export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined' | 'removed'
 export type MatchRoomSourceRole = 'opponent' | 'partner' | 'opponent2' | 'pool'
 
 export type MatchRoomHost = {
