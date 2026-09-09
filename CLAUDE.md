@@ -35,7 +35,8 @@ src/
 │   │                             #   NegotiationTurnActions(내 차례 꼬리 — 개인 카드·룸 행 공용), SeatProgressBadge, MemberNeedsRoomNotice, result-badge 단일 출처
 │   └── match-rooms/              # MatchRoomForm(매칭 만들기) + form-sections(format/password/invitee), MatchRoomCard(내 차례 필), RoomInvitesSection/RoomInviteCard, RoomListBody,
 │                                 #   RoomDetailHeader + RoomStageBadge, RoomTurnBanner, RoomSettledNotice, RoomMembersSection + RoomInviteMembers, RoomGamesSection,
-│                                 #   RoomGameActions → RoomGameNegotiationActions/RoomFreeGameActions, RoomGameDialog, RoomRotationBuilder, RoomHostActions, RoomGateView
+│                                 #   RoomGameActions → RoomGameNegotiationActions/RoomFreeGameActions, RoomGameDialog, RoomRotationBuilder, RoomHostActions, RoomGateView,
+│                                 #   RoomLineupButton → RoomLineupDialog(= use-room-lineup + form-sections/lineup-options + RoomLineupPreview)
 ├── lib/
 │   ├── supabase/                 # client.ts(브라우저) / server.ts(서버) / middleware.ts
 │   ├── actions/                  # Server Actions — auth, clubs, club-members, match-games, personal-matches, match-requests, match-results, rotation-sessions, match-rooms, profile, ratings, ai-coaching
@@ -44,8 +45,9 @@ src/
 │   ├── personal-matches/         # 순수: lineup, map/explode/grouping/winner, match-groups, confirmation(협상 관점·자격 술어), perspective, confirm-flow, labels, validate-input,
 │   │                             #   rotation·rotation-pool·rotation-rep·rotation-participation·rotation-entered, session-visibility, direct-record(회원이 끼면 매칭 룸), schedule-conflict, player-suggestions, seat-status
 │   ├── match-rooms/              # 순수 + server-only: create-match(매칭 만들기 규칙 — 복식 = 로테이션), room-stage(4단계), room-turn(내 차례·방 롤업·뱃지 총계), room-sort, password,
-│                                 #   title/split/headcount/members-view, parse-detail, room-context, game-status, game-labels, tabs, room-cursor, revalidate, create-room
-│   ├── match-games/              # form-mapping, auto-generate, special-match, former-members, match-view-helpers, attendance-stats
+│                                 #   title/split/headcount/members-view, parse-detail, room-context, game-status, game-labels, tabs, room-cursor, revalidate, create-room,
+│                                 #   lineup(자동 대진표 — 프리셋 3종·시드 난수·출전 균등)
+│   ├── match-games/              # form-mapping, auto-generate, lineup-core(대진 배치 코어 — 클럽 격자·룸 목록 공용), special-match, former-members, match-view-helpers, attendance-stats
 │   ├── analytics/                # 순수 집계 (toQuadStats = AnalyticsBundle.stats 단일 출처)
 │   ├── rating/                   # elo/constants(클럽 ELO), personal-rating, tier(8계급), display — docs/rating-system.md
 │   ├── dashboard/                # tokens.ts(TYPO·CARD_BASE·PILL_BASE·ATTENTION_PILL·FORM_*), outcome, surface, match-type-style, match-display, colors.test.ts(컬러 회귀 가드)
@@ -92,12 +94,14 @@ src/
 | 37 | 0064 | 로테이션 결과 입력 「전원 수락」 게이트(소유자 예외 없음), 세션 게임 공유 RPC·낙관적 선점, 좌석 명단화, 게스트 대체 탈출구 |
 | 38 | — | 허브 2단 탭(승인 요청›초대/경기 결과 확정/이의 신청 · 상대 승인 대기), **허브는 승인 전용 — 결과 입력 대기는 개인 경기 결과로**, 승인 악센트, stale 새로고침, 확인한 좌석의 이의, 페어 고정 게스트 재요청 |
 | 39 | 0065 | **매칭 룸 중심 개편** — 사이드 메뉴 3개(가이드·클럽 진입점 제거), 「매칭 만들기」로 방이 1급 객체(`invite_room_members`), 룸에 단계 칩·「지금 할 일」 배너·참가자 초대, 매칭 리스트 = 작업 큐(내 차례 필·초대 섹션·뱃지), 직접 기록 = 비회원 전용, **확인 요청 허브 철거** |
+| 40 | 0066 | **룸 자동 대진표** — 배치 코어 추출(`lineup-core`: 격자와 규칙 분리), 룸용 `lineup.ts`(프리셋 균형/실력/골고루 · 시드 [다시 뽑기] · 출전 편차 ≤1 · 성별 soft), `create_room_lineup`으로 **「내가 안 뛰는 게임」** 저장(방장 전용·이어붙이기), 룸 [자동 대진표] 다이얼로그(옵션 → 즉시 미리보기 → 저장) |
 
 ### 남은 일 (백로그)
 - **배포**: Vercel + 환경변수(`NEXT_PUBLIC_SUPABASE_URL`·`_ANON_KEY`·`ANTHROPIC_API_KEY`), leaked password protection + URL 화이트리스트(`/auth/confirm`), 재설정 메일 템플릿, `metadataBase` 환경변수화
 - **픽스처 잔여**: 클럽·대진표 `redesign-fixtures` → 실 쿼리 복원, 프로필 클럽/통합 탭 활성화, 타인 프로필 통계 픽스처화 여부
 - **브라우저 E2E 수동 검증**(계정 2~3개, 최우선): Week 39 흐름 — 매칭 만들기 → 초대 수락(비번 없이) / 비번 입장 → 룸 게임 → 제안·확인·이의 → 정산 → 개인 경기 결과, 로테이션 방(빈 풀 → 입장으로 채움 → 빌더), 직접 기록의 회원 차단, 레거시 URL(/me/match-requests·/guide)
 - **알림·리마인더·만료 전무** — 매칭이 룸 중심이 되며 무응답이 방을 막는다. 이의 왕복 상한 없음(`dispute_count`만 셈)
+- **Week 40 잔여**: 자동 대진표 브라우저 E2E 미검증(방장 4명 이상 방 → 옵션·다시 뽑기 → 저장 → 게임 카드), 미확정 로테이션 복식 방에서는 [자동 대진표]와 로테이션 빌더가 함께 보인다(두 경로 공존), 저장한 대진의 일괄 삭제·재생성 없음
 - **Week 39 잔여**: 매칭 만들기에 중복 일정 경고 미적용(개인 경기 폼에는 있다), 룸 카드 그룹핑, `participants.ts`의 `classifyPendingRequest`·`groupRotationRequests`는 소비처 없이 테스트만 남음(방 밖 요청 재개 대비 보존)
 - **보안·성능**: 비밀번호 시도 제한, anon EXECUTE 회수 잔여 15종, `search_path` 미설정 10종, RLS `auth.uid()` 재평가 56건, 미인덱스 FK 11건, 개인 경기 목록 페이지네이션
 - **2차 기능**: 로테이션 그룹 단위 삭제, 방 게임 카드 목록 그룹핑(room_id), 방장 '닫기', 룸 필터, 슬롯에서 빠진 회원의 stale 초대 정리, 확정 시 `personal_ntrp` lazy 갱신, 진행도 분모 computed column, 룸 '참가자 채우기' → `RoomGameDialog initialData`, 티어 8계급 색 리마스터, 클럽 해동(redesign-fixtures → 실 쿼리)
@@ -110,7 +114,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 ```
 
 ## DB 스키마 현황
-> 2026-09 재설계(`docs/redesign/`): 다형성 컬럼을 참가자 테이블로 정규화. 마이그레이션 0001~0064(0016부터 `supabase/migrations/*.sql`이 정본, 원격 적용은 MCP `apply_migration`). 원격 DB의 정의가 레포에 없으면 `execute_sql`로 읽어 마이그레이션에 편입한다.
+> 2026-09 재설계(`docs/redesign/`): 다형성 컬럼을 참가자 테이블로 정규화. 마이그레이션 0001~0066(0016부터 `supabase/migrations/*.sql`이 정본, 원격 적용은 MCP `apply_migration`). 원격 DB의 정의가 레포에 없으면 `execute_sql`로 읽어 마이그레이션에 편입한다.
 
 | 테이블 | 핵심 규칙 |
 |---|---|
@@ -131,7 +135,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 - 확인 요청: `create_match_request`(스코어 거부 `set_scores_not_allowed`), `accept_match_request`(대표 수락 → 게이트), `maybe_materialize_request`(**전원 수락 게이트 단일 초크포인트**, 요청 행 락), `materialize_accepted_request`(회원 참가자 전원 관점 행), `respond_request_participation`, `respond_rotation_participation`(세션 단위 일괄 — 좌석 축까지 움직인다), `reject_match_request`(한 명의 거절 = 요청 종료), `backfill_rotation_perspectives`
 - 결과 협상: `propose/confirm/dispute/reopen_match_result` — 자격 좌석 넷(`request_seat_of`), 제안은 `normalize_to_requester_perspective`로 요청자 관점 정규화, confirm은 `confirmed_by` 추가 후 `request_result_seats ⊆ confirmed_by`면 `settle_match_result`(boolean 반환, 멱등). 제안자 본인만 제안 수정(`result_already_proposed`는 타인), dispute는 제안자만 거부(확인한 좌석도 정산 전이면 가능), reopen은 확정 행 전부 비움 + disputed. 헬퍼 `invert_set_scores`·`validate_set_scores`·`normalize_set_scores`·`derive_public_ntrp`
 - 로테이션: `finalize_rotation_session(session, games, expected_seq?)` — 기준 '나'는 호출자, 방 밖은 좌석 **전원 응답**해야 진입(`session_seats_pending`, 신원 검사가 먼저), `p_expected_seq ≠ max+1`이면 `session_games_changed`, allowlist(풀 ∪ 방 참가자 ∪ 소유자 − 거절자)로 위조 방어, 상대팀에 회원이 있으면 요청(accepted)+제안, 전원 비회원만 즉시 확정. `get_rotation_session_games`(좌석·소유자·방 참가자에게 대표 게임 전량), `respond_rotation_plan`(일정 응답 — 거절은 그 사람만 풀에서 뺀다), `add/remove_rotation_session_player`(방 밖 전용), `rotation_seats_accepted`, `close_rotation_room`
-- 매칭 룸: `create_match_room`, `invite_room_members`(0065 — 방장·참가자가 회원 초대, 게스트·탈퇴·본인 조용히 제외, joined 강등 금지), `enter_match_room`(→ `join_match_room_as_player`: joined + 미확정 로테이션 풀 append + 방 요청 좌석 수락), `respond_room_invite`, `update_match_room_password`, `get_match_room_detail`(멤버 게이트 후 jsonb), `leave_match_room`(방장 불가), `create_room_game`(참가자가 만드는 상호 확인 게임 — seed 치환 순서 고정), `recompute_match_room_settled`, 관점 헬퍼 `copy_personal_match_perspective`·`swap_partner_perspective`·`swap_opponent_perspective`·`resolve_rotation_player`
+- 매칭 룸: `create_match_room`, `invite_room_members`(0065 — 방장·참가자가 회원 초대, 게스트·탈퇴·본인 조용히 제외, joined 강등 금지), `enter_match_room`(→ `join_match_room_as_player`: joined + 미확정 로테이션 풀 append + 방 요청 좌석 수락), `respond_room_invite`, `update_match_room_password`, `get_match_room_detail`(멤버 게이트 후 jsonb), `leave_match_room`(방장 불가), `create_room_game`(참가자가 만드는 상호 확인 게임 — seed 치환 순서 고정), `create_room_lineup`(0066 — 방장이 짠 대진을 스코어 없는 게임들로 일괄 저장, requester가 호출자가 아니어도 된다 + 슬롯 정규화 `resolve_room_player`), `recompute_match_room_settled`, 관점 헬퍼 `copy_personal_match_perspective`·`swap_partner_perspective`·`swap_opponent_perspective`·`resolve_rotation_player`
 
 ⚠ supabase-js는 select 문자열을 **리터럴 타입**으로 파싱한다 — 상수 결합(`a + b`)이면 `GenericStringError`. 새 컬럼은 `types/supabase.ts`를 먼저 갱신해야 임베드 전체가 깨지지 않는다(배포 순서도 마이그레이션 → 앱).
 
