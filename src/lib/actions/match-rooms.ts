@@ -37,6 +37,8 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['invalid_partner', '파트너를 다시 선택해주세요.'],
     ['invalid_opponent2', '상대팀 2번째 선수를 다시 선택해주세요.'],
     ['replace_not_allowed', '이미 결과가 있거나 내 기록이 아니어서 대체할 수 없습니다.'],
+    ['invalid_participant', '참가자 정보를 다시 확인해주세요.'],
+    ['invalid_games', '대진 구성이 올바르지 않습니다. 참가자와 경기 수를 확인해주세요.'],
 ]
 
 function translate(message: string, fallback: string): string {
@@ -250,6 +252,46 @@ export async function createRoomGameAction(input: RoomGameInput): Promise<Action
     if (error) return { error: translate(error.message, '게임 등록에 실패했습니다.') }
 
     revalidateRoomPaths(input.roomId)
+    revalidatePath('/me/personal-matches')
+    revalidatePath('/match-rooms')
+    return { error: null }
+}
+
+/** 대진 한 게임 — 팀마다 단식 1명, 복식 2명 */
+export type RoomLineupGameInput = {
+    team1: RoomGamePlayerInput[]
+    team2: RoomGamePlayerInput[]
+}
+
+/**
+ * 자동 대진표 저장(0066, Week 40) — 방장이 전원의 대진을 한 번에 만든다.
+ *
+ * create_room_game과 달리 **호출자가 슬롯에 없어도 된다**: 참가자가 5명 이상이면 대진을 짠
+ * 방장도 언젠가 쉬기 때문이다. 그 제약을 푸는 것이 create_room_lineup의 존재 이유다.
+ * 저장된 게임은 스코어가 없는 상태로 방 게임 목록에 뜨고, 결과 입력부터는 기존 경로를 그대로 탄다.
+ */
+export async function createRoomLineupAction(
+    roomId: string,
+    games: RoomLineupGameInput[],
+): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+    if (games.length === 0) return { error: '저장할 대진이 없습니다.' }
+
+    const toJson = (p: RoomGamePlayerInput) => ({
+        user_id: p.userId ?? null,
+        name: p.name.trim() || null,
+        dominant_hand: p.dominantHand ?? null,
+        ntrp: p.ntrp ?? null,
+    })
+
+    const { error } = await supabase.rpc('create_room_lineup', {
+        p_room_id: roomId,
+        p_games: games.map((g) => ({ team1: g.team1.map(toJson), team2: g.team2.map(toJson) })),
+    })
+    if (error) return { error: translate(error.message, '대진표 저장에 실패했습니다.') }
+
+    revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
     revalidatePath('/match-rooms')
     return { error: null }

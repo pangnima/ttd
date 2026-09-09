@@ -244,8 +244,21 @@ export async function fetchRoomGameConfirmations(
 type ParticipantRow = {
     users: {
         id: string; name: string; nickname: string; ntrp: number | null; personal_ntrp: number | null
-        stats_hidden: boolean | null; dominant_hand: string | null; is_guest: boolean; deleted_at: string | null
+        stats_hidden: boolean | null; dominant_hand: string | null; gender: string | null
+        is_guest: boolean; deleted_at: string | null
     } | null
+}
+
+const PARTICIPANT_COLUMNS =
+    'users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, stats_hidden, dominant_hand, gender, is_guest, deleted_at)'
+
+/** 참가(joined)·미탈퇴 회원 행을 후보로 — 두 조회가 같은 컬럼·정렬을 쓴다 */
+function toCandidates(data: unknown): OpponentCandidate[] {
+    return (data as ParticipantRow[])
+        .map((row) => row.users)
+        .filter((u): u is NonNullable<ParticipantRow['users']> => !!u && !u.deleted_at)
+        .map(toParticipantCandidate)
+        .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /**
@@ -256,16 +269,27 @@ export async function fetchRoomParticipantCandidates(roomId: string, excludeUser
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
-        .select('users!match_room_members_user_id_fkey(id, name, nickname, ntrp, personal_ntrp, stats_hidden, dominant_hand, is_guest, deleted_at)')
+        .select(PARTICIPANT_COLUMNS)
         .eq('room_id', roomId)
         .eq('status', 'joined')
         .neq('user_id', excludeUserId)
     if (error || !data) return []
-    return (data as ParticipantRow[])
-        .map((row) => row.users)
-        .filter((u): u is NonNullable<ParticipantRow['users']> => !!u && !u.deleted_at)
-        .map(toParticipantCandidate)
-        .sort((a, b) => a.name.localeCompare(b.name))
+    return toCandidates(data)
+}
+
+/**
+ * 자동 대진표의 배치 대상 — 참가자 **전원**(방장 본인 포함, Week 40).
+ * 게임 구성 자동완성과 달리 대진은 "모인 사람을 다 넣는" 것이라 뷰어를 빼면 안 된다.
+ */
+export async function fetchRoomLineupCandidates(roomId: string): Promise<OpponentCandidate[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_room_members')
+        .select(PARTICIPANT_COLUMNS)
+        .eq('room_id', roomId)
+        .eq('status', 'joined')
+    if (error || !data) return []
+    return toCandidates(data)
 }
 
 function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): OpponentCandidate {
@@ -277,6 +301,7 @@ function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): Oppone
         personalNtrp: u.personal_ntrp != null ? Number(u.personal_ntrp) : undefined,
         statsHidden: u.stats_hidden ?? false,
         dominantHand: toDominantHand(u.dominant_hand),
+        gender: u.gender === 'male' || u.gender === 'female' ? u.gender : undefined,
         isGuest: u.is_guest ?? false,
         clubNames: [],
     }

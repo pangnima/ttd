@@ -21,6 +21,37 @@ import {
  * 덜 뛴 사람을 강제로 넣는다 — 이것이 출전 편차 ≤ 1을 보장한다.
  */
 
+/** 방 참가자 후보의 최소 형태 — OpponentCandidate가 구조적으로 대입된다(server-only 모듈 의존 회피) */
+export type LineupCandidate = {
+    id: string
+    name: string
+    ntrp?: number
+    personalNtrp?: number
+    gender?: 'male' | 'female'
+    isGuest: boolean
+}
+
+/** 아무도 평점이 없을 때의 대체값 — auto-generate의 FALLBACK_NTRP와 같은 값 */
+const FALLBACK_NTRP = 3.0
+
+/**
+ * 방 참가자 → 배치 대상.
+ * NTRP는 룸 규칙(`personalNtrp ?? ntrp`, rotation-pool.ts와 같은 우선순위)을 따르고,
+ * 둘 다 없으면 아는 사람들의 평균으로 채운다 — 평점이 없다고 대진에서 빠지면 안 되기 때문.
+ */
+export function toLineupPlayers(candidates: LineupCandidate[]): LineupPlayer[] {
+    const ntrpOf = (c: LineupCandidate) => c.personalNtrp ?? c.ntrp
+    const known = candidates.map(ntrpOf).filter((n): n is number => typeof n === 'number' && n > 0)
+    const fallback = known.length > 0 ? known.reduce((sum, n) => sum + n, 0) / known.length : FALLBACK_NTRP
+    return candidates.map((c) => ({
+        key: c.id,
+        name: c.name,
+        ntrp: ntrpOf(c) ?? fallback,
+        gender: c.gender,
+        isMember: !c.isGuest,
+    }))
+}
+
 export type LineupPreset = 'balanced' | 'skill' | 'variety'
 
 export const LINEUP_PRESET_WEIGHTS: Record<LineupPreset, LineupWeights> = {

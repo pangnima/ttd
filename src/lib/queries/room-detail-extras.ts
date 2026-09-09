@@ -4,7 +4,11 @@ import type { MatchRoomDetail, PersonalMatchConfirmation, RotationSession } from
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
-import { fetchRoomGameConfirmations, fetchRoomParticipantCandidates } from '@/lib/queries/match-rooms'
+import {
+    fetchRoomGameConfirmations,
+    fetchRoomLineupCandidates,
+    fetchRoomParticipantCandidates,
+} from '@/lib/queries/match-rooms'
 import { fetchRoomRotationSession, fetchRotationSessionGames } from '@/lib/queries/rotation-sessions'
 import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchPastOpponents } from '@/lib/queries/personal-matches'
@@ -18,6 +22,8 @@ export type RoomDetailExtras = {
     isPendingRotation: boolean
     /** OpponentCandidate로 온다 — RoomParticipant(더 좁은 구조)로도 그대로 쓰인다 */
     participants: OpponentCandidate[]
+    /** 자동 대진표의 배치 대상 — 방장 본인을 포함한 참가자 전원. 방장에게만 채운다(Week 40) */
+    lineupCandidates: OpponentCandidate[]
     opponentCandidates: OpponentCandidate[]
     pastOpponents: PastOpponent[]
     confirmations: Record<string, PersonalMatchConfirmation>
@@ -42,8 +48,10 @@ export async function fetchRoomDetailExtras(detail: MatchRoomDetail, viewerId: s
     const needsCandidates = needsPicker || isMember
     const requestIds = detail.games.map((g) => g.sourceRequestId).filter((id): id is string => !!id)
 
-    const [participants, opponentCandidates, pastOpponents, confirmations, rotationSession] = await Promise.all([
+    const [participants, lineupCandidates, opponentCandidates, pastOpponents, confirmations, rotationSession] = await Promise.all([
         needsPicker ? fetchRoomParticipantCandidates(roomId, viewerId) : [],
+        // 대진 생성은 방장 전용이라 방장에게만 조회한다
+        isHost ? fetchRoomLineupCandidates(roomId) : [],
         needsCandidates ? fetchOpponentCandidates(viewerId) : [],
         needsPicker ? fetchPastOpponents(viewerId) : [],
         // 협상 행이 오는 게임 = 내가 결과를 입력·확인할 수 있는 게임 (RLS가 당사자만 통과시킨다)
@@ -57,6 +65,6 @@ export async function fetchRoomDetailExtras(detail: MatchRoomDetail, viewerId: s
 
     return {
         isHost, isMember, canAdd, isPendingRotation,
-        participants, opponentCandidates, pastOpponents, confirmations, rotationSession, sessionGames,
+        participants, lineupCandidates, opponentCandidates, pastOpponents, confirmations, rotationSession, sessionGames,
     }
 }

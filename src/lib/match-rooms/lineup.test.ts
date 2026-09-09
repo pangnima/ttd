@@ -5,6 +5,7 @@ import {
     ROOM_LINEUP_MAX_GAMES,
     buildRoomLineup,
     gamesForPerPlayer,
+    toLineupPlayers,
     type LineupGame,
     type LineupPreset,
 } from './lineup'
@@ -24,6 +25,40 @@ const SIX = [
 ]
 
 const keysOf = (g: LineupGame) => [...g.team1, ...g.team2].map((x) => x.key)
+
+describe('toLineupPlayers — 방 참가자를 배치 대상으로', () => {
+    it('NTRP는 personalNtrp ?? ntrp — 룸 풀(rotation-pool)과 같은 우선순위다', () => {
+        const [a, b] = toLineupPlayers([
+            { id: 'a', name: 'A', ntrp: 3.0, personalNtrp: 4.2, isGuest: false },
+            { id: 'b', name: 'B', ntrp: 2.5, isGuest: false },
+        ])
+        expect(a.ntrp).toBe(4.2)
+        expect(b.ntrp).toBe(2.5)
+    })
+
+    it('평점이 없는 참가자는 아는 사람들의 평균으로 채운다 — 평점이 없다고 빠지면 안 된다', () => {
+        const players = toLineupPlayers([
+            { id: 'a', name: 'A', ntrp: 3.0, isGuest: false },
+            { id: 'b', name: 'B', ntrp: 4.0, isGuest: false },
+            { id: 'c', name: 'C', isGuest: false },
+        ])
+        expect(players[2].ntrp).toBe(3.5)
+    })
+
+    it('아무도 평점이 없으면 3.0으로 떨어진다', () => {
+        expect(toLineupPlayers([{ id: 'a', name: 'A', isGuest: false }])[0].ntrp).toBe(3.0)
+    })
+
+    it('게스트는 회원이 아니다 — 각 팀 회원 최소 1명 제약의 판정 근거', () => {
+        const [member, guest] = toLineupPlayers([
+            { id: 'a', name: 'A', ntrp: 3.0, gender: 'male', isGuest: false },
+            { id: 'g', name: 'G', ntrp: 3.0, gender: 'female', isGuest: true },
+        ])
+        expect(member.isMember).toBe(true)
+        expect(guest.isMember).toBe(false)
+        expect(guest.gender).toBe('female')
+    })
+})
 
 describe('gamesForPerPlayer — 1인당 경기 수를 총 게임 수로 환산', () => {
     it('복식은 게임당 4자리', () => {

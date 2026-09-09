@@ -63,6 +63,7 @@ export type OpponentCandidate = {
     personalNtrp?: number  // 동적 개인 NTRP(개인경기 기반 캐시). 있으면 프리필 우선
     statsHidden?: boolean  // 통계 비공개 — 개인 NTRP를 감추고 자가선언 값만 쓴다 (derivePublicNtrp)
     dominantHand?: 'right' | 'left'  // 프로필 손잡이 — 선택 시 손잡이 자동 채움
+    gender?: 'male' | 'female'  // 자동 대진표의 성별 밸런스용 (방 참가자 조회에서만 채움, Week 40)
     isGuest: boolean
     clubNames: string[]
 }
