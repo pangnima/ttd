@@ -1,6 +1,8 @@
 import type { MatchRoomDetail, MatchRoomGame, PersonalMatchConfirmation } from '@/types'
 import { PENDING_BADGE, resolveResultBadge } from '@/lib/personal-matches/result-badge'
-import { isRoomGameParty, roomGameStatusBadge } from '@/lib/match-rooms/game-status'
+import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
+import { PILL_BASE } from '@/lib/dashboard/tokens'
+import { roomGameStatusBadge } from '@/lib/match-rooms/game-status'
 import { buildRoomGameSets, buildRoomGameTeams } from '@/lib/match-rooms/game-labels'
 import { GameScoreChips } from '@/components/personal-matches/set-score-chips'
 import { RoomGameActions } from '@/components/match-rooms/room-game-actions'
@@ -24,7 +26,7 @@ const STATUS_BADGE: Record<'attention' | 'pending', string> = {
 
 /**
  * 게임 1행 — 개인 경기 카드(PersonalMatchCard)와 같은 형태: 좌측 결과 색 바 + 팀 두 줄 + 배지 하나 +
- * 하단 '게임 N · 스코어 ↔ 액션'. 같은 경기가 화면마다 다른 형태로 보이지 않게 형태만 이식했고,
+ * 하단 '타입 · 게임 N · 스코어 ↔ 액션'. 같은 경기가 화면마다 다른 형태로 보이지 않게 형태만 이식했고,
  * 관점 반전(game-labels)·배지 규칙(result-badge)은 기존 단일 출처를 그대로 쓴다.
  *
  * 배지는 한 행에 하나뿐이다 — roomGameStatusBadge가 스코어 있는 행에 null을 주므로
@@ -60,18 +62,20 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation }: Pro
                     <span className={`${BADGE_BASE} ${badge.className}`}>{badge.label}</span>
                 </div>
 
-                {/* 게임 순번·스코어(왼쪽) ↔ 결과 입력·확인 액션(오른쪽) */}
-                {(sets.length > 0 || gameLabel || isRoomGameParty(game, viewerId)) && (
-                    <div className="flex items-end justify-between gap-2 mt-2">
-                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                            {gameLabel && <span className="text-caption text-muted-foreground shrink-0">{gameLabel}</span>}
-                            <GameScoreChips sets={sets} />
-                        </div>
-                        <div className="shrink-0 self-center empty:hidden">
-                            <RoomGameActions game={game} viewerId={viewerId} confirmation={confirmation} />
-                        </div>
+                {/* 경기 타입·게임 순번·스코어(왼쪽) ↔ 결과 입력·확인 액션(오른쪽) */}
+                <div className="flex items-end justify-between gap-2 mt-2">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        {/* 복식 방에서도 게임마다 남복·여복·혼복이 갈린다 — 방 헤더의 방식만으로는 알 수 없다 */}
+                        <span className={`${PILL_BASE} shrink-0 ${getMatchTypeBadgeClass(game.matchType)}`}>
+                            {MATCH_TYPE_LABELS[game.matchType]}
+                        </span>
+                        {gameLabel && <span className="text-caption text-muted-foreground shrink-0">{gameLabel}</span>}
+                        <GameScoreChips sets={sets} />
                     </div>
-                )}
+                    <div className="shrink-0 self-center empty:hidden">
+                        <RoomGameActions game={game} viewerId={viewerId} confirmation={confirmation} />
+                    </div>
+                </div>
             </div>
         </div>
     )

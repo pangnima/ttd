@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
-import { PILL_BASE } from '@/lib/dashboard/tokens'
+import { PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
 import { canKickRoomMember, canReinviteRoomMember } from '@/lib/match-rooms/kick'
 import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
@@ -22,7 +22,11 @@ const STATUS_CLASS: Record<string, string> = {
     '강퇴됨': 'border-border text-muted-foreground',
 }
 
-/** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·상태 칩 / 2줄: NTRP·주력손·라켓 */
+// NTRP는 이름 옆에 붙는다 — 실력이 곧 그 사람을 고르는 기준이라 이름과 한 덩어리로 읽혀야 한다.
+// shrink-0이라 어떤 폭에서도 잘리지 않고, 잘리는 것은 언제나 이름 뒤의 메타(닉네임·라켓)다.
+const NTRP_BADGE = `${PILL_BASE} ${TYPO.micro} shrink-0 border-border text-foreground tabular-nums`
+
+/** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·NTRP·상태 칩 / 2줄: 닉네임·주력손·라켓 */
 export function RoomMemberRow({ row, roomId, isSettled, host }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
@@ -42,9 +46,15 @@ export function RoomMemberRow({ row, roomId, isSettled, host }: Props) {
                 <AvatarFallback className="bg-muted text-muted-foreground text-caption font-bold">{row.name[0]}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-                {row.userId && !row.deleted ? (
-                    <ProfileLink userId={row.userId} isGuest={false} className="hover:underline">{name}</ProfileLink>
-                ) : name}
+                <div className="flex items-center gap-1.5 min-w-0">
+                    {row.userId && !row.deleted ? (
+                        <ProfileLink userId={row.userId} isGuest={false} className="min-w-0 truncate hover:underline">{name}</ProfileLink>
+                    ) : name}
+                    {/* 탈퇴 회원은 익명화 대상이라 실력을 남기지 않는다 */}
+                    {row.ntrp != null && !row.deleted && (
+                        <span className={NTRP_BADGE}>NTRP {row.ntrp.toFixed(1)}</span>
+                    )}
+                </div>
                 <MemberMetaLine row={row} />
             </div>
             <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
