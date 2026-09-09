@@ -14,7 +14,7 @@ type SidebarProps = {
     currentPath?: string
     /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
-    /** 받은 확인 요청 pending + 결과 제안 + 매칭 리스트 방 초대 건수 (경기 확인 요청 메뉴 뱃지) */
+    /** 매칭 리스트에서 내 차례로 강조되는 카드 수 — 방 초대 + 내 차례가 있는 방 (매칭 리스트 메뉴 뱃지) */
     myTurnCount?: number
 }
 
@@ -23,12 +23,11 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
 
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록(목록·생성·수정) + 매칭 리스트(목록·상세) + 경기 확인 요청
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 매칭 리스트(진행 중) + 개인 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
     const myNavActive = (href: string) => {
         if (href.startsWith('/me/personal-matches')) return activePath.startsWith('/me/personal-matches')
         if (href.startsWith('/match-rooms')) return activePath.startsWith('/match-rooms')
-        if (href.startsWith('/me/match-requests')) return activePath.startsWith('/me/match-requests')
         return userId ? isPersonalNavActive(activePath, userId) : false
     }
 
@@ -70,12 +69,12 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
 
             {/* 메인 네비게이션 — rail에서는 플라이아웃이 사이드바 밖으로 나가야 하므로 overflow를 자르지 않는다 */}
             <nav className={cn('flex-1 min-h-0 p-3 space-y-0.5', collapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden')}>
-                {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 개인 경기 등록 + 경기 확인 요청 (로그인 시) */}
+                {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 매칭 리스트 + 개인 경기 결과 (로그인 시) */}
                 {myNavItems.length > 0 && (
                     <div className="space-y-0.5">
                         {myNavItems.map(({ href, label, icon: Icon }) => {
                             const active = myNavActive(href)
-                            const showBadge = href === '/me/match-requests' && myTurnCount > 0
+                            const showBadge = href === '/match-rooms' && myTurnCount > 0
                             return (
                                 <Link
                                     key={href}

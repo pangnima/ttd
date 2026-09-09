@@ -2,7 +2,7 @@ import type { MatchQueue } from '@/lib/queries/match-queue'
 import type { RotationBuilderContext } from '@/lib/queries/rotation-builder-context'
 import { todayIsoKst } from '@/lib/match-rooms/split'
 import { isDormantSession } from '@/lib/personal-matches/session-visibility'
-import { PendingMatchSection } from '@/components/match-requests/pending-match-section'
+import { PendingMatchSection } from '@/components/personal-matches/pending-match-section'
 import { RotationSessionCard } from '@/components/personal-matches/rotation-session-card'
 
 type Props = {
@@ -12,19 +12,18 @@ type Props = {
 }
 
 /**
- * 개인 경기 결과 상단 「결과 입력 대기」 — 전원 수락이 끝났지만 아직 스코어가 없는 것들 (Week 38).
+ * 개인 경기 결과 상단 「결과 입력 대기」 — **방 밖 기록만** (Week 39).
  *
- * 0064까지는 허브 「경기 결과 확정」에 있었다. 사용자가 정의한 흐름은 "승인이 끝나면 개인 경기 결과로"이고
- * 결과 입력은 승인이 아니므로 여기가 맞다 — 허브는 승인 전용이 된다. 누군가 입력하면 나머지 좌석에게는
- * 허브 '결과 확인 대기'로 돌아가고, 전원이 확인하면 이 화면의 확정 목록으로 내려온다.
+ * 미확정 행 하나가 놓이는 자리는 room_id가 가른다: 방에 속한 것은 매칭 룸(과 매칭 리스트의 내 차례 필)이
+ * 그리고, 방 밖 기록 — 즉 비회원과 친 직접 기록 — 만 여기 남는다. 방 밖 기록에는 확인해 줄 상대가 없으므로
+ * 내가 스코어를 넣는 순간 확정된다.
  *
- * 카드: 미확정 행(enterResult — 상호 확인 경기·자유 기록) + 입력 가능한 로테이션 일정.
  * 일정 카드는 게임이 전부 확정되고 경기일이 지나면 숨긴다(isDormantSession). 숫자는 그려지는 카드 수다.
  */
 export function PendingResultsSection({ queue, viewerId, builder }: Props) {
-    const entries = queue.pendingMatches.filter((p) => p.bucket === 'enterResult')
+    const entries = queue.pendingMatches.filter((p) => !p.match.roomId && p.bucket === 'enterResult')
     const today = todayIsoKst()
-    const sessions = queue.rotationSessions.filter((s) => !isDormantSession(
+    const sessions = queue.rotationSessions.filter((s) => !s.roomId && !isDormantSession(
         s,
         queue.enteredGamesBySession.get(s.id) ?? [],
         queue.pendingMatches.some((p) => p.match.rotationSessionId === s.id),
@@ -34,7 +33,7 @@ export function PendingResultsSection({ queue, viewerId, builder }: Props) {
     return (
         <PendingMatchSection
             title="결과 입력 대기"
-            hint="게임 스코어를 넣으면 회원 참가자 전원의 확인을 거쳐 확정됩니다"
+            hint="게임 스코어를 넣으면 곧바로 확정됩니다"
             count={entries.length + sessions.length}
             entries={entries}
         >

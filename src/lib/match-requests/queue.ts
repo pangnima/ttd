@@ -3,27 +3,28 @@ import { canRespondToProposal, hasDisputeHistory, isReentryTurn } from '@/lib/pe
 import { isLineupComplete, isRecruiting } from '@/lib/personal-matches/lineup'
 
 /**
- * 경기 확인 요청 허브의 작업 큐 분류 — 순수 규칙.
+ * 미확정 경기의 작업 큐 분류 — 순수 규칙.
  *
- * 개인 경기 결과(확정)와 확인 요청(미확정)은 `hasResult`(winner.ts) 하나로 집합 분할되고,
- * 이 모듈은 그중 **미확정 쪽만** 다시 "내 차례(승인 요청) / 상대 대기"로 나눈다.
+ * 개인 경기 결과(확정)와 미확정은 `hasResult`(winner.ts) 하나로 집합 분할되고,
+ * 이 모듈은 그중 **미확정 쪽만** 다시 "내 차례 / 상대 대기"로 나눈다.
  * 분류가 SQL 필터가 아니라 순수 함수라 상태 조합 전량을 테스트로 고정할 수 있다.
  *
- * 버킷 → 자리 대응 (personal_matches 행이 있는 것들). 한 행은 정확히 한 자리에만 나온다(tabs.ts):
- *   confirmResult          승인 요청 › 경기 결과 확정 · 결과 확인 대기 — 누군가 제안했고 내 좌석이 아직 확인하지 않았다
- *   enterResult            개인 경기 결과 · 결과 입력 대기 (허브 밖, Week 38) — 아무도 제안하지 않았다
- *   fillLineup             승인 요청 › 경기 결과 확정 · 참가자 채우기  — 모집 중이라 결과를 넣을 수 없다
- *   awaitingCounterpart    상대 승인 대기                                — 내가 제안했거나 이미 확인했고, 남은 좌석을 기다린다
- *   reenterResult          승인 요청 › 이의 신청 · 다시 입력할 차례     — 내 제안에 이의가 들어왔다(뱃지 포함, 0061)
- *   awaitingReentry        상대 승인 대기 · 재입력 대기                  — 이의자·나머지 좌석·좌석 판정 실패 폴백
- *   reentryReview          승인 요청 › 이의 신청 · 재입력된 결과 확인   — 이의 후 다시 입력됐고 내가 확인할 차례(뱃지 포함, 0062)
- *   awaitingReentryConfirm 상대 승인 대기 · 재입력 결과 확인 대기       — 내가 재입력했거나 이미 확인했다(0062)
+ * 버킷 → 자리 대응. 한 행은 정확히 한 자리에만 나온다 — 경계는 **room_id**다(Week 39):
+ * 방에 속한 행은 매칭 룸(과 매칭 리스트의 내 차례 필)이, 방 밖 행은 개인 경기 결과가 그린다.
+ *   confirmResult          결과 확인 대기        — 누군가 제안했고 내 좌석이 아직 확인하지 않았다
+ *   enterResult            결과 입력 대기        — 아무도 제안하지 않았다
+ *   fillLineup             참가자 채우기         — 모집 중이라 결과를 넣을 수 없다
+ *   awaitingCounterpart    상대 대기             — 내가 제안했거나 이미 확인했고, 남은 좌석을 기다린다
+ *   reenterResult          다시 입력할 차례      — 내 제안에 이의가 들어왔다(0061)
+ *   awaitingReentry        재입력 대기           — 이의자·나머지 좌석·좌석 판정 실패 폴백
+ *   reentryReview          재입력된 결과 확인    — 이의 후 다시 입력됐고 내가 확인할 차례(0062)
+ *   awaitingReentryConfirm 재입력 결과 확인 대기 — 내가 재입력했거나 이미 확인했다(0062)
  *
  * 이의를 거친 협상(hasDisputeHistory)은 버킷을 따로 둔다(0062) — 카드가 "누구의 이의에 대한 재입력인가"를
- * 배지로 말해야 하기 때문이다. 다만 **탭 위치는 차례 축을 따른다**(Week 38): 내 차례면 승인 요청 › 이의 신청,
- * 상대 차례면 상대 승인 대기. 0062가 세운 "확정까지 이의 탭에 머문다"는 여기서 철회됐다.
+ * 배지로 말해야 하기 때문이다.
  *
- * pending 요청·룸 초대·미입력 로테이션 세션은 아직 personal_matches 행이 없어 여기서 다루지 않는다.
+ * 룸 초대와 미입력 로테이션 세션은 아직 personal_matches 행이 없어 여기서 다루지 않는다.
+ * 방 단위 롤업은 `lib/match-rooms/room-turn.ts`가 이 버킷을 받아 수행한다.
  */
 
 export type MatchQueueBucket =
@@ -78,84 +79,4 @@ export function classifyPendingMatch(m: PersonalMatch): MatchQueueBucket {
 
     // confirmed인데 세트가 없는 조합은 존재할 수 없다(confirm이 양측 세트를 동시에 채운다) — 방어적 폴백
     return 'awaitingCounterpart'
-}
-
-/**
- * 허브의 **'내 차례' 건수** — 알림(사이드바·모바일 뱃지)의 재료다.
- *
- * ⚠ 화면에 그려지는 **카드 수와는 다르다.** 목록 건수는 `hub-totals.ts`가 따로 파생한다 —
- * 두 숫자를 하나로 겸하게 두면 조건에 따라 "배지 0인데 카드 N장"이 생긴다(그게 0064까지의 상태였다).
- * participation은 personal_matches 행이 없는 단계(받은 pending 요청 + 룸 초대)라 조립 쪽에서 채운다.
- */
-export type MatchQueueCounts = {
-    participation: number   // 내 차례 · 경기 참여 확인
-    confirmResult: number   // 내 차례 · 결과 확인 대기
-    enterResult: number     // 개인 경기 결과 · 결과 입력 대기 행 (뱃지 제외 — 입력은 승인이 아니다, Week 38)
-    fillLineup: number      // 내 차례 · 참가자 채우기
-    waiting: number         // 상대 대기 (뱃지 제외)
-    reenterResult: number   // 이의 신청 · 다시 입력할 차례 (뱃지 포함)
-    disputeWaiting: number  // 상대 대기 · 재입력 대기 (뱃지 제외)
-    reentryReview: number   // 이의 신청 · 재입력된 결과 확인 (뱃지 포함, 0062)
-    reentryWaiting: number  // 상대 대기 · 재입력 결과 확인 대기 (뱃지 제외, 0062)
-}
-
-export const EMPTY_QUEUE_COUNTS: MatchQueueCounts = {
-    participation: 0, confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0,
-    reenterResult: 0, disputeWaiting: 0, reentryReview: 0, reentryWaiting: 0,
-}
-
-/** 「승인 요청 › 초대」의 내 차례 — 참여 수락(받은 요청·일정 초대·방 초대) */
-export function inviteMyTurn(c: MatchQueueCounts): number {
-    return c.participation
-}
-
-/**
- * 「승인 요청 › 경기 결과 확정」의 내 차례 — 제안된 결과 확인(승인) + 참가자 채우기.
- * **결과 입력(enterResult)은 여기 없다**(Week 38) — 전원 수락이 끝난 경기는 승인할 것이 없으므로
- * 허브를 떠나 개인 경기 결과 목록에서 입력한다. 허브는 승인 전용이다.
- */
-export function resultMyTurn(c: MatchQueueCounts): number {
-    return c.confirmResult + c.fillLineup
-}
-
-/** 「승인 요청 › 이의 신청」의 내 차례 — 다시 입력할 차례 + 재입력된 결과 확인. 이 탭은 카드 수 = 내 차례다 */
-export function disputeMyTurnTotal(c: MatchQueueCounts): number {
-    return c.reenterResult + c.reentryReview
-}
-
-/**
- * 사이드바·모바일 nav 뱃지 = '지금 내가 처리할 일' 총건수. **알림**의 단일 출처다.
- *
- * 승인 요청 탭의 하위 세 탭(초대·경기 결과 확정·이의 신청)의 내 차례를 더한 값이고, 곧 **승인 요청 탭의
- * 내 차례 총합**이다(hub-totals.ts hubTopHasMyTurn과 같은 재료). 상대 승인 대기는 정의상 0이다.
- * 뺄셈으로 정의하지 않는다 — 항이 늘 때마다 뺄셈을 쓰는 곳이 함께 깨진 전력이 있다(0062의 백지 화면).
- * 결과 입력(enterResult)은 Week 38부터 뱃지 밖이다 — 승인이 아니라 내 기록 관리이고, 개인 경기 결과 목록이 그린다.
- */
-export function myTurnTotal(c: MatchQueueCounts): number {
-    return inviteMyTurn(c) + resultMyTurn(c) + disputeMyTurnTotal(c)
-}
-
-/** 버킷 집계가 채우는 키 — participation은 조립 쪽에서 온다 */
-type TalliedCounts = Omit<MatchQueueCounts, 'participation'>
-
-// 버킷 → counts 키. awaitingCounterpart는 waiting으로, awaitingReentry는 disputeWaiting으로 접는다.
-const COUNT_KEY: Record<MatchQueueBucket, keyof TalliedCounts> = {
-    confirmResult: 'confirmResult',
-    enterResult: 'enterResult',
-    fillLineup: 'fillLineup',
-    awaitingCounterpart: 'waiting',
-    reenterResult: 'reenterResult',
-    awaitingReentry: 'disputeWaiting',
-    reentryReview: 'reentryReview',
-    awaitingReentryConfirm: 'reentryWaiting',
-}
-
-/** 버킷별 집계 — 미확정 행 목록에서 counts를 채운다(participation 제외) */
-export function tallyBuckets(buckets: MatchQueueBucket[]): TalliedCounts {
-    const counts = {
-        confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0,
-        reenterResult: 0, disputeWaiting: 0, reentryReview: 0, reentryWaiting: 0,
-    }
-    for (const b of buckets) counts[COUNT_KEY[b]] += 1
-    return counts
 }

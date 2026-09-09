@@ -141,7 +141,7 @@ export async function inviteRoomMembersAction(roomId: string, userIds: string[])
     if (error) return { error: translate(error.message, '초대에 실패했습니다.') }
 
     revalidateRoomPaths(roomId)
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     return { error: null }
 }
 
@@ -153,7 +153,7 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
     const { error } = await supabase.rpc('respond_room_invite', { p_room_id: roomId, p_accept: accept })
     if (error) return { error: translate(error.message, '초대 응답에 실패했습니다.') }
     revalidateRoomPaths(roomId)
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     return { error: null }
 }
 
@@ -170,7 +170,7 @@ export async function leaveMatchRoomAction(roomId: string): Promise<ActionResult
     if (error) return { error: translate(error.message, '방에서 나가지 못했습니다.') }
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     return { error: null }
 }
 
@@ -240,7 +240,7 @@ export async function createRoomGameAction(input: RoomGameInput): Promise<Action
 
     revalidateRoomPaths(input.roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     return { error: null }
 }
 

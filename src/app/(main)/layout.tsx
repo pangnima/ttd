@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { fetchMatchQueue } from '@/lib/queries/match-queue'
-import { myTurnTotal } from '@/lib/match-requests/queue'
+import { fetchRoomQueue } from '@/lib/queries/room-queue'
+import { roomBadgeTotal } from '@/lib/match-rooms/room-turn'
 import { Header } from '@/components/common/header'
 import { Sidebar } from '@/components/common/sidebar'
 import { SidebarProvider } from '@/components/common/sidebar-context'
@@ -14,9 +14,9 @@ export default async function MainLayout({
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     // 직렬화 가능한 최소 형태만 Client Component(Sidebar/Header)에 전달 (아이콘·객체 전체 전달 금지)
-    // 뱃지 = 확인 요청 허브 '내 차례' 총건수. fetchMatchQueue는 React cache()라 같은 요청의 화면 본문과 쿼리를 공유한다
-    const queue = user ? await fetchMatchQueue(user.id) : null
-    const myTurnCount = queue ? myTurnTotal(queue.counts) : 0
+    // 뱃지 = 매칭 리스트에서 내 차례로 강조되는 카드 수. fetchRoomQueue는 React cache()라 화면 본문과 쿼리를 공유한다
+    const queue = user ? await fetchRoomQueue(user.id) : null
+    const myTurnCount = queue ? roomBadgeTotal(queue.turns, queue.invites.length) : 0
 
     // 헤더 표시용 사용자 정보 — 서버에서 조회해 props로 전달 (저장 후 revalidatePath로 즉시 갱신)
     let userDisplay: {

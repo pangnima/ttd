@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, ClipboardList, Inbox } from 'lucide-react'
+import { BarChart3, CalendarDays, ClipboardList } from 'lucide-react'
 
 export type NavItem = {
     href: string
@@ -21,13 +21,14 @@ export function isPersonalNavActive(pathname: string, userId: string): boolean {
     return pathname === `/profile/${userId}`
 }
 
-// 개인 경기 메뉴 ('개인' 메뉴와 같은 섹션, 로그인 시 노출)
-// '경기 확인 요청'에는 받은 pending 건수 뱃지가 붙는다 (Sidebar/MobileNav에서 렌더).
-// 생애 순서로 배열한다: 경기를 잡고(매칭 리스트) → 결과를 처리하고(확인 요청) → 확정 전적을 본다(개인 경기 결과).
-// Sidebar의 활성 판정은 href prefix 기반이라 순서와 무관하다.
+/**
+ * 개인 경기 메뉴 ('개인' 메뉴와 같은 섹션, 로그인 시 노출).
+ *
+ * 하나의 경기가 놓이는 자리는 둘뿐이다(Week 39) — **진행 중인 매칭은 매칭 리스트**(그 목록이 곧 작업 큐),
+ * **끝난 것은 개인 경기 결과**. 뱃지는 매칭 리스트에 붙는다(Sidebar/MobileNav에서 렌더).
+ */
 export const myMatchNavItems: NavItem[] = [
     { href: '/match-rooms', label: '매칭 리스트', icon: CalendarDays },
-    { href: '/me/match-requests', label: '경기 확인 요청', icon: Inbox },
     { href: '/me/personal-matches', label: '개인 경기 결과', icon: ClipboardList },
 ]
 

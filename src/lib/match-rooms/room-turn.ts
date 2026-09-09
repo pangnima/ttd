@@ -134,6 +134,21 @@ export const ROOM_TURN_PILL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
     waiting: '상대 대기',
 }
 
+/**
+ * 사이드바·모바일 nav 뱃지 = **매칭 리스트에서 내 차례로 강조되는 카드 수**.
+ *
+ * 알림의 단일 출처이고, 정의가 곧 "그 화면에 실제로 그려지는 강조 카드 수"라 배지와 목록이 어긋날 수 없다.
+ * 뺄셈으로 정의하지 않는다 — 항이 늘 때마다 뺄셈을 쓰는 곳이 함께 깨진 전력이 있다.
+ * 방 밖 직접 기록의 결과 입력은 여기 없다: 확인해 줄 상대가 없어 알릴 일이 아니라 내 기록 관리다.
+ */
+export function roomBadgeTotal(turns: Map<string, RoomTurnSummary>, inviteCount: number): number {
+    let mine = 0
+    for (const summary of turns.values()) {
+        if (isMyRoomTurn(summary.turn)) mine += 1
+    }
+    return mine + inviteCount
+}
+
 /** 미확정 행들을 방 단위로 접는다 — roomId가 없는 행(방 밖 기록)은 버린다 */
 export function rollUpRoomTurns(
     rows: ReadonlyArray<{ roomId?: string; turn: RoomGameTurn }>,

@@ -114,7 +114,7 @@ export async function respondRotationPlanAction(sessionId: string, accept: boole
         return { error: known ? known[1] : '응답에 실패했습니다.' }
     }
 
-    revalidatePath('/me/match-requests')
+    revalidatePath('/me/personal-matches')
     return { error: null }
 }
 
@@ -150,7 +150,7 @@ export async function addRotationSessionPlayerAction(sessionId: string, userId: 
     })
     if (error) return { error: poolError(error.message) }
 
-    revalidatePath('/me/match-requests')
+    revalidatePath('/me/personal-matches')
     return { error: null }
 }
 
@@ -166,7 +166,7 @@ export async function removeRotationSessionPlayerAction(sessionId: string, userI
     })
     if (error) return { error: poolError(error.message) }
 
-    revalidatePath('/me/match-requests')
+    revalidatePath('/me/personal-matches')
     return { error: null }
 }
 
@@ -197,7 +197,7 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
     }
 
     revalidatePath('/me/personal-matches')
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     return { error: null }
 }
 
@@ -275,7 +275,7 @@ export async function finalizeRotationSessionAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/personal-matches')
     revalidatePath(`/profile/${user.id}`)
-    revalidatePath('/me/match-requests')
+    revalidatePath('/match-rooms')
     revalidateRoomPaths(session?.room_id)
     return { error: null }
 }

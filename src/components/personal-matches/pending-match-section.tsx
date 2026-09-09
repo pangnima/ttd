@@ -4,8 +4,8 @@ import type { MatchQueueBucket } from '@/lib/match-requests/queue'
 import { buildMatchGroups } from '@/lib/personal-matches/match-groups'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { MatchGroupList } from '@/components/personal-matches/match-group-list'
-import { QueueSection } from '@/components/match-requests/queue-section'
-import { PendingMatchActions } from '@/components/match-requests/pending-match-actions'
+import { QueueSection } from '@/components/personal-matches/queue-section'
+import { PendingMatchActions } from '@/components/personal-matches/pending-match-actions'
 
 type Props = {
     title: string

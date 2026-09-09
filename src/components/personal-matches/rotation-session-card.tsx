@@ -12,7 +12,7 @@ import { useResultDialog } from '@/components/personal-matches/use-result-dialog
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
-import { SeatProgressBadge } from '@/components/match-requests/request-acceptance-note'
+import { SeatProgressBadge } from '@/components/personal-matches/seat-progress-badge'
 import { canManageRotationPool, pendingSeats, poolMemberIds, rejectedSeats } from '@/lib/personal-matches/rotation-participation'
 import {
     awaitingConsentNote, enteredBadgeLabel, nextGroupSeq, type EnteredRotationGame,

@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchResultStatus, PersonalMatch, PersonalMatchConfirmation } from '@/types'
-import type { MatchQueueCounts } from './queue'
-import {
-    EMPTY_QUEUE_COUNTS, classifyPendingMatch, disputeMyTurnTotal, inviteMyTurn,
-    myTurnTotal, resultMyTurn, tallyBuckets,
-} from './queue'
+import { classifyPendingMatch } from './queue'
 
 /**
  * 상태 조합 전량 고정 — redesign-fixtures/match-requests.ts가 갖고 있던
@@ -176,74 +172,3 @@ describe('classifyPendingMatch — 이의를 거친 뒤 재제안 (0062)', () =>
     })
 })
 
-describe('tallyBuckets', () => {
-    it('버킷별로 집계하고 대기 계열을 waiting/disputeWaiting/reentryWaiting으로 접는다', () => {
-        expect(tallyBuckets([
-            'confirmResult', 'enterResult', 'enterResult', 'fillLineup',
-            'awaitingCounterpart', 'awaitingCounterpart',
-            'reenterResult', 'awaitingReentry', 'awaitingReentry', 'awaitingReentry',
-            'reentryReview', 'reentryReview', 'awaitingReentryConfirm',
-        ])).toEqual({
-            confirmResult: 1, enterResult: 2, fillLineup: 1, waiting: 2,
-            reenterResult: 1, disputeWaiting: 3, reentryReview: 2, reentryWaiting: 1,
-        })
-    })
-
-    it('빈 목록은 전부 0', () => {
-        expect(tallyBuckets([])).toEqual({
-            confirmResult: 0, enterResult: 0, fillLineup: 0, waiting: 0,
-            reenterResult: 0, disputeWaiting: 0, reentryReview: 0, reentryWaiting: 0,
-        })
-    })
-})
-
-describe('myTurnTotal / inviteMyTurn / resultMyTurn / disputeMyTurnTotal', () => {
-    const counts = {
-        participation: 2, confirmResult: 1, enterResult: 3, fillLineup: 1, waiting: 99,
-        reenterResult: 2, disputeWaiting: 5, reentryReview: 4, reentryWaiting: 6,
-    }
-
-    it('뱃지 = 승인 요청 탭의 내 차례. 결과 입력·상대 대기·이의 대기는 뺀다', () => {
-        expect(myTurnTotal(counts)).toBe(10)
-    })
-
-    it('하위 탭별 내 차례 — 초대 / 경기 결과 확정 / 이의 신청', () => {
-        expect(inviteMyTurn(counts)).toBe(2)        // 참여 확인
-        expect(resultMyTurn(counts)).toBe(2)        // 결과 확인 1 + 라인업 1 (결과 입력 3은 허브 밖)
-        expect(disputeMyTurnTotal(counts)).toBe(6)  // 다시 입력 2 + 재입력 확인 4
-    })
-
-    it('뱃지 = 하위 세 탭을 더한 것 (뺄셈이 아니라 합산이 정의다)', () => {
-        expect(inviteMyTurn(counts) + resultMyTurn(counts) + disputeMyTurnTotal(counts))
-            .toBe(myTurnTotal(counts))
-    })
-
-    it('enterResult는 뱃지에 들어가지 않는다 — 전원 수락이 끝난 경기는 승인할 것이 없다(Week 38)', () => {
-        // 결과 입력 대기는 개인 경기 결과 목록이 그린다. 입력은 알림이 아니라 내 기록 관리다.
-        expect(myTurnTotal({ ...counts, enterResult: 99 })).toBe(myTurnTotal(counts))
-    })
-
-    it('빈 큐는 0 — 배너·뱃지가 렌더되지 않는 조건', () => {
-        expect(myTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
-        expect(disputeMyTurnTotal(EMPTY_QUEUE_COUNTS)).toBe(0)
-    })
-})
-
-describe('이의 대기는 뱃지 밖이다', () => {
-    const counts = (over: Partial<MatchQueueCounts>): MatchQueueCounts => ({
-        ...EMPTY_QUEUE_COUNTS, ...over,
-    })
-
-    it('이의 신청 탭의 내 차례 = 다시 입력할 차례 + 재입력된 결과 확인', () => {
-        const c = counts({ reenterResult: 2, reentryReview: 3, disputeWaiting: 5, reentryWaiting: 7 })
-        expect(disputeMyTurnTotal(c)).toBe(5)
-        expect(myTurnTotal(c)).toBe(5)
-    })
-
-    it('이의 신청에만 할 일이 있으면 초대·결과 확정의 내 차례는 0이다', () => {
-        const c = counts({ reentryReview: 2 })
-        expect(inviteMyTurn(c)).toBe(0)
-        expect(resultMyTurn(c)).toBe(0)
-        expect(myTurnTotal(c)).toBe(2)
-    })
-})

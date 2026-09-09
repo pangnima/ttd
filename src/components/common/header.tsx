@@ -23,7 +23,7 @@ type HeaderProps = {
     userDisplay?: UserDisplay | null
     /** 로그인 사용자 id — 모바일 nav 개인 섹션용 (userDisplay는 프로필 행이 없으면 null일 수 있어 별도 전달) */
     userId?: string | null
-    /** 확인 요청 뱃지 건수 — 서버에서 계산해 모바일 nav로 전달 */
+    /** 매칭 리스트 뱃지 건수 — 서버에서 계산해 모바일 nav로 전달 */
     myTurnCount?: number
 }
 

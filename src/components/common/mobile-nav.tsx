@@ -15,7 +15,7 @@ import { BrandLogo } from '@/components/common/brand-logo'
 type MobileNavProps = {
     /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인' href) */
     userId?: string | null
-    /** 확인 요청 허브 '내 차례' 건수 — 서버 fetchMatchQueue 1곳(myTurnTotal)에서 계산해 props로 전달 */
+    /** 매칭 리스트 '내 차례' 건수 — 서버 fetchRoomQueue 1곳(roomBadgeTotal)에서 계산해 props로 전달 */
     myTurnCount?: number
 }
 
@@ -23,12 +23,11 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
 
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 개인 경기 등록 + 매칭 리스트 + 경기 확인 요청
+    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 매칭 리스트(진행 중) + 개인 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
     const myNavActive = (href: string) => {
         if (href.startsWith('/me/personal-matches')) return pathname.startsWith('/me/personal-matches')
         if (href.startsWith('/match-rooms')) return pathname.startsWith('/match-rooms')
-        if (href.startsWith('/me/match-requests')) return pathname.startsWith('/me/match-requests')
         return userId ? isPersonalNavActive(pathname, userId) : false
     }
     const navLinkClass = (active: boolean) =>
@@ -68,7 +67,7 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
                         <div className="space-y-1">
                             {myNavItems.map(({ href, label, icon: Icon }) => {
                                 const active = myNavActive(href)
-                                const showBadge = href === '/me/match-requests' && myTurnCount > 0
+                                const showBadge = href === '/match-rooms' && myTurnCount > 0
                                 return (
                                     <Link
                                         key={href}

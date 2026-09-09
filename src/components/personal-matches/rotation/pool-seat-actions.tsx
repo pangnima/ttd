@@ -3,7 +3,7 @@
 import type { RotationPoolPlayer, RotationSessionSeat } from '@/types'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
-import { RequestStatusBadge } from '@/components/match-requests/request-status-badge'
+import { RequestStatusBadge } from '@/components/personal-matches/request-status-badge'
 
 /** 좌석 조작에 필요한 것만 — PoolAdmin에서 좁혀 받는다(순환 import 회피) */
 export type SeatAdmin = {
