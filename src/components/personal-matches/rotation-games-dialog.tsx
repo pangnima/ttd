@@ -36,7 +36,7 @@ type Props = {
 export function RotationGamesDialog({ open, onOpenChange, session, pool, isRoomSession, picker, onSubmit, isPending, error, poolAdmin, enteredGames, blockedReason }: Props) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle>로테이션 게임 입력</DialogTitle>
                     <DialogDescription>

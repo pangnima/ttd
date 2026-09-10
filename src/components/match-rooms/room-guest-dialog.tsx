@@ -24,7 +24,7 @@ export function RoomGuestDialog({ roomId }: Props) {
                 비회원 초대
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>비회원 초대</DialogTitle>
                     </DialogHeader>

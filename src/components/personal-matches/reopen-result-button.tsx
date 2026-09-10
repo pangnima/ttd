@@ -36,7 +36,7 @@ export function ReopenResultButton({ requestId, description }: Props) {
             </button>
 
             <Dialog open={d.open} onOpenChange={d.setOpen}>
-                <DialogContent>
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>확정된 결과를 정정할까요?</DialogTitle>
                         <DialogDescription>

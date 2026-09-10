@@ -6,6 +6,8 @@ type Props = {
     title: string
     /** 그 라운드에 한 번도 안 뛴 사람 — 게임별로 세면 1번 코트에서 쉬고 2번 코트에서 뛰는 사람이 쉰 것처럼 읽힌다 */
     restingNames: string[]
+    /** 이 라운드에 두 번 선 사람 — 있으면 그 라운드는 실행할 수 없다 */
+    conflictNames?: string[]
     children: ReactNode
 }
 
@@ -15,7 +17,7 @@ type Props = {
  * 그룹핑은 **감싸기**다 — 기존 게임 카드를 그대로 두고 머리줄만 씌운다.
  * 2면 이상인 방에서 `게임 1, 2, 3…`이 일렬로 늘어서면 어느 둘이 같은 시각에 도는지 알 수 없다.
  */
-export function LineupRoundGroup({ title, restingNames, children }: Props) {
+export function LineupRoundGroup({ title, restingNames, conflictNames = [], children }: Props) {
     return (
         <div className="space-y-1.5">
             <div className="flex items-baseline justify-between gap-2">
@@ -27,6 +29,11 @@ export function LineupRoundGroup({ title, restingNames, children }: Props) {
                     </span>
                 )}
             </div>
+            {conflictNames.length > 0 && (
+                <p className={`${TYPO.caption} text-spot break-keep`}>
+                    {conflictNames.join(', ')} — 같은 라운드에 두 번 배정되어 있습니다. 동시에 두 코트에 설 수 없습니다.
+                </p>
+            )}
             <ol className={`${CARD_BASE} divide-y divide-border`}>{children}</ol>
         </div>
     )

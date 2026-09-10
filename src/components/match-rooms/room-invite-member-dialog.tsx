@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { FORM_CANCEL } from '@/lib/dashboard/tokens'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RoomInviteMemberSearch } from '@/components/match-rooms/room-invite-member-search'
 
 type Props = {
@@ -29,7 +30,7 @@ export function RoomInviteMemberDialog({ roomId, selfUserId, candidates, exclude
                 회원 초대
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md" showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>회원 초대</DialogTitle>
                     </DialogHeader>
@@ -40,6 +41,12 @@ export function RoomInviteMemberDialog({ roomId, selfUserId, candidates, exclude
                         excludedUserIds={excludedUserIds}
                         onDone={() => setOpen(false)}
                     />
+                    {/* 저장이 없는 팝업이라 FormActions를 쓰지 않는다 — 고르는 즉시 초대되고 남는 건 닫기뿐 */}
+                    <DialogFooter>
+                        <Button variant="outline" className={FORM_CANCEL} onClick={() => setOpen(false)}>
+                            닫기
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>

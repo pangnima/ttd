@@ -5,7 +5,7 @@ import type { LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupSlot } from '@/lib/match-rooms/lineup'
 import { summarizeLineup } from '@/lib/match-rooms/lineup'
 import {
-    derivedSlotMinutes, groupByRound, restingByRound, roundStartLabels,
+    derivedSlotMinutes, groupByRound, restingByRound, roundConflictNames, roundStartLabels,
 } from '@/lib/match-rooms/court-slots'
 import {
     addGame, removeGame, setSlot, validateDraft, type DraftGame, type DraftSide,
@@ -50,6 +50,10 @@ export function LineupEditList({
     const starts = roundStartLabels(playedTime, rounds.length, slot)
     const grouped = courts > 1
     const roundResting = restingByRound(resting, courts)
+    const roundConflicts = roundConflictNames(
+        games.map((g) => [...g.team1, ...g.team2].filter((p) => !!p).map((p) => p!.name)),
+        courts,
+    )
 
     const card = (g: DraftGame, i: number) => (
         <LineupEditCard
@@ -85,6 +89,7 @@ export function LineupEditList({
                             key={r}
                             title={`${r + 1}라운드${starts[r] ? ` · ${starts[r]}` : ''}`}
                             restingNames={(roundResting[r] ?? []).map(nameOf)}
+                            conflictNames={roundConflicts[r] ?? []}
                         >
                             {round.map((g, i) => card(g, r * courts + i))}
                         </LineupRoundGroup>

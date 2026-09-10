@@ -67,7 +67,7 @@ export function WelcomeDialog() {
                 if (!next) close()
             }}
         >
-            <DialogContent>
+            <DialogContent showCloseButton={false}>
                 <DialogHeader>
                     <span className="grid size-10 place-items-center rounded-md bg-secondary text-foreground">
                         <Icon className="size-5" />
@@ -79,6 +79,12 @@ export function WelcomeDialog() {
                 <Progress value={pct} aria-label={`${STEPS.length}단계 중 ${step + 1}단계`} />
 
                 <DialogFooter>
+                    {/* X를 없앴으므로(영문 'Close') 나갈 길을 눈에 보이게 둔다 — 마지막 단계는 본 버튼이 그 역할을 한다 */}
+                    {!isLast && (
+                        <Button variant="outline" onClick={close}>
+                            건너뛰기
+                        </Button>
+                    )}
                     {step > 0 && (
                         <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
                             이전

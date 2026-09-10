@@ -67,7 +67,7 @@ export function RoomHostActions({ roomId, canCloseRotation = false }: Props) {
             {error && !open && <p className="w-full text-caption text-destructive">{error}</p>}
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>입장 비밀번호 변경</DialogTitle>
                         <DialogDescription>이미 입장했거나 참가 중인 회원은 그대로 볼 수 있습니다.</DialogDescription>

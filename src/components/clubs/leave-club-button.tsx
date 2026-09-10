@@ -53,7 +53,7 @@ export function LeaveClubButton({ clubId, clubName }: Props) {
             </Button>
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-destructive">클럽 탈퇴</DialogTitle>
                         <DialogDescription>

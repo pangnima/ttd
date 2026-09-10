@@ -53,7 +53,7 @@ export function DeleteAccountButton() {
             </Button>
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-destructive">회원 탈퇴</DialogTitle>
                         <DialogDescription>

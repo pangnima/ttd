@@ -36,7 +36,7 @@ export function RoomGameDialog({
                 {triggerLabel}
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto" showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>{initialData ? '참가자 채우기' : '게임 추가'}</DialogTitle>
                     </DialogHeader>

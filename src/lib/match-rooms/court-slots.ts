@@ -85,3 +85,20 @@ export function restingByRound(resting: readonly string[][], courts: number): st
         )
     })
 }
+
+/**
+ * 한 라운드에 두 번 이상 나오는 이름 — 그 라운드는 실행할 수 없다.
+ *
+ * 자동 대진표는 이제 라운드 중복을 만들지 않지만, **저장된 대진이 늘 그 규칙을 만족하는 것은 아니다** —
+ * 가드가 생기기 전에 저장된 대진, 참가자가 손으로 추가한 게임, 자리를 바꾼 편집이 격자와 어긋날 수 있다.
+ * 라운드·코트를 순서에서 파생하는 이상 화면은 그 어긋남을 스스로 드러내야 한다.
+ */
+export function roundConflictNames(namesPerGame: readonly (readonly string[])[], courts: number): string[][] {
+    return groupByRound(namesPerGame, courts).map((round) => {
+        const seen = new Map<string, number>()
+        for (const names of round) {
+            for (const name of new Set(names)) seen.set(name, (seen.get(name) ?? 0) + 1)
+        }
+        return [...seen.entries()].filter(([, n]) => n > 1).map(([name]) => name)
+    })
+}

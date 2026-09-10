@@ -205,7 +205,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
             </Card>
 
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                <DialogContent>
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-destructive">클럽 삭제</DialogTitle>
                         <DialogDescription>

@@ -5,6 +5,7 @@ import {
     effectiveCourtCount,
     groupByRound,
     restingByRound,
+    roundConflictNames,
     roundStartLabels,
 } from '@/lib/match-rooms/court-slots'
 
@@ -102,5 +103,24 @@ describe('restingByRound — 한 라운드 안에서 한 번도 안 뛴 사람�
 
     it('1면이면 게임별 「쉼」 그대로', () => {
         expect(restingByRound([['c'], ['a']], 1)).toEqual([['c'], ['a']])
+    })
+})
+
+describe('roundConflictNames — 한 라운드에 두 번 선 사람', () => {
+    it('두 코트에 같은 이름이 있으면 잡아낸다', () => {
+        expect(roundConflictNames([['a', 'b', 'c', 'd'], ['a', 'e', 'f', 'g']], 2)).toEqual([['a']])
+    })
+
+    it('멀쩡한 라운드는 빈 배열', () => {
+        expect(roundConflictNames([['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h']], 2)).toEqual([[]])
+    })
+
+    // 한 게임 안의 중복은 validateDraft가 따로 막는다 — 라운드 판정이 그것까지 겹쳐 세면 안 된다
+    it('한 게임 안에서 이름이 겹쳐도 라운드 충돌은 아니다', () => {
+        expect(roundConflictNames([['a', 'a', 'c', 'd'], ['e', 'f', 'g', 'h']], 2)).toEqual([[]])
+    })
+
+    it('1면이면 충돌이 있을 수 없다', () => {
+        expect(roundConflictNames([['a', 'b'], ['a', 'c']], 1)).toEqual([[], []])
     })
 })
