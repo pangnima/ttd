@@ -21,6 +21,11 @@ type FieldsProps = {
     onDurationChange: (minutes: number) => void
     courtCount: number
     onCourtCountChange: (count: number) => void
+    /** 시작 시각 'HH:MM' — 요약 줄이 종료 시각을 환산해 말한다 */
+    playedTime: string
+    matchType: MatchType
+    /** 방장 + 초대 대상 — 비밀번호로 더 들어올 수 있으므로 어디까지나 예상이다 */
+    playerCount: number
 }
 
 /**
@@ -33,10 +38,12 @@ type FieldsProps = {
  * 경기에 코트를 배정하지는 않는다(룸의 대진은 순서 있는 목록이고, 라운드·코트는 그 순서에서 파생한다).
  *
  * 두 필드는 날짜·시각과 **한 줄**에 놓인다 — MatchMetaSection의 `scheduleExtra`로 들어가므로 여기서는
- * 그리드 칸 둘만 낸다. 필드마다 붙던 도움말은 아래 RoomScheduleSummary 한 줄로 합쳤다(4열에서 높이가 어긋난다).
+ * 그리드 칸을 낸다. 필드마다 붙던 도움말은 요약 줄 하나로 합쳤고(4열에서 높이가 어긋난다),
+ * 그 요약은 **그리드 안에서 한 줄을 통째로 차지한다** — 밖에 두면 코트 표면·코트명 아래로 밀려
+ * 정작 설명하는 네 필드와 떨어진다.
  */
 export function RoomScheduleFields({
-    durationMinutes, onDurationChange, courtCount, onCourtCountChange,
+    durationMinutes, onDurationChange, courtCount, onCourtCountChange, playedTime, matchType, playerCount,
 }: FieldsProps) {
     return (
         <>
@@ -60,6 +67,15 @@ export function RoomScheduleFields({
                     triggerClassName={MATCH_FORM_SELECT_TRIGGER}
                 />
             </div>
+            <div className="col-span-2 sm:col-span-4">
+                <RoomScheduleSummary
+                    playedTime={playedTime}
+                    durationMinutes={durationMinutes}
+                    courtCount={courtCount}
+                    matchType={matchType}
+                    playerCount={playerCount}
+                />
+            </div>
         </>
     )
 }
@@ -80,17 +96,21 @@ type SummaryProps = {
  * 인원이 모자라 추천이 서지 않으면(`recommendGames`가 null) 앞의 두 조각만 말한다 —
  * 방장 혼자인 방에서 헛숫자가 나오지 않게 하는 기존 게이트를 그대로 탄다.
  */
-export function RoomScheduleSummary({
+function RoomScheduleSummary({
     playedTime, durationMinutes, courtCount, matchType, playerCount,
 }: SummaryProps) {
     const when = formatRoomWhen(playedTime, durationMinutes)
     const recommendation = recommendGames({
         durationMinutes, slotMinutes: DEFAULT_SLOT_MINUTES, courtCount, playerCount, matchType,
     })
+    const basisCourts = recommendation && recommendation.courts < courtCount ? `${recommendation.courts}면 기준 ` : ''
     const parts = [
         when ? `${when} (${formatDurationLabel(durationMinutes)})` : '시각을 고르면 종료 시각이 계산됩니다',
         `코트 ${courtCount}면`,
-        recommendation ? `참가 예정 ${playerCount}명이면 1인당 ${recommendation.perPlayer}경기 권장` : null,
+        // 고른 면 수와 실제로 돌릴 수 있는 면 수가 다르면 밝힌다 — 안 그러면 "3면인데 왜 4경기"가 된다
+        recommendation
+            ? `참가 예정 ${playerCount}명이면 ${basisCourts}1인당 ${recommendation.perPlayer}경기 권장`
+            : null,
     ].filter(Boolean)
 
     return <p className={`${TYPO.caption} break-keep`}>{parts.join(' · ')}</p>

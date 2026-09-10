@@ -8,7 +8,7 @@ import { createMatchRoomAction } from '@/lib/actions/match-rooms'
 import { FormActions } from '@/components/common/form-actions'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
-import { RoomScheduleFields, RoomScheduleSummary } from '@/components/match-rooms/form-sections/room-schedule-section'
+import { RoomScheduleFields } from '@/components/match-rooms/form-sections/room-schedule-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
 import { RoomFormatSection } from '@/components/match-rooms/form-sections/room-format-section'
 import { RoomPasswordSection } from '@/components/match-rooms/form-sections/room-password-section'
@@ -68,15 +68,11 @@ export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames
                             onDurationChange={s.setDurationMinutes}
                             courtCount={s.courtCount}
                             onCourtCountChange={s.setCourtCount}
+                            playedTime={s.playedTime}
+                            matchType={s.matchType}
+                            playerCount={s.invitees.length + 1}
                         />
                     )}
-                />
-                <RoomScheduleSummary
-                    playedTime={s.playedTime}
-                    durationMinutes={s.durationMinutes}
-                    courtCount={s.courtCount}
-                    matchType={s.matchType}
-                    playerCount={s.invitees.length + 1}
                 />
             </FormSectionCard>
 
