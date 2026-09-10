@@ -13,7 +13,8 @@ import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput }
  * 여기서는 사용자 문구로 번역만 한다.
  */
 
-type ActionResult = { error: string | null }
+// stale = 내가 팝업을 열어 둔 사이 방이 움직였다 — 팝업은 그대로 두고 화면만 새로 읽는다(0060 관용구)
+type ActionResult = { error: string | null; stale?: boolean }
 
 /** RPC가 raise하는 식별자 → 사용자 안내 문구 */
 const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
@@ -47,6 +48,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['replace_not_allowed', '이미 결과가 있거나 내 기록이 아니어서 대체할 수 없습니다.'],
     ['invalid_participant', '참가자 정보를 다시 확인해주세요.'],
     ['invalid_games', '대진 구성이 올바르지 않습니다. 참가자와 경기 수를 확인해주세요.'],
+    ['lineup_locked', '그 사이 결과가 입력된 경기가 있어 대진을 바꿀 수 없습니다. 새로고침 후 다시 시도해주세요.'],
 ]
 
 function translate(message: string, fallback: string): string {
@@ -370,6 +372,45 @@ export async function createRoomLineupAction(
         p_games: games.map((g) => ({ team1: g.team1.map(toJson), team2: g.team2.map(toJson) })),
     })
     if (error) return { error: translate(error.message, '대진표 저장에 실패했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/me/personal-matches')
+    revalidatePath('/match-rooms')
+    return { error: null }
+}
+
+/**
+ * 저장한 대진 고치기(0071, Week 42) — 방장이 라인업 게임을 지우고 새 대진을 넣는다.
+ *
+ * 자리 하나만 바꿔도 requester가 달라져 관점 행의 기준 자체가 바뀌므로 부분 수정이 아니라 **교체**다.
+ * 그래서 `requestIds`는 편집 화면에 올라온 게임 전량이고, `games`는 편집을 마친 대진 전량이다.
+ * 그 사이 누가 결과를 넣었으면 RPC가 `lineup_locked`로 막는다 — 이미 확인한 좌석의 동의가
+ * 다른 사람 경기에 붙는 것을 막는 자리다. 그 경우 팝업을 닫지 않고 화면만 새로 읽는다.
+ */
+export async function replaceRoomLineupAction(
+    roomId: string,
+    requestIds: string[],
+    games: RoomLineupGameInput[],
+): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const toJson = (p: RoomGamePlayerInput) => ({
+        user_id: p.userId ?? null,
+        name: p.name.trim() || null,
+        dominant_hand: p.dominantHand ?? null,
+        ntrp: p.ntrp ?? null,
+    })
+
+    const { error } = await supabase.rpc('replace_room_lineup', {
+        p_room_id: roomId,
+        p_request_ids: requestIds,
+        p_games: games.map((g) => ({ team1: g.team1.map(toJson), team2: g.team2.map(toJson) })),
+    })
+    if (error) {
+        const stale = error.message.includes('lineup_locked')
+        return { error: translate(error.message, '대진 수정에 실패했습니다.'), stale }
+    }
 
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')

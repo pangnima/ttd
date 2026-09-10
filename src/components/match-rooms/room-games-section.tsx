@@ -1,12 +1,14 @@
 import type { MatchRoomDetail, PersonalMatchConfirmation, RotationSession } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
+import type { EditableLineupGame } from '@/lib/queries/match-rooms'
 import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 import { roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
 import { RoomGameRow } from '@/components/match-rooms/room-game-row'
 import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
 import { RoomLineupButton } from '@/components/match-rooms/room-lineup-button'
+import { RoomLineupEditButton } from '@/components/match-rooms/room-lineup-edit-button'
 import { RoomRotationBuilder } from '@/components/match-rooms/room-rotation-builder'
 import { guestParticipants, type RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
@@ -29,6 +31,8 @@ export type RoomGamesSectionProps = {
     sessionGames?: EnteredRotationGame[]
     /** 자동 대진표(0066) — 방장에게만 채워진다. 참가자 전원(방장 포함)이 배치 대상 */
     lineupCandidates?: OpponentCandidate[]
+    /** 아직 고칠 수 있는 대진(0071) — 비면 [대진 편집]이 사라진다. 방장에게만 채워진다 */
+    editableLineup?: EditableLineupGame[]
 }
 
 /**
@@ -38,7 +42,7 @@ export type RoomGamesSectionProps = {
  */
 export function RoomGamesSection({
     detail, viewerId, gameCtx, opponentCandidates, pastOpponents, confirmations, rotationSession, participants, picker,
-    sessionGames, lineupCandidates,
+    sessionGames, lineupCandidates, editableLineup,
 }: RoomGamesSectionProps) {
     const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
@@ -56,6 +60,16 @@ export function RoomGamesSection({
                             matchType={detail.room.matchType}
                             candidates={lineupCandidates}
                             existingGames={detail.games.length}
+                        />
+                    )}
+                    {/* 저장한 대진 고치기 — 결과·협상이 없는 라인업 게임이 남아 있을 때만 (0071) */}
+                    {lineupCandidates && editableLineup && (
+                        <RoomLineupEditButton
+                            roomId={detail.room.id}
+                            matchType={detail.room.matchType}
+                            candidates={lineupCandidates}
+                            games={detail.games}
+                            editable={editableLineup}
                         />
                     )}
                     {/* 미확정 로테이션 방은 참가자 누구나 자기 기준으로 게임을 넣는다 (0050) */}

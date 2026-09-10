@@ -74,6 +74,7 @@ export default async function MatchRoomPage({ params }: Props) {
                 picker={picker}
                 sessionGames={x.sessionGames}
                 lineupCandidates={x.isHost ? x.lineupCandidates : undefined}
+                editableLineup={x.isHost ? x.editableLineup : undefined}
             />
             {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
             {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && detail.viewer.status !== 'removed' && (

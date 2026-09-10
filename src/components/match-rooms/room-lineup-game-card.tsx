@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { teamDiff, type LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupGame } from '@/lib/match-rooms/lineup'
 import { lineupBalance } from '@/lib/match-rooms/lineup-balance'
@@ -7,6 +8,8 @@ type Props = {
     game: LineupGame
     /** 이 게임에서 쉬는 사람 이름 — 비면 줄 자체가 사라진다 */
     restingNames: string[]
+    /** 머리줄 오른쪽 끝, 밸런스 배지 옆에 붙는 편집 액션 */
+    actions?: ReactNode
 }
 
 /** 팀 색은 승패가 아니라 분류다 — cat 슬롯을 쓰고 win/loss는 쓰지 않는다(docs/color-system.md §5) */
@@ -35,7 +38,7 @@ function TeamLine({ team, barClass }: { team: LineupPlayer[]; barClass: string }
  * 'A · B vs C · D' 한 줄이던 것을 팀마다 한 줄로 갈랐다 — 구분선과 색 바가 `vs` 한 글자보다
  * 팀 경계를 훨씬 잘 말한다. 그래서 `vs`는 없앴다.
  */
-export function RoomLineupGameCard({ game, restingNames }: Props) {
+export function RoomLineupGameCard({ game, restingNames, actions }: Props) {
     const diff = teamDiff(game)
     const balance = lineupBalance(diff, game.team1.length)
 
@@ -43,9 +46,12 @@ export function RoomLineupGameCard({ game, restingNames }: Props) {
         <li className="px-3 py-2.5 space-y-2">
             <div className="flex items-center justify-between gap-2">
                 <span className={TYPO.eyebrow}>게임 {game.seq}</span>
-                <span className={`${balance.pillClass} shrink-0 tabular-nums`}>
-                    {balance.label} {diff.toFixed(1)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className={`${balance.pillClass} tabular-nums`}>
+                        {balance.label} {diff.toFixed(1)}
+                    </span>
+                    {actions}
+                </div>
             </div>
 
             <div className="space-y-1.5">

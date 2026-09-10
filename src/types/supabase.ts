@@ -572,12 +572,13 @@ export type Database = {
         Row: {
           court_name: string | null
           created_at: string
-          id: string
           group_seq: number | null
-          opponent_accepted_at: string | null
+          id: string
           match_type: string
           notes: string | null
+          opponent_accepted_at: string | null
           opponent_user_id: string
+          origin: string
           played_at: string
           played_time: string
           requester_id: string
@@ -591,12 +592,13 @@ export type Database = {
         Insert: {
           court_name?: string | null
           created_at?: string
-          id?: string
           group_seq?: number | null
-          opponent_accepted_at?: string | null
+          id?: string
           match_type?: string
           notes?: string | null
+          opponent_accepted_at?: string | null
           opponent_user_id: string
+          origin?: string
           played_at: string
           played_time: string
           requester_id: string
@@ -610,12 +612,13 @@ export type Database = {
         Update: {
           court_name?: string | null
           created_at?: string
-          id?: string
           group_seq?: number | null
-          opponent_accepted_at?: string | null
+          id?: string
           match_type?: string
           notes?: string | null
+          opponent_accepted_at?: string | null
           opponent_user_id?: string
+          origin?: string
           played_at?: string
           played_time?: string
           requester_id?: string
@@ -834,9 +837,9 @@ export type Database = {
         Row: {
           court_name: string | null
           created_at: string
-          is_settled: boolean
           host_user_id: string
           id: string
+          is_settled: boolean
           match_type: string
           notes: string | null
           played_at: string
@@ -847,9 +850,9 @@ export type Database = {
         Insert: {
           court_name?: string | null
           created_at?: string
-          is_settled?: boolean
           host_user_id: string
           id?: string
+          is_settled?: boolean
           match_type: string
           notes?: string | null
           played_at: string
@@ -860,9 +863,9 @@ export type Database = {
         Update: {
           court_name?: string | null
           created_at?: string
-          is_settled?: boolean
           host_user_id?: string
           id?: string
+          is_settled?: boolean
           match_type?: string
           notes?: string | null
           played_at?: string
@@ -1215,13 +1218,30 @@ export type Database = {
         }
         Returns: string
       }
+      add_rotation_session_player: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
       apply_club_rating_snapshot: {
         Args: { p_club_id: string; p_snapshot: Json }
         Returns: undefined
       }
-      confirm_match_result: {
-        Args: { p_request_id: string }
-        Returns: boolean
+      backfill_rotation_perspectives: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: number
+      }
+      close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
+      confirm_match_result: { Args: { p_request_id: string }; Returns: boolean }
+      copy_personal_match_perspective: {
+        Args: {
+          p_opponent: Json
+          p_opponent2: Json
+          p_partner: Json
+          p_sets: Json
+          p_source_match_id: string
+          p_user_id: string
+        }
+        Returns: string
       }
       create_match_game: {
         Args: {
@@ -1266,86 +1286,6 @@ export type Database = {
       create_room_lineup: {
         Args: { p_games: Json; p_room_id: string }
         Returns: number
-      }
-      close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
-      leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
-      reopen_match_result: {
-        Args: { p_reason?: string; p_request_id: string }
-        Returns: undefined
-      }
-      respond_request_participation: {
-        Args: { p_accept: boolean; p_request_id: string }
-        Returns: boolean
-      }
-      respond_rotation_participation: {
-        Args: { p_accept: boolean; p_rotation_session_id: string }
-        Returns: number
-      }
-      respond_rotation_plan: {
-        Args: { p_accept: boolean; p_session_id: string }
-        Returns: undefined
-      }
-      add_rotation_session_player: {
-        Args: { p_session_id: string; p_user_id: string }
-        Returns: undefined
-      }
-      request_result_seats: {
-        Args: { p_request_id: string }
-        Returns: string[]
-      }
-      request_seat_of: {
-        Args: { p_request_id: string; p_user_id: string }
-        Returns: string
-      }
-      normalize_to_requester_perspective: {
-        Args: { p_seat: string; p_sets: Json }
-        Returns: Json
-      }
-      remove_room_guest: {
-        Args: { p_guest_id: string }
-        Returns: undefined
-      }
-      remove_rotation_session_player: {
-        Args: { p_session_id: string; p_user_id: string }
-        Returns: undefined
-      }
-      is_rotation_session_party: {
-        Args: { p_session_id: string }
-        Returns: boolean
-      }
-      rotation_seats_accepted: {
-        Args: { p_session_id: string; p_uids: string[] }
-        Returns: boolean
-      }
-      reject_match_request: {
-        Args: { p_request_id: string }
-        Returns: undefined
-      }
-      materialize_accepted_request: {
-        Args: {
-          p_group_seq?: number
-          p_request_id: string
-          p_rotation_session_id?: string
-        }
-        Returns: undefined
-      }
-      resolve_rotation_player: { Args: { p_player: Json }; Returns: Json }
-      settle_match_result: {
-        Args: { p_request_id: string }
-        Returns: undefined
-      }
-      swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
-      is_request_party: {
-        Args: { p_request_id: string }
-        Returns: boolean
-      }
-      is_room_participant: {
-        Args: { p_room_id: string }
-        Returns: boolean
-      }
-      swap_partner_perspective: {
-        Args: { p_sets: Json }
-        Returns: Json
       }
       derive_public_ntrp: {
         Args: { p_user: Database["public"]["Tables"]["users"]["Row"] }
@@ -1401,6 +1341,13 @@ export type Database = {
         }[]
       }
       get_match_room_detail: { Args: { p_room_id: string }; Returns: Json }
+      get_room_lineup_requests: {
+        Args: { p_room_id: string }
+        Returns: {
+          game_id: string
+          request_id: string
+        }[]
+      }
       get_rotation_session_games: {
         Args: { p_session_id: string }
         Returns: Json
@@ -1433,11 +1380,16 @@ export type Database = {
           wins: number
         }[]
       }
+      insert_room_lineup_games: {
+        Args: { p_games: Json; p_room_id: string }
+        Returns: number
+      }
       invert_set_scores: { Args: { p_sets: Json }; Returns: Json }
       invite_room_members: {
         Args: { p_room_id: string; p_user_ids: string[] }
         Returns: number
       }
+      is_active_member: { Args: { p_user_id: string }; Returns: boolean }
       is_club_approved_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
@@ -1450,23 +1402,118 @@ export type Database = {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_request_party: { Args: { p_request_id: string }; Returns: boolean }
+      is_room_participant: { Args: { p_room_id: string }; Returns: boolean }
+      is_rotation_session_party: {
+        Args: { p_session_id: string }
+        Returns: boolean
+      }
+      is_rotation_session_seat: {
+        Args: { p_session_id: string }
+        Returns: boolean
+      }
       join_club_via_invite: { Args: { p_token: string }; Returns: string }
+      join_match_room_as_player: {
+        Args: { p_room_id: string; p_user_id: string }
+        Returns: undefined
+      }
       kick_room_member: {
         Args: { p_room_id: string; p_target_user_id: string }
         Returns: undefined
       }
+      leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
+      mark_request_opponent_response: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: boolean
+      }
+      mark_request_participant_response: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: boolean
+      }
+      materialize_accepted_request: {
+        Args: {
+          p_group_seq?: number
+          p_request_id: string
+          p_rotation_session_id?: string
+        }
+        Returns: undefined
+      }
+      maybe_materialize_request: {
+        Args: { p_request_id: string }
+        Returns: boolean
+      }
       normalize_set_scores: {
         Args: { p_keep_ad: boolean; p_sets: Json }
+        Returns: Json
+      }
+      normalize_to_requester_perspective: {
+        Args: { p_seat: string; p_sets: Json }
         Returns: Json
       }
       propose_match_result: {
         Args: { p_request_id: string; p_set_scores: Json }
         Returns: undefined
       }
+      recompute_match_room_settled: {
+        Args: { p_room_id: string }
+        Returns: undefined
+      }
+      reject_match_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      remove_room_guest: { Args: { p_guest_id: string }; Returns: undefined }
+      remove_rotation_session_player: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      reopen_match_result: {
+        Args: { p_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      replace_room_lineup: {
+        Args: { p_games: Json; p_request_ids: string[]; p_room_id: string }
+        Returns: number
+      }
+      request_result_seats: {
+        Args: { p_request_id: string }
+        Returns: string[]
+      }
+      request_seat_of: {
+        Args: { p_request_id: string; p_user_id: string }
+        Returns: string
+      }
+      resolve_room_player: {
+        Args: { p: Json; p_room_id: string }
+        Returns: Json
+      }
+      resolve_rotation_player: { Args: { p_player: Json }; Returns: Json }
+      respond_request_participation: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: boolean
+      }
       respond_room_invite: {
         Args: { p_accept: boolean; p_room_id: string }
         Returns: undefined
       }
+      respond_rotation_participation: {
+        Args: { p_accept: boolean; p_rotation_session_id: string }
+        Returns: number
+      }
+      respond_rotation_plan: {
+        Args: { p_accept: boolean; p_session_id: string }
+        Returns: undefined
+      }
+      rotation_seats_accepted: {
+        Args: { p_session_id: string; p_uids: string[] }
+        Returns: boolean
+      }
+      settle_match_result: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
+      swap_partner_perspective: { Args: { p_sets: Json }; Returns: Json }
       update_match_game: {
         Args: {
           p_courts: Json

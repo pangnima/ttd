@@ -1,18 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import type { MatchType } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
-import { createRoomLineupAction } from '@/lib/actions/match-rooms'
 import { Button } from '@/components/ui/button'
 import { FormActions } from '@/components/common/form-actions'
 import { FORM_CANCEL } from '@/lib/dashboard/tokens'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { LineupOptions } from '@/components/match-rooms/form-sections/lineup-options'
+import { LineupEditList } from '@/components/match-rooms/lineup-edit/lineup-edit-list'
 import { RoomLineupNotices } from '@/components/match-rooms/room-lineup-notices'
-import { RoomLineupPreview } from '@/components/match-rooms/room-lineup-preview'
 import { useRoomLineup } from '@/components/match-rooms/use-room-lineup'
+import { useRoomLineupSave } from '@/components/match-rooms/use-room-lineup-save'
 
 type Props = {
     open: boolean
@@ -25,7 +24,8 @@ type Props = {
 }
 
 /**
- * 자동 대진표 다이얼로그 — 옵션을 바꾸면 미리보기가 즉시 다시 그려지고, [저장]에서만 방에 반영된다.
+ * 자동 대진표 다이얼로그 — 옵션을 바꾸면 대진이 즉시 다시 그려지고, [저장]에서만 방에 반영된다.
+ * 뽑힌 대진은 그대로 쓸 수도 있고 자리를 고칠 수도 있다(카드마다 [수정]·[삭제], 목록 아래 [게임 추가]).
  * 저장된 대진은 스코어가 없는 게임들이므로 그대로 방 게임 목록에 뜨고, 결과 입력부터는 기존 경로다.
  *
  * 골격은 헤더·푸터 고정 + 본문만 스크롤이다. 옵션이 길어 결과와 [저장]이 스크롤 아래로 묻히던 것을
@@ -33,31 +33,12 @@ type Props = {
  */
 export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candidates, existingGames }: Props) {
     const lineup = useRoomLineup({ candidates, matchType })
-    const [saving, setSaving] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const save = useRoomLineupSave({ roomId, onDone: () => onOpenChange(false) })
     const [optionsOpen, setOptionsOpen] = useState(true)
-    const router = useRouter()
-
-    async function handleSave() {
-        setSaving(true)
-        setError(null)
-        const games = lineup.result.games.map((g) => ({
-            team1: g.team1.map((p) => ({ userId: p.isMember ? p.key : undefined, name: p.name })),
-            team2: g.team2.map((p) => ({ userId: p.isMember ? p.key : undefined, name: p.name })),
-        }))
-        const res = await createRoomLineupAction(roomId, games)
-        setSaving(false)
-        if (res.error) {
-            setError(res.error)
-            return
-        }
-        onOpenChange(false)
-        router.refresh()
-    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle>자동 대진표</DialogTitle>
                 </DialogHeader>
@@ -77,22 +58,28 @@ export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candid
                     />
                     <RoomLineupNotices
                         existingGames={existingGames}
-                        warnings={lineup.result.warnings}
-                        error={error}
+                        warnings={lineup.warnings}
+                        error={save.error}
+                        isEdited={lineup.isEdited}
                     />
-                    <RoomLineupPreview result={lineup.result} nameOf={lineup.nameOf} />
+                    <LineupEditList
+                        games={lineup.draft}
+                        players={lineup.players}
+                        matchType={matchType}
+                        onChange={lineup.setDraft}
+                    />
                 </div>
 
                 <DialogFooter>
                     <FormActions
-                        submitLabel={`${lineup.result.games.length}경기 저장`}
+                        submitLabel={`${lineup.draft.length}경기 저장`}
                         pendingLabel="저장 중…"
-                        onSubmit={handleSave}
+                        onSubmit={() => save.save(lineup.draft)}
                         onCancel={() => onOpenChange(false)}
-                        isPending={saving}
-                        disabled={lineup.result.games.length === 0}
+                        isPending={save.saving}
+                        disabled={lineup.errors.length > 0}
                         secondary={(
-                            <Button variant="outline" className={FORM_CANCEL} onClick={lineup.reroll} disabled={saving}>
+                            <Button variant="outline" className={FORM_CANCEL} onClick={lineup.reroll} disabled={save.saving}>
                                 다시 뽑기
                             </Button>
                         )}

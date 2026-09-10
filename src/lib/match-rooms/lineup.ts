@@ -74,8 +74,11 @@ export const LINEUP_PRESETS: { value: LineupPreset; label: string; hint: string 
 /** 방 하나에 만들 수 있는 게임 수 상한 — 로테이션 finalize(MAX_GAMES)와 같은 값 */
 export const ROOM_LINEUP_MAX_GAMES = 20
 
-/** 1인당 경기 수 선택지 */
-export const PER_PLAYER_OPTIONS = [1, 2, 3, 4, 5, 6] as const
+/**
+ * 1인당 경기 수 선택지 — 드롭다운이라 항목이 늘어도 옵션 영역이 커지지 않는다.
+ * 인원이 많으면 총 게임 수가 ROOM_LINEUP_MAX_GAMES에 먼저 걸리고, 그건 경고로 알린다.
+ */
+export const PER_PLAYER_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
 
 export type LineupGame = {
     seq: number // 1부터
@@ -169,6 +172,35 @@ const TYPE_LABEL: Record<MatchType, string> = {
     mixed_doubles: '혼합 복식',
 }
 
+/** 대진 한 자리 — 편집 중에는 아직 비어 있을 수 있다 */
+export type LineupSlot = LineupPlayer | null
+
+type SlottedGame = { team1: readonly LineupSlot[]; team2: readonly LineupSlot[] }
+
+/**
+ * 게임 배열에서 「쉼」과 출전 횟수를 다시 센다.
+ *
+ * 생성 루프 안에서 누적하지 않고 결과에서 되읽는 이유는 **편집** 때문이다 — 사람이 자리를 바꾸거나
+ * 게임을 지운 뒤에도 같은 함수로 집계가 맞아야 한다. 생성 직후에는 commitLineup이 누적한 값과 동치다.
+ */
+export function summarizeLineup(
+    games: readonly SlottedGame[],
+    players: LineupPlayer[],
+): { resting: string[][]; playCounts: Record<string, number> } {
+    const playCounts: Record<string, number> = {}
+    for (const p of players) playCounts[p.key] = 0
+
+    const resting = games.map((g) => {
+        const inGame = new Set([...g.team1, ...g.team2].filter((p): p is LineupPlayer => !!p).map((p) => p.key))
+        for (const key of inGame) {
+            if (key in playCounts) playCounts[key] += 1
+        }
+        return players.filter((p) => !inGame.has(p.key)).map((p) => p.key)
+    })
+
+    return { resting, playCounts }
+}
+
 /** 참가자로 순서 있는 대진을 만든다. 만들 수 없으면 games가 비고 warnings가 이유를 말한다 */
 export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOptions): LineupResult {
     const warnings: string[] = []
@@ -204,7 +236,6 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
     const rng = mulberry32(opts.seed)
 
     const games: LineupGame[] = []
-    const resting: string[][] = []
     for (let i = 0; i < count; i++) {
         // 비용이 같은 후보들 사이에서만 흔들린다 — 품질은 유지되고 [다시 뽑기]가 실제로 다른 결과를 낸다
         const pool = shuffled(players, rng)
@@ -216,16 +247,11 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
         }
         const teams = commitLineup(picked, opts.matchType, state, lineupOptions)
         games.push({ seq: games.length + 1, matchType: opts.matchType, team1: teams.team1, team2: teams.team2 })
-        const inGame = new Set(picked.map((p) => p.key))
-        resting.push(players.filter((p) => !inGame.has(p.key)).map((p) => p.key))
     }
 
     if (games.some((g) => !isGenderMatched(g))) {
         warnings.push(`인원 구성상 일부 경기는 ${TYPE_LABEL[opts.matchType]} 성별 구성을 맞추지 못했습니다.`)
     }
 
-    const playCounts: Record<string, number> = {}
-    for (const p of players) playCounts[p.key] = state.playCount.get(p.key) ?? 0
-
-    return { games, resting, playCounts, warnings }
+    return { games, ...summarizeLineup(games, players), warnings }
 }
