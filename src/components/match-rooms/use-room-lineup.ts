@@ -10,6 +10,7 @@ import {
     toLineupPlayers,
     type LineupPreset,
 } from '@/lib/match-rooms/lineup'
+import { effectiveCourtCount } from '@/lib/match-rooms/court-slots'
 import { fromResult, validateDraft, type DraftGame } from '@/lib/match-rooms/lineup-draft'
 import {
     DEFAULT_SLOT_MINUTES,
@@ -57,6 +58,8 @@ export type RoomLineupState = {
     errors: string[]
     /** [다시 뽑기] — 시드만 바꾼다 */
     reroll: () => void
+    /** 실제로 동시에 도는 면 수 — 생성과 표시가 같은 값을 봐야 라운드 묶음이 대진과 맞는다 */
+    courts: number
 }
 
 /**
@@ -87,10 +90,12 @@ export function useRoomLineup({ candidates, matchType, durationMinutes, courtCou
 
     const isDoubles = matchType !== 'singles'
     const gameCount = gamesForPerPlayer(players.length, perPlayer, isDoubles)
+    // 면 수를 생성에 넘긴다 — 한 라운드 안에서 같은 사람이 두 코트에 서면 실행할 수 없는 대진이 된다
     const generated = useMemo(
-        () => buildRoomLineup(players, { matchType, games: gameCount, preset, seed }),
-        [players, matchType, gameCount, preset, seed],
+        () => buildRoomLineup(players, { matchType, games: gameCount, preset, seed, courtCount }),
+        [players, matchType, gameCount, preset, seed, courtCount],
     )
+    const courts = effectiveCourtCount(players.length, matchType, courtCount)
 
     const draft = edited ?? fromResult(generated)
 
@@ -116,7 +121,7 @@ export function useRoomLineup({ candidates, matchType, durationMinutes, courtCou
         slotMinutes,
         setSlotMinutes: (n) => { setEdited(null); setSlotMinutesState(n) },
         recommendation,
-        estimatedMinutes: estimateMinutes(draft.length, slotMinutes, courtCount),
+        estimatedMinutes: estimateMinutes(draft.length, slotMinutes, courts),
         preset,
         setPreset: (p) => { setEdited(null); setPreset(p) },
         gameCount,
@@ -127,5 +132,6 @@ export function useRoomLineup({ candidates, matchType, durationMinutes, courtCou
         warnings: generated.warnings,
         errors: validateDraft(draft),
         reroll: () => { setEdited(null); setSeed((s) => s + 1) },
+        courts,
     }
 }

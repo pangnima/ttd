@@ -9,6 +9,7 @@ import {
     type LineupPlayer,
     type LineupWeights,
 } from '@/lib/match-games/lineup-core'
+import { effectiveCourtCount } from '@/lib/match-rooms/court-slots'
 
 /**
  * 매칭 룸 자동 대진표 (순수 — Week 40).
@@ -102,6 +103,12 @@ export type BuildRoomLineupOptions = {
     preset: LineupPreset
     /** 같은 시드 = 같은 대진. [다시 뽑기]는 시드만 바꾼다 */
     seed: number
+    /**
+     * 동시에 도는 코트 면 수(기본 1). 2 이상이면 **한 라운드 안에서 같은 사람이 두 코트에 서지 않게** 뽑는다 —
+     * 이 값이 없으면 게임 1과 게임 2에 같은 사람이 들어갈 수 있고, 그 둘을 나란히 그리면
+     * 실행할 수 없는 대진이 된다.
+     */
+    courtCount?: number
 }
 
 /**
@@ -235,10 +242,21 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
     const state = createLineupState()
     const rng = mulberry32(opts.seed)
 
+    // 라운드 = 동시에 도는 한 묶음. 인원이 모자라면 면을 다 못 쓴다(11명으로 3면은 2면이 한계).
+    // 표시 계층도 같은 함수로 라운드를 읽으므로 "화면은 2면인데 대진은 3면 기준"이 생기지 않는다.
+    const courts = effectiveCourtCount(players.length, opts.matchType, opts.courtCount ?? 1)
+    if (courts < (opts.courtCount ?? 1)) {
+        warnings.push(`참가자 ${players.length}명으로는 한 번에 ${courts}면만 돌릴 수 있습니다.`)
+    }
+    // 같은 라운드에 이미 코트에 선 사람 — 클럽 격자(auto-generate.ts)가 라운드마다 available을
+    // 리셋하고 지우는 것과 같은 장치다. 룸은 격자가 없으므로 Set 하나면 된다.
+    const roundUsed = new Set<string>()
+
     const games: LineupGame[] = []
     for (let i = 0; i < count; i++) {
+        if (i % courts === 0) roundUsed.clear()
         // 비용이 같은 후보들 사이에서만 흔들린다 — 품질은 유지되고 [다시 뽑기]가 실제로 다른 결과를 낸다
-        const pool = shuffled(players, rng)
+        const pool = shuffled(players.filter((p) => !roundUsed.has(p.key)), rng)
         const { mandatory, optional } = fairnessTier(pool, state.playCount, need.size)
         const picked = selectPlayers(opts.matchType, optional, state, lineupOptions, mandatory)
         if (!picked) {
@@ -246,6 +264,7 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
             break
         }
         const teams = commitLineup(picked, opts.matchType, state, lineupOptions)
+        for (const p of picked) roundUsed.add(p.key)
         games.push({ seq: games.length + 1, matchType: opts.matchType, team1: teams.team1, team2: teams.team2 })
     }
 

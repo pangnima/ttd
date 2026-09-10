@@ -9,6 +9,7 @@ import {
     type LineupGame,
     type LineupPreset,
 } from './lineup'
+import { effectiveCourtCount, groupByRound } from '@/lib/match-rooms/court-slots'
 
 function p(key: string, gender: 'male' | 'female', ntrp: number, isMember = true): LineupPlayer {
     return { key, name: key, ntrp, gender, isMember }
@@ -288,5 +289,51 @@ describe('buildRoomLineup — 단식', () => {
         }
         const counts = Object.values(result.playCounts)
         expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
+    })
+})
+
+describe('코트 면 수 — 한 라운드 안에서 같은 사람이 두 코트에 서지 않는다', () => {
+    const many = (n: number) =>
+        Array.from({ length: n }, (_, i) => p(`p${i}`, i % 2 === 0 ? 'male' : 'female', 2.5 + (i % 5) * 0.5))
+
+    it('라운드 안 중복이 없다 — 없으면 실행할 수 없는 대진이 된다', () => {
+        for (const courtCount of [2, 3]) {
+            for (const n of [8, 9, 11, 12, 14]) {
+                for (const seed of [1, 7, 99]) {
+                    const players = many(n)
+                    const { games } = buildRoomLineup(players, {
+                        matchType: 'mixed_doubles', games: 12, preset: 'balanced', seed, courtCount,
+                    })
+                    const courts = effectiveCourtCount(n, 'mixed_doubles', courtCount)
+                    for (const round of groupByRound(games, courts)) {
+                        const keys = round.flatMap(keysOf)
+                        expect(new Set(keys).size, `${n}명 ${courtCount}면 seed ${seed}`).toBe(keys.length)
+                    }
+                }
+            }
+        }
+    })
+
+    it('면 수를 주지 않으면 예전 그대로다 — 1면은 필터가 비어 있어 경로가 같다', () => {
+        const before = buildRoomLineup(SIX, { matchType: 'men_doubles', games: 6, preset: 'balanced', seed: 3 })
+        const after = buildRoomLineup(SIX, { matchType: 'men_doubles', games: 6, preset: 'balanced', seed: 3, courtCount: 1 })
+        expect(after.games.map(keysOf)).toEqual(before.games.map(keysOf))
+    })
+
+    it('인원이 모자라면 면을 다 못 쓴다고 말해 준다', () => {
+        const { warnings } = buildRoomLineup(many(11), {
+            matchType: 'mixed_doubles', games: 8, preset: 'balanced', seed: 1, courtCount: 3,
+        })
+        expect(warnings.some((w) => w.includes('2면'))).toBe(true)
+    })
+
+    it('다면에서도 출전 편차가 1을 넘지 않는다', () => {
+        for (const n of [8, 12]) {
+            const { playCounts } = buildRoomLineup(many(n), {
+                matchType: 'mixed_doubles', games: n, preset: 'balanced', seed: 5, courtCount: 2,
+            })
+            const counts = Object.values(playCounts)
+            expect(Math.max(...counts) - Math.min(...counts), `${n}명`).toBeLessThanOrEqual(1)
+        }
     })
 })

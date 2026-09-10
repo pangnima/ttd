@@ -14,6 +14,8 @@ type Props = {
     viewerId: string
     /** 내가 당사자인 상호 확인 게임에만 있다 — 결과 입력·확인 자격의 술어 */
     confirmation?: PersonalMatchConfirmation
+    /** 2면 이상이면 '1번 코트', 1면이면 예상 시각 — 목록 순서에서 파생한다(court-slots.ts) */
+    slotLabel?: string
 }
 
 // 개인 경기 카드와 같은 배지 형태 — 룸과 개인 경기 결과가 같은 경기를 다르게 보이면 안 된다
@@ -33,7 +35,7 @@ const STATUS_BADGE: Record<'attention' | 'pending', string> = {
  * 상태 배지와 결과 배지가 겹치지 않는다. 경기 타입은 분류 색(cat-*)이라 그 자리와 다투지 않는다.
  * 날짜 열은 두지 않는다(일시·표면은 방 헤더에 있고 게임끼리 같다).
  */
-export function RoomGameRow({ game, index, detail, viewerId, confirmation }: Props) {
+export function RoomGameRow({ game, index, detail, viewerId, confirmation, slotLabel }: Props) {
     // 당사자에게는 자기 관점, 방 안의 제3자에게는 작성자 관점 (표시 전용 — 저장 값은 그대로다)
     const teams = buildRoomGameTeams(game, viewerId)
     // 라인과 같은 관점의 스코어 — 상대팀 회원에게는 승패가 뒤집힌 대표 행 값이 내려온다
@@ -58,6 +60,7 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation }: Pro
                             {MATCH_TYPE_LABELS[game.matchType]}
                         </span>
                         {gameLabel && <span className="text-caption text-muted-foreground shrink-0">{gameLabel}</span>}
+                {slotLabel && <span className="text-caption text-muted-foreground shrink-0">{slotLabel}</span>}
                     </div>
                     <span className={`${BADGE_BASE} ${badge.className}`}>{badge.label}</span>
                 </div>

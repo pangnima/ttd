@@ -69,6 +69,13 @@ export const FORM_LABEL_BASE = 'block text-caption font-medium tracking-eyebrow 
 export const MATCH_FORM_INPUT =
     'w-full rounded-lg border border-input bg-background dark:bg-input/30 px-3 py-3 text-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring'
 export const MATCH_FORM_LABEL = 'text-body font-medium text-foreground block mb-2'
+/**
+ * 경기 폼의 셀렉트 트리거 — date input(MATCH_FORM_INPUT + h-12)과 **같은 높이**여야 한다.
+ * EnumSelect 기본은 h-11이라 한 줄에 섞으면 1px 단위로 어긋난다(날짜·시각·경기 시간·면 수가 한 줄인 매칭 만들기).
+ */
+export const MATCH_FORM_FIELD_HEIGHT = 'h-12'
+export const MATCH_FORM_SELECT_TRIGGER =
+    'w-full h-12 data-[size=default]:h-12 rounded-lg px-3 text-body bg-background dark:bg-input/30 border-input focus:border-ring'
 
 /**
  * 폼·팝업 하단 액션 줄 — 저장(라임) 왼쪽 / 취소 오른쪽, 우측 정렬.

@@ -2,10 +2,10 @@ import type { MatchRoomDetail, PersonalMatchConfirmation, RotationSession } from
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { EditableLineupGame } from '@/lib/queries/match-rooms'
-import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 import { canCreateRoomLineup, roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
-import { RoomGameRow } from '@/components/match-rooms/room-game-row'
+import { RoomGameRounds } from '@/components/match-rooms/room-game-rounds'
 import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
 import { RoomLineupButton } from '@/components/match-rooms/room-lineup-button'
 import { RoomLineupEditButton } from '@/components/match-rooms/room-lineup-edit-button'
@@ -75,6 +75,9 @@ export function RoomGamesSection({
                             candidates={lineupCandidates}
                             games={detail.games}
                             editable={editableLineup}
+                            playedTime={detail.room.playedTime}
+                            durationMinutes={detail.room.durationMinutes}
+                            courtCount={detail.room.courtCount}
                         />
                     )}
                     {/* 미확정 로테이션 방은 참가자 누구나 자기 기준으로 게임을 넣는다 (0050) */}
@@ -100,18 +103,7 @@ export function RoomGamesSection({
             {detail.games.length === 0 ? (
                 <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail)}</div>
             ) : (
-                <div className={`${CARD_BASE} divide-y divide-border`}>
-                    {detail.games.map((g, i) => (
-                        <RoomGameRow
-                            key={g.id}
-                            game={g}
-                            index={i}
-                            detail={detail}
-                            viewerId={viewerId}
-                            confirmation={g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined}
-                        />
-                    ))}
-                </div>
+                <RoomGameRounds detail={detail} viewerId={viewerId} confirmations={confirmations} />
             )}
         </section>
     )

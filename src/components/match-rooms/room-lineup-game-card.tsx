@@ -6,8 +6,10 @@ import { ATTENTION_PILL, TYPO } from '@/lib/dashboard/tokens'
 
 type Props = {
     game: LineupGame
-    /** 이 게임에서 쉬는 사람 이름 — 비면 줄 자체가 사라진다 */
+    /** 이 게임에서 쉬는 사람 이름 — 비면 줄 자체가 사라진다(라운드로 묶으면 헤더가 대신 말한다) */
     restingNames: string[]
+    /** 머리줄 '게임 N' 옆 한 조각 — 2면 이상이면 '2번 코트', 1면이면 예상 시각 */
+    slotLabel?: string
     /** 머리줄 오른쪽 끝, 밸런스 배지 옆에 붙는 편집 액션 */
     actions?: ReactNode
 }
@@ -38,14 +40,17 @@ function TeamLine({ team, barClass }: { team: LineupPlayer[]; barClass: string }
  * 'A · B vs C · D' 한 줄이던 것을 팀마다 한 줄로 갈랐다 — 구분선과 색 바가 `vs` 한 글자보다
  * 팀 경계를 훨씬 잘 말한다. 그래서 `vs`는 없앴다.
  */
-export function RoomLineupGameCard({ game, restingNames, actions }: Props) {
+export function RoomLineupGameCard({ game, restingNames, slotLabel, actions }: Props) {
     const diff = teamDiff(game)
     const balance = lineupBalance(diff, game.team1.length)
 
     return (
         <li className="px-3 py-2.5 space-y-2">
             <div className="flex items-center justify-between gap-2">
-                <span className={TYPO.eyebrow}>게임 {game.seq}</span>
+                <span className={TYPO.eyebrow}>
+                    게임 {game.seq}
+                    {slotLabel && <span className="ml-1.5 normal-case">· {slotLabel}</span>}
+                </span>
                 <div className="flex items-center gap-2 shrink-0">
                     <span className={`${balance.pillClass} tabular-nums`}>
                         {balance.label} {diff.toFixed(1)}

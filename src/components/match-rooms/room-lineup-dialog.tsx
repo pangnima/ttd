@@ -65,8 +65,9 @@ export function RoomLineupDialog({
                                 recommendation={lineup.recommendation}
                                 playedTime={playedTime}
                                 durationMinutes={durationMinutes}
-                                courtCount={courtCount}
                                 slotMinutes={lineup.slotMinutes}
+                                perPlayer={lineup.perPlayer}
+                                isEdited={lineup.isEdited}
                                 gameCount={lineup.draft.length}
                                 estimatedMinutes={lineup.estimatedMinutes}
                                 onApply={lineup.setPerPlayer}
@@ -89,6 +90,9 @@ export function RoomLineupDialog({
                         players={lineup.players}
                         matchType={matchType}
                         onChange={lineup.setDraft}
+                        courts={lineup.courts}
+                        playedTime={playedTime}
+                        slotMinutes={lineup.slotMinutes}
                     />
                 </div>
 

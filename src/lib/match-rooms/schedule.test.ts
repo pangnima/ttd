@@ -52,7 +52,9 @@ describe('recommendGames — 시간과 코트 면 수로 권장 경기 수', () 
     it('코트 면 수만큼 경기가 늘어난다 — 같은 시간, 같은 인원', () => {
         expect(recommendGames({ ...base, courtCount: 1 })).toMatchObject({ rounds: 4, games: 3, perPlayer: 1 })
         expect(recommendGames({ ...base, courtCount: 2 })).toMatchObject({ rounds: 4, games: 8, perPlayer: 3 })
-        expect(recommendGames({ ...base, courtCount: 3 })).toMatchObject({ rounds: 4, games: 11, perPlayer: 4 })
+        // 3면을 골라도 11명으로는 세 번째 코트를 채울 4명이 없어 2면이 한계다 — 권장값도 2면 기준이다
+        expect(recommendGames({ ...base, courtCount: 3 })).toMatchObject({ rounds: 4, courts: 2, games: 8, perPlayer: 3 })
+        expect(recommendGames({ ...base, courtCount: 3, playerCount: 12 })).toMatchObject({ courts: 3, perPlayer: 4 })
     })
 
     it('권장대로 적용하면 예정 시간을 넘지 않는다 — 화면이 스스로를 반박하지 않게', () => {
@@ -60,7 +62,9 @@ describe('recommendGames — 시간과 코트 면 수로 권장 경기 수', () 
             for (const playerCount of [4, 6, 7, 9, 11, 14]) {
                 const r = recommendGames({ ...base, courtCount, playerCount })
                 if (!r) continue
-                expect(estimateMinutes(r.games, base.slotMinutes, courtCount)).toBeLessThanOrEqual(base.durationMinutes)
+                // 방의 면 수가 아니라 **실제로 돌릴 수 있는 면 수**로 재어야 한다 — 인원이 모자라면
+                // 남는 코트는 비어 있고 그만큼 라운드가 늘어난다
+                expect(estimateMinutes(r.games, base.slotMinutes, r.courts)).toBeLessThanOrEqual(base.durationMinutes)
             }
         }
     })

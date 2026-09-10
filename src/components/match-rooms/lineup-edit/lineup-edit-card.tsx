@@ -13,6 +13,8 @@ type Props = {
     index: number
     players: LineupPlayer[]
     restingNames: string[]
+    /** '2번 코트'·'10:30' — 읽기/편집 어느 상태에서도 자리가 흔들리지 않게 양쪽에 붙인다 */
+    slotLabel?: string
     onSlotChange: (side: DraftSide, index: number, player: LineupSlot) => void
     onRemove: () => void
 }
@@ -27,7 +29,7 @@ const REMOVE = `${TYPO.caption} text-destructive/80 hover:text-destructive shrin
  * 모든 카드를 항상 드롭다운으로 펼치지 않는 이유: 복식은 자리가 넷이라 목록 전체가 입력으로 덮이고,
  * 정작 대진을 판단하는 근거인 전력 균형 배지가 묻힌다.
  */
-export function LineupEditCard({ game, index, players, restingNames, onSlotChange, onRemove }: Props) {
+export function LineupEditCard({ game, index, players, restingNames, slotLabel, onSlotChange, onRemove }: Props) {
     const [editing, setEditing] = useState(false)
     const readable = toLineupGame(game, index)
 
@@ -36,6 +38,7 @@ export function LineupEditCard({ game, index, players, restingNames, onSlotChang
             <RoomLineupGameCard
                 game={readable}
                 restingNames={restingNames}
+                slotLabel={slotLabel}
                 actions={(
                     <>
                         <button type="button" className={LINK} onClick={() => setEditing(true)}>수정</button>
@@ -66,7 +69,10 @@ export function LineupEditCard({ game, index, players, restingNames, onSlotChang
     return (
         <li className="px-3 py-2.5 space-y-2">
             <div className="flex items-center justify-between gap-2">
-                <span className={TYPO.eyebrow}>게임 {index + 1}</span>
+                <span className={TYPO.eyebrow}>
+                    게임 {index + 1}
+                    {slotLabel && <span className="ml-1.5 normal-case">· {slotLabel}</span>}
+                </span>
                 <div className="flex items-center gap-2 shrink-0">
                     {readable && (
                         <button type="button" className={LINK} onClick={() => setEditing(false)}>완료</button>

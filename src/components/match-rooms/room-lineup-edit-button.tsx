@@ -15,6 +15,10 @@ type Props = {
     /** 방 게임 전량 — 편집 대상만 골라 쓴다 */
     games: MatchRoomGame[]
     editable: EditableLineupGame[]
+    /** 방의 시간 축 — 편집 화면도 라운드·코트로 묶어 보여준다 */
+    playedTime?: string
+    durationMinutes?: number
+    courtCount: number
 }
 
 /**
@@ -24,7 +28,9 @@ type Props = {
  * 방의 대진이 전부 진행된 뒤에는 버튼 자체가 사라진다.
  * 다이얼로그는 열 때 마운트해 방이 바뀐 뒤 다시 열면 새 대진으로 시작하게 한다.
  */
-export function RoomLineupEditButton({ roomId, matchType, candidates, games, editable }: Props) {
+export function RoomLineupEditButton({
+    roomId, matchType, candidates, games, editable, playedTime, durationMinutes, courtCount,
+}: Props) {
     const [open, setOpen] = useState(false)
     if (editable.length === 0) return null
 
@@ -42,6 +48,9 @@ export function RoomLineupEditButton({ roomId, matchType, candidates, games, edi
                     candidates={candidates}
                     games={games}
                     editable={editable}
+                    playedTime={playedTime}
+                    durationMinutes={durationMinutes}
+                    courtCount={courtCount}
                 />
             )}
         </>

@@ -6,6 +6,7 @@ import type { MatchRoomGame, MatchType } from '@/types'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { EditableLineupGame } from '@/lib/queries/match-rooms'
 import { toLineupPlayers } from '@/lib/match-rooms/lineup'
+import { effectiveCourtCount } from '@/lib/match-rooms/court-slots'
 import { fromRoomGames, toSavePayload, validateDraft, type DraftGame } from '@/lib/match-rooms/lineup-draft'
 import { replaceRoomLineupAction } from '@/lib/actions/match-rooms'
 import { TYPO } from '@/lib/dashboard/tokens'
@@ -21,6 +22,9 @@ type Props = {
     candidates: OpponentCandidate[]
     games: MatchRoomGame[]
     editable: EditableLineupGame[]
+    playedTime?: string
+    durationMinutes?: number
+    courtCount: number
 }
 
 /**
@@ -30,7 +34,7 @@ type Props = {
  * 그때는 팝업을 닫지 않고 화면만 새로 읽는다 — 사용자가 고친 내용을 잃지 않게(0060 관용구).
  */
 export function RoomLineupEditDialog({
-    open, onOpenChange, roomId, matchType, candidates, games, editable,
+    open, onOpenChange, roomId, matchType, candidates, games, editable, playedTime, durationMinutes, courtCount,
 }: Props) {
     const players = useMemo(() => toLineupPlayers(candidates), [candidates])
     const targets = useMemo(() => {
@@ -71,7 +75,15 @@ export function RoomLineupEditDialog({
                         결과가 입력되었거나 확인이 시작된 경기는 여기에 오지 않습니다. 저장하면 이 목록이 방의 대진을 대체합니다.
                     </p>
                     {error && <p className={`${TYPO.caption} text-destructive break-keep`}>{error}</p>}
-                    <LineupEditList games={draft} players={players} matchType={matchType} onChange={setDraft} />
+                    <LineupEditList
+                        games={draft}
+                        players={players}
+                        matchType={matchType}
+                        onChange={setDraft}
+                        courts={effectiveCourtCount(players.length, matchType, courtCount)}
+                        playedTime={playedTime}
+                        durationMinutes={durationMinutes}
+                    />
                 </div>
 
                 <DialogFooter>

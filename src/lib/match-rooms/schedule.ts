@@ -1,6 +1,7 @@
 import type { MatchType } from '@/types'
 import { addMinutes } from '@/lib/match-games/form-mapping'
 import { courtNeed } from '@/lib/match-games/lineup-core'
+import { effectiveCourtCount } from '@/lib/match-rooms/court-slots'
 import { gamesForPerPlayer, PER_PLAYER_OPTIONS, ROOM_LINEUP_MAX_GAMES } from '@/lib/match-rooms/lineup'
 
 /**
@@ -60,6 +61,8 @@ export type RecommendInput = {
 export type LineupRecommendation = {
     /** 시간 안에 들어가는 순번 수 */
     rounds: number
+    /** 실제로 돌릴 수 있는 면 수 — 인원이 모자라면 방의 면 수보다 작다 */
+    courts: number
     /** 권장 총 경기 수 */
     games: number
     /** 권장 1인당 경기 수 — 자동 대진표가 조작하는 축 */
@@ -82,6 +85,10 @@ export function recommendGames(input: RecommendInput): LineupRecommendation | nu
     const slots = courtNeed(matchType).size
     if (playerCount < slots) return null
 
+    // 인원으로 실제 돌릴 수 있는 면 수를 쓴다. 방의 면 수를 그대로 곱하면 11명·3면 방에
+    // "1인당 4경기"를 권하게 되는데, 11명으로는 세 번째 코트를 채울 수 없어 실제로는 예정 시간을 넘긴다.
+    const courts = effectiveCourtCount(playerCount, matchType, courtCount)
+
     const notes: string[] = []
     let rounds = Math.floor(durationMinutes / slotMinutes)
     if (rounds < 1) {
@@ -89,7 +96,7 @@ export function recommendGames(input: RecommendInput): LineupRecommendation | nu
         notes.push(`경기 시간이 예정 시간(${formatDurationLabel(durationMinutes)})보다 깁니다.`)
     }
 
-    const capacity = rounds * courtCount
+    const capacity = rounds * courts
     if (capacity > ROOM_LINEUP_MAX_GAMES) {
         notes.push(`시간으로는 ${capacity}경기가 들어가지만 한 번에 만들 수 있는 경기는 ${ROOM_LINEUP_MAX_GAMES}개까지입니다.`)
     }
@@ -102,14 +109,14 @@ export function recommendGames(input: RecommendInput): LineupRecommendation | nu
     let games = gamesForPerPlayer(playerCount, 1, isDoubles)
     for (let candidate = PER_PLAYER_OPTIONS[PER_PLAYER_OPTIONS.length - 1]; candidate >= 1; candidate--) {
         const total = gamesForPerPlayer(playerCount, candidate, isDoubles)
-        if (total <= capacity && estimateMinutes(total, slotMinutes, courtCount) <= durationMinutes) {
+        if (total <= capacity && estimateMinutes(total, slotMinutes, courts) <= durationMinutes) {
             perPlayer = candidate
             games = total
             break
         }
     }
 
-    return { rounds, games, perPlayer, notes }
+    return { rounds, courts, games, perPlayer, notes }
 }
 
 /** 이 경기 수를 소화하는 데 걸리는 시간 — 코트 면 수만큼 동시에 돈다 */

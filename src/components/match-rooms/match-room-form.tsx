@@ -8,7 +8,7 @@ import { createMatchRoomAction } from '@/lib/actions/match-rooms'
 import { FormActions } from '@/components/common/form-actions'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
-import { RoomScheduleSection } from '@/components/match-rooms/form-sections/room-schedule-section'
+import { RoomScheduleFields, RoomScheduleSummary } from '@/components/match-rooms/form-sections/room-schedule-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
 import { RoomFormatSection } from '@/components/match-rooms/form-sections/room-format-section'
 import { RoomPasswordSection } from '@/components/match-rooms/form-sections/room-password-section'
@@ -62,13 +62,21 @@ export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames
                     surface={s.surface} onSurfaceChange={(v: CourtSurface) => s.setSurface(v)}
                     courtName={s.courtName} onCourtNameChange={s.setCourtName}
                     recentCourtNames={recentCourtNames}
+                    scheduleExtra={(
+                        <RoomScheduleFields
+                            durationMinutes={s.durationMinutes}
+                            onDurationChange={s.setDurationMinutes}
+                            courtCount={s.courtCount}
+                            onCourtCountChange={s.setCourtCount}
+                        />
+                    )}
                 />
-                <RoomScheduleSection
+                <RoomScheduleSummary
                     playedTime={s.playedTime}
                     durationMinutes={s.durationMinutes}
-                    onDurationChange={s.setDurationMinutes}
                     courtCount={s.courtCount}
-                    onCourtCountChange={s.setCourtCount}
+                    matchType={s.matchType}
+                    playerCount={s.invitees.length + 1}
                 />
             </FormSectionCard>
 

@@ -1,11 +1,12 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import type { CourtSurface } from '@/types'
 import { SURFACE_OPTIONS } from '@/lib/dashboard/surface'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { EnumSelect } from '@/components/match/enum-select'
 import { CourtNameAutocomplete } from '@/components/personal-matches/court-name-autocomplete'
-import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { MATCH_FORM_FIELD_HEIGHT, MATCH_FORM_INPUT, MATCH_FORM_LABEL, MATCH_FORM_SELECT_TRIGGER } from '@/lib/dashboard/tokens'
 import { HOUR_OPTIONS } from '@/lib/format'
 
 type MatchMetaSectionProps = {
@@ -18,12 +19,13 @@ type MatchMetaSectionProps = {
     courtName: string
     onCourtNameChange: (v: string) => void
     recentCourtNames: string[]
+    /**
+     * 날짜·시각과 **같은 줄**에 이어 붙일 필드들(매칭 만들기의 경기 시간·코트 면 수).
+     * 방의 시간 축은 "언제부터 몇 시간, 몇 면"이 하나의 사실이라 네 조각으로 흩어지면 읽히지 않는다.
+     * 넘기지 않으면 개인 경기 폼은 지금과 똑같이 2열이다.
+     */
+    scheduleExtra?: ReactNode
 }
-
-// 날짜 input과 시각 셀렉트 트리거를 같은 높이로 고정 (MATCH_FORM_INPUT은 textarea 공용이라 토큰에는 높이를 두지 않는다)
-const FIELD_HEIGHT = 'h-12'
-const HOUR_TRIGGER_CLASS =
-    `w-full ${FIELD_HEIGHT} data-[size=default]:${FIELD_HEIGHT} rounded-lg px-3 text-body bg-background dark:bg-input/30 border-input focus:border-ring`
 
 /**
  * 경기 메타 정보 — 날짜·시각(시 단위 셀렉트)·코트 표면(라디오형 FieldToggle)·코트명(선택, 최근 코트 재선택).
@@ -31,18 +33,18 @@ const HOUR_TRIGGER_CLASS =
  */
 export function MatchMetaSection({
     playedAt, onPlayedAtChange, playedTime, onPlayedTimeChange, surface, onSurfaceChange,
-    courtName, onCourtNameChange, recentCourtNames,
+    courtName, onCourtNameChange, recentCourtNames, scheduleExtra,
 }: MatchMetaSectionProps) {
     return (
         <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid grid-cols-2 gap-3${scheduleExtra ? ' sm:grid-cols-4' : ''}`}>
                 <div>
                     <label className={MATCH_FORM_LABEL}>경기 날짜 *</label>
                     <input
                         type="date"
                         value={playedAt}
                         onChange={(e) => onPlayedAtChange(e.target.value)}
-                        className={`${MATCH_FORM_INPUT} ${FIELD_HEIGHT}`}
+                        className={`${MATCH_FORM_INPUT} ${MATCH_FORM_FIELD_HEIGHT}`}
                         required
                     />
                 </div>
@@ -54,9 +56,10 @@ export function MatchMetaSection({
                         options={HOUR_OPTIONS}
                         placeholder="시각 선택"
                         ariaLabel="경기 시각"
-                        triggerClassName={HOUR_TRIGGER_CLASS}
+                        triggerClassName={MATCH_FORM_SELECT_TRIGGER}
                     />
                 </div>
+                {scheduleExtra}
             </div>
             <div>
                 <FieldToggle
