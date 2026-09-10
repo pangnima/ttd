@@ -153,6 +153,8 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
             matchType: (str(r.matchType) ?? 'singles') as MatchType,
             surface: str(r.surface) as CourtSurface | undefined,
             courtName: str(r.courtName),
+            durationMinutes: num(r.durationMinutes),
+            courtCount: num(r.courtCount) ?? 1,
             notes: str(r.notes),
             isSettled: r.isSettled === true,
             createdAt: str(r.createdAt) ?? '',

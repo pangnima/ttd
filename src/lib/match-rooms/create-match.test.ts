@@ -15,6 +15,8 @@ function input(over: Partial<CreateMatchRoomInput> = {}): CreateMatchRoomInput {
         playedAt: '2026-09-20',
         playedTime: '19:00',
         surface: 'hard',
+        durationMinutes: 120,
+        courtCount: 1,
         password: '1234',
         inviteUserIds: [],
         ...over,
@@ -90,5 +92,20 @@ describe('validateCreateMatchRoomInput', () => {
         const ids = Array.from({ length: MATCH_ROOM_INVITE_MAX + 1 }, (_, i) => `u${i}`)
         expect(validateCreateMatchRoomInput(input({ inviteUserIds: ids }))).not.toBeNull()
         expect(validateCreateMatchRoomInput(input({ inviteUserIds: ids.slice(0, MATCH_ROOM_INVITE_MAX) }))).toBeNull()
+    })
+})
+
+describe('validateCreateMatchRoomInput — 시간·코트 면 수 (0073)', () => {
+    it('DB CHECK와 같은 범위만 통과한다', () => {
+        expect(validateCreateMatchRoomInput(input({ durationMinutes: 30 }))).toBeNull()
+        expect(validateCreateMatchRoomInput(input({ durationMinutes: 600 }))).toBeNull()
+        expect(validateCreateMatchRoomInput(input({ durationMinutes: 20 }))).toContain('경기 시간')
+        expect(validateCreateMatchRoomInput(input({ durationMinutes: 601 }))).toContain('경기 시간')
+    })
+
+    it('코트 면 수는 1~12면', () => {
+        expect(validateCreateMatchRoomInput(input({ courtCount: 12 }))).toBeNull()
+        expect(validateCreateMatchRoomInput(input({ courtCount: 0 }))).toContain('코트 면 수')
+        expect(validateCreateMatchRoomInput(input({ courtCount: 13 }))).toContain('코트 면 수')
     })
 })

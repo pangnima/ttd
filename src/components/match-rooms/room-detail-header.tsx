@@ -12,6 +12,13 @@ type Props = { detail: MatchRoomDetail; actions?: React.ReactNode }
 
 const SOURCE_LABEL = { direct: '자유 기록', confirmation: '상호 확인 경기', rotation: '로테이션 복식' } as const
 
+/** 코트명과 면 수를 한 덩어리로 — 면이 하나면 굳이 세지 않는다 */
+function courtLabel(courtName: string | undefined, courtCount: number): string | undefined {
+    const court = courtName?.trim() || undefined
+    if (courtCount <= 1) return court
+    return court ? `${court} ${courtCount}면` : `코트 ${courtCount}면`
+}
+
 /** 상세 상단 — 자동 제목 + 단계 칩 + 출처/표면 eyebrow + 방장 + 시각·코트명·메모(MatchMetaLine) */
 export function RoomDetailHeader({ detail, actions }: Props) {
     const { room, host } = detail
@@ -34,7 +41,13 @@ export function RoomDetailHeader({ detail, actions }: Props) {
                     {host.deleted && <span className="ml-1 text-caption text-muted-foreground">(탈퇴)</span>}
                     {host.nickname && <span className="ml-1 text-caption text-muted-foreground">{host.nickname}</span>}
                 </p>
-                <MatchMetaLine playedTime={room.playedTime} courtName={room.courtName} notes={room.notes} className="space-y-0.5" />
+                <MatchMetaLine
+                    playedTime={room.playedTime}
+                    durationMinutes={room.durationMinutes}
+                    courtName={courtLabel(room.courtName, room.courtCount)}
+                    notes={room.notes}
+                    className="space-y-0.5"
+                />
             </div>
         </div>
     )

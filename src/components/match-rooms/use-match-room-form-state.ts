@@ -9,6 +9,7 @@ import {
     type MatchRoomFormat,
 } from '@/lib/match-rooms/create-match'
 import { todayIsoKst } from '@/lib/match-rooms/split'
+import { DEFAULT_COURT_COUNT, DEFAULT_DURATION_MINUTES } from '@/lib/match-rooms/schedule'
 
 /** 초대 대상 1명 — 회원만 담긴다(게스트는 방에 들어올 수 없다) */
 export type InviteeRow = { userId: string; name: string; meta?: string }
@@ -24,6 +25,8 @@ export function useMatchRoomFormState() {
     const [playedTime, setPlayedTime] = useState('')
     const [surface, setSurface] = useState<CourtSurface | ''>('')
     const [courtName, setCourtName] = useState('')
+    const [durationMinutes, setDurationMinutes] = useState<number>(DEFAULT_DURATION_MINUTES)
+    const [courtCount, setCourtCount] = useState<number>(DEFAULT_COURT_COUNT)
     const [notes, setNotes] = useState('')
     const [password, setPassword] = useState('')
     const [invitees, setInvitees] = useState<InviteeRow[]>([])
@@ -49,6 +52,8 @@ export function useMatchRoomFormState() {
             playedTime,
             surface: surface as CourtSurface,
             courtName: courtName.trim() || undefined,
+            durationMinutes,
+            courtCount,
             notes: notes.trim() || undefined,
             password,
             inviteUserIds: invitees.map((r) => r.userId),
@@ -59,6 +64,7 @@ export function useMatchRoomFormState() {
         format, setFormat, matchType, setMatchType,
         playedAt, setPlayedAt, playedTime, setPlayedTime,
         surface, setSurface, courtName, setCourtName, notes, setNotes,
+        durationMinutes, setDurationMinutes, courtCount, setCourtCount,
         password, setPassword,
         invitees, addInvitee, removeInvitee,
         isValid: !!surface && validateCreateMatchRoomInput(buildInput()) === null,

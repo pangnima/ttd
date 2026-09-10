@@ -1,7 +1,10 @@
 import { formatHourLabel } from '@/lib/format'
+import { formatRoomWhen } from '@/lib/match-rooms/schedule'
 
 type Props = {
     playedTime?: string   // "18:00"
+    /** 매칭 룸에서만 넘어온다 — 있으면 시각이 '10:00~12:00' 구간이 된다 (0073) */
+    durationMinutes?: number
     courtName?: string
     notes?: string
     className?: string
@@ -17,8 +20,9 @@ type Props = {
  * 개인 경기·로테이션 세션 카드 공용 부가 정보 — 시각·코트명 한 줄 + 메모(최대 2줄).
  * 값이 하나도 없으면 아무것도 렌더하지 않는다.
  */
-export function MatchMetaLine({ playedTime, courtName, notes, className, emphasizeTime = false }: Props) {
-    const time = playedTime ? formatHourLabel(playedTime) : ''
+export function MatchMetaLine({ playedTime, durationMinutes, courtName, notes, className, emphasizeTime = false }: Props) {
+    // 개인 경기는 소요 시간이 없어 기존 '18시' 표기 그대로다
+    const time = durationMinutes ? formatRoomWhen(playedTime, durationMinutes) : (playedTime ? formatHourLabel(playedTime) : '')
     if (!time && !courtName && !notes) return null
     return (
         <div className={className}>

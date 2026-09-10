@@ -11,8 +11,21 @@ import {
     type LineupPreset,
 } from '@/lib/match-rooms/lineup'
 import { fromResult, validateDraft, type DraftGame } from '@/lib/match-rooms/lineup-draft'
+import {
+    DEFAULT_SLOT_MINUTES,
+    estimateMinutes,
+    recommendGames,
+    type LineupRecommendation,
+} from '@/lib/match-rooms/schedule'
 
-type Options = { candidates: OpponentCandidate[]; matchType: MatchType }
+type Options = {
+    candidates: OpponentCandidate[]
+    matchType: MatchType
+    /** 방의 예정 소요 시간(분) — 없으면 권장 경기 수를 내지 않는다 (0073 이전 방) */
+    durationMinutes?: number
+    /** 동시에 도는 경기 수 */
+    courtCount?: number
+}
 
 export type RoomLineupState = {
     /** 대진에 넣을 참가자 key (체크 해제로 제외할 수 있다) */
@@ -20,6 +33,13 @@ export type RoomLineupState = {
     toggle: (id: string) => void
     perPlayer: number
     setPerPlayer: (n: number) => void
+    /** 경기당 시간(분) — 방이 아니라 대진을 짤 때 고른다 */
+    slotMinutes: number
+    setSlotMinutes: (n: number) => void
+    /** 시간과 코트 면 수로 낸 권장값 — 소요 시간을 모르는 방이면 null */
+    recommendation: LineupRecommendation | null
+    /** 지금 대진을 소화하는 데 걸리는 시간(분) */
+    estimatedMinutes: number
     preset: LineupPreset
     setPreset: (p: LineupPreset) => void
     /** 총 게임 수 — 1인당 경기 수에서 환산된 값 */
@@ -47,10 +67,11 @@ export type RoomLineupState = {
  * `edited`를 비워 생성분으로 돌아간다 — 바뀐 조건으로 뽑은 대진에 옛 편집을 덧대면 무엇을 보고 있는지
  * 알 수 없기 때문이다. useEffect 없이 렌더 중 파생으로만 처리한다.
  */
-export function useRoomLineup({ candidates, matchType }: Options): RoomLineupState {
+export function useRoomLineup({ candidates, matchType, durationMinutes, courtCount = 1 }: Options): RoomLineupState {
     const [excluded, setExcluded] = useState<Set<string>>(new Set())
     const [perPlayer, setPerPlayer] = useState(2)
     const [preset, setPreset] = useState<LineupPreset>('balanced')
+    const [slotMinutes, setSlotMinutesState] = useState(DEFAULT_SLOT_MINUTES)
     const [seed, setSeed] = useState(1)
     const [edited, setEdited] = useState<DraftGame[] | null>(null)
 
@@ -73,6 +94,12 @@ export function useRoomLineup({ candidates, matchType }: Options): RoomLineupSta
 
     const draft = edited ?? fromResult(generated)
 
+    // 권장값은 경기 수가 아니라 **1인당 경기 수**로 낸다 — 화면이 조작하는 축과 같아야
+    // [적용] 뒤에 요약 줄의 총 경기 수가 저절로 맞는다.
+    const recommendation = recommendGames({
+        durationMinutes, slotMinutes, courtCount, playerCount: players.length, matchType,
+    })
+
     return {
         included,
         toggle: (id) => {
@@ -86,6 +113,10 @@ export function useRoomLineup({ candidates, matchType }: Options): RoomLineupSta
         },
         perPlayer,
         setPerPlayer: (n) => { setEdited(null); setPerPlayer(n) },
+        slotMinutes,
+        setSlotMinutes: (n) => { setEdited(null); setSlotMinutesState(n) },
+        recommendation,
+        estimatedMinutes: estimateMinutes(draft.length, slotMinutes, courtCount),
         preset,
         setPreset: (p) => { setEdited(null); setPreset(p) },
         gameCount,

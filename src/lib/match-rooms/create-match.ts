@@ -47,6 +47,10 @@ export type CreateMatchRoomInput = {
     playedTime: string      // 'HH:MM' (시 단위)
     surface: CourtSurface
     courtName?: string
+    /** 예정 소요 시간(분) — 종료 시각은 playedTime + 이 값 (0073) */
+    durationMinutes: number
+    /** 동시에 쓰는 코트 면 수 — 권장 경기 수 계산과 표시에만 쓴다 (0073) */
+    courtCount: number
     notes?: string
     /** 리스트에서 발견한 회원이 입장할 때 쓰는 비밀번호. 초대받은 사람은 이걸 몰라도 수락으로 들어온다 */
     password: string
@@ -78,6 +82,9 @@ export function validateCreateMatchRoomInput(input: CreateMatchRoomInput): strin
     if (!input.playedAt) return '경기 날짜를 입력해주세요.'
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return '경기 시각을 선택해주세요.'
     if (!input.surface) return '코트 표면을 선택해주세요.'
+    // DB CHECK(match_rooms.duration_minutes / court_count)의 거울
+    if (!(input.durationMinutes >= 30 && input.durationMinutes <= 600)) return '경기 시간을 선택해주세요.'
+    if (!(input.courtCount >= 1 && input.courtCount <= 12)) return '코트 면 수를 선택해주세요.'
 
     const courtNameError = validateCourtName(input.courtName)
     if (courtNameError) return courtNameError

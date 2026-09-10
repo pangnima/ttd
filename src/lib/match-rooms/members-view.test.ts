@@ -3,7 +3,7 @@ import type { MatchRoomDetail } from '@/types'
 import { buildMemberRows, inviteExcludedUserIds, memberMetaLine, type MemberRowView } from './members-view'
 
 const base: MatchRoomDetail = {
-    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', isSettled: false, createdAt: '' },
+    room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', courtCount: 1, isSettled: false, createdAt: '' },
     host: { id: 'h', name: '호스트', nickname: 'host', deleted: false },
     viewer: { role: 'host', status: 'joined' },
     members: [

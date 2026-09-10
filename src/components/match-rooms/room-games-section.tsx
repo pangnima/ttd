@@ -61,6 +61,9 @@ export function RoomGamesSection({
                             matchType={detail.room.matchType}
                             candidates={lineupCandidates}
                             existingGames={detail.games.length}
+                            playedTime={detail.room.playedTime}
+                            durationMinutes={detail.room.durationMinutes}
+                            courtCount={detail.room.courtCount}
                         />
                     )}
                     {/* 저장한 대진 고치기 — 결과·협상이 없는 라인업 게임이 남아 있을 때만 (0071).

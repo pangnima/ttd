@@ -835,8 +835,10 @@ export type Database = {
       }
       match_rooms: {
         Row: {
+          court_count: number
           court_name: string | null
           created_at: string
+          duration_minutes: number | null
           host_user_id: string
           id: string
           is_settled: boolean
@@ -848,8 +850,10 @@ export type Database = {
           surface: string | null
         }
         Insert: {
+          court_count?: number
           court_name?: string | null
           created_at?: string
+          duration_minutes?: number | null
           host_user_id: string
           id?: string
           is_settled?: boolean
@@ -861,8 +865,10 @@ export type Database = {
           surface?: string | null
         }
         Update: {
+          court_count?: number
           court_name?: string | null
           created_at?: string
+          duration_minutes?: number | null
           host_user_id?: string
           id?: string
           is_settled?: boolean
@@ -1270,7 +1276,13 @@ export type Database = {
         Returns: string
       }
       create_match_room: {
-        Args: { p_password: string; p_source_id: string; p_source_kind: string }
+        Args: {
+          p_court_count?: number
+          p_duration_minutes?: number
+          p_password: string
+          p_source_id: string
+          p_source_kind: string
+        }
         Returns: string
       }
       create_room_game: {

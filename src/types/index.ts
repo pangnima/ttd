@@ -296,6 +296,10 @@ export type MatchRoomMeta = {
     matchType: MatchType
     surface?: CourtSurface
     courtName?: string
+    /** 예정 소요 시간(분) — 종료 시각은 playedTime + 이 값. 0073 이전 방은 없다 */
+    durationMinutes?: number
+    /** 동시에 쓰는 코트 면 수 — 권장 경기 수 계산과 표시에만 쓴다. 기본 1면 (0073) */
+    courtCount: number
     // 방의 대표 게임이 1건 이상이고 전부 확정 — 매칭 리스트에서 '지난 경기'로 내려간다 (0049)
     isSettled: boolean
 }

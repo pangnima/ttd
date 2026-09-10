@@ -100,7 +100,10 @@ export async function createMatchRoomAction(
     if (seed.error || !seed.data) return { error: '매칭을 만들지 못했습니다.' }
     const sourceId = seed.data.id
 
-    const room = await listRecordAsRoom(kind, sourceId, input.password)
+    const room = await listRecordAsRoom(kind, sourceId, input.password, {
+        durationMinutes: input.durationMinutes,
+        courtCount: input.courtCount,
+    })
     if (room.error || !room.roomId) {
         if (kind === 'rotation') await supabase.from('rotation_sessions').delete().eq('id', sourceId)
         else await supabase.from('personal_matches').delete().eq('id', sourceId)

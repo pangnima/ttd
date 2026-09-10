@@ -8,6 +8,7 @@ import { FormActions } from '@/components/common/form-actions'
 import { FORM_CANCEL } from '@/lib/dashboard/tokens'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { LineupOptions } from '@/components/match-rooms/form-sections/lineup-options'
+import { LineupRecommendation } from '@/components/match-rooms/form-sections/lineup-recommendation'
 import { LineupEditList } from '@/components/match-rooms/lineup-edit/lineup-edit-list'
 import { RoomLineupNotices } from '@/components/match-rooms/room-lineup-notices'
 import { useRoomLineup } from '@/components/match-rooms/use-room-lineup'
@@ -21,6 +22,10 @@ type Props = {
     candidates: OpponentCandidate[]
     /** 이미 저장된 게임 수 — 대진은 덮어쓰지 않고 이어붙인다 */
     existingGames: number
+    /** 방의 일정 — 권장 경기 수를 내는 근거 (0073). 모르는 방이면 추천 줄이 뜨지 않는다 */
+    playedTime?: string
+    durationMinutes?: number
+    courtCount?: number
 }
 
 /**
@@ -31,8 +36,11 @@ type Props = {
  * 골격은 헤더·푸터 고정 + 본문만 스크롤이다. 옵션이 길어 결과와 [저장]이 스크롤 아래로 묻히던 것을
  * DialogFooter(구분선 + bg-muted/50)로 바닥에 붙였다.
  */
-export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candidates, existingGames }: Props) {
-    const lineup = useRoomLineup({ candidates, matchType })
+export function RoomLineupDialog({
+    open, onOpenChange, roomId, matchType, candidates, existingGames,
+    playedTime, durationMinutes, courtCount = 1,
+}: Props) {
+    const lineup = useRoomLineup({ candidates, matchType, durationMinutes, courtCount })
     const save = useRoomLineupSave({ roomId, onDone: () => onOpenChange(false) })
     const [optionsOpen, setOptionsOpen] = useState(true)
 
@@ -50,6 +58,20 @@ export function RoomLineupDialog({ open, onOpenChange, roomId, matchType, candid
                         onToggle={lineup.toggle}
                         perPlayer={lineup.perPlayer}
                         onPerPlayerChange={lineup.setPerPlayer}
+                        slotMinutes={lineup.slotMinutes}
+                        onSlotMinutesChange={lineup.setSlotMinutes}
+                        recommendation={(
+                            <LineupRecommendation
+                                recommendation={lineup.recommendation}
+                                playedTime={playedTime}
+                                durationMinutes={durationMinutes}
+                                courtCount={courtCount}
+                                slotMinutes={lineup.slotMinutes}
+                                gameCount={lineup.draft.length}
+                                estimatedMinutes={lineup.estimatedMinutes}
+                                onApply={lineup.setPerPlayer}
+                            />
+                        )}
                         preset={lineup.preset}
                         onPresetChange={lineup.setPreset}
                         gameCount={lineup.gameCount}
