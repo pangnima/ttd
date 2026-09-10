@@ -4,7 +4,7 @@ import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { EditableLineupGame } from '@/lib/queries/match-rooms'
 import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
-import { roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
+import { canCreateRoomLineup, roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
 import { RoomGameRow } from '@/components/match-rooms/room-game-row'
 import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
 import { RoomLineupButton } from '@/components/match-rooms/room-lineup-button'
@@ -53,8 +53,9 @@ export function RoomGamesSection({
                 <h2 className={TYPO.h3}>게임</h2>
                 {/* 로테이션 방장에게는 버튼 3개가 한꺼번에 보인다 — 좁은 화면에서 제목을 밀지 않도록 감싼다 */}
                 <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
-                    {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066) */}
-                    {lineupCandidates && lineupCandidates.length > 0 && (
+                    {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066).
+                        노출 조건은 RPC 가드의 거울이다 — 정산된 방에서는 거절당하므로 그리지 않는다 (0072) */}
+                    {lineupCandidates && canCreateRoomLineup(detail, lineupCandidates.length) && (
                         <RoomLineupButton
                             roomId={detail.room.id}
                             matchType={detail.room.matchType}
@@ -62,7 +63,8 @@ export function RoomGamesSection({
                             existingGames={detail.games.length}
                         />
                     )}
-                    {/* 저장한 대진 고치기 — 결과·협상이 없는 라인업 게임이 남아 있을 때만 (0071) */}
+                    {/* 저장한 대진 고치기 — 결과·협상이 없는 라인업 게임이 남아 있을 때만 (0071).
+                        정산된 방은 대표 게임이 전부 확정이라 editableLineup이 비고 버튼이 스스로 사라진다 */}
                     {lineupCandidates && editableLineup && (
                         <RoomLineupEditButton
                             roomId={detail.room.id}

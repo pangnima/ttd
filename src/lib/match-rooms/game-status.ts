@@ -47,6 +47,20 @@ export function roomGameMemberIds(games: MatchRoomGame[]): Set<string> {
     return ids
 }
 
+/**
+ * [자동 대진표]를 그릴 수 있는가 — `create_room_lineup` 가드의 거울(0072).
+ *
+ * 방장 여부는 `candidateCount`가 대신 말한다(대진 후보는 방장에게만 조회된다).
+ * 정산된 방을 빼는 이유는 RPC가 `room_already_closed`로 거절하기 때문이고, **거절할 것을 그리지
+ * 않는 것**이 `roomGameMemberIds`가 [내보내기]에 쓰는 것과 같은 원칙이다.
+ *
+ * ⚠ 방식(단식/복식·로테이션 여부)은 보지 않는다. 복식 방은 전부 로테이션 방이고,
+ * 자동 대진표는 바로 그 방을 위해 만들어졌다(0066 머리말·0072).
+ */
+export function canCreateRoomLineup(detail: MatchRoomDetail, candidateCount: number): boolean {
+    return candidateCount > 0 && !detail.room.isSettled
+}
+
 /** 게임이 하나도 없을 때의 안내 — 출처별로 다음에 할 일이 다르다 */
 export function roomGamesEmptyMessage(detail: MatchRoomDetail): string {
     const s = detail.source

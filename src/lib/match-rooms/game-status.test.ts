@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail, MatchRoomGame, MatchRoomSource } from '@/types'
-import { canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage, roomGameMemberIds } from './game-status'
+import { canCreateRoomLineup, canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage, roomGameMemberIds } from './game-status'
 
 const base: MatchRoomGame = {
     id: 'g1',
@@ -104,5 +104,37 @@ describe('roomGameMemberIds — 경기에 배정된 회원 (0070)', () => {
 
     it('게임이 없으면 빈 집합 — 아무나 내보낼 수 있다', () => {
         expect(roomGameMemberIds([]).size).toBe(0)
+    })
+})
+
+describe('canCreateRoomLineup — create_room_lineup 가드의 거울', () => {
+    const room = (over: Partial<MatchRoomDetail['room']> = {}): MatchRoomDetail => ({
+        room: {
+            id: 'r1', hostUserId: 'u1', sourceKind: 'rotation', playedAt: '2026-09-12',
+            matchType: 'men_doubles', isSettled: false, createdAt: '2026-09-01T00:00:00Z', ...over,
+        },
+        host: { id: 'u1', name: '방장', nickname: '', deleted: false },
+        members: [],
+        guests: [],
+        source: { kind: 'rotation', isFinalized: false },
+        games: [],
+    })
+
+    it('후보가 없으면(= 방장이 아니면) 그리지 않는다', () => {
+        expect(canCreateRoomLineup(room(), 0)).toBe(false)
+    })
+
+    it('정산된 방은 RPC가 거절하므로 그리지 않는다', () => {
+        expect(canCreateRoomLineup(room({ isSettled: true }), 4)).toBe(false)
+    })
+
+    // 0072 회귀 가드 — 0071이 로테이션 방을 막아 복식 방 전체에서 자동 대진표가 죽었다.
+    // 복식 방은 예외 없이 로테이션 방이고, 자동 대진표는 바로 그 방을 위한 기능이다.
+    it('미확정 로테이션 방에서도 그린다 — 방식을 보지 않는다', () => {
+        expect(canCreateRoomLineup(room(), 4)).toBe(true)
+    })
+
+    it('단식 방에서도 그린다', () => {
+        expect(canCreateRoomLineup(room({ sourceKind: 'direct', matchType: 'singles' }), 2)).toBe(true)
     })
 })
