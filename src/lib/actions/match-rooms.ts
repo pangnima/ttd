@@ -6,6 +6,7 @@ import { validateRoomPassword } from '@/lib/match-rooms/password'
 import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 import { listRecordAsRoom } from '@/lib/match-rooms/create-room'
 import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput } from '@/lib/match-rooms/create-match'
+import { translateError } from '@/lib/match-rooms/error-map'
 
 /**
  * 매칭 리스트(매칭 룸) 쓰기 — 매칭 만들기·입장·초대 응답·방장 관리·방 게임 등록.
@@ -16,17 +17,16 @@ import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput }
 // stale = 내가 팝업을 열어 둔 사이 방이 움직였다 — 팝업은 그대로 두고 화면만 새로 읽는다(0060 관용구)
 type ActionResult = { error: string | null; stale?: boolean }
 
-/** RPC가 raise하는 식별자 → 사용자 안내 문구 */
+/** RPC가 raise하는 식별자 → 사용자 안내 문구. 순서 무관 — translateError가 포함된 키 중 가장 긴 것을 고른다(F-pre-2) */
 const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['not_authenticated', '로그인이 필요합니다.'],
     ['room_not_found', '존재하지 않거나 리스트에서 내려간 경기입니다.'],
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
-    // ⚠ translate는 includes 선형 탐색이라 더 긴 전용 키가 not_room_member보다 앞에 있어야 한다
     ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
     ['cannot_kick_host', '방장은 내보낼 수 없습니다.'],
-    // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품으므로 앞에 둔다(translate는 includes 선형 탐색)
+    // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품는다(긴 키 우선이라 순서는 무관)
     ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 방장에게 대진 수정을 요청해주세요.'],
     ['member_has_games', '이미 배정된 경기가 있어 내보낼 수 없습니다.'],
     ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
@@ -54,8 +54,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
 ]
 
 function translate(message: string, fallback: string): string {
-    const known = ROOM_ERROR_MESSAGES.find(([key]) => message.includes(key))
-    return known ? known[1] : fallback
+    return translateError(message, ROOM_ERROR_MESSAGES, fallback)
 }
 
 async function requireUser() {

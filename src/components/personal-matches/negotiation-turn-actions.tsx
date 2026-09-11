@@ -21,6 +21,8 @@ type Props = {
     disputerName?: string
     seats: NamedSeat[]
     badgeClassName: string
+    /** 호출부가 이미 상태 배지(결과 확인 대기)를 그린다 — 룸 행. 같은 뜻의 텍스트 배지를 두 번 두지 않는다(E2E F-4) */
+    hideStatusBadge?: boolean
 }
 
 const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정됩니다'
@@ -33,7 +35,7 @@ const REMAINING_TITLE = '남은 회원 참가자가 모두 확인하면 확정�
  * 분기를 복제해 두면 한쪽만 고쳐졌을 때 같은 협상이 화면마다 다른 버튼을 보여준다.
  */
 export function NegotiationTurnActions({
-    requestId, confirmation: c, opponentName, teams, adLabels, disputerName, seats, badgeClassName,
+    requestId, confirmation: c, opponentName, teams, adLabels, disputerName, seats, badgeClassName, hideStatusBadge = false,
 }: Props) {
     const d = useResultDialog()
     const reviewMode = canRespondToProposal(c)
@@ -46,7 +48,7 @@ export function NegotiationTurnActions({
                 <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={badgeClassName} />
                 {editingOwn && (
                     <>
-                        <span className={badgeClassName} title={REMAINING_TITLE}>참가자 확인 대기</span>
+                        {!hideStatusBadge && <span className={badgeClassName} title={REMAINING_TITLE}>참가자 확인 대기</span>}
                         <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
                     </>
                 )}

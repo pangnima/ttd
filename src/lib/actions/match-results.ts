@@ -8,6 +8,7 @@ import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
 import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import { findKnownError } from '@/lib/match-rooms/error-map'
 
 /**
  * 상호 확인 경기(match_requests 수락 → personal_matches 2행)의 사후 결과(세트) 등록 플로우.
@@ -26,10 +27,10 @@ type ActionResult = { error: string | null; stale?: boolean }
 
 /**
  * RPC가 raise하는 식별자 → 사용자 안내 문구 (acceptMatchRequestAction과 동일 패턴).
- * ⚠ 매칭은 `includes`라 한 키가 다른 키의 접두이면(`result_already_confirmed` ⊂ `…_by_seat`) 짧은 쪽이 먼저
- * 걸린다. 그래서 목록을 **키 길이 내림차순**으로 정렬해 둔다 — 항목을 추가할 때 순서를 신경 쓰지 않아도 된다.
+ * 한 키가 다른 키의 접두(`result_already_confirmed` ⊂ `…_by_seat`)여도 findKnownError가 가장 긴 키를 고르므로
+ * 순서는 무관하다(F-pre-2 — 종전의 길이순 정렬을 공용 함수로 옮겼다).
  */
-const RESULT_ERROR_MESSAGES: Array<[string, string]> = ([
+const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
     ['request_not_found', '존재하지 않는 경기입니다.'],
     ['request_not_accepted', '수락된 상호 확인 경기에만 결과를 등록할 수 있습니다.'],
     ['not_request_party', '이 경기에 참가한 회원만 결과를 등록할 수 있습니다.'],
@@ -46,7 +47,7 @@ const RESULT_ERROR_MESSAGES: Array<[string, string]> = ([
     ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
     ['perspective_row_missing', '참가자 기록 일부가 없어 확정하지 못했습니다.'],
     ['result_not_confirmed', '아직 확정되지 않은 결과입니다.'],
-] as Array<[string, string]>).sort((a, b) => b[0].length - a[0].length)
+]
 
 /** 내 화면이 낡아서 거부된 코드들 — 동시 입력의 다른 한쪽이 먼저 도착했을 때 */
 const STALE_KEYS = new Set([
@@ -55,7 +56,7 @@ const STALE_KEYS = new Set([
 ])
 
 function mapRpcError(message: string, fallback: string): ActionResult {
-    const known = RESULT_ERROR_MESSAGES.find(([key]) => message.includes(key))
+    const known = findKnownError(message, RESULT_ERROR_MESSAGES)
     if (!known) return { error: fallback }
     return { error: known[1], stale: STALE_KEYS.has(known[0]) }
 }

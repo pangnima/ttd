@@ -74,6 +74,7 @@ export function RoomGameNegotiationActions({ game, requestId, viewerId, confirma
             disputerName={disputerName}
             seats={seats}
             badgeClassName={badgeClassName}
+            hideStatusBadge
         />
     )
 }

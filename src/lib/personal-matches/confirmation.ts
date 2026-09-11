@@ -187,6 +187,9 @@ export type NamedSeat = { userId?: string; name: string }
  * 검토 팝업이 "OOO님이 제안한 결과"에 쓴다. 종전에는 상대팀 이름(formatOpponents)을 그 자리에 넣어
  * 복식에서 파트너가 제안하면 상대팀이 제안한 것처럼 읽혔다(E2E S4.7).
  */
+/** 이의·정정 사유 상한 — DB dispute_reason_too_long과 같은 값. 이의 패널·정정 팝업이 함께 쓴다(F-6) */
+export const REASON_MAX = 200
+
 export function proposerNameOf(c: PersonalMatchConfirmation | undefined, seats: NamedSeat[]): string | undefined {
     if (!c) return undefined
     if (c.proposedByMe) return '나'

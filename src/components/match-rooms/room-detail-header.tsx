@@ -4,13 +4,12 @@ import { ProfileLink } from '@/components/common/profile-link'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { buildRoomTitle } from '@/lib/match-rooms/title'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
+import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { roomStage } from '@/lib/match-rooms/room-stage'
 import { RoomStageBadge } from '@/components/match-rooms/room-stage-badge'
 
 type Props = { detail: MatchRoomDetail; actions?: React.ReactNode }
-
-const SOURCE_LABEL = { direct: '자유 기록', confirmation: '상호 확인 경기', rotation: '로테이션 복식' } as const
 
 /** 코트명과 면 수를 한 덩어리로 — 면이 하나면 굳이 세지 않는다 */
 function courtLabel(courtName: string | undefined, courtCount: number): string | undefined {
@@ -19,10 +18,14 @@ function courtLabel(courtName: string | undefined, courtCount: number): string |
     return court ? `${court} ${courtCount}면` : `코트 ${courtCount}면`
 }
 
-/** 상세 상단 — 자동 제목 + 단계 칩 + 출처/표면 eyebrow + 방장 + 시각·코트명·메모(MatchMetaLine) */
+/**
+ * 상세 상단 — 자동 제목 + 단계 칩 + 방식/표면 eyebrow + 방장 + 시각·코트명·메모(MatchMetaLine).
+ * eyebrow는 방식 라벨(단식·남자 복식…)이다 — 출처(source_kind)의 '자유 기록'·'로테이션 복식'은 내부 어휘라
+ * 단식 매칭을 만든 사람이 「자유 기록」을 읽게 됐다(E2E F-1).
+ */
 export function RoomDetailHeader({ detail, actions }: Props) {
     const { room, host } = detail
-    const eyebrow = [SOURCE_LABEL[room.sourceKind], room.surface ? SURFACE_LABELS[room.surface] : null].filter(Boolean).join(' · ')
+    const eyebrow = [MATCH_TYPE_LABELS[room.matchType], room.surface ? SURFACE_LABELS[room.surface] : null].filter(Boolean).join(' · ')
 
     return (
         <div className="space-y-3">

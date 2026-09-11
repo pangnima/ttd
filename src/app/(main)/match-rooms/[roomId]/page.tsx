@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match-rooms'
 import { fetchRoomDetailExtras } from '@/lib/queries/room-detail-extras'
@@ -8,6 +8,8 @@ import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { viewerRoomTurn } from '@/lib/match-rooms/room-turn'
 import { PageContainer } from '@/components/common/page-container'
 import { RoomGateView } from '@/components/match-rooms/room-gate-view'
+import { RoomGoneNotice } from '@/components/match-rooms/room-gone-notice'
+import { RoomInviteFailedNotice } from '@/components/match-rooms/room-invite-failed-notice'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
 import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
@@ -19,24 +21,25 @@ import { RoomLeaveButton } from '@/components/match-rooms/room-leave-button'
 
 export const metadata = { title: '매칭 룸' }
 
-type Props = { params: Promise<{ roomId: string }> }
+type Props = { params: Promise<{ roomId: string }>; searchParams: Promise<{ notice?: string }> }
 
 /**
  * 매칭 룸 상세 — 하나의 매칭이 시작해서 끝날 때까지의 단일 작업 공간(Week 39).
  * 단계 칩과 「지금 할 일」 배너가 위에서 방향을 잡아 주고, 참가자 초대·대진·결과 입력·확인·이의가
  * 전부 이 화면 안에서 끝난다. 멤버가 아니면 공개 메타 + 비밀번호 게이트만 보인다.
  */
-export default async function MatchRoomPage({ params }: Props) {
+export default async function MatchRoomPage({ params, searchParams }: Props) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const { roomId } = await params
+    const [{ roomId }, { notice }] = await Promise.all([params, searchParams])
     const detail = await fetchMatchRoomDetail(roomId)
 
     if (!detail) {
         const summary = await fetchMatchRoomSummary(roomId, user.id)
-        if (!summary) notFound()
+        // 내려간 방은 404가 아니라 매칭 리스트로 돌려보낸다(F-14)
+        if (!summary) return <RoomGoneNotice />
         return <RoomGateView roomId={roomId} summary={summary} />
     }
 
@@ -58,6 +61,7 @@ export default async function MatchRoomPage({ params }: Props) {
                 detail={detail}
                 actions={x.isHost ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} /> : undefined}
             />
+            {notice === 'invite_failed' && <RoomInviteFailedNotice />}
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
             {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection

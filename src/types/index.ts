@@ -390,6 +390,8 @@ export type MatchRoomInvite = {
     hostNickname: string
     playedAt: string
     playedTime?: string
+    /** 상세·목록과 같은 '10:00~12:00' 표기를 위해 — 빠지면 초대 카드만 시 단위가 된다(E2E F-3) */
+    durationMinutes?: number
     matchType: MatchType
     courtName?: string
     sourceRole?: MatchRoomSourceRole

@@ -391,6 +391,7 @@ type InviteRow = {
     room: {
         played_at: string
         played_time: string | null
+        duration_minutes: number | null
         match_type: string
         court_name: string | null
         host: { name: string; nickname: string } | null
@@ -405,6 +406,7 @@ function mapInviteRow(row: InviteRow): MatchRoomInvite | null {
         hostNickname: row.room.host?.nickname ?? '',
         playedAt: row.room.played_at,
         playedTime: row.room.played_time ? row.room.played_time.slice(0, 5) : undefined,
+        durationMinutes: row.room.duration_minutes ?? undefined,
         matchType: row.room.match_type as MatchType,
         courtName: row.room.court_name ?? undefined,
         sourceRole: (row.source_role as MatchRoomSourceRole | null) ?? undefined,
@@ -416,7 +418,7 @@ export async function fetchPendingRoomInvites(userId: string): Promise<MatchRoom
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
-        .select(`room_id, source_role, room:match_rooms!inner(played_at, played_time, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
+        .select(`room_id, source_role, room:match_rooms!inner(played_at, played_time, duration_minutes, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
         .eq('user_id', userId)
         .eq('status', 'invited')
         .order('created_at', { ascending: false })
@@ -434,7 +436,7 @@ export async function fetchMyRoomMemberships(
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('match_room_members')
-        .select(`room_id, status, source_role, room:match_rooms!inner(played_at, played_time, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
+        .select(`room_id, status, source_role, room:match_rooms!inner(played_at, played_time, duration_minutes, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
         .eq('user_id', userId)
         .in('status', ['invited', 'joined'])
         .order('created_at', { ascending: false })

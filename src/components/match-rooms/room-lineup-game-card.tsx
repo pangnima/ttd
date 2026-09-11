@@ -18,7 +18,19 @@ type Props = {
 const TEAM1_BAR = 'bg-cat-1'
 const TEAM2_BAR = 'bg-cat-5'
 
-const sumNtrp = (team: LineupPlayer[]) => team.reduce((sum, p) => sum + p.ntrp, 0)
+/**
+ * 팀 전력 표기 — 회원의 NTRP만 더하고 비회원은 수로 센다(E2E F-8).
+ * 비회원의 ntrp는 배치용 대체값(아는 사람 평균)이라 카드에 그리면 "게스트 실력이 3.9"로 읽힌다.
+ * 밸런스 배지는 여전히 대체값으로 계산한다 — 배치는 대체값으로 하되 표시는 하지 않는다.
+ */
+function strengthLabel(team: LineupPlayer[]): string {
+    const members = team.filter((p) => p.isMember)
+    const guests = team.length - members.length
+    const parts: string[] = []
+    if (members.length > 0) parts.push(members.reduce((sum, p) => sum + p.ntrp, 0).toFixed(1))
+    if (guests > 0) parts.push(`비회원 ${guests}`)
+    return parts.join(' · ')
+}
 
 /** 팀 한 줄 — 색 바로 팀을 가르고, 이름과 전력 합을 같은 줄에 둔다(따로 두면 좌우로 매칭해 읽어야 한다) */
 function TeamLine({ team, barClass }: { team: LineupPlayer[]; barClass: string }) {
@@ -29,7 +41,7 @@ function TeamLine({ team, barClass }: { team: LineupPlayer[]; barClass: string }
                 {team.map((p) => p.name).join(' · ')}
             </span>
             <span className={`${TYPO.caption} tabular-nums shrink-0 self-center`}>
-                {sumNtrp(team).toFixed(1)}
+                {strengthLabel(team)}
             </span>
         </div>
     )

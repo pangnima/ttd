@@ -8,8 +8,7 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { FormActions } from '@/components/common/form-actions'
 import { Textarea } from '@/components/ui/textarea'
 import { SetScoreChips } from '@/components/personal-matches/set-score-chips'
-
-const REASON_MAX = 200
+import { REASON_MAX } from '@/lib/personal-matches/confirmation'
 
 type Props = {
     opponentName: string

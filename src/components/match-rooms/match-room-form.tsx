@@ -40,8 +40,8 @@ export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames
         }
         startTransition(async () => {
             const res = await createMatchRoomAction(s.buildInput())
-            // 방은 만들어졌는데 초대만 실패한 경우 — 방으로 보내고 룸에서 다시 부르게 한다
-            if (res.roomId) router.push(`/match-rooms/${res.roomId}`)
+            // 방은 만들어졌는데 초대만 실패한 경우 — 방으로 보내되 쿼리로 알려 룸이 안내를 그리게 한다(F-pre-1)
+            if (res.roomId) router.push(`/match-rooms/${res.roomId}${res.error ? '?notice=invite_failed' : ''}`)
             else setError(res.error ?? '매칭을 만들지 못했습니다.')
         })
     }
