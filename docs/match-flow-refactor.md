@@ -676,6 +676,8 @@ grant execute on function public.is_request_party(uuid) to authenticated;
 
 ### ✅ 엔드투엔드 수동 시나리오 — 완료
 
+> ⚠ 이 절은 Week 27 시점(3탭·확인 요청 허브)의 기록이다. **현행 E2E 절차는 `docs/e2e/match-room-scenarios.md`**, 규약은 `docs/e2e/README.md`.
+
 계정 4개(`admin@admin.com / 123123` + 임시 테스트 계정 3, 검증 후 데이터·계정 모두 삭제)로 전량 확인했다.
 
 | # | 시나리오 | 결과 |
