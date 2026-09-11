@@ -26,6 +26,8 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     // ⚠ translate는 includes 선형 탐색이라 더 긴 전용 키가 not_room_member보다 앞에 있어야 한다
     ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
     ['cannot_kick_host', '방장은 내보낼 수 없습니다.'],
+    // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품으므로 앞에 둔다(translate는 includes 선형 탐색)
+    ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 방장에게 대진 수정을 요청해주세요.'],
     ['member_has_games', '이미 배정된 경기가 있어 내보낼 수 없습니다.'],
     ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
     ['not_host', '방장만 할 수 있습니다.'],

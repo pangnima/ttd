@@ -153,6 +153,12 @@ export async function createPersonalMatchesAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
+    // 정산된 방에는 게임을 붙이지 않는다(0077) — 화면(canAddRoomGame)·RLS와 같은 규칙을 먼저 사람 말로 거절한다.
+    if (options.roomId) {
+        const { data: room } = await supabase.from('match_rooms').select('is_settled').eq('id', options.roomId).maybeSingle()
+        if (room?.is_settled) return { error: '이미 게임 입력이 종료된 경기입니다.' }
+    }
+
     const baseRows = inputs.map((input) => ({ ...buildPersonalMatchBaseRow(input, user.id), room_id: options.roomId ?? null }))
     const { data: inserted, error } = await supabase.from('personal_matches').insert(baseRows).select('id')
     if (error || !inserted) return { error: options.roomId ? '방의 게임 저장에 실패했습니다. 방에 참가한 뒤 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }

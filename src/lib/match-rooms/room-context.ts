@@ -23,7 +23,10 @@ export type RoomGameContext = {
  * (호출부는 canViewerAddRoomGame을 쓴다).
  * 미확정 로테이션은 게임 빌더가 담당하고, 확인 요청 방은 대표가 수락한 뒤에야 게임을 쌓을 수 있다.
  */
-export function canAddRoomGame(detail: Pick<MatchRoomDetail, 'source'>): boolean {
+export function canAddRoomGame(detail: Pick<MatchRoomDetail, 'source' | 'room'>): boolean {
+    // 정산된 방에는 게임을 붙이지 않는다(0077) — 초대·자동 대진표와 같은 규칙이고, 재개는 [결과 정정]이 맡는다.
+    // 붙이면 방이 조용히 미정산으로 돌아가 「종료」 칩과 어긋난다(E2E S1.19).
+    if (detail.room.isSettled) return false
     const s = detail.source
     if (s.kind === 'direct') return true
     if (s.kind === 'rotation') return s.isFinalized

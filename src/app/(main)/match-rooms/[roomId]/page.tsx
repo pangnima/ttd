@@ -4,6 +4,7 @@ import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match
 import { fetchRoomDetailExtras } from '@/lib/queries/room-detail-extras'
 import { buildRoomGameContext } from '@/lib/match-rooms/room-context'
 import { roomStage } from '@/lib/match-rooms/room-stage'
+import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { viewerRoomTurn } from '@/lib/match-rooms/room-turn'
 import { PageContainer } from '@/components/common/page-container'
 import { RoomGateView } from '@/components/match-rooms/room-gate-view'
@@ -46,7 +47,10 @@ export default async function MatchRoomPage({ params }: Props) {
         : undefined
 
     const stage = roomStage(detail)
-    const turn = x.isMember ? viewerRoomTurn(detail.games, user.id, x.confirmations) : null
+    // 방장의 미확정 로테이션 방은 게임을 다 확정해도 세션이 남는다 — 종료 차례를 배너가 말한다(0077)
+    const turn = x.isMember
+        ? viewerRoomTurn(detail.games, user.id, x.confirmations, { hostOfPendingRotation: x.isHost && x.isPendingRotation })
+        : null
 
     return (
         <PageContainer>
@@ -76,9 +80,10 @@ export default async function MatchRoomPage({ params }: Props) {
                 lineupCandidates={x.isHost ? x.lineupCandidates : undefined}
                 editableLineup={x.isHost ? x.editableLineup : undefined}
             />
-            {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054) */}
+            {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054).
+                경기에 배정된 참가자도 나갈 수 없다(0077) — 강퇴 가드(member_has_games)와 같은 집합을 본다 */}
             {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && detail.viewer.status !== 'removed' && (
-                <RoomLeaveButton roomId={roomId} />
+                <RoomLeaveButton roomId={roomId} hasGames={roomGameMemberIds(detail.games).has(user.id)} />
             )}
         </PageContainer>
     )

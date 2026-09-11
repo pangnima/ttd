@@ -18,12 +18,13 @@ export type RoomGameTurn =
     | 'reenterResult'   // 이의를 받아 다시 입력할 차례
     | 'reentryReview'   // 이의 뒤 재제안된 결과를 확인할 차례
     | 'fillLineup'      // 모집 중 — 라인업을 채워야 결과를 넣을 수 있다
+    | 'closeRotation'   // 방장 — 게임이 전부 확정됐으니 [게임 입력 종료]로 마무리할 차례(0077)
     | 'waiting'         // 상대 차례
     | 'none'            // 나와 무관하거나 이미 끝난 게임
 
 /** 내 차례인 것부터 — 배너는 가장 급한 하나만 말한다 */
 const TURN_PRIORITY: RoomGameTurn[] = [
-    'reenterResult', 'reentryReview', 'confirmResult', 'enterResult', 'fillLineup', 'waiting',
+    'reenterResult', 'reentryReview', 'confirmResult', 'enterResult', 'fillLineup', 'closeRotation', 'waiting',
 ]
 
 export const ROOM_TURN_LABEL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
@@ -32,6 +33,7 @@ export const ROOM_TURN_LABEL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
     confirmResult: '제안된 결과를 확인해주세요',
     enterResult: '경기 결과를 입력해주세요',
     fillLineup: '참가자를 채워주세요',
+    closeRotation: '모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다',
     waiting: '상대의 응답을 기다리는 중입니다',
 }
 
@@ -97,9 +99,38 @@ export function viewerRoomTurn(
     games: MatchRoomGame[],
     viewerId: string,
     confirmations: Record<string, PersonalMatchConfirmation>,
+    opts: { hostOfPendingRotation?: boolean } = {},
 ): RoomTurnSummary | null {
-    return pickTurn(games.map((g) =>
-        classifyRoomGameTurn(g, viewerId, g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined)))
+    const turns = games.map((g) =>
+        classifyRoomGameTurn(g, viewerId, g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined))
+    // 방장의 마지막 할 일(0077) — 미확정 로테이션 방은 게임을 다 확정해도 세션이 남아 정산되지 않는다.
+    // 그 사실을 아무도 말하지 않아 방이 영영 「진행 중」에 머물렀다(E2E S4.13). 게임이 있고 전부 끝났으면
+    // 방장에게 종료 차례를 준다. 미확정 게임이 하나라도 있으면 그쪽 차례가 우선한다(PRIORITY).
+    if (opts.hostOfPendingRotation && allGamesSettled(games)) turns.push('closeRotation')
+    return pickTurn(turns)
+}
+
+/** 게임이 하나 이상 있고 전부 스코어가 붙었는가 — 방장 종료 차례의 조건 */
+export function allGamesSettled(games: ReadonlyArray<Pick<MatchRoomGame, 'setScores'>>): boolean {
+    return games.length > 0 && games.every((g) => g.setScores.length > 0)
+}
+
+/**
+ * 목록용 — 방장의 미확정 로테이션 세션 중 게임이 전부 확정된 방을 고른다(0077).
+ * `gamesByRoom`은 대표 게임(관점 행 제외)의 총수·확정 수. 조회는 호출자(room-queue.ts)가 한다.
+ */
+export function closeRotationRooms(
+    sessions: ReadonlyArray<{ roomId?: string; userId: string }>,
+    viewerId: string,
+    gamesByRoom: Readonly<Record<string, { total: number; settled: number }>>,
+): string[] {
+    const out: string[] = []
+    for (const s of sessions) {
+        if (!s.roomId || s.userId !== viewerId) continue
+        const g = gamesByRoom[s.roomId]
+        if (g && g.total > 0 && g.settled === g.total) out.push(s.roomId)
+    }
+    return out
 }
 
 // ── 매칭 리스트 롤업 ──
@@ -131,6 +162,7 @@ export const ROOM_TURN_PILL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
     confirmResult: '결과 확인',
     enterResult: '결과 입력',
     fillLineup: '참가자 채우기',
+    closeRotation: '입력 종료',
     waiting: '상대 대기',
 }
 

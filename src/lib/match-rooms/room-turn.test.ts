@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { MatchRoomGame, PersonalMatchConfirmation } from '@/types'
-import { classifyRoomGameTurn, isMyRoomTurn, rollUpRoomTurns, turnOfBucket, viewerRoomTurn } from './room-turn'
+import { classifyRoomGameTurn, closeRotationRooms, isMyRoomTurn, rollUpRoomTurns, turnOfBucket, viewerRoomTurn } from './room-turn'
 
 const ME = 'me'
 const OTHER = 'other'
@@ -166,5 +166,56 @@ describe('isMyRoomTurn', () => {
         for (const turn of ['enterResult', 'confirmResult', 'reenterResult', 'reentryReview', 'fillLineup'] as const) {
             expect(isMyRoomTurn(turn)).toBe(true)
         }
+    })
+})
+
+describe('viewerRoomTurn — 방장의 게임 입력 종료 차례 (0077)', () => {
+    const done = game({ setScores: [{ me: 6, opp: 3 }] })
+    const open = game({ id: 'g2', sourceRequestId: 'r2' })
+
+    it('미확정 로테이션 방장이고 게임이 전부 확정됐으면 closeRotation', () => {
+        expect(viewerRoomTurn([done], ME, {}, { hostOfPendingRotation: true }))
+            .toEqual({ turn: 'closeRotation', count: 1 })
+    })
+
+    it('미확정 게임이 남아 있으면 그쪽 차례가 우선한다', () => {
+        const r = viewerRoomTurn([done, open], ME, { r2: conf() }, { hostOfPendingRotation: true })
+        expect(r?.turn).toBe('enterResult')
+    })
+
+    it('게임이 없으면 종료 차례도 없다 — 모집 중인 방을 닫으라고 하지 않는다', () => {
+        expect(viewerRoomTurn([], ME, {}, { hostOfPendingRotation: true })).toBeNull()
+    })
+
+    it('참가자에게는 종료 차례가 없다', () => {
+        expect(viewerRoomTurn([done], ME, {})).toBeNull()
+    })
+
+    it('closeRotation은 내 차례다 — 뱃지에 센다', () => {
+        expect(isMyRoomTurn('closeRotation')).toBe(true)
+    })
+})
+
+describe('closeRotationRooms — 목록에서 방장 종료 차례 (0077)', () => {
+    const sessions = [
+        { roomId: 'r-mine-done', userId: ME },
+        { roomId: 'r-mine-open', userId: ME },
+        { roomId: 'r-mine-empty', userId: ME },
+        { roomId: 'r-theirs', userId: OTHER },
+        { userId: ME },
+    ]
+    const tallies = {
+        'r-mine-done': { total: 2, settled: 2 },
+        'r-mine-open': { total: 2, settled: 1 },
+        'r-theirs': { total: 1, settled: 1 },
+    }
+
+    it('내가 소유한 방 세션 중 게임이 있고 전부 확정된 방만', () => {
+        expect(closeRotationRooms(sessions, ME, tallies)).toEqual(['r-mine-done'])
+    })
+
+    it('rollUpRoomTurns를 거치면 그 방의 차례가 된다', () => {
+        const turns = rollUpRoomTurns([{ roomId: 'r-mine-done', turn: 'closeRotation' }])
+        expect(turns.get('r-mine-done')).toEqual({ turn: 'closeRotation', count: 1 })
     })
 })

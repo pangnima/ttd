@@ -1519,6 +1519,10 @@ export type Database = {
         Args: { p_accept: boolean; p_session_id: string }
         Returns: undefined
       }
+      room_member_has_games: {
+        Args: { p_room_id: string; p_user_id: string }
+        Returns: boolean
+      }
       rotation_seats_accepted: {
         Args: { p_session_id: string; p_uids: string[] }
         Returns: boolean
