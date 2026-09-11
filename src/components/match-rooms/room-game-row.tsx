@@ -65,11 +65,10 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation, slotL
                     <span className={`${BADGE_BASE} ${badge.className}`}>{badge.label}</span>
                 </div>
 
-                {/* 팀마다 한 줄 — 단식 당사자에게는 내 팀이 '나' 하나뿐이라 접는다(개인 카드와 동일) */}
+                {/* 팀마다 한 줄 — 당사자에게는 '나', 제3자에게는 작성자 실명. 단식이라도 내 팀 줄을 접지 않는다:
+                    한 방에 남의 게임이 섞여 있어 첫 줄이 비면 "누구 게임인지" 한 번 더 읽어야 한다 */}
                 <div className="mt-1.5 min-w-0">
-                    {teams.mine !== '나' && (
-                        <p className="text-body2 font-medium text-foreground truncate">{teams.mine}</p>
-                    )}
+                    <p className="text-body2 font-medium text-foreground truncate">{teams.mine}</p>
                     <p className="text-body2 font-medium text-foreground truncate">
                         <span className="text-muted-foreground">vs </span>{teams.theirs}
                     </p>

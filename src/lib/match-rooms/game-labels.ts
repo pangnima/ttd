@@ -63,7 +63,7 @@ export type RoomGameTeams = { mine: string; theirs: string }
  *
  * 작성자도 당사자다 — `isRoomGameParty`와 같은 집합. 자동 대진표는 team1의 첫 회원을 작성자로
  * 잡으므로 같은 사람이 게임마다 작성자였다가 상대가 되는데, 작성자에게만 실명을 주면 한 사람의
- * 두 게임이 다른 형태로 그려진다(상대로 선 행은 '나'로 접히고 작성자 행은 이름이 남는다).
+ * 두 게임이 다른 형태로 그려진다(상대로 선 행은 '나', 작성자 행은 이름).
  */
 export function buildRoomGameTeams(game: MatchRoomGame, viewerId: string): RoomGameTeams {
     const by = (role: string) => game.participants.find((p) => p.role === role)?.name

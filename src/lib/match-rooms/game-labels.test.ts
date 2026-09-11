@@ -104,13 +104,13 @@ describe('buildRoomGameTeams', () => {
         expect(buildRoomGameTeams(doubles(), 'u-bystander')).toEqual({ mine: '작성자 · 내파트너', theirs: '상대1 · 상대2' })
     })
 
-    it('단식 당사자의 내 팀은 나 한 명 — 카드가 그 줄을 접는 기준이다', () => {
+    it('단식 당사자의 내 팀은 나 한 명', () => {
         expect(buildRoomGameTeams(singles(), OPP)).toEqual({ mine: '나', theirs: '작성자' })
     })
 
-    it('단식 작성자의 내 팀도 나 한 명 — 상대로 선 게임과 같은 형태로 접힌다', () => {
+    it('단식 작성자의 내 팀도 나 한 명 — 상대로 선 게임과 같은 형태', () => {
         // 자동 대진표는 team1의 첫 회원을 작성자로 잡아 같은 사람이 게임마다 작성자·상대를 오간다.
-        // 작성자에게만 실명을 주면 한 사람의 두 게임이 "vs 상대"와 "이름 / vs 상대"로 갈린다
+        // 작성자에게만 실명을 주면 한 사람의 두 게임이 "나 / vs 상대"와 "이름 / vs 상대"로 갈린다
         expect(buildRoomGameTeams(singles(), OWNER)).toEqual({ mine: '나', theirs: '상대' })
     })
 
