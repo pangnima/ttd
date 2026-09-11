@@ -76,7 +76,7 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
 export const ROOM_PAGE_SIZE = 30
 
 /**
- * '내가 참여한' 탭이 방 목록을 좁히는 데 쓰는 멤버십 id 상한.
+ * 「참여 중인 매칭」이 방 목록을 좁히는 데 쓰는 멤버십 id 상한.
  * `.in('id', ids)`가 URL로 나가므로 무한정 늘릴 수 없다. 한 사람의 참여 방 수라
  * 현실적으로 닿지 않지만, 닿으면 최근 멤버십부터 남는다.
  */
@@ -107,6 +107,18 @@ function pastRoomFilter(todayIso: string): string {
 }
 
 /**
+ * 진행/종료를 가르는 **축**은 화면마다 다르다(Week 45).
+ *
+ * - `schedule` (매칭 리스트, 0049 규칙) — 고르러 오는 화면이라 "지금 들어갈 수 있나"가 기준이다.
+ *   날짜가 지난 방은 정산 여부와 무관하게 내려간다.
+ * - `settlement` (참여 중인 매칭) — 내 방에서는 "끝났나"가 기준이다. 결과 입력이 남은 방은
+ *   경기일이 지나도 **내 할 일**이라 진행 중에 남아야 한다. 날짜로 가르면 뱃지가 센 방이
+ *   기본 탭이 아닌 '종료된' 탭에 숨어, 뱃지와 착지 화면이 다시 어긋난다.
+ *   내 차례가 있는 방은 정의상 `is_settled=false`이므로 이 축에서는 전부 진행 중에 모인다.
+ */
+export type RoomListAxis = 'schedule' | 'settlement'
+
+/**
  * 탭 한 페이지. 필터·정렬·커서를 서버에서 처리한다(구 방식: 전체 200건을 받아 메모리 분리).
  *
  * ⚠ 정렬 3열은 `roomKeysetFilter`의 술어와 정확히 짝을 이뤄야 한다 —
@@ -117,18 +129,20 @@ export async function fetchRoomPage(
     viewerId: string,
     filter: RoomListFilter,
     todayIso: string,
-    opts: { cursor?: RoomCursor | null; roomIds?: string[]; limit?: number } = {},
+    opts: { cursor?: RoomCursor | null; roomIds?: string[]; limit?: number; axis?: RoomListAxis } = {},
 ): Promise<RoomPage> {
-    const { cursor, roomIds, limit = ROOM_PAGE_SIZE } = opts
+    const { cursor, roomIds, limit = ROOM_PAGE_SIZE, axis = 'schedule' } = opts
     // 참여 방이 하나도 없으면 .in([])으로 빈 결과를 굳이 왕복시키지 않는다
     if (roomIds && roomIds.length === 0) return EMPTY_PAGE
 
     const asc = filter === 'open'
     const supabase = await createClient()
     const base = supabase.from('match_rooms').select(`${ROOM_COLUMNS}, ${HOST_JOIN}, ${MEMBERS_JOIN}`)
-    let query = asc
-        ? base.eq('is_settled', false).gte('played_at', todayIso)
-        : base.or(pastRoomFilter(todayIso))
+    let query = axis === 'settlement'
+        ? base.eq('is_settled', !asc)
+        : asc
+            ? base.eq('is_settled', false).gte('played_at', todayIso)
+            : base.or(pastRoomFilter(todayIso))
     if (roomIds) query = query.in('id', roomIds)
     if (cursor) query = query.or(roomKeysetFilter(cursor, asc ? 'asc' : 'desc'))
 
@@ -153,11 +167,11 @@ export async function fetchRoomPage(
 
 /**
  * 내가 **참가한** 방 id — `joined`만(방장 행도 joined다). 앱 술어 `isViewerJoined`의 거울이다.
- * '내가 참여한' 탭의 2단 조회 1단계이자 그 탭 배지 숫자의 출처다.
+ * 「참여 중인 매칭」 목록의 좁히기 인자이자 그 화면 '진행 중' 배지 숫자의 출처다.
  *
- * ⚠ 초대 대기(invited)는 세지 않는다(Week 39). 아직 수락하지 않은 매칭까지 '내가 참여한 경기'로
- * 세면 수락 전인데 숫자가 오르고, 같은 방이 「나를 초대한 매칭」과 이 탭에 두 번 나온다.
- * 초대는 목록 최상단 초대 섹션이 담당하고, 수락하는 순간 이 탭으로 넘어온다.
+ * ⚠ 초대 대기(invited)는 세지 않는다(Week 39). 아직 수락하지 않은 매칭까지 '참여 중'으로
+ * 세면 수락 전인데 숫자가 오르고, 같은 방이 「나를 초대한 매칭」과 목록에 두 번 나온다.
+ * 초대는 목록 최상단 초대 섹션이 담당하고, 수락하는 순간 목록으로 넘어온다.
  */
 export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
     const supabase = await createClient()
@@ -172,14 +186,25 @@ export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
     return data.map((row) => row.room_id)
 }
 
-/** '진행 중인 경기' 탭 배지 — 행을 받지 않는 head count라 페이지 크기와 무관하게 정확하다 */
-export async function fetchOpenRoomCount(todayIso: string): Promise<number> {
+/**
+ * '진행 중' 탭 배지 — 행을 받지 않는 head count라 페이지 크기와 무관하게 정확하다.
+ * `roomIds`를 주면 그 방들로 좁히고(참여 중인 매칭 화면), 축도 목록과 같은 것을 써야
+ * 숫자와 목록이 어긋나지 않는다 — 그래서 옵션 두 개가 늘 함께 온다.
+ */
+export async function fetchOpenRoomCount(
+    todayIso: string,
+    opts: { roomIds?: string[]; axis?: RoomListAxis } = {},
+): Promise<number> {
+    const { roomIds, axis = 'schedule' } = opts
+    if (roomIds && roomIds.length === 0) return 0
     const supabase = await createClient()
-    const { count, error } = await supabase
+    let query = supabase
         .from('match_rooms')
         .select('id', { count: 'exact', head: true })
         .eq('is_settled', false)
-        .gte('played_at', todayIso)
+    if (axis === 'schedule') query = query.gte('played_at', todayIso)
+    if (roomIds) query = query.in('id', roomIds)
+    const { count, error } = await query
     return error ? 0 : (count ?? 0)
 }
 

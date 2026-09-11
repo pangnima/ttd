@@ -7,7 +7,7 @@ import type { RotationGamePayload } from '@/lib/personal-matches/rotation'
 import { isDoublesMatchType, validateCourtName, validateSetScores } from '@/lib/personal-matches/validate-input'
 import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
-import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 
 /**
  * 로테이션(파트너 교체) 복식 세션 — 등록 시 선수 풀만 저장(rotation_sessions),
@@ -197,7 +197,7 @@ export async function deleteRotationSessionAction(id: string): Promise<ActionRes
     }
 
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -275,7 +275,7 @@ export async function finalizeRotationSessionAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath('/me/personal-matches')
     revalidatePath(`/profile/${user.id}`)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     revalidateRoomPaths(session?.room_id)
     return { error: null }
 }

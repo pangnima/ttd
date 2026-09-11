@@ -1,15 +1,15 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchMyRoomIds, fetchOpenRoomCount, fetchRoomPage, type RoomPage } from '@/lib/queries/match-rooms'
+import { fetchOpenRoomCount, fetchRoomPage } from '@/lib/queries/match-rooms'
 import { fetchRoomQueue } from '@/lib/queries/room-queue'
 import { todayIsoKst } from '@/lib/match-rooms/split'
 import { parseRoomCursor } from '@/lib/match-rooms/room-cursor'
-import { resolveRoomListTab, roomListTabMeta, ROOM_LIST_TABS } from '@/lib/match-rooms/tabs'
-import { isMyRoomTurn } from '@/lib/match-rooms/room-turn'
+import {
+    MATCH_ROOMS_PATH, MY_ROOMS_PATH, resolveRoomListTab, roomTabHref, roomTabMeta, ROOM_LIST_TABS,
+} from '@/lib/match-rooms/tabs'
 import { LinkTabs } from '@/components/common/link-tabs'
-import { RoomInvitesSection } from '@/components/match-rooms/room-invites-section'
-import { RoomListBody } from '@/components/match-rooms/room-list-body'
+import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
@@ -19,12 +19,11 @@ export const metadata = { title: '매칭 리스트' }
 type Props = { searchParams: Promise<{ tab?: string; cursor?: string }> }
 
 /**
- * 매칭 리스트 — 노출된 경기(방). 진행 중(가까운 순) / 내가 참여한(진행 중 → 종료) / 종료된(최근순).
- * '내가 참여한'은 다른 두 탭과 교차하는 관점 필터라 종료된 방도 함께 남는다(내 경기함).
+ * 매칭 리스트 — 노출된 **모든** 방. 진행 중(가까운 순) / 종료된(최근순), 시간 축 하나로 배타적이다.
  *
- * 탭별 필터·정렬·페이지는 전부 서버에서 처리한다 — 화면 하나를 그리려고 목록 전체를 받지 않는다.
- * 커서는 계속 자라는 쪽(종료된 경기)에만 붙인다: '내가 참여한'의 진행 중 섹션은
- * 한 사람의 예정 경기라 페이지를 넘길 일이 없고, 섹션마다 커서를 두면 URL이 두 개가 된다.
+ * 관계 축('내가 참여한')은 Week 45에 `/me/match-rooms`로 나갔다. 초대 섹션·작업 큐 강조도 함께 갔고,
+ * 여기 남은 것은 고르러 오는 순수 목록이다. 카드의 「내 차례」 필만은 남긴다 —
+ * 목록에서 곧장 알아보는 편이 낫고, fetchRoomQueue가 React cache라 추가 왕복이 없다.
  */
 export default async function MatchRoomsPage({ searchParams }: Props) {
     const supabase = await createClient()
@@ -32,30 +31,27 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
     if (!user) redirect('/login')
 
     const params = await searchParams
+    // 레거시 `?tab=mine` — 북마크·뒤로가기로 남아 있다. 폴백에 맡기면 조용히 '진행 중인 경기'(전체)가
+    // 열리므로 명시적으로 옮긴다. 커서가 있으면 옛 mine 탭에서 **종료 섹션**을 넘기던 중이었으므로
+    // 그 탭으로 이어 주고, 커서가 없으면 첫 페이지가 진행 중을 먼저 보여주던 대로 기본 탭으로 보낸다.
+    if (params.tab === 'mine') {
+        redirect(params.cursor
+            ? roomTabHref(MY_ROOMS_PATH, 'past', params.cursor)
+            : roomTabHref(MY_ROOMS_PATH, 'open'))
+    }
+
     const activeTab = resolveRoomListTab(params.tab)
     const cursor = parseRoomCursor(params.cursor)
     // 형식이 깨진 커서는 무시하고 첫 페이지를 그린다 — URL에도 남기지 않는다
     const rawCursor = cursor ? params.cursor : undefined
     const todayIso = todayIsoKst()
-    const meta = roomListTabMeta(activeTab)
+    const meta = roomTabMeta(ROOM_LIST_TABS, activeTab)
 
-    // 작업 큐(Week 39) — fetchMatchQueue는 React cache라 레이아웃 뱃지와 쿼리를 공유한다
-    const [myRoomIds, openCount, roomQueue] = await Promise.all([
-        fetchMyRoomIds(user.id), fetchOpenRoomCount(todayIso), fetchRoomQueue(user.id),
+    const [openCount, roomQueue, page] = await Promise.all([
+        fetchOpenRoomCount(todayIso),
+        fetchRoomQueue(user.id),
+        fetchRoomPage(user.id, activeTab, todayIso, { cursor }),
     ])
-
-    // '내가 참여한'은 커서를 넘기는 동안 종료 섹션만 보여준다(진행 중은 첫 페이지 전용)
-    const [mineUpcoming, page] = await Promise.all([
-        activeTab === 'mine' && !cursor
-            ? fetchRoomPage(user.id, 'open', todayIso, { roomIds: myRoomIds })
-            : Promise.resolve<RoomPage | null>(null),
-        activeTab === 'mine'
-            ? fetchRoomPage(user.id, 'past', todayIso, { roomIds: myRoomIds, cursor })
-            : fetchRoomPage(user.id, activeTab, todayIso, { cursor }),
-    ])
-
-    const hasMyTurn = roomQueue.invites.length > 0
-        || [...roomQueue.turns.values()].some((t) => isMyRoomTurn(t.turn))
 
     return (
         <PageContainer>
@@ -69,30 +65,25 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 }
             />
 
-            {/* 배지는 head count와 멤버십 건수라 페이지 크기와 무관하게 정확하다. 종료 탭은 무한히 자라 숫자를 붙이지 않는다 */}
+            {/* 배지는 head count라 페이지 크기와 무관하게 정확하다. 종료 탭은 무한히 자라 숫자를 붙이지 않는다 */}
             <LinkTabs
                 ariaLabel="매칭 리스트 탭"
                 activeKey={activeTab}
                 items={ROOM_LIST_TABS.map((t) => ({
                     ...t,
-                    count: t.key === 'open' ? openCount : t.key === 'mine' ? myRoomIds.length : undefined,
-                    // '내 차례 있음'은 숫자가 아니라 강조색이 전달한다 — 실제로 할 일이 있을 때만 켠다
-                    emphasis: t.key === 'mine' && hasMyTurn,
+                    count: t.key === 'open' ? openCount : undefined,
                 }))}
             />
 
-            {/* 초대는 고르는 것이 아니라 답해야 하는 것이라 탭 뒤에 숨기지 않는다 */}
-            <RoomInvitesSection invites={roomQueue.invites} />
-
-            <RoomListBody
-                tab={activeTab}
-                meta={meta}
-                page={page}
-                mineUpcoming={mineUpcoming}
+            <RoomListSection
+                rooms={page.rooms}
+                emptyTitle={meta.emptyTitle}
+                emptyHint={meta.emptyHint}
+                emptyHref={meta.emptyHref}
                 turns={roomQueue.turns}
             />
 
-            <RoomListPager tab={activeTab} cursor={rawCursor} nextCursor={page.nextCursor} />
+            <RoomListPager base={MATCH_ROOMS_PATH} tab={activeTab} cursor={rawCursor} nextCursor={page.nextCursor} />
         </PageContainer>
     )
 }

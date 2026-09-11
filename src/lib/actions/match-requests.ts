@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { revalidateRoomList } from '@/lib/match-rooms/revalidate'
 import { createClient } from '@/lib/supabase/server'
 
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
@@ -22,7 +23,7 @@ export async function cancelMatchRequestAction(id: string): Promise<{ error: str
     if (error) return { error: '요청 취소에 실패했습니다.' }
     if (!data?.length) return { error: '이미 처리된 요청입니다.' }
 
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -42,7 +43,7 @@ export async function rejectMatchRequestAction(id: string): Promise<{ error: str
         return { error: known ? known[1] : '요청 거절에 실패했습니다.' }
     }
 
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -77,7 +78,7 @@ export async function respondRequestParticipationAction(
         return { error: known ? known[1] : '응답 처리에 실패했습니다.' }
     }
 
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     if (data === true) {
         await recomputePersonalNtrp(user.id)
         revalidatePath('/me/personal-matches')
@@ -107,7 +108,7 @@ export async function respondRotationParticipationAction(
     }
 
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     revalidatePath('/me/personal-matches')
     revalidatePath(`/profile/${user.id}`)
     return { error: null }
@@ -138,7 +139,7 @@ export async function acceptMatchRequestAction(id: string): Promise<{ error: str
     // 수락자 본인 캐시 갱신 (요청자 캐시는 lazy — 표시가 온더플라이 재생이라 정합성 유지,
     // 요청자의 다음 경기 CUD에서 자동 재계산된다)
     await recomputePersonalNtrp(user.id)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     revalidatePath('/me/personal-matches')
     revalidatePath(`/profile/${user.id}`)
     return { error: null }

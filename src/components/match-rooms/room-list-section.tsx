@@ -6,13 +6,13 @@ import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
 
 type Props = {
     rooms: MatchRoomSummary[]
-    /** 서브섹션 제목 ('내가 참여한' 탭의 진행 중/종료됨 구분). 없으면 제목 없이 목록만 */
+    /** 서브섹션 제목. 없으면 제목 없이 목록만 */
     title?: string
     emptyTitle?: string
     emptyHint?: string
     /** 빈 상태에서 유도할 링크 — 문구는 emptyHint */
     emptyHref?: string
-    /** roomId → 내 차례 (매칭 리스트 작업 큐, Week 39) */
+    /** roomId → 내 차례 (작업 큐, Week 39) */
     turns?: Map<string, RoomTurnSummary>
 }
 

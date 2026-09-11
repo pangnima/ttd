@@ -167,7 +167,7 @@ export async function inviteRoomMembersAction(roomId: string, userIds: string[])
     if (error) return { error: translate(error.message, '초대에 실패했습니다.') }
 
     revalidateRoomPaths(roomId)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -187,7 +187,7 @@ export async function kickRoomMemberAction(roomId: string, userId: string): Prom
     if (error) return { error: translate(error.message, '참가자를 내보내지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -223,7 +223,7 @@ export async function addRoomGuestAction(roomId: string, input: RoomGuestInput):
     if (error) return { error: translate(error.message, '참가자를 추가하지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -239,7 +239,7 @@ export async function removeRoomGuestAction(roomId: string, guestId: string): Pr
     if (error) return { error: translate(error.message, '참가자를 빼지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -251,7 +251,7 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
     const { error } = await supabase.rpc('respond_room_invite', { p_room_id: roomId, p_accept: accept })
     if (error) return { error: translate(error.message, '초대 응답에 실패했습니다.') }
     revalidateRoomPaths(roomId)
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -268,7 +268,7 @@ export async function leaveMatchRoomAction(roomId: string): Promise<ActionResult
     if (error) return { error: translate(error.message, '방에서 나가지 못했습니다.') }
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -338,7 +338,7 @@ export async function createRoomGameAction(input: RoomGameInput): Promise<Action
 
     revalidateRoomPaths(input.roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -378,7 +378,7 @@ export async function createRoomLineupAction(
 
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 
@@ -417,7 +417,7 @@ export async function replaceRoomLineupAction(
 
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     return { error: null }
 }
 

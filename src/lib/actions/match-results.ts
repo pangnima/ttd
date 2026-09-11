@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { PersonalMatchSetScore } from '@/types'
 import { validateSetScores } from '@/lib/personal-matches/validate-input'
 import { recomputePersonalNtrp } from '@/lib/actions/personal-matches'
-import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 
@@ -62,7 +62,7 @@ function mapRpcError(message: string, fallback: string): ActionResult {
 
 function revalidateResultPaths(viewerId: string, roomId?: string | null) {
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     // 통계 화면은 /profile/[userId] — /me/analytics는 리다이렉트 전용이라 무효화 대상이 아니다
     revalidatePath(`/profile/${viewerId}`)
     // 방 게임·로테이션 게임의 요청에는 room_id가 채워져 있다(0049·0050) — 결과가 바뀌면 방 정산도 재계산된다

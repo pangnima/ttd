@@ -18,7 +18,7 @@ describe('formatHeadcount', () => {
     })
 })
 
-describe("isViewerJoined — 게임 등록 자격 · '내가 참여한 경기' 탭 술어", () => {
+describe('isViewerJoined — 게임 등록 자격 · 「참여 중인 매칭」 술어', () => {
     it('수락 전(invited)은 참여가 아니다 — 초대는 초대 섹션이 담당한다(Week 39)', () => {
         expect(isViewerJoined({ role: 'player', status: 'invited' })).toBe(false)
     })

@@ -10,7 +10,7 @@ export function countJoined(members: MemberLike[]): number {
 
 /**
  * 실제 참여 — '참가 인원'에 잡히는 상태(방장 행도 joined다).
- * 게임 등록 자격과 **'내가 참여한 경기' 탭**(fetchMyRoomIds)이 함께 보는 단일 술어다.
+ * 게임 등록 자격과 **「참여 중인 매칭」**(fetchMyRoomIds)이 함께 보는 단일 술어다.
  *
  * ⚠ 초대 대기(invited)는 참여가 아니다(Week 39). 종전에는 "초대도 내 경기"라며 세었지만,
  * 초대가 목록 최상단 「나를 초대한 매칭」으로 올라오면서 같은 방이 두 자리에 나오고

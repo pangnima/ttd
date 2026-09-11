@@ -14,7 +14,7 @@ import {
     type PersonalMatchInput,
 } from '@/lib/personal-matches/validate-input'
 import type { PersonalMatchSetScore } from '@/types'
-import { revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
+import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/revalidate'
 import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 
 /**
@@ -167,7 +167,7 @@ export async function createPersonalMatchesAction(
     revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
     // 신규 등록은 세트가 없어 항상 미확정이다 — 저장 직후 도착하는 화면이 확인 요청 허브다
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
 
     if (options.roomId) {
         revalidateRoomPaths(options.roomId)
@@ -223,7 +223,7 @@ export async function updatePersonalMatchAction(
     revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
     // 참가자를 채워도 세트가 없으면 여전히 미확정 — 허브 카드가 갱신돼야 한다
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     if (roomId) revalidateRoomPaths(roomId)
     return { error: null }
 }
@@ -251,7 +251,7 @@ export async function deletePersonalMatchAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     // cleanup 트리거가 방을 지우거나 정산을 재계산하므로 방 목록·상세도 무효화한다
     revalidateRoomPaths(deleted[0].room_id)
     return { error: null }
@@ -298,7 +298,7 @@ export async function updatePersonalMatchSetsAction(
     await recomputePersonalNtrp(user.id)
     revalidatePath(`/profile/${user.id}`)
     revalidatePath('/me/personal-matches')
-    revalidatePath('/match-rooms')
+    revalidateRoomList()
     // 확정으로 방의 is_settled가 재계산되므로(recompute_match_room_settled) 방 화면도 갱신한다
     revalidateRoomPaths(match.roomId)
     return { error: null }

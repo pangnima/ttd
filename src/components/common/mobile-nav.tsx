@@ -7,7 +7,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-    myMatchNavItems, buildPersonalNavItem, isPersonalNavActive,
+    myMatchNavItems, buildPersonalNavItem, isNavItemActive,
 } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { BrandLogo } from '@/components/common/brand-logo'
@@ -15,7 +15,7 @@ import { BrandLogo } from '@/components/common/brand-logo'
 type MobileNavProps = {
     /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인' href) */
     userId?: string | null
-    /** 매칭 리스트 '내 차례' 건수 — 서버 fetchRoomQueue 1곳(roomBadgeTotal)에서 계산해 props로 전달 */
+    /** 「참여 중인 매칭」의 '내 차례' 건수 — 서버 fetchRoomQueue 1곳(roomBadgeTotal)에서 계산해 props로 전달 */
     myTurnCount?: number
 }
 
@@ -23,13 +23,8 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
 
-    // 개인 섹션: '개인'(본인 프로필, scope 무관) + 매칭 리스트(진행 중) + 개인 경기 결과(끝난 것)
+    // 개인 섹션: '개인'(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 개인 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
-    const myNavActive = (href: string) => {
-        if (href.startsWith('/me/personal-matches')) return pathname.startsWith('/me/personal-matches')
-        if (href.startsWith('/match-rooms')) return pathname.startsWith('/match-rooms')
-        return userId ? isPersonalNavActive(pathname, userId) : false
-    }
     const navLinkClass = (active: boolean) =>
         cn(
             'flex items-center gap-3 px-3 py-2 rounded-md text-body2 font-medium transition-colors',
@@ -65,9 +60,10 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
                     {/* 개인 섹션 (로그인 시) */}
                     {myNavItems.length > 0 && (
                         <div className="space-y-1">
-                            {myNavItems.map(({ href, label, icon: Icon }) => {
-                                const active = myNavActive(href)
-                                const showBadge = href === '/match-rooms' && myTurnCount > 0
+                            {myNavItems.map((item) => {
+                                const { href, label, icon: Icon } = item
+                                const active = isNavItemActive(item, pathname, userId)
+                                const showBadge = !!item.badge && myTurnCount > 0
                                 return (
                                     <Link
                                         key={href}

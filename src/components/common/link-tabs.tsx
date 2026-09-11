@@ -8,8 +8,6 @@ export type LinkTabItem = {
     href: string
     /** 0이면 배지를 붙이지 않는다 — 행동이 필요한 탭에만 숫자를 보여주기 위함 */
     count?: number
-    /** 주의를 끄는 배지(내 차례 등). 기본은 중립 배지 */
-    emphasis?: boolean
 }
 
 type Props = {
@@ -20,7 +18,11 @@ type Props = {
 
 /**
  * URL 파라미터로 전환하는 탭 바 (서버 컴포넌트).
- * 확인 요청 허브와 매칭 리스트가 각자 갖고 있던 같은 모양의 tabClass를 흡수한다.
+ * 매칭 리스트와 참여 중인 매칭이 같은 시간 축 탭을 이 컴포넌트로 그린다.
+ *
+ * '내 차례 있음'을 알리던 `emphasis`는 Week 45에 지웠다 — 관계 축이 라우트로 나가면서
+ * 그 신호는 사이드바 뱃지가 맡는다(탭 배지는 `count>0`일 때만 그려져 참여 방이 0이면
+ * 강조가 아예 나타나지 않는 구멍도 있었다).
  */
 export function LinkTabs({ items, activeKey, ariaLabel }: Props) {
     return (
@@ -41,13 +43,7 @@ export function LinkTabs({ items, activeKey, ariaLabel }: Props) {
                     >
                         {item.label}
                         {!!item.count && item.count > 0 && (
-                            <Badge
-                                variant="outline"
-                                className={cn(
-                                    'text-caption',
-                                    item.emphasis ? 'text-spot border-spot/50' : 'text-muted-foreground border-border',
-                                )}
-                            >
+                            <Badge variant="outline" className="text-caption text-muted-foreground border-border">
                                 {item.count}
                             </Badge>
                         )}
