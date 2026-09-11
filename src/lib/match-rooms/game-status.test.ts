@@ -128,20 +128,28 @@ describe('canCreateRoomLineup — create_room_lineup 가드의 거울', () => {
     })
 
     it('후보가 없으면(= 방장이 아니면) 그리지 않는다', () => {
-        expect(canCreateRoomLineup(room(), 0)).toBe(false)
+        expect(canCreateRoomLineup(room(), 0, 0)).toBe(false)
     })
 
     it('정산된 방은 RPC가 거절하므로 그리지 않는다', () => {
-        expect(canCreateRoomLineup(room({ isSettled: true }), 4)).toBe(false)
+        expect(canCreateRoomLineup(room({ isSettled: true }), 4, 2)).toBe(false)
     })
 
     // 0072 회귀 가드 — 0071이 로테이션 방을 막아 복식 방 전체에서 자동 대진표가 죽었다.
     // 복식 방은 예외 없이 로테이션 방이고, 자동 대진표는 바로 그 방을 위한 기능이다.
     it('미확정 로테이션 방에서도 그린다 — 방식을 보지 않는다', () => {
-        expect(canCreateRoomLineup(room(), 4)).toBe(true)
+        expect(canCreateRoomLineup(room(), 4, 2)).toBe(true)
     })
 
     it('단식 방에서도 그린다', () => {
-        expect(canCreateRoomLineup(room({ sourceKind: 'direct', matchType: 'singles' }), 2)).toBe(true)
+        expect(canCreateRoomLineup(room({ sourceKind: 'direct', matchType: 'singles' }), 2, 2)).toBe(true)
+    })
+
+    it('회원이 한 명뿐이어도 그린다 — 회원 1명 게임은 자유 기록으로 저장된다(0076)', () => {
+        expect(canCreateRoomLineup(room({ sourceKind: 'direct', matchType: 'singles' }), 5, 1)).toBe(true)
+    })
+
+    it('회원이 한 명도 없으면 그리지 않는다 — 저장할 자리가 없다', () => {
+        expect(canCreateRoomLineup(room(), 4, 0)).toBe(false)
     })
 })

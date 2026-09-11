@@ -49,7 +49,7 @@ export function LineupCountFields({
                     ariaLabel="1인당 경기 수"
                 />
                 <p className={`mt-2 ${TYPO.caption} break-keep`}>
-                    덜 뛴 사람이 먼저 들어갑니다. 출전 편차는 1 이내입니다.
+                    덜 뛴 사람이 먼저 들어갑니다. 출전 편차는 1 이내이고, 회원이 모자라면 회원이 더 자주 섭니다.
                 </p>
             </div>
             <div>

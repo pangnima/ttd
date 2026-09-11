@@ -450,11 +450,12 @@ export async function fetchMyRoomMemberships(
     }
 }
 
-/** 방장이 지금 고칠 수 있는 대진 — 게임 id와 그 요청 id의 짝 */
-export type EditableLineupGame = { gameId: string; requestId: string }
+/** 방장이 지금 고칠 수 있는 대진 — 게임 id(personal_matches 대표 행). 요청 id는 상호 확인 게임에만 있다(0076) */
+export type EditableLineupGame = { gameId: string; requestId: string | null }
 
 /**
  * 저장된 대진 중 아직 손댈 수 있는 것(0071) — 라인업이 만들었고, 스코어도 결과 협상도 없는 게임.
+ * 회원이 한 팀에만 있어 자유 기록으로 저장된 라인업 게임도 포함된다(0076, requestId null).
  *
  * 상세 RPC와 따로 두는 이유는 권한 때문이다. 방장은 자기가 뛰지 않는 게임의 `match_requests` 행을
  * 직접 읽을 수 없다(정책이 당사자 둘만 통과시킨다). 이 목록이 [대진 편집] 버튼을 그릴지도 정한다.
@@ -463,5 +464,5 @@ export async function fetchEditableLineupGames(roomId: string): Promise<Editable
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('get_room_lineup_requests', { p_room_id: roomId })
     if (error || !data) return []
-    return data.map((row) => ({ gameId: row.game_id, requestId: row.request_id }))
+    return data.map((row) => ({ gameId: row.game_id, requestId: row.request_id ?? null }))
 }

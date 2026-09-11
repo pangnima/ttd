@@ -16,11 +16,15 @@ import { effectiveCourtCount } from '@/lib/match-rooms/court-slots'
  *
  * 룸은 코트가 하나이므로 대진은 격자가 아니라 **순서 있는 게임 목록**이다. 클럽 대진표와 다른 점 셋:
  *  - 모인 사람은 다 뛴다 → 성별은 하드 제약이 아니라 선호(genderMode 'soft')
- *  - 저장하면 match_requests 행이 되고 requester/opponent가 NOT NULL → 각 팀에 회원 최소 1명
+ *  - 저장되는 행에 소유자(회원)가 있어야 한다 → 게임마다 회원 최소 1명(0076). 양 팀에 회원이 있으면
+ *    상호 확인 게임(match_requests), 한 팀만이면 그 회원의 자유 기록(personal_matches direct)이 된다.
+ *    회원끼리는 가능하면 양 팀으로 가른다(자유 기록은 소유자 한 명에게만 남는다)
  *  - 가중치를 사용자가 프리셋으로 고른다
  *
  * 그리고 룸에서는 "골고루 뛴다"가 눈에 보이는 약속이라, 선발 전에 **출전 계층**을 잘라
- * 덜 뛴 사람을 강제로 넣는다 — 이것이 출전 편차 ≤ 1을 보장한다.
+ * 덜 뛴 사람을 강제로 넣는다 — 이것이 출전 편차 ≤ 1을 보장한다. 예외는 회원이 모자랄 때다 —
+ * 회원이 한 명뿐인 방에서 그 회원을 편차 규칙으로 빼면 어떤 게임도 만들 수 없으므로, 계층에 회원이
+ * 없으면 덜 뛴 회원 한 명을 강제로 넣는다(회원은 편차를 넘고, 게스트끼리는 여전히 ≤ 1).
  */
 
 /** 방 참가자 후보의 최소 형태 — OpponentCandidate가 구조적으로 대입된다(server-only 모듈 의존 회피) */
@@ -162,6 +166,24 @@ function fairnessTier(
     }
 }
 
+/**
+ * 출전 계층에 회원이 한 명도 없으면 덜 뛴 회원 한 명을 강제로 넣는다(0076).
+ * 계층을 그대로 두면 회원이 모자란 방에서는 두 번째 게임부터 회원이 후보에서 빠져 어떤 게임도 만들 수 없다.
+ * 자리가 남아야 넣을 수 있다 — mandatory가 이미 꽉 찼으면(회원 없는 묶음) selectPlayers가 실패해 중단한다.
+ */
+function withMemberForced(
+    tier: { mandatory: LineupPlayer[]; optional: LineupPlayer[] },
+    pool: LineupPlayer[],
+    playCount: Map<string, number>,
+    size: number,
+): LineupPlayer[] {
+    if ([...tier.mandatory, ...tier.optional].some((p) => p.isMember)) return tier.mandatory
+    if (tier.mandatory.length >= size) return tier.mandatory
+    const count = (p: LineupPlayer) => playCount.get(p.key) ?? 0
+    const member = pool.filter((p) => p.isMember).sort((a, b) => count(a) - count(b))[0]
+    return member ? [...tier.mandatory, member] : tier.mandatory
+}
+
 /** 요구 성별 구성과 맞는 게임인가 — soft 모드라 안 맞아도 만들어지지만 안내는 한다 */
 function isGenderMatched(game: LineupGame): boolean {
     if (game.matchType === 'singles') return true
@@ -222,10 +244,10 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
         warnings.push(`${TYPE_LABEL[opts.matchType]} 대진에는 참가자가 ${need.size}명 이상 필요합니다.`)
         return empty()
     }
-    // 각 팀에 회원이 최소 1명 — 저장되는 게임이 match_requests 행이기 때문
+    // 게임마다 회원이 최소 1명 — 소유자 없는 게임은 저장할 자리가 없다(0076). 회원이 0명이면 시작도 못 한다
     const members = players.filter((p) => p.isMember).length
-    if (members < 2) {
-        warnings.push('각 팀에 회원이 최소 1명씩 필요합니다. 회원 참가자를 2명 이상 모아주세요.')
+    if (members < 1) {
+        warnings.push('회원이 한 명도 없으면 대진을 저장할 수 없습니다. 비회원끼리의 게임은 기록할 곳이 없습니다.')
         return empty()
     }
 
@@ -237,7 +259,7 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
     const lineupOptions: LineupOptions = {
         weights: LINEUP_PRESET_WEIGHTS[opts.preset],
         genderMode: 'soft',
-        requireMemberPerTeam: true,
+        memberRule: 'perGame',
     }
     const state = createLineupState()
     const rng = mulberry32(opts.seed)
@@ -253,12 +275,15 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
     const roundUsed = new Set<string>()
 
     const games: LineupGame[] = []
+    let memberOverran = false
     for (let i = 0; i < count; i++) {
         if (i % courts === 0) roundUsed.clear()
         // 비용이 같은 후보들 사이에서만 흔들린다 — 품질은 유지되고 [다시 뽑기]가 실제로 다른 결과를 낸다
         const pool = shuffled(players.filter((p) => !roundUsed.has(p.key)), rng)
-        const { mandatory, optional } = fairnessTier(pool, state.playCount, need.size)
-        const picked = selectPlayers(opts.matchType, optional, state, lineupOptions, mandatory)
+        const tier = fairnessTier(pool, state.playCount, need.size)
+        const mandatory = withMemberForced(tier, pool, state.playCount, need.size)
+        if (mandatory !== tier.mandatory) memberOverran = true
+        const picked = selectPlayers(opts.matchType, tier.optional, state, lineupOptions, mandatory)
         if (!picked) {
             warnings.push(`${i + 1}번째 경기부터는 참가자 구성으로 대진을 만들 수 없어 중단했습니다.`)
             break
@@ -268,6 +293,16 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
         games.push({ seq: games.length + 1, matchType: opts.matchType, team1: teams.team1, team2: teams.team2 })
     }
 
+    if (memberOverran) {
+        warnings.push(`회원이 ${members}명뿐이라 회원은 출전 편차 규칙을 넘어 더 자주 섭니다.`)
+    }
+    // 한 팀에만 회원이 있는 게임은 저장 방식이 다르다 — 상호 확인이 아니라 그 회원의 자유 기록(0076)
+    const freeGames = games.filter((g) => !(g.team1.some((p) => p.isMember) && g.team2.some((p) => p.isMember)))
+    if (freeGames.length > 0) {
+        warnings.push(
+            `회원이 한 팀에만 있는 게임 ${freeGames.length}개는 그 회원의 자유 기록으로 저장됩니다. 확인해 줄 상대가 없어 결과를 넣으면 곧 확정됩니다.`,
+        )
+    }
     if (games.some((g) => !isGenderMatched(g))) {
         warnings.push(`인원 구성상 일부 경기는 ${TYPE_LABEL[opts.matchType]} 성별 구성을 맞추지 못했습니다.`)
     }

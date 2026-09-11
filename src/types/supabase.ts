@@ -944,6 +944,7 @@ export type Database = {
           is_perspective: boolean
           match_type: string
           notes: string | null
+          origin: string
           played_at: string
           played_time: string | null
           room_id: string | null
@@ -963,6 +964,7 @@ export type Database = {
           is_perspective?: boolean
           match_type: string
           notes?: string | null
+          origin?: string
           played_at: string
           played_time?: string | null
           room_id?: string | null
@@ -982,6 +984,7 @@ export type Database = {
           is_perspective?: boolean
           match_type?: string
           notes?: string | null
+          origin?: string
           played_at?: string
           played_time?: string | null
           room_id?: string | null
@@ -1484,7 +1487,7 @@ export type Database = {
         Returns: undefined
       }
       replace_room_lineup: {
-        Args: { p_games: Json; p_request_ids: string[]; p_room_id: string }
+        Args: { p_game_ids: string[]; p_games: Json; p_room_id: string }
         Returns: number
       }
       request_result_seats: {

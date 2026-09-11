@@ -47,7 +47,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['invalid_opponent2', '상대팀 2번째 선수를 다시 선택해주세요.'],
     ['replace_not_allowed', '이미 결과가 있거나 내 기록이 아니어서 대체할 수 없습니다.'],
     ['invalid_participant', '참가자 정보를 다시 확인해주세요.'],
-    ['invalid_games', '대진 구성이 올바르지 않습니다. 참가자와 경기 수를 확인해주세요.'],
+    ['invalid_games', '대진 구성이 올바르지 않습니다. 게임마다 회원이 한 명은 있어야 합니다.'],
     ['lineup_locked', '그 사이 결과가 입력된 경기가 있어 대진을 바꿀 수 없습니다. 새로고침 후 다시 시도해주세요.'],
 ]
 
@@ -386,13 +386,14 @@ export async function createRoomLineupAction(
  * 저장한 대진 고치기(0071, Week 42) — 방장이 라인업 게임을 지우고 새 대진을 넣는다.
  *
  * 자리 하나만 바꿔도 requester가 달라져 관점 행의 기준 자체가 바뀌므로 부분 수정이 아니라 **교체**다.
- * 그래서 `requestIds`는 편집 화면에 올라온 게임 전량이고, `games`는 편집을 마친 대진 전량이다.
+ * 그래서 `gameIds`는 편집 화면에 올라온 게임(personal_matches 대표 행) 전량이고, `games`는 편집을 마친 대진 전량이다.
+ * 키가 요청 id가 아니라 게임 id인 이유는 회원 1명 게임이 자유 기록으로 저장되어 요청 행이 없기 때문이다(0076).
  * 그 사이 누가 결과를 넣었으면 RPC가 `lineup_locked`로 막는다 — 이미 확인한 좌석의 동의가
  * 다른 사람 경기에 붙는 것을 막는 자리다. 그 경우 팝업을 닫지 않고 화면만 새로 읽는다.
  */
 export async function replaceRoomLineupAction(
     roomId: string,
-    requestIds: string[],
+    gameIds: string[],
     games: RoomLineupGameInput[],
 ): Promise<ActionResult> {
     const { supabase, user } = await requireUser()
@@ -407,7 +408,7 @@ export async function replaceRoomLineupAction(
 
     const { error } = await supabase.rpc('replace_room_lineup', {
         p_room_id: roomId,
-        p_request_ids: requestIds,
+        p_game_ids: gameIds,
         p_games: games.map((g) => ({ team1: g.team1.map(toJson), team2: g.team2.map(toJson) })),
     })
     if (error) {

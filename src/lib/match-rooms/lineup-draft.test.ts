@@ -144,12 +144,20 @@ describe('validateDraft — DB 가드의 거울', () => {
         expect(validateDraft(draft)).toEqual(['게임 1: 같은 사람이 두 번 들어갔습니다.'])
     })
 
-    it('한 팀이 전원 비회원이면 막는다 — invalid_games의 거울', () => {
+    it('한 팀이 전원 비회원이어도 통과한다 — 회원 팀의 자유 기록으로 저장된다(0076)', () => {
         const draft: DraftGame[] = [{
             key: 'g1', matchType: 'men_doubles',
             team1: [A, B], team2: [guest('g-1', '손님1'), guest('g-2', '손님2')],
         }]
-        expect(validateDraft(draft)).toEqual(['게임 1: 각 팀에 회원이 최소 1명씩 필요합니다.'])
+        expect(validateDraft(draft)).toEqual([])
+    })
+
+    it('회원이 한 명도 없으면 막는다 — invalid_games의 거울', () => {
+        const draft: DraftGame[] = [{
+            key: 'g1', matchType: 'singles',
+            team1: [guest('g-1', '손님1')], team2: [guest('g-2', '손님2')],
+        }]
+        expect(validateDraft(draft)).toEqual(['게임 1: 회원이 한 명은 있어야 합니다.'])
     })
 
     it('팀마다 회원이 하나씩만 있어도 통과한다', () => {

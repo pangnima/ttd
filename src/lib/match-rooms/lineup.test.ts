@@ -115,7 +115,7 @@ describe('buildRoomLineup — 대진의 불변식', () => {
         })
     })
 
-    it('각 팀에 회원이 최소 1명 — 저장되는 게임이 match_requests 행이기 때문', () => {
+    it('회원이 둘 다 뛸 수 있는 게임은 양 팀으로 가르고, 편차 규칙이 한 명만 허락하면 자유 기록 게임이 된다(0076)', () => {
         const withGuests = [
             p('m1', 'male', 4.0),
             p('m2', 'male', 3.0),
@@ -124,11 +124,18 @@ describe('buildRoomLineup — 대진의 불변식', () => {
             p('g3', 'male', 3.0, false),
         ]
         const result = buildRoomLineup(withGuests, { matchType: 'men_doubles', games: 4, preset: 'balanced', seed: 3 })
-        expect(result.games.length).toBeGreaterThan(0)
+        // 0075까지는 편차 규칙이 4번째 게임에서 회원 한 명만 허락해 3게임에서 중단됐다 — 이제 그 게임은 자유 기록이다
+        expect(result.games).toHaveLength(4)
         for (const g of result.games) {
-            expect(g.team1.some((x) => x.isMember)).toBe(true)
-            expect(g.team2.some((x) => x.isMember)).toBe(true)
+            // 회원은 언제나 team1의 첫 자리(소유자·requester)
+            expect(g.team1[0].isMember).toBe(true)
+            const members = [...g.team1, ...g.team2].filter((x) => x.isMember)
+            // 회원 둘이 같은 게임에 있으면 반드시 양 팀으로 갈린다
+            if (members.length === 2) expect(g.team2.some((x) => x.isMember)).toBe(true)
         }
+        expect(result.games.filter((g) => g.team2.some((x) => x.isMember))).toHaveLength(3)
+        const counts = Object.values(result.playCounts)
+        expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
     })
 
     it('요청한 게임 수만큼 만든다', () => {
@@ -243,7 +250,7 @@ describe('buildRoomLineup — 만들 수 없는 경우', () => {
         expect(result.warnings).toEqual(['남자 복식 대진에는 참가자가 4명 이상 필요합니다.'])
     })
 
-    it('회원이 1명뿐이면 팀을 나눌 수 없다', () => {
+    it('회원이 1명뿐이면 그 회원이 매 게임 선다 — 자유 기록으로 저장된다(0076)', () => {
         const oneMember = [
             p('m1', 'male', 3.5),
             p('g1', 'male', 3.0, false),
@@ -256,8 +263,36 @@ describe('buildRoomLineup — 만들 수 없는 경우', () => {
             preset: 'balanced',
             seed: 1,
         })
+        expect(result.games).toHaveLength(2)
+        for (const g of result.games) {
+            // 회원은 team1의 첫 자리 = 저장될 자유 기록의 소유자
+            expect(g.team1[0].key).toBe('m1')
+            expect(g.team2.some((x) => x.isMember)).toBe(false)
+        }
+        expect(result.playCounts.m1).toBe(2)
+        // 4명이 2게임이면 전원 2회라 편차 초과는 없다 — 대신 자유 기록으로 저장된다는 안내가 붙는다
+        expect(result.warnings.some((w) => w.includes('자유 기록'))).toBe(true)
+        expect(result.warnings.some((w) => w.includes('더 자주'))).toBe(false)
+    })
+
+    it('회원이 한 명도 없으면 만들지 않는다 — 저장할 자리가 없다', () => {
+        const guests = ['g1', 'g2', 'g3', 'g4'].map((k) => p(k, 'male', 3.0, false))
+        const result = buildRoomLineup(guests, { matchType: 'men_doubles', games: 2, preset: 'balanced', seed: 1 })
         expect(result.games).toEqual([])
-        expect(result.warnings[0]).toContain('각 팀에 회원이 최소 1명씩')
+        expect(result.warnings[0]).toContain('회원이 한 명도 없으면')
+    })
+
+    it('회원이 넉넉하면 회원끼리 양 팀으로 갈린다 — 상호 확인 게임이 자유 기록보다 낫다', () => {
+        const twoMembers = [
+            p('m1', 'male', 3.5), p('m2', 'male', 3.5),
+            p('g1', 'male', 3.0, false), p('g2', 'male', 3.0, false),
+        ]
+        const result = buildRoomLineup(twoMembers, { matchType: 'men_doubles', games: 3, preset: 'balanced', seed: 1 })
+        expect(result.games).toHaveLength(3)
+        for (const g of result.games) {
+            expect(g.team1.some((x) => x.isMember)).toBe(true)
+            expect(g.team2.some((x) => x.isMember)).toBe(true)
+        }
     })
 
     it('경기 수가 0 이하면 만들지 않는다', () => {
@@ -279,7 +314,7 @@ describe('buildRoomLineup — 만들 수 없는 경우', () => {
 })
 
 describe('buildRoomLineup — 단식', () => {
-    it('단식은 게임마다 1대1이고 양쪽 다 회원이어야 한다', () => {
+    it('단식은 게임마다 1대1이다', () => {
         const result = buildRoomLineup(SIX, { matchType: 'singles', games: 6, preset: 'balanced', seed: 2 })
         expect(result.games).toHaveLength(6)
         for (const g of result.games) {
@@ -289,6 +324,37 @@ describe('buildRoomLineup — 단식', () => {
         }
         const counts = Object.values(result.playCounts)
         expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
+    })
+})
+
+describe('buildRoomLineup — 단식 · 방장 + 게스트 (0076)', () => {
+    // 남자25 방 재현 — 회원 1명(방장) + 게스트 4명, 1인당 1경기 → 3게임
+    const hostAndGuests = [
+        p('host', 'male', 3.5),
+        ...['g1', 'g2', 'g3', 'g4'].map((k) => p(k, 'male', 3.0, false)),
+    ]
+
+    it('방장 vs 게스트 게임이 나온다 — 방장이 team1 첫 자리, 게스트는 편차 1 이내', () => {
+        const games = gamesForPerPlayer(hostAndGuests.length, 1, false)
+        expect(games).toBe(3)
+        const result = buildRoomLineup(hostAndGuests, { matchType: 'singles', games, preset: 'balanced', seed: 1 })
+        expect(result.games).toHaveLength(3)
+        for (const g of result.games) {
+            expect(g.team1[0].key).toBe('host')
+            expect(g.team2[0].isMember).toBe(false)
+        }
+        const guestCounts = ['g1', 'g2', 'g3', 'g4'].map((k) => result.playCounts[k])
+        expect(Math.max(...guestCounts) - Math.min(...guestCounts)).toBeLessThanOrEqual(1)
+        expect(result.playCounts.host).toBe(3)
+        expect(result.warnings.some((w) => w.includes('더 자주'))).toBe(true)
+        expect(result.warnings.some((w) => w.includes('게임 3개는'))).toBe(true)
+    })
+
+    it('2면 방에서는 방장이 한 라운드에 한 코트만 서므로 라운드당 1게임에서 멈춘다', () => {
+        const result = buildRoomLineup(hostAndGuests, { matchType: 'singles', games: 3, preset: 'balanced', seed: 1, courtCount: 2 })
+        // 라운드 1: host vs g? 뒤 두 번째 코트에는 회원이 없다 → 중단 경고와 함께 1게임
+        expect(result.games).toHaveLength(1)
+        expect(result.warnings.some((w) => w.includes('중단'))).toBe(true)
     })
 })
 

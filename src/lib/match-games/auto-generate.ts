@@ -61,7 +61,7 @@ export const WEIGHTS = DEFAULT_LINEUP_WEIGHTS
 const CLUB_LINEUP_OPTIONS: LineupOptions = {
     weights: WEIGHTS,
     genderMode: 'hard',
-    requireMemberPerTeam: false,
+    memberRule: 'none',
 }
 
 const FALLBACK_NTRP = 3.0

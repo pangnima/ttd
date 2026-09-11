@@ -57,8 +57,9 @@ export function roomGameMemberIds(games: MatchRoomGame[]): Set<string> {
  * ⚠ 방식(단식/복식·로테이션 여부)은 보지 않는다. 복식 방은 전부 로테이션 방이고,
  * 자동 대진표는 바로 그 방을 위해 만들어졌다(0066 머리말·0072).
  */
-export function canCreateRoomLineup(detail: MatchRoomDetail, candidateCount: number): boolean {
-    return candidateCount > 0 && !detail.room.isSettled
+export function canCreateRoomLineup(detail: MatchRoomDetail, candidateCount: number, memberCount: number): boolean {
+    // 회원이 한 명도 없으면 어떤 게임도 저장할 자리가 없다(0076) — 방장이 회원이라 사실상 항상 참이지만 거울은 지킨다
+    return candidateCount > 0 && memberCount > 0 && !detail.room.isSettled
 }
 
 /**

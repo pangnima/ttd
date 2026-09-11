@@ -52,7 +52,7 @@ export function RoomLineupEditDialog({
     async function handleSave() {
         setSaving(true)
         setError(null)
-        const res = await replaceRoomLineupAction(roomId, editable.map((e) => e.requestId), toSavePayload(draft))
+        const res = await replaceRoomLineupAction(roomId, editable.map((e) => e.gameId), toSavePayload(draft))
         setSaving(false)
         if (res.error) {
             setError(res.error)

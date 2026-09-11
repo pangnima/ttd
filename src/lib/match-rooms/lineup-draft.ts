@@ -133,7 +133,7 @@ export function toLineupGame(draft: DraftGame, index: number): LineupGame | null
 
 /**
  * 저장할 수 있는 대진인지. `create_room_lineup`이 던지는 예외의 거울이다 —
- * `invalid_games`(자리 수·팀별 회원)와 `duplicate_players`를 화면에서 먼저 말한다.
+ * `invalid_games`(자리 수·게임에 회원 한 명)와 `duplicate_players`를 화면에서 먼저 말한다.
  */
 export function validateDraft(games: DraftGame[]): string[] {
     const errors: string[] = []
@@ -157,8 +157,9 @@ export function validateDraft(games: DraftGame[]): string[] {
             errors.push(`${label}: 같은 사람이 두 번 들어갔습니다.`)
             return
         }
-        if (!g.team1.some((p) => p?.isMember) || !g.team2.some((p) => p?.isMember)) {
-            errors.push(`${label}: 각 팀에 회원이 최소 1명씩 필요합니다.`)
+        // 게임에 회원이 한 명은 있어야 저장할 자리가 있다(0076) — 한 팀만 회원이면 그 회원의 자유 기록
+        if (!filled.some((p) => p.isMember)) {
+            errors.push(`${label}: 회원이 한 명은 있어야 합니다.`)
             return
         }
         const missing = filled.filter((p) => isMissingPlayer(p))

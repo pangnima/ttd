@@ -6,8 +6,10 @@
 //  - genderMode  : 클럽은 'hard'(남복 코트에 여성이 들어가면 안 된다) / 룸은 'soft'
 //                  (모인 사람은 다 뛰어야 하므로 성별이 안 맞아도 제외하지 않는다)
 //  - weights     : 클럽은 균형 고정 / 룸은 프리셋(실력·다양성)으로 사용자가 고른다
-//  - requireMemberPerTeam : 룸의 대진은 match_requests 행이 되고 requester/opponent가 NOT NULL이라
-//                  각 팀에 회원이 최소 1명 있어야 한다. 클럽 대진표에는 그런 제약이 없다.
+//  - memberRule  : 룸의 대진은 저장되는 행에 소유자(회원)가 있어야 한다. 'perGame'(0076)은 게임에 회원이
+//                  최소 1명 — 양 팀에 회원을 둘 수 있으면 그렇게 가르고(상호 확인 게임), 안 되면 한 팀만
+//                  회원인 게임(그 회원의 자유 기록)을 허용한다. 'perTeam'은 0066~0075의 옛 규칙(각 팀 1명),
+//                  클럽 대진표는 'none'.
 //
 // 배치 대상은 LineupPlayer 하나로 좁힌다 — 클럽은 User, 룸은 방 참가자에서 변환해 들어온다.
 // NTRP는 여기 오기 전에 이미 파생된 값(클럽 = users.ntrp 또는 참석자 평균, 룸 = personal_ntrp ?? ntrp)이다.
@@ -23,7 +25,7 @@ export type LineupPlayer = {
     ntrp: number
     /** 미상 허용 — soft 모드에서만 들어올 수 있다 */
     gender?: 'male' | 'female'
-    /** requireMemberPerTeam 제약용 */
+    /** memberRule 제약용 */
     isMember: boolean
 }
 
@@ -38,18 +40,24 @@ export type LineupWeights = {
 /** "균형있게 모두 반영" — 클럽 대진표의 기존 가중치이자 룸 '균형' 프리셋 */
 export const DEFAULT_LINEUP_WEIGHTS: LineupWeights = { skill: 1.0, fairness: 1.0, variety: 1.0 }
 
+/**
+ * 회원(isMember) 제약 — 'none' 없음 / 'perTeam' 각 팀 1명 / 'perGame' 게임에 1명(양 팀이 가능하면 우선).
+ * 룸이 'perGame'인 이유: 양 팀 회원 게임은 match_requests로, 한 팀 회원 게임은 그 회원의 자유 기록으로
+ * 저장되므로 회원이 한 명도 없는 게임만 저장할 자리가 없다(0076).
+ */
+export type MemberRule = 'none' | 'perTeam' | 'perGame'
+
 export type LineupOptions = {
     weights: LineupWeights
     /** 'hard' = 성별이 안 맞는 사람은 아예 제외 / 'soft' = 선호하되 인원이 안 맞으면 그냥 넣는다 */
     genderMode: 'hard' | 'soft'
-    /** 각 팀에 회원(isMember)이 최소 1명 */
-    requireMemberPerTeam: boolean
+    memberRule: MemberRule
 }
 
 export const DEFAULT_LINEUP_OPTIONS: LineupOptions = {
     weights: DEFAULT_LINEUP_WEIGHTS,
     genderMode: 'hard',
-    requireMemberPerTeam: false,
+    memberRule: 'none',
 }
 
 /** 누적 상태 — 라운드(또는 게임)를 거치며 갱신된다 */
@@ -147,7 +155,7 @@ export function splitTeams(
 ): LineupTeams {
     if (type === 'singles') {
         const [p0, p1] = [...players].sort((a, b) => b.ntrp - a.ntrp)
-        return { team1: [p0], team2: [p1] }
+        return memberTeamFirst({ team1: [p0], team2: [p1] }, opts)
     }
 
     let candidates: LineupTeams[]
@@ -164,9 +172,11 @@ export function splitTeams(
         candidates = doublesCandidates(players)
     }
 
-    if (opts.requireMemberPerTeam) {
+    if (opts.memberRule !== 'none') {
         const ok = candidates.filter((c) => c.team1.some((p) => p.isMember) && c.team2.some((p) => p.isMember))
-        // 어느 분할도 만족하지 못하면(회원이 1명 이하) 원안을 남겨 호출자가 판정하게 둔다
+        // 어느 분할도 만족하지 못하면(회원이 1명 이하) 원안을 남겨 호출자가 판정하게 둔다.
+        // perGame에서도 양 팀에 회원을 둘 수 있으면 **반드시** 그렇게 — 회원 둘이 같은 팀에 서고 상대가
+        // 전부 게스트면 자유 기록이 되어 두 번째 회원에게 기록이 남지 않는다.
         if (ok.length > 0) candidates = ok
     }
 
@@ -179,7 +189,22 @@ export function splitTeams(
             best = c
         }
     }
-    return best
+    return memberTeamFirst(best, opts)
+}
+
+/**
+ * perGame에서 회원이 team2에만 있으면 팀을 맞바꾼다 — 저장(create_room_lineup의 소유자 선택)과
+ * 편집(fromRoomGames)이 "team1의 첫 자리 = 게임 소유자"를 전제하므로, 미리보기와 저장 결과의 팀 순서가
+ * 같아야 사람이 고친 자리가 저장 뒤에도 같은 자리에 보인다.
+ */
+function memberTeamFirst(teams: LineupTeams, opts: LineupOptions): LineupTeams {
+    if (opts.memberRule === 'none') return teams
+    // 팀 안에서도 회원이 앞자리 — 저장 뒤 다시 읽으면 requester·opponent(첫 회원)가 각 팀의 첫 자리로 온다
+    const membersFirst = (team: LineupPlayer[]) =>
+        [...team.filter((p) => p.isMember), ...team.filter((p) => !p.isMember)]
+    const ordered = { team1: membersFirst(teams.team1), team2: membersFirst(teams.team2) }
+    if (ordered.team1.some((p) => p.isMember) || !ordered.team2.some((p) => p.isMember)) return ordered
+    return { team1: ordered.team2, team2: ordered.team1 }
 }
 
 /** 한 코트(선수 묶음)의 비용. 낮을수록 좋다. */
@@ -214,10 +239,11 @@ export function groupCost(
     return opts.weights.skill * skill + opts.weights.fairness * fairness + opts.weights.variety * variety
 }
 
-/** 회원 최소 1명 제약을 만족할 수 있는 묶음인가 — 분할 후보가 하나라도 통과하는지로 본다 */
-function canSatisfyMemberRule(players: LineupPlayer[], type: MatchType, opts: LineupOptions): boolean {
-    if (!opts.requireMemberPerTeam) return true
+/** 회원 제약을 만족할 수 있는 묶음인가 — perTeam은 분할 후보가 하나라도 통과하는지, perGame은 회원이 있는지 */
+function canSatisfyMemberRule(players: LineupPlayer[], type: MatchType, rule: MemberRule): boolean {
+    if (rule === 'none') return true
     const members = players.filter((p) => p.isMember).length
+    if (rule === 'perGame') return members >= 1
     if (type === 'singles') return members === players.length
     return members >= 2
 }
@@ -274,13 +300,13 @@ export function selectPlayers(
         return a.ntrp - b.ntrp
     }
 
-    const pickBest = (combos: LineupPlayer[][]): LineupPlayer[] | null => {
+    const pickBestBy = (combos: LineupPlayer[][], rule: MemberRule): LineupPlayer[] | null => {
         let best: LineupPlayer[] | null = null
         let bestCost = Infinity
         for (const combo of combos) {
             const group = mandatory.length > 0 ? [...mandatory, ...combo] : combo
             if (group.length !== need.size) continue
-            if (!canSatisfyMemberRule(group, type, opts)) continue
+            if (!canSatisfyMemberRule(group, type, rule)) continue
             const cost =
                 GENDER_PENALTY_WEIGHT * genderPenalty(group, type) + groupCost(group, type, state, opts)
             if (cost < bestCost) {
@@ -289,6 +315,13 @@ export function selectPlayers(
             }
         }
         return best
+    }
+    // perGame은 두 단계다 — 양 팀에 회원을 둘 수 있는 묶음(상호 확인 게임)이 하나라도 있으면 그것을,
+    // 없을 때만 회원 한 명짜리 묶음(그 회원의 자유 기록)으로 물러난다. 회원이 넉넉한 방에서 회원을
+    // 쉬게 하고 게스트끼리 붙이면 두 번째 회원의 기록이 사라지므로 비용이 아니라 단계로 가른다.
+    const pickBest = (combos: LineupPlayer[][]): LineupPlayer[] | null => {
+        if (opts.memberRule !== 'perGame') return pickBestBy(combos, opts.memberRule)
+        return pickBestBy(combos, 'perTeam') ?? pickBestBy(combos, 'perGame')
     }
 
     if (opts.genderMode === 'soft') {

@@ -47,7 +47,8 @@ export function RoomGamesSection({
     const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
     // [자동 대진표]의 노출 조건 — 권장 힌트와 빈 상태의 방장 문구가 같은 식을 본다(버튼 없는 안내를 막는다)
-    const canLineup = !!lineupCandidates && canCreateRoomLineup(detail, lineupCandidates.length)
+    const canLineup = !!lineupCandidates
+        && canCreateRoomLineup(detail, lineupCandidates.length, lineupCandidates.filter((c) => !c.isGuest).length)
 
     return (
         <section className="space-y-2">
