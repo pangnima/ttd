@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-    buildConfirmation, bystanderWaitingBadge, canDisputeProposal, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf,
+    buildConfirmation, bystanderWaitingBadge, canDisputeProposal, canReopenResult, canRespondToProposal, disputeBadge, disputerNameOf, proposerNameOf,
     formatConfirmProgress, hasDisputeHistory, isReentryTurn, reentryBadge,
     type ConfirmationSourceRow,
 } from './confirmation'
@@ -287,5 +287,15 @@ describe('canDisputeProposal — 이의는 확인보다 넓다 (0060 §7)', () =
         expect(canDisputeProposal(buildConfirmation(DOUBLES, 'eve'))).toBe(false)
         expect(canDisputeProposal(buildConfirmation({ ...DOUBLES, result_status: 'disputed' }, 'alice'))).toBe(false)
         expect(canDisputeProposal(undefined)).toBe(false)
+    })
+})
+
+describe('proposerNameOf — 검토 팝업의 "OOO님이 제안한 결과" (0077)', () => {
+    const seats = [{ userId: 'bob', name: '밥' }, { userId: 'carol', name: '캐럴' }]
+    it("내가 제안했으면 '나', 좌석에서 찾으면 그 이름, 미상이면 undefined", () => {
+        expect(proposerNameOf({ status: 'proposed', proposedByMe: true, proposedBy: 'me' } as never, seats)).toBe('나')
+        expect(proposerNameOf({ status: 'proposed', proposedByMe: false, proposedBy: 'carol' } as never, seats)).toBe('캐럴')
+        expect(proposerNameOf({ status: 'proposed', proposedByMe: false, proposedBy: 'zed' } as never, seats)).toBeUndefined()
+        expect(proposerNameOf(undefined, seats)).toBeUndefined()
     })
 })

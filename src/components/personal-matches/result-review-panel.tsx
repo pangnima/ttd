@@ -13,6 +13,8 @@ const REASON_MAX = 200
 
 type Props = {
     opponentName: string
+    /** 제안자 표시 이름(0077) — 복식에서 파트너가 제안하면 상대팀 이름과 다르다 */
+    proposerName?: string
     sets: PersonalMatchSetScore[]  // 제안된 게임(세트) 스코어 — 내 관점으로 반전 완료
     onConfirm: () => void
     onDispute: (reason: string) => void
@@ -30,7 +32,7 @@ type Props = {
  * 내 확인은 한 표다(0060) — 회원 좌석 전원이 확인한 순간 모두의 기록이 확정되어 이후 수정할 수 없다.
  */
 export function ResultReviewPanel({
-    opponentName, sets, onConfirm, onDispute, onCancel, progressLabel, confirmable = true, isPending, error,
+    opponentName, proposerName, sets, onConfirm, onDispute, onCancel, progressLabel, confirmable = true, isPending, error,
 }: Props) {
     const [disputing, setDisputing] = useState(!confirmable)
     const [reason, setReason] = useState('')
@@ -39,7 +41,7 @@ export function ResultReviewPanel({
         <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-1.5">
                 <p className="text-caption text-muted-foreground">
-                    <span className="font-medium text-foreground">{opponentName}</span>님이 제안한 결과 (내 관점)
+                    <span className="font-medium text-foreground">{proposerName ?? opponentName}</span>님이 제안한 결과 (내 관점)
                 </p>
                 <SetScoreChips sets={sets} />
             </div>

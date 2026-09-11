@@ -22,6 +22,8 @@ type Props = {
      * 0062부터 검토 모드에서도 필요하다: 이의를 거친 재제안을 확인하는 사람이 무엇에 대한 답인지 알아야 한다.
      */
     disputerName?: string
+    /** 제안자 표시 이름(proposerNameOf) — 검토 패널의 "OOO님이 제안한 결과". 없으면 상대팀 이름으로 폴백 */
+    proposerName?: string
     dialog: ReturnType<typeof useResultDialog>
 }
 
@@ -31,7 +33,7 @@ type Props = {
  * 검토 모드 진입은 canDisputeProposal(제안자 아닌 좌석 전원), 그 안의 [결과 확인] 노출은 canRespondToProposal
  * (아직 미확인)이다 — 이미 확인한 좌석도 정산 전이면 이의만 낼 수 있다(0060 §7). 화면과 RPC의 자격이 같은 문장이어야 한다.
  */
-export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, dialog: d }: Props) {
+export function NegotiationDialog({ requestId, confirmation: c, opponentName, teams, adLabels, disputerName, proposerName, dialog: d }: Props) {
     // 이의자 호칭은 카드의 사유 줄과 같은 출처를 쓴다 — 인라인하면 화면마다 다른 사람 것으로 보일 수 있다
     const disputer = disputerTitleOf(disputerName)
 
@@ -47,6 +49,7 @@ export function NegotiationDialog({ requestId, confirmation: c, opponentName, te
                 open={d.open}
                 onOpenChange={d.setOpen}
                 opponentName={opponentName}
+                proposerName={proposerName}
                 title={confirmable ? '경기 결과 확인' : '경기 결과 이의 제기'}
                 description={reviewDescription}
                 proposedSets={c.proposedSets}

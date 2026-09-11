@@ -26,8 +26,10 @@ export function RoomGameNegotiationActions({ game, requestId, viewerId, confirma
     const teams = formatTeams(labels)
     const opponentName = formatOpponents(labels)
     const adLabels = buildAdLabels(labels)
-    // 이름 해석·남은 확인자 명단의 좌석 = 작성자 + 라인업 회원 (0061)
+    // 이름 해석·남은 확인자 명단의 좌석 = 작성자 + 라인업 회원 (0061), 뷰어 본인은 뺀다(0077) —
+    // confirmSeatStatuses가 '나'를 앞에 붙이므로 남겨 두면 '나 · 내 실명'으로 두 번 센다(E2E S4.7)
     const seats = [{ userId: game.ownerUserId, name: game.ownerName }, ...game.participants]
+        .filter((s) => s.userId !== viewerId)
     const disputerName = disputerNameOf(c, seats)
 
     // 이의(0061) — 개인 경기 카드와 같은 컴포넌트

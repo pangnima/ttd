@@ -122,3 +122,17 @@ describe('seatStateLabel', () => {
         expect(seatStateLabel('left')).toBe('탈퇴')
     })
 })
+
+describe('confirmSeatStatuses — 호출부 계약: seats에 뷰어 본인이 없어야 한다 (0077)', () => {
+    it("뷰어를 걸러 넘기면 '나'는 한 번만 선다", () => {
+        const c = confirmation({ status: 'proposed', viewerIsParty: true, proposedByMe: false, confirmedByMe: false, confirmedUserIds: [] })
+        const names = confirmSeatStatuses(c, [{ userId: PARTNER, name: '파트너' }]).map((s) => s.name)
+        expect(names).toEqual(['나', '파트너'])
+    })
+
+    it('뷰어를 걸러 넘기지 않으면 두 번 센다 — 룸 행이 이렇게 넘겨 F-10이 났다(회귀 감지)', () => {
+        const c = confirmation({ status: 'proposed', viewerIsParty: true, proposedByMe: false, confirmedByMe: false, confirmedUserIds: [] })
+        const names = confirmSeatStatuses(c, [{ userId: 'me', name: '내 실명' }, { userId: PARTNER, name: '파트너' }]).map((s) => s.name)
+        expect(names).toEqual(['나', '내 실명', '파트너'])
+    })
+})

@@ -4,7 +4,7 @@ import type { PersonalMatchConfirmation } from '@/types'
 import { Button } from '@/components/ui/button'
 import type { AdLabels } from '@/lib/personal-matches/labels'
 import type { NamedSeat } from '@/lib/personal-matches/confirmation'
-import { canRespondToProposal } from '@/lib/personal-matches/confirmation'
+import { canRespondToProposal, proposerNameOf } from '@/lib/personal-matches/confirmation'
 import { NegotiationDialog } from '@/components/personal-matches/negotiation-dialog'
 import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
@@ -65,6 +65,7 @@ export function NegotiationTurnActions({
                     teams={teams}
                     adLabels={adLabels}
                     disputerName={disputerName}
+                    proposerName={proposerNameOf(c, seats)}
                     dialog={d}
                 />
             </span>

@@ -18,6 +18,8 @@ type ProposeProps = {
 type ReviewProps = {
     mode: 'review'
     proposedSets: PersonalMatchSetScore[]
+    /** 제안자 표시 이름 — 없으면 opponentName */
+    proposerName?: string
     onConfirm: () => void
     onDispute: (reason: string) => void
     progressLabel?: string  // '2/4명 확인' — 복식 만장일치 진행도(0060). 단식은 생략
@@ -68,6 +70,7 @@ export function MatchResultDialog(props: Props) {
                     <ResultReviewPanel
                         onCancel={() => onOpenChange(false)}
                         opponentName={opponentName}
+                        proposerName={props.proposerName}
                         sets={props.proposedSets}
                         onConfirm={props.onConfirm}
                         onDispute={props.onDispute}

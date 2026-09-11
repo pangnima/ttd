@@ -182,6 +182,18 @@ export type NamedSeat = { userId?: string; name: string }
  * 가드가 `status === 'disputed'`가 아니라 이의 **이력**인 것이 0062의 변경점이다 — 재제안으로 proposed가
  * 되어도 "누구의 이의에 대한 재입력인가"를 말해야 하므로 그 뒤에도 이름이 해석돼야 한다.
  */
+/**
+ * 제안자의 표시 이름 — 나면 '나', 좌석에서 찾으면 그 이름, 미상이면 undefined(0077).
+ * 검토 팝업이 "OOO님이 제안한 결과"에 쓴다. 종전에는 상대팀 이름(formatOpponents)을 그 자리에 넣어
+ * 복식에서 파트너가 제안하면 상대팀이 제안한 것처럼 읽혔다(E2E S4.7).
+ */
+export function proposerNameOf(c: PersonalMatchConfirmation | undefined, seats: NamedSeat[]): string | undefined {
+    if (!c) return undefined
+    if (c.proposedByMe) return '나'
+    if (!c.proposedBy) return undefined
+    return seats.find((s) => s.userId && s.userId === c.proposedBy)?.name.trim() || undefined
+}
+
 export function disputerNameOf(c: PersonalMatchConfirmation | undefined, seats: NamedSeat[]): string | undefined {
     if (!c || !hasDisputeHistory(c)) return undefined
     if (c.disputedByMe) return '나'
