@@ -359,6 +359,8 @@ export type RoomLineupGameInput = {
 export async function createRoomLineupAction(
     roomId: string,
     games: RoomLineupGameInput[],
+    /** 방장이 고른 경기당 시간(분) — 방에 남아 라운드 예상 시각의 근거가 된다 (0078) */
+    slotMinutes?: number,
 ): Promise<ActionResult> {
     const { supabase, user } = await requireUser()
     if (!user) return { error: '로그인이 필요합니다.' }
@@ -374,6 +376,7 @@ export async function createRoomLineupAction(
     const { error } = await supabase.rpc('create_room_lineup', {
         p_room_id: roomId,
         p_games: games.map((g) => ({ team1: g.team1.map(toJson), team2: g.team2.map(toJson) })),
+        ...(slotMinutes && slotMinutes > 0 ? { p_slot_minutes: slotMinutes } : {}),
     })
     if (error) return { error: translate(error.message, '대진표 저장에 실패했습니다.') }
 

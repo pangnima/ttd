@@ -300,6 +300,8 @@ export type MatchRoomMeta = {
     durationMinutes?: number
     /** 동시에 쓰는 코트 면 수 — 권장 경기 수 계산과 표시에만 쓴다. 기본 1면 (0073) */
     courtCount: number
+    /** 경기당 시간(분) — 방장이 자동 대진표를 저장할 때 고른 값(0078). 없으면 화면이 소요 시간으로 역산한다 */
+    slotMinutes?: number
     // 방의 대표 게임이 1건 이상이고 전부 확정 — 매칭 리스트에서 '지난 경기'로 내려간다 (0049)
     isSettled: boolean
 }

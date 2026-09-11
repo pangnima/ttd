@@ -18,6 +18,8 @@ type Props = {
     /** 방의 시간 축 — 편집 화면도 라운드·코트로 묶어 보여준다 */
     playedTime?: string
     durationMinutes?: number
+    /** 방이 기억한 경기당 시간 (0078) — 편집 화면은 묻지 않고 그대로 쓴다 */
+    slotMinutes?: number
     courtCount: number
 }
 
@@ -29,7 +31,7 @@ type Props = {
  * 다이얼로그는 열 때 마운트해 방이 바뀐 뒤 다시 열면 새 대진으로 시작하게 한다.
  */
 export function RoomLineupEditButton({
-    roomId, matchType, candidates, games, editable, playedTime, durationMinutes, courtCount,
+    roomId, matchType, candidates, games, editable, playedTime, durationMinutes, slotMinutes, courtCount,
 }: Props) {
     const [open, setOpen] = useState(false)
     if (editable.length === 0) return null
@@ -50,6 +52,7 @@ export function RoomLineupEditButton({
                     editable={editable}
                     playedTime={playedTime}
                     durationMinutes={durationMinutes}
+                    slotMinutes={slotMinutes}
                     courtCount={courtCount}
                 />
             )}

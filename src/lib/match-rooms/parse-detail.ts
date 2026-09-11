@@ -155,6 +155,7 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
             courtName: str(r.courtName),
             durationMinutes: num(r.durationMinutes),
             courtCount: num(r.courtCount) ?? 1,
+            slotMinutes: num(r.slotMinutes),
             notes: str(r.notes),
             isSettled: r.isSettled === true,
             createdAt: str(r.createdAt) ?? '',

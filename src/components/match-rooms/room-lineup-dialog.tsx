@@ -25,6 +25,8 @@ type Props = {
     /** 방의 일정 — 권장 경기 수를 내는 근거 (0073). 모르는 방이면 추천 줄이 뜨지 않는다 */
     playedTime?: string
     durationMinutes?: number
+    /** 방이 기억한 경기당 시간(0078) — 셀렉트의 초기값이고, 저장하면 고른 값으로 갱신된다 */
+    slotMinutes?: number
     courtCount?: number
 }
 
@@ -38,9 +40,9 @@ type Props = {
  */
 export function RoomLineupDialog({
     open, onOpenChange, roomId, matchType, candidates, existingGames,
-    playedTime, durationMinutes, courtCount = 1,
+    playedTime, durationMinutes, slotMinutes, courtCount = 1,
 }: Props) {
-    const lineup = useRoomLineup({ candidates, matchType, durationMinutes, courtCount })
+    const lineup = useRoomLineup({ candidates, matchType, durationMinutes, slotMinutes, courtCount })
     const save = useRoomLineupSave({ roomId, onDone: () => onOpenChange(false) })
     const [optionsOpen, setOptionsOpen] = useState(true)
 
@@ -101,7 +103,7 @@ export function RoomLineupDialog({
                     <FormActions
                         submitLabel={`${lineup.draft.length}경기 저장`}
                         pendingLabel="저장 중…"
-                        onSubmit={() => save.save(lineup.draft)}
+                        onSubmit={() => save.save(lineup.draft, lineup.slotMinutes)}
                         onCancel={() => onOpenChange(false)}
                         isPending={save.saving}
                         disabled={lineup.errors.length > 0}

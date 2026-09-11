@@ -15,6 +15,8 @@ type Props = {
     /** 권장 경기 수의 근거 (0073) */
     playedTime?: string
     durationMinutes?: number
+    /** 방이 기억한 경기당 시간 (0078) */
+    slotMinutes?: number
     courtCount?: number
 }
 
@@ -23,7 +25,7 @@ type Props = {
  * 다이얼로그는 열 때 마운트해 참가자가 바뀐 뒤 다시 열면 새 명단으로 시작하게 한다.
  */
 export function RoomLineupButton({
-    roomId, matchType, candidates, existingGames, playedTime, durationMinutes, courtCount,
+    roomId, matchType, candidates, existingGames, playedTime, durationMinutes, slotMinutes, courtCount,
 }: Props) {
     const [open, setOpen] = useState(false)
 
@@ -42,6 +44,7 @@ export function RoomLineupButton({
                     existingGames={existingGames}
                     playedTime={playedTime}
                     durationMinutes={durationMinutes}
+                    slotMinutes={slotMinutes}
                     courtCount={courtCount}
                 />
             )}

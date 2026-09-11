@@ -24,6 +24,8 @@ type Props = {
     editable: EditableLineupGame[]
     playedTime?: string
     durationMinutes?: number
+    /** 방이 기억한 경기당 시간(0078) — 편집 화면은 이 값을 묻지 않고 그대로 쓴다 */
+    slotMinutes?: number
     courtCount: number
 }
 
@@ -34,7 +36,7 @@ type Props = {
  * 그때는 팝업을 닫지 않고 화면만 새로 읽는다 — 사용자가 고친 내용을 잃지 않게(0060 관용구).
  */
 export function RoomLineupEditDialog({
-    open, onOpenChange, roomId, matchType, candidates, games, editable, playedTime, durationMinutes, courtCount,
+    open, onOpenChange, roomId, matchType, candidates, games, editable, playedTime, durationMinutes, slotMinutes, courtCount,
 }: Props) {
     const players = useMemo(() => toLineupPlayers(candidates), [candidates])
     const targets = useMemo(() => {
@@ -83,6 +85,7 @@ export function RoomLineupEditDialog({
                         courts={effectiveCourtCount(players.length, matchType, courtCount)}
                         playedTime={playedTime}
                         durationMinutes={durationMinutes}
+                        slotMinutes={slotMinutes}
                     />
                 </div>
 

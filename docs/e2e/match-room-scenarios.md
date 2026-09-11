@@ -92,7 +92,7 @@
 | 3.11 | A | 게임 2 [수정] → 상대 자리를 다른 게스트로 → [완료] | 자리 교체됨, 알림 `대진을 직접 고쳤습니다…` | `lineup-draft` swap | B |
 | 3.12 | A | 게임 3 [삭제] → 목록 아래 [게임 추가] → 자리 채움 | 저장 버튼 `3경기 저장` 활성 | `validateDraft` | B |
 | 3.13 | A | [다시 뽑기] | 편집이 버려지고 새 시드 대진 | `reroll` | B |
-| 3.14 | A | [3경기 저장] | 게임 행 3개, 각 `결과 미입력`, 작성자 `남자01`, 액션 [결과 입력] | `create_room_lineup` → `personal_matches` direct 3행 `origin='lineup'`, `match_requests` 0행 | B+S |
+| 3.14 | A | [3경기 저장] | 게임 행 3개, 각 `결과 미입력`, 작성자 `남자01`, 액션 [결과 입력]. **라운드 예상 시각이 팝업에서 본 것과 같다**(0078 — 방이 고른 경기당 시간을 기억한다. 종전에는 소요 시간 ÷ 라운드 수로 역산해 어긋났다, K-6) | `create_room_lineup` → `personal_matches` direct 3행 `origin='lineup'`, `match_requests` 0행, `match_rooms.slot_minutes` = 고른 값 | B+S |
 | 3.15 | A | [대진 편집] | 3게임이 목록에 있음. 한 자리 교체 → [3경기 저장] | `get_room_lineup_requests`(request_id null) → `replace_room_lineup` → 옛 행 삭제·새 행 3개(id 변경) | B+S |
 | 3.16 | A | 게임 1 [결과 입력] `6:0` | 즉시 `WIN 6-0`, 단계 칩 `진행 중`(남은 2게임) | `updatePersonalMatchSetsAction`, `has_result` | B+S |
 | 3.17 | A | [대진 편집] | 결과 있는 게임 1은 목록에 **없음**, 2게임만 | `lineup_locked` 예방(목록 필터) | B |

@@ -846,6 +846,7 @@ export type Database = {
           notes: string | null
           played_at: string
           played_time: string | null
+          slot_minutes: number | null
           source_kind: string
           surface: string | null
         }
@@ -861,6 +862,7 @@ export type Database = {
           notes?: string | null
           played_at: string
           played_time?: string | null
+          slot_minutes?: number | null
           source_kind: string
           surface?: string | null
         }
@@ -876,6 +878,7 @@ export type Database = {
           notes?: string | null
           played_at?: string
           played_time?: string | null
+          slot_minutes?: number | null
           source_kind?: string
           surface?: string | null
         }
@@ -1299,7 +1302,7 @@ export type Database = {
         Returns: string
       }
       create_room_lineup: {
-        Args: { p_games: Json; p_room_id: string }
+        Args: { p_games: Json; p_room_id: string; p_slot_minutes?: number }
         Returns: number
       }
       derive_public_ntrp: {

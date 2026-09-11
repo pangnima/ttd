@@ -10,7 +10,7 @@ type Options = { roomId: string; onDone: () => void }
 export type RoomLineupSaveState = {
     saving: boolean
     error: string | null
-    save: (games: DraftGame[]) => Promise<void>
+    save: (games: DraftGame[], slotMinutes?: number) => Promise<void>
 }
 
 /**
@@ -25,10 +25,12 @@ export function useRoomLineupSave({ roomId, onDone }: Options): RoomLineupSaveSt
     return {
         saving,
         error,
-        save: async (games) => {
+        // 방장이 고른 경기당 시간을 함께 보낸다(0078) — 방이 그 값을 기억해야 라운드 예상 시각이
+        // 팝업에서 본 것과 같아진다. 안 보내면 방은 소요 시간으로 역산한다(옛 동작).
+        save: async (games, slotMinutes) => {
             setSaving(true)
             setError(null)
-            const res = await createRoomLineupAction(roomId, toSavePayload(games))
+            const res = await createRoomLineupAction(roomId, toSavePayload(games), slotMinutes)
             setSaving(false)
             if (res.error) {
                 setError(res.error)

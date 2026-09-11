@@ -24,6 +24,8 @@ type Options = {
     matchType: MatchType
     /** 방의 예정 소요 시간(분) — 없으면 권장 경기 수를 내지 않는다 (0073 이전 방) */
     durationMinutes?: number
+    /** 방이 기억한 경기당 시간(분) — 이전에 저장한 대진표가 고른 값(0078). 초기값이 된다 */
+    slotMinutes?: number
     /** 동시에 도는 경기 수 */
     courtCount?: number
 }
@@ -34,7 +36,7 @@ export type RoomLineupState = {
     toggle: (id: string) => void
     perPlayer: number
     setPerPlayer: (n: number) => void
-    /** 경기당 시간(분) — 방이 아니라 대진을 짤 때 고른다 */
+    /** 경기당 시간(분) — 대진을 짤 때 고르고, 저장하면 방이 기억한다(0078) */
     slotMinutes: number
     setSlotMinutes: (n: number) => void
     /** 시간과 코트 면 수로 낸 권장값 — 소요 시간을 모르는 방이면 null */
@@ -70,16 +72,19 @@ export type RoomLineupState = {
  * `edited`를 비워 생성분으로 돌아간다 — 바뀐 조건으로 뽑은 대진에 옛 편집을 덧대면 무엇을 보고 있는지
  * 알 수 없기 때문이다. useEffect 없이 렌더 중 파생으로만 처리한다.
  */
-export function useRoomLineup({ candidates, matchType, durationMinutes, courtCount = 1 }: Options): RoomLineupState {
+export function useRoomLineup({ candidates, matchType, durationMinutes, slotMinutes: savedSlot, courtCount = 1 }: Options): RoomLineupState {
     const [excluded, setExcluded] = useState<Set<string>>(new Set())
     // 초기값은 권장값이다(Week 47) — 다이얼로그는 열 때마다 마운트되므로 매번 그 시점의 명단·일정으로 계산된다.
     // 이후로는 사용자 선택을 존중한다(인원을 빼도 초기값을 되돌리지 않는다 — 권장 마크만 옮겨 간다).
     // 소요 시간을 모르는 방(0073 이전)은 권장이 없어 예전 기본값 2로 시작한다.
+    // 경기당 시간은 **방이 기억한 값**으로 시작한다(0078) — 한 방에서 두 번째로 여는 대진표가
+    // 첫 번째와 다른 시간을 기본값으로 내밀면 라운드 시각이 소리 없이 바뀐다.
+    const initialSlot = savedSlot && savedSlot > 0 ? savedSlot : DEFAULT_SLOT_MINUTES
     const [perPlayer, setPerPlayer] = useState(() => recommendGames({
-        durationMinutes, slotMinutes: DEFAULT_SLOT_MINUTES, courtCount, playerCount: candidates.length, matchType,
+        durationMinutes, slotMinutes: initialSlot, courtCount, playerCount: candidates.length, matchType,
     })?.perPlayer ?? 2)
     const [preset, setPreset] = useState<LineupPreset>('balanced')
-    const [slotMinutes, setSlotMinutesState] = useState(DEFAULT_SLOT_MINUTES)
+    const [slotMinutes, setSlotMinutesState] = useState(initialSlot)
     const [seed, setSeed] = useState(1)
     const [edited, setEdited] = useState<DraftGame[] | null>(null)
 

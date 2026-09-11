@@ -3,6 +3,7 @@ import {
     courtSlotOf,
     derivedSlotMinutes,
     effectiveCourtCount,
+    roomSlotMinutes,
     groupByRound,
     restingByRound,
     roundConflictNames,
@@ -122,5 +123,35 @@ describe('roundConflictNames — 한 라운드에 두 번 선 사람', () => {
 
     it('1면이면 충돌이 있을 수 없다', () => {
         expect(roundConflictNames([['a', 'b'], ['a', 'c']], 1)).toEqual([[], []])
+    })
+})
+
+describe('roomSlotMinutes — 저장된 값이 역산을 이긴다 (0078, K-6)', () => {
+    it('방이 값을 알면 그것을 쓴다 — 라운드 수·소요 시간과 무관하다', () => {
+        // 30분으로 3라운드를 짠 120분 방: 역산은 40분이라 팝업(10:30)과 방(10:40)이 갈렸다
+        expect(derivedSlotMinutes(120, 3)).toBe(40)
+        expect(roomSlotMinutes(30, 120, 3)).toBe(30)
+    })
+
+    it('게임을 지워 라운드가 줄어도 저장된 값은 그대로다', () => {
+        expect(roomSlotMinutes(30, 120, 2)).toBe(30)
+        expect(roomSlotMinutes(30, 120, 5)).toBe(30)
+    })
+
+    it('저장된 값이 없으면 종전대로 역산한다 (0078 이전 방)', () => {
+        expect(roomSlotMinutes(undefined, 120, 4)).toBe(30)
+        expect(roomSlotMinutes(null, 120, 3)).toBe(40)
+        expect(roomSlotMinutes(0, 120, 4)).toBe(30)
+    })
+
+    it('소요 시간도 없으면 null — 화면은 라운드 번호만 그린다', () => {
+        expect(roomSlotMinutes(undefined, undefined, 3)).toBeNull()
+        expect(roomSlotMinutes(null, null, 0)).toBeNull()
+    })
+
+    it('라운드 시각이 방장이 고른 값을 따른다', () => {
+        expect(roundStartLabels('10:00', 3, roomSlotMinutes(30, 120, 3))).toEqual(['10:00', '10:30', '11:00'])
+        // 저장 전 방은 역산이라 어긋난다 — 이것이 K-6이 말하던 증상이다
+        expect(roundStartLabels('10:00', 3, roomSlotMinutes(null, 120, 3))).toEqual(['10:00', '10:40', '11:20'])
     })
 })

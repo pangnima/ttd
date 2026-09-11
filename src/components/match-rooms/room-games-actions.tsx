@@ -23,6 +23,8 @@ export function RoomGamesActions({ detail, lineupCandidates, editableLineup, can
     const schedule = {
         playedTime: detail.room.playedTime,
         durationMinutes: detail.room.durationMinutes,
+        // 방이 기억한 경기당 시간(0078) — 두 팝업과 방 목록이 같은 값으로 라운드 시각을 읽어야 한다
+        slotMinutes: detail.room.slotMinutes,
         courtCount: detail.room.courtCount,
     }
 

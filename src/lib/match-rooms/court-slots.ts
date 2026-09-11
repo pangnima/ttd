@@ -61,14 +61,35 @@ export function roundStartLabels(
 }
 
 /**
- * 저장된 방은 경기당 시간을 모른다(자동 대진표를 짤 때 고르는 값이라 방에 남지 않는다).
- * 그래서 **예정 소요 시간을 라운드 수로 나눠** 되짚는다 — 대진이 예정 시간에 들어맞게 짜였다면
- * 이 값은 방장이 고른 값과 같아지고, 시간을 넘겨 짰다면 실제 진행 속도를 말한다.
+ * 경기당 시간을 저장하지 않는 방(0078 이전, 또는 자동 대진표를 쓰지 않은 방)의 **역산값** —
+ * 예정 소요 시간을 라운드 수로 나눈다. 대진이 예정 시간에 들어맞게 짜였다면 방장이 고른 값과
+ * 같아지고, 시간을 넘겨 짰다면 실제 진행 속도를 말한다.
+ *
+ * ⚠ 이것은 **폴백**이다. 방이 값을 알면(0078) 그쪽이 언제나 옳다 — `roomSlotMinutes`를 쓴다.
  */
 export function derivedSlotMinutes(durationMinutes: number | null | undefined, roundCount: number): number | null {
     if (!durationMinutes || durationMinutes <= 0 || roundCount <= 0) return null
     const raw = durationMinutes / roundCount
     return Math.max(SLOT_STEP_MINUTES, Math.round(raw / SLOT_STEP_MINUTES) * SLOT_STEP_MINUTES)
+}
+
+/**
+ * 이 방의 경기당 시간 — **저장된 값이 있으면 그것**, 없으면 역산(0078, K-6).
+ *
+ * 0073은 경기당 시간을 방에 두지 않기로 했다(대진을 짤 때 고르는 값이라는 이유로). 그런데 Week 44가
+ * 라운드 예상 시각을 그리게 되면서 그 결정이 화면을 어긋나게 했다 — 30분으로 3라운드를 짠 방의
+ * 예정이 120분이면 역산은 40분이 되어 팝업(10:00·10:30·11:00)과 방(10:00·10:40·11:20)이 갈렸다.
+ * 이제 자동 대진표가 고른 값을 방에 적으므로 **저장된 값이 우선이고 역산은 옛 방의 폴백**이다.
+ *
+ * 라운드 수에 의존하지 않는 값이라는 점이 핵심이다 — 게임을 지워 라운드가 줄어도 경기당 시간은 그대로다.
+ */
+export function roomSlotMinutes(
+    slotMinutes: number | null | undefined,
+    durationMinutes: number | null | undefined,
+    roundCount: number,
+): number | null {
+    if (slotMinutes && slotMinutes > 0) return slotMinutes
+    return derivedSlotMinutes(durationMinutes, roundCount)
 }
 
 /**

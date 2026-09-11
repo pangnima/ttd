@@ -2,7 +2,7 @@ import type { MatchRoomDetail, MatchRoomGame, PersonalMatchConfirmation } from '
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { countJoined } from '@/lib/match-rooms/headcount'
 import {
-    courtSlotOf, derivedSlotMinutes, effectiveCourtCount, groupByRound, roundConflictNames, roundStartLabels,
+    courtSlotOf, effectiveCourtCount, groupByRound, roomSlotMinutes, roundConflictNames, roundStartLabels,
 } from '@/lib/match-rooms/court-slots'
 import { RoomGameRow } from '@/components/match-rooms/room-game-row'
 
@@ -34,10 +34,12 @@ export function RoomGameRounds({ detail, viewerId, confirmations }: Props) {
         planned.map((g) => [g.ownerName, ...g.participants.map((p) => p.name)]),
         courts,
     )
+    // 방장이 고른 경기당 시간이 있으면 그것을 쓴다(0078) — 없을 때만 소요 시간으로 역산한다.
+    // 종전에는 늘 역산이라 "팝업은 10:30인데 방은 10:40"이 됐다(K-6).
     const starts = roundStartLabels(
         detail.room.playedTime,
         rounds.length,
-        derivedSlotMinutes(detail.room.durationMinutes, rounds.length),
+        roomSlotMinutes(detail.room.slotMinutes, detail.room.durationMinutes, rounds.length),
     )
 
     const row = (g: MatchRoomGame, i: number) => (
