@@ -60,12 +60,19 @@ export type RoomGameTeams = { mine: string; theirs: string }
  * **'나'는 이 게임의 당사자에게만 쓴다.** 방에는 이 게임과 무관한 참가자도 들어와 있고
  * (정원이 없어 한 방에서 여러 조합이 돈다, 0048), 그들에게까지 작성자 자리를 '나'로 바꾸면
  * 남의 게임이 자기 게임처럼 보인다. 제3자에게는 작성자 관점 이름을 그대로 보여준다.
+ *
+ * 작성자도 당사자다 — `isRoomGameParty`와 같은 집합. 자동 대진표는 team1의 첫 회원을 작성자로
+ * 잡으므로 같은 사람이 게임마다 작성자였다가 상대가 되는데, 작성자에게만 실명을 주면 한 사람의
+ * 두 게임이 다른 형태로 그려진다(상대로 선 행은 '나'로 접히고 작성자 행은 이름이 남는다).
  */
 export function buildRoomGameTeams(game: MatchRoomGame, viewerId: string): RoomGameTeams {
     const by = (role: string) => game.participants.find((p) => p.role === role)?.name
 
-    if (game.ownerUserId === viewerId || !isRoomGameParty(game, viewerId)) {
+    if (!isRoomGameParty(game, viewerId)) {
         return joinTeams([game.ownerName, by('partner')], [by('opponent'), by('opponent2')])
+    }
+    if (game.ownerUserId === viewerId) {
+        return joinTeams(['나', by('partner')], [by('opponent'), by('opponent2')])
     }
 
     const labels = buildRoomGameLabels(game, viewerId)

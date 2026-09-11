@@ -87,8 +87,8 @@ describe('buildRoomGameLabels — 참가자 미정(모집 중)', () => {
 })
 
 describe('buildRoomGameTeams', () => {
-    it('작성자는 자기 팀이 작성자 관점 그대로다', () => {
-        expect(buildRoomGameTeams(doubles(), OWNER)).toEqual({ mine: '작성자 · 내파트너', theirs: '상대1 · 상대2' })
+    it('작성자도 당사자 — 자기 자리는 나', () => {
+        expect(buildRoomGameTeams(doubles(), OWNER)).toEqual({ mine: '나 · 내파트너', theirs: '상대1 · 상대2' })
     })
 
     it('상대팀 회원은 팀을 가로질러 나 기준으로 본다', () => {
@@ -108,15 +108,22 @@ describe('buildRoomGameTeams', () => {
         expect(buildRoomGameTeams(singles(), OPP)).toEqual({ mine: '나', theirs: '작성자' })
     })
 
+    it('단식 작성자의 내 팀도 나 한 명 — 상대로 선 게임과 같은 형태로 접힌다', () => {
+        // 자동 대진표는 team1의 첫 회원을 작성자로 잡아 같은 사람이 게임마다 작성자·상대를 오간다.
+        // 작성자에게만 실명을 주면 한 사람의 두 게임이 "vs 상대"와 "이름 / vs 상대"로 갈린다
+        expect(buildRoomGameTeams(singles(), OWNER)).toEqual({ mine: '나', theirs: '상대' })
+    })
+
     it('상대가 아직 비어 있으면 모집 문구', () => {
         const seed: MatchRoomGame = { ...doubles(), participants: [], sourceType: 'direct' }
-        expect(buildRoomGameTeams(seed, OWNER)).toEqual({ mine: '작성자', theirs: '(참가자 미정)' })
+        expect(buildRoomGameTeams(seed, OWNER)).toEqual({ mine: '나', theirs: '(참가자 미정)' })
+        expect(buildRoomGameTeams(seed, 'u-bystander')).toEqual({ mine: '작성자', theirs: '(참가자 미정)' })
     })
 })
 
 describe('buildRoomGameLine', () => {
-    it('작성자는 자기 이름으로 시작하는 작성자 관점 라인', () => {
-        expect(buildRoomGameLine(doubles(), OWNER)).toBe('작성자 · 내파트너 vs 상대1 · 상대2')
+    it('작성자도 당사자라 나로 시작한다', () => {
+        expect(buildRoomGameLine(doubles(), OWNER)).toBe('나 · 내파트너 vs 상대1 · 상대2')
     })
 
     it('상대팀 회원은 팀을 가로질러 나 기준으로 본다', () => {
@@ -134,7 +141,7 @@ describe('buildRoomGameLine', () => {
 
     it('상대가 아직 비어 있으면 모집 문구', () => {
         const seed: MatchRoomGame = { ...doubles(), participants: [], sourceType: 'direct' }
-        expect(buildRoomGameLine(seed, OWNER)).toBe('작성자 vs (참가자 미정)')
+        expect(buildRoomGameLine(seed, OWNER)).toBe('나 vs (참가자 미정)')
         expect(buildRoomGameLine(seed, 'u-bystander')).toBe('작성자 vs (참가자 미정)')
     })
 })
