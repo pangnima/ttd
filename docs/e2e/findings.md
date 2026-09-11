@@ -8,21 +8,21 @@
 
 | ID | P | 시나리오 | 증상(실제) | 기대 | 원인(파일·함수) | 수정 계획 | 상태 |
 |---|---|---|---|---|---|---|---|
-| F-1 | P3 | S1.5 | 단식 방 상세 헤더 eyebrow가 `자유 기록 · 하드` — 사용자는 단식 매칭을 만들었는데 「자유 기록」이라는 내부 어휘(source_kind direct)가 보인다 | `단식 · 하드`처럼 방식 라벨 | `RoomDetailHeader` eyebrow가 source kind 라벨을 그대로 씀 | eyebrow를 `MATCH_TYPE_LABELS[matchType]`(또는 단식/복식)로 교체 | open |
-| F-2 | P3 | S1.10 | 「나를 초대한 매칭」 카드 하단 문구 `수락하면 방 참가자로 등록됩니다. 경기 기록 자체는 방장 계정에만 남습니다.` — Week 39 이후 방 게임은 상호 확인이라 양쪽 기록에 남는다. 거짓 안내 | `수락하면 방 참가자로 등록되고, 방 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다` | `RoomInviteCard` 하단 caption(Week 25 문구 잔존) | 문구 교체 | open |
-| F-3 | P3 | S1.10 | 초대 카드 제목 `9월 11일 10시 · E2E-S1 · 단식` — 상세·목록은 `10:00~12:00`(formatRoomWhen)인데 초대 카드만 시 단위 | 같은 방은 어디서나 같은 시간 표기 | `RoomInviteCard`가 `buildRoomTitle`에 `durationMinutes`를 넘기지 않음(초대 요약 쿼리에 컬럼 누락 가능) | `room-queue.ts` 초대 요약에 `duration_minutes` 포함 → `buildRoomTitle` 전달 | open |
-| F-4 | P3 | S1.16 | 제안자 관점 게임 행에 배지 둘 — 상태 배지 `결과 확인 대기`(roomGameStatusBadge) + 액션 영역 `참가자 확인 대기`(NegotiationTurnActions). 같은 뜻을 두 번 말한다 | 행마다 배지 하나(CLAUDE.md 「배지는 행마다 하나」) | `room-game-row.tsx`가 상태 배지를 그리고 `NegotiationTurnActions`가 또 배지를 그림 | 룸 행에서는 액션 영역 배지를 숨기거나(`badgeClassName` 아닌 `hideBadge` prop), 상태 배지를 협상 상태로 대체 | open |
-| F-5 | P2 | S1.19 | 정산된 방(`종료`)에서 [회원 초대]·[비회원 초대]·[자동 대진표]는 사라지는데 **[게임 추가]는 남는다**. 눌러 저장하면 방이 다시 미정산으로 돌아간다(가드 없음) | 정산된 방에서는 게임 추가도 막거나, 의도라면 「추가하면 매칭이 다시 진행 중이 됩니다」 안내 | `canViewerAddRoomGame`·`canAddRoomGame`(room-context.ts)이 `isSettled`를 보지 않음. RPC `create_room_game`도 정산 검사 없음 | 결정 필요: (a) `canAddRoomGame`에 `!isSettled` + RPC `room_already_closed` 가드(0072 원칙: 노출 = 가드) 또는 (b) 허용하되 안내. **권장 (a)** — 정산 뒤 게임을 붙이려면 [결과 정정]처럼 명시적 재개가 맞다 | open |
-| F-6 | P3 | S2.5 | 이의 사유 201자 입력 시 문구 없이 200자로 잘려 저장된다(`maxLength`) | 잘림을 알리는 카운터(`n/200`) 또는 문구 | textarea `maxLength=200`만 있고 카운터 없음 | 글자 수 카운터 추가(정정 사유 input도 동일) | open |
-| F-8 | P3 | S3.8 | 자동 대진표·대진 편집 카드에서 NTRP 없는 게스트가 `3.9`(아는 사람 평균 대체값)로 보인다 — 방장 3.9와 나란히 놓여 게스트 실력이 3.9인 것처럼 읽힌다. 참가자 칩은 `비회원`으로 맞게 표시 | 카드에서는 대체값 대신 `—` 또는 `비회원`(배치는 대체값으로 하되 표시는 하지 않는다) | `toLineupPlayers`가 fallback을 ntrp에 넣고 `RoomLineupGameCard`가 그 값을 그대로 그림 | `LineupPlayer`에 `ntrpKnown: boolean`을 더해 카드가 모를 때 숨기기 | open |
-| F-9 | P2 | S4.7 | 복식 결과 확인 다이얼로그가 제안자를 **상대팀 이름**으로 말한다 — A(남자01)가 제안했는데 파트너 B에게 `남자04 · 남자03님이 제안한 결과`, 상대 D에게 `남자02 · 남자01님이 제안한 결과`. 행의 `결과를 입력한 사람: 남자01`과 모순 | `남자01님이 제안한 결과` | `result-review-panel.tsx:42`가 `opponentName`을 제안자 자리에 씀 | `proposedBy` 이름을 `PersonalMatchConfirmation`에 실어 전달(`proposerName`), 패널이 그것을 쓰고 없을 때만 opponentName 폴백 | open |
-| F-10 | P2 | S1.16·S4.7·S4.10 | 룸 게임 행의 좌석 명단이 **뷰어를 두 번** 센다 — `확인 대기: 나 · 남자04 · 남자02 · 남자03`(B 관점, 실제 대기 3명), `확인 완료: 나 · 남자02`(둘 다 B). 개인 카드에는 없다 | `확인 대기: 나 · 남자04 · 남자03` | `seat-status.ts:67`이 `'나'`를 앞에 더하는데, 룸 행 호출부가 `seats`에 뷰어 본인 참가자를 걸러 넘기지 않는다(개인 카드의 `namedSeatsOf`는 타 좌석만) | 룸 행(`room-game-row`/`buildRoomGameSeats`)에서 `viewerId`를 제외한 좌석만 넘기거나 `seatStatuses`가 `me` 이름과 같은 항목을 제거. vitest 케이스 추가 | open |
-| F-11 | P2 | S4.13 | 복식(로테이션) 방에서 **게임을 전부 확정해도** 풀 회원 전원에게 사이드바 뱃지 1 + 카드 필 `결과 입력`이 남는다(D 확인). 방 상세에는 「지금 할 일」 배너가 없어 카드와 상세가 어긋난다. 방장이 [게임 입력 종료]를 누르기 전까지 지속 | 게임이 남지 않았으면 풀 세션은 차례로 세지 않거나, 방장에게만 「게임 입력 종료로 마무리하세요」 차례를 준다 | `room-queue.ts`/`match-queue.ts`가 미확정 `rotation_sessions`를 무조건 `enterResult`로 넣음. `classifyRoomGameTurn`은 게임만 봄 | (a) 방 세션은 큐에서 `enterResult`로 세지 않는다(방 안 [게임 입력]은 상시 가능한 액션이지 차례가 아님) + (b) 방장에게 `closeRotation` 차례 신설(배너 「모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다」). K-12와 묶어 결정 | open |
-| F-13 | P2 | S6.12 | 결과 미입력 게임이 있는 B가 [방 나가기]를 하면 **사이드바 뱃지는 1로 남는데** 「참여 중인 매칭」에는 카드가 없다(declined는 목록에서 제외, 큐는 관점 행을 그대로 셈). 뱃지 = 카드 수 항등식(Week 45)이 깨진다. 방 상세는 게이트라 할 일을 볼 수도 없다(K-1) | 나간 방의 게임은 큐에서 빼거나(뱃지 0), 나간 뒤에도 카드는 남기고(「나간 매칭」 표시) 결과 확인 경로를 준다 | `fetchMatchQueue`가 `room_id` 방의 멤버십 상태를 보지 않음; `fetchRoomQueue`/목록은 joined만 | K-1과 함께: `leave_match_room`에 `member_has_games` 가드(강퇴와 대칭) 또는 큐에서 declined 방 제외. **권장: 가드** — 결과가 남은 채로 나가는 것이 문제의 뿌리 | open |
-| F-14 | P3 | S10.12 | 내려간 방의 URL은 404 페이지인데 CTA가 `클럽 목록으로 돌아가기`다 — 매칭 룸 경로에서는 매칭 리스트가 맞다 | `매칭 리스트로 돌아가기` 또는 경로별 CTA | `app/not-found.tsx` 단일 CTA | `/match-rooms/[roomId]`에 `notFound()` 대신 전용 안내(「내려간 매칭입니다」 + 매칭 리스트 링크) | open |
-| F-7 | P3 | S2.11 | [결과 정정] 다이얼로그 설명 `양쪽 기록이 미확정으로 돌아가고 **확인 요청에서** 다시 입력합니다.` — 허브가 철거되어 다시 입력하는 곳은 매칭 룸이다 | `…매칭 룸에서 다시 입력합니다` | `ReopenResultButton` description 문구(Week 39 이전) | 문구 교체 | open |
+| F-1 | P3 | S1.5 | 단식 방 상세 헤더 eyebrow가 `자유 기록 · 하드` — 사용자는 단식 매칭을 만들었는데 「자유 기록」이라는 내부 어휘(source_kind direct)가 보인다 | `단식 · 하드`처럼 방식 라벨 | `RoomDetailHeader` eyebrow가 source kind 라벨을 그대로 씀 | eyebrow를 `MATCH_TYPE_LABELS[matchType]`(또는 단식/복식)로 교체 | **fixed(38fcf3c)** |
+| F-2 | P3 | S1.10 | 「나를 초대한 매칭」 카드 하단 문구 `수락하면 방 참가자로 등록됩니다. 경기 기록 자체는 방장 계정에만 남습니다.` — Week 39 이후 방 게임은 상호 확인이라 양쪽 기록에 남는다. 거짓 안내 | `수락하면 방 참가자로 등록되고, 방 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다` | `RoomInviteCard` 하단 caption(Week 25 문구 잔존) | 문구 교체 | **fixed(38fcf3c)** |
+| F-3 | P3 | S1.10 | 초대 카드 제목 `9월 11일 10시 · E2E-S1 · 단식` — 상세·목록은 `10:00~12:00`(formatRoomWhen)인데 초대 카드만 시 단위 | 같은 방은 어디서나 같은 시간 표기 | `RoomInviteCard`가 `buildRoomTitle`에 `durationMinutes`를 넘기지 않음(초대 요약 쿼리에 컬럼 누락 가능) | `room-queue.ts` 초대 요약에 `duration_minutes` 포함 → `buildRoomTitle` 전달 | **fixed(38fcf3c)** |
+| F-4 | P3 | S1.16 | 제안자 관점 게임 행에 배지 둘 — 상태 배지 `결과 확인 대기`(roomGameStatusBadge) + 액션 영역 `참가자 확인 대기`(NegotiationTurnActions). 같은 뜻을 두 번 말한다 | 행마다 배지 하나(CLAUDE.md 「배지는 행마다 하나」) | `room-game-row.tsx`가 상태 배지를 그리고 `NegotiationTurnActions`가 또 배지를 그림 | 룸 행에서는 액션 영역 배지를 숨기거나(`badgeClassName` 아닌 `hideBadge` prop), 상태 배지를 협상 상태로 대체 | **fixed(38fcf3c)** |
+| F-5 | P2 | S1.19 | 정산된 방(`종료`)에서 [회원 초대]·[비회원 초대]·[자동 대진표]는 사라지는데 **[게임 추가]는 남는다**. 눌러 저장하면 방이 다시 미정산으로 돌아간다(가드 없음) | 정산된 방에서는 게임 추가도 막거나, 의도라면 「추가하면 매칭이 다시 진행 중이 됩니다」 안내 | `canViewerAddRoomGame`·`canAddRoomGame`(room-context.ts)이 `isSettled`를 보지 않음. RPC `create_room_game`도 정산 검사 없음 | 결정 필요: (a) `canAddRoomGame`에 `!isSettled` + RPC `room_already_closed` 가드(0072 원칙: 노출 = 가드) 또는 (b) 허용하되 안내. **권장 (a)** — 정산 뒤 게임을 붙이려면 [결과 정정]처럼 명시적 재개가 맞다 | **fixed(f4d1d3b)** |
+| F-6 | P3 | S2.5 | 이의 사유 201자 입력 시 문구 없이 200자로 잘려 저장된다(`maxLength`) | 잘림을 알리는 카운터(`n/200`) 또는 문구 | textarea `maxLength=200`만 있고 카운터 없음 | 글자 수 카운터 추가(정정 사유 input도 동일) | **fixed(38fcf3c)** |
+| F-8 | P3 | S3.8 | 자동 대진표·대진 편집 카드에서 NTRP 없는 게스트가 `3.9`(아는 사람 평균 대체값)로 보인다 — 방장 3.9와 나란히 놓여 게스트 실력이 3.9인 것처럼 읽힌다. 참가자 칩은 `비회원`으로 맞게 표시 | 카드에서는 대체값 대신 `—` 또는 `비회원`(배치는 대체값으로 하되 표시는 하지 않는다) | `toLineupPlayers`가 fallback을 ntrp에 넣고 `RoomLineupGameCard`가 그 값을 그대로 그림 | `LineupPlayer`에 `ntrpKnown: boolean`을 더해 카드가 모를 때 숨기기 | **fixed(38fcf3c)** |
+| F-9 | P2 | S4.7 | 복식 결과 확인 다이얼로그가 제안자를 **상대팀 이름**으로 말한다 — A(남자01)가 제안했는데 파트너 B에게 `남자04 · 남자03님이 제안한 결과`, 상대 D에게 `남자02 · 남자01님이 제안한 결과`. 행의 `결과를 입력한 사람: 남자01`과 모순 | `남자01님이 제안한 결과` | `result-review-panel.tsx:42`가 `opponentName`을 제안자 자리에 씀 | `proposedBy` 이름을 `PersonalMatchConfirmation`에 실어 전달(`proposerName`), 패널이 그것을 쓰고 없을 때만 opponentName 폴백 | **fixed(56f689a)** |
+| F-10 | P2 | S1.16·S4.7·S4.10 | 룸 게임 행의 좌석 명단이 **뷰어를 두 번** 센다 — `확인 대기: 나 · 남자04 · 남자02 · 남자03`(B 관점, 실제 대기 3명), `확인 완료: 나 · 남자02`(둘 다 B). 개인 카드에는 없다 | `확인 대기: 나 · 남자04 · 남자03` | `seat-status.ts:67`이 `'나'`를 앞에 더하는데, 룸 행 호출부가 `seats`에 뷰어 본인 참가자를 걸러 넘기지 않는다(개인 카드의 `namedSeatsOf`는 타 좌석만) | 룸 행(`room-game-row`/`buildRoomGameSeats`)에서 `viewerId`를 제외한 좌석만 넘기거나 `seatStatuses`가 `me` 이름과 같은 항목을 제거. vitest 케이스 추가 | **fixed(56f689a)** |
+| F-11 | P2 | S4.13 | 복식(로테이션) 방에서 **게임을 전부 확정해도** 풀 회원 전원에게 사이드바 뱃지 1 + 카드 필 `결과 입력`이 남는다(D 확인). 방 상세에는 「지금 할 일」 배너가 없어 카드와 상세가 어긋난다. 방장이 [게임 입력 종료]를 누르기 전까지 지속 | 게임이 남지 않았으면 풀 세션은 차례로 세지 않거나, 방장에게만 「게임 입력 종료로 마무리하세요」 차례를 준다 | `room-queue.ts`/`match-queue.ts`가 미확정 `rotation_sessions`를 무조건 `enterResult`로 넣음. `classifyRoomGameTurn`은 게임만 봄 | (a) 방 세션은 큐에서 `enterResult`로 세지 않는다(방 안 [게임 입력]은 상시 가능한 액션이지 차례가 아님) + (b) 방장에게 `closeRotation` 차례 신설(배너 「모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다」). K-12와 묶어 결정 | **fixed(f4d1d3b)** |
+| F-13 | P2 | S6.12 | 결과 미입력 게임이 있는 B가 [방 나가기]를 하면 **사이드바 뱃지는 1로 남는데** 「참여 중인 매칭」에는 카드가 없다(declined는 목록에서 제외, 큐는 관점 행을 그대로 셈). 뱃지 = 카드 수 항등식(Week 45)이 깨진다. 방 상세는 게이트라 할 일을 볼 수도 없다(K-1) | 나간 방의 게임은 큐에서 빼거나(뱃지 0), 나간 뒤에도 카드는 남기고(「나간 매칭」 표시) 결과 확인 경로를 준다 | `fetchMatchQueue`가 `room_id` 방의 멤버십 상태를 보지 않음; `fetchRoomQueue`/목록은 joined만 | K-1과 함께: `leave_match_room`에 `member_has_games` 가드(강퇴와 대칭) 또는 큐에서 declined 방 제외. **권장: 가드** — 결과가 남은 채로 나가는 것이 문제의 뿌리 | **fixed(f4d1d3b)** |
+| F-14 | P3 | S10.12 | 내려간 방의 URL은 404 페이지인데 CTA가 `클럽 목록으로 돌아가기`다 — 매칭 룸 경로에서는 매칭 리스트가 맞다 | `매칭 리스트로 돌아가기` 또는 경로별 CTA | `app/not-found.tsx` 단일 CTA | `/match-rooms/[roomId]`에 `notFound()` 대신 전용 안내(「내려간 매칭입니다」 + 매칭 리스트 링크) | **fixed(38fcf3c)** |
+| F-7 | P3 | S2.11 | [결과 정정] 다이얼로그 설명 `양쪽 기록이 미확정으로 돌아가고 **확인 요청에서** 다시 입력합니다.` — 허브가 철거되어 다시 입력하는 곳은 매칭 룸이다 | `…매칭 룸에서 다시 입력합니다` | `ReopenResultButton` description 문구(Week 39 이전) | 문구 교체 | **fixed(38fcf3c)** |
 
-## 수정 계획 요약 (2026-09-11 첫 전수 실행 뒤) — 승인 대기
+## 수정 계획 요약 (2026-09-11 첫 전수 실행 뒤) — **완료**
 
 P1(저장 실패·크래시·교착)은 **0건**. 흐름 자체는 전부 통과했고, 발견한 것은 어긋남(P2) 5건과 문구·표시(P3) 9건이다. 묶어서 3개 커밋으로 고치는 것을 제안한다.
 
@@ -34,19 +34,31 @@ P1(저장 실패·크래시·교착)은 **0건**. 흐름 자체는 전부 통과
 
 순서 제안: ① → ② → ③. ①의 F-13은 마이그레이션이 들어가므로 별도 승인. ②·③은 앱만.
 
+### 실행 결과 (2026-09-11 두 번째 실행)
+
+세 묶음 모두 구현·검증 완료. 사용자 결정은 F-5 **막는다**, F-11 **세션 차례 제거 + 방장 종료 차례**, F-13 **나가기에 가드**.
+
+| 묶음 | 커밋 | 결과 |
+|---|---|---|
+| ① 정산·차례 정합 | `f4d1d3b` (+ 마이그레이션 0077) | 정산된 방은 [게임 추가]까지 사라지고 RPC·정책이 함께 막는다. 방 세션은 더 이상 차례가 아니고, 게임이 전부 확정되면 **방장에게만** 「입력 종료」 차례가 간다. 배정된 경기가 있는 회원은 나갈 수 없다 |
+| ② 협상 표시 | `56f689a` | 검토 패널이 제안자 이름을 말한다(`proposerNameOf`, `disputerNameOf`와 대칭). 룸 행 좌석에서 뷰어 본인을 뺀다 |
+| ③ 문구·표시 | `38fcf3c` | P3 8건 + 선등록 2건. 에러 맵은 `lib/match-rooms/error-map.ts`로 빠져 **포함된 키 중 가장 긴 것**을 고른다(순서 의존 제거) |
+
+재실행 결과는 `runs.md` 「Week 50 두 번째 실행」 블록의 재실행 표에 있다. 미해결로 남긴 것은 **K-6**(경기당 시간 미저장 — 저장된 대진의 라운드 시각이 역산값)뿐이고, 이는 방 스키마 확장이 필요해 백로그에 남긴다.
+
 ## 코드 조사 선등록
 
 | ID | P | 근거 | 증상 | 수정 계획 | 상태 |
 |---|---|---|---|---|---|
-| F-pre-1 | P3 | `match-room-form.tsx` · `createMatchRoomAction` | 초대 실패 문구(`매칭은 만들어졌지만 초대에 실패했습니다…`)는 `roomId`가 있으면 폼이 무조건 push하므로 화면에 닿지 않는다 | 액션 결과에 `inviteError`를 따로 실어 룸 착지 후 배너로 한 번 보여주거나, push 전에 문구를 세션 스토리지에 남긴다 | open |
-| F-pre-2 | P3 | `lib/actions/match-rooms.ts` `translate`, `match-results.ts` | 에러 맵이 `includes` 선형 탐색이라 `not_room_member`/`target_not_room_member`, `result_already_confirmed`/`…_by_seat` 순서에 의존 — 회귀 유닛 테스트 없음 | 에러 맵을 순수 모듈로 빼고 `translate`가 정확 일치 우선·접두 일치 후순으로 찾게 한 뒤 vitest로 고정 | open |
-| F-pre-3 | P2 후보 | `game-status.ts` `roomGameMemberIds` ↔ `kick_room_member` `member_has_games` | 게임이 하나라도 붙으면 [내보내기]가 사라지는데, 게스트 상대 자유 기록만 있는 회원(0076 direct 라인업 포함)도 같은 취급인지 확인 필요 — S6·S4.12에서 판정 | S6 결과에 따라 결정 | open |
+| F-pre-1 | P3 | `match-room-form.tsx` · `createMatchRoomAction` | 초대 실패 문구(`매칭은 만들어졌지만 초대에 실패했습니다…`)는 `roomId`가 있으면 폼이 무조건 push하므로 화면에 닿지 않는다 | 액션 결과에 `inviteError`를 따로 실어 룸 착지 후 배너로 한 번 보여주거나, push 전에 문구를 세션 스토리지에 남긴다 | **fixed(38fcf3c)** |
+| F-pre-2 | P3 | `lib/actions/match-rooms.ts` `translate`, `match-results.ts` | 에러 맵이 `includes` 선형 탐색이라 `not_room_member`/`target_not_room_member`, `result_already_confirmed`/`…_by_seat` 순서에 의존 — 회귀 유닛 테스트 없음 | 에러 맵을 순수 모듈로 빼고 `translate`가 정확 일치 우선·접두 일치 후순으로 찾게 한 뒤 vitest로 고정 | **fixed(38fcf3c)** |
+| F-pre-3 | P2 후보 | `game-status.ts` `roomGameMemberIds` ↔ `kick_room_member` `member_has_games` | 게임이 하나라도 붙으면 [내보내기]가 사라지는데, 게스트 상대 자유 기록만 있는 회원(0076 direct 라인업 포함)도 같은 취급인지 확인 필요 — S6·S4.12에서 판정 | 판정 완료 — 자유 기록도 같은 취급이다(`room_member_has_games`가 personal_matches 소유·참가자를 본다). 0077이 그 술어를 함수로 빼 leave에도 같은 눈높이를 준다 | **closed(f4d1d3b)** |
 
 ## 기지 (CLAUDE.md 백로그에서 옮김) — 재현되면 `confirmed`
 
 | ID | 출처 | 내용 | 상태 |
 |---|---|---|---|
-| K-1 | Week 41 잔여 | 스스로 나간 사람(declined)은 게임을 친 뒤 [방 나가기]를 하면 상세가 막혀 결과를 확인할 수 없다(강퇴에만 `member_has_games` 가드) | **confirmed** — S6.12: 나간 뒤 상세는 비밀번호 게이트, 뱃지는 1 잔존(F-13). 탈출구 = 비밀번호 재입장(6.13 확인) |
+| K-1 | Week 41 잔여 | 스스로 나간 사람(declined)은 게임을 친 뒤 [방 나가기]를 하면 상세가 막혀 결과를 확인할 수 없다(강퇴에만 `member_has_games` 가드) | **fixed(f4d1d3b)** — 0077이 `leave_match_room`에 `room_member_has_games` 가드를 걸어 애초에 나갈 수 없다(강퇴와 대칭). 화면도 버튼 대신 이유를 말한다 |
 | K-2 | Week 41 잔여 | 방장이 누구를 내보냈는지 화면에 남지 않고, 초대 검색에 「강퇴됨」 표시가 없다 | known — S6.7 |
 | K-3 | Week 41 잔여 | 게임 추가 폼의 파트너·상대2 자동완성에 방 게스트가 뜨지 않는다 | known — S3.7 |
 | K-4 | Week 41 잔여 | 강퇴 알림 없음(강퇴자는 방을 열어야 안다) | known — S6.3 |
@@ -57,4 +69,4 @@ P1(저장 실패·크래시·교착)은 **0건**. 흐름 자체는 전부 통과
 | K-9 | Week 48 잔여 | 자유 기록 라인업 행은 소유자가 `/me/personal-matches/[id]/edit`에서 고치거나 지울 수 있고, 방장 소유 행의 메타 편집은 방 메타를 덮어쓴다 | known — S3.20 |
 | K-10 | 백로그 | 이의 왕복 상한 없음(`dispute_count`만 셈), 알림·리마인더·만료 없음 | known |
 | K-11 | Week 45 잔여 | 방 상세 URL에서는 사이드바 「매칭 리스트」가 활성(참여 중인 매칭에서 들어가도) | known — S8 |
-| K-12 | Week 40 잔여 | 미확정 로테이션 방에 [자동 대진표]와 [게임 입력]이 공존 — 유지하기로 결정. 정산하려면 방장이 [게임 입력 종료]를 눌러야 한다 | **confirmed** — S4.13·4.15: 게임 전부 확정 뒤에도 방장 배너가 비어 있어 종료를 눌러야 한다는 것을 아무도 말하지 않는다(F-11과 함께 처리) |
+| K-12 | Week 40 잔여 | 미확정 로테이션 방에 [자동 대진표]와 [게임 입력]이 공존 — 유지하기로 결정. 정산하려면 방장이 [게임 입력 종료]를 눌러야 한다 | **fixed(f4d1d3b)** — 공존은 그대로 두고, 게임이 전부 확정되면 방장에게 `closeRotation` 차례를 준다(배너·필 「입력 종료」). 풀 회원의 유령 차례는 사라졌다 |
