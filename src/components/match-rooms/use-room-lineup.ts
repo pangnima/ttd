@@ -72,7 +72,12 @@ export type RoomLineupState = {
  */
 export function useRoomLineup({ candidates, matchType, durationMinutes, courtCount = 1 }: Options): RoomLineupState {
     const [excluded, setExcluded] = useState<Set<string>>(new Set())
-    const [perPlayer, setPerPlayer] = useState(2)
+    // 초기값은 권장값이다(Week 47) — 다이얼로그는 열 때마다 마운트되므로 매번 그 시점의 명단·일정으로 계산된다.
+    // 이후로는 사용자 선택을 존중한다(인원을 빼도 초기값을 되돌리지 않는다 — 권장 마크만 옮겨 간다).
+    // 소요 시간을 모르는 방(0073 이전)은 권장이 없어 예전 기본값 2로 시작한다.
+    const [perPlayer, setPerPlayer] = useState(() => recommendGames({
+        durationMinutes, slotMinutes: DEFAULT_SLOT_MINUTES, courtCount, playerCount: candidates.length, matchType,
+    })?.perPlayer ?? 2)
     const [preset, setPreset] = useState<LineupPreset>('balanced')
     const [slotMinutes, setSlotMinutesState] = useState(DEFAULT_SLOT_MINUTES)
     const [seed, setSeed] = useState(1)

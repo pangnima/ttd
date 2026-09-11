@@ -3,11 +3,10 @@
 import type { ReactNode } from 'react'
 
 import type { OpponentCandidate } from '@/lib/queries/users'
-import { LINEUP_PRESETS, PER_PLAYER_OPTIONS, type LineupPreset } from '@/lib/match-rooms/lineup'
-import { SLOT_MINUTES_OPTIONS } from '@/lib/match-rooms/schedule'
-import { MATCH_FORM_LABEL, TYPO } from '@/lib/dashboard/tokens'
-import { EnumSelect } from '@/components/match/enum-select'
+import { LINEUP_PRESETS, type LineupPreset } from '@/lib/match-rooms/lineup'
+import { TYPO } from '@/lib/dashboard/tokens'
 import { FieldToggle } from '@/components/common/field-toggle'
+import { LineupCountFields } from '@/components/match-rooms/form-sections/lineup-count-fields'
 import { LineupParticipantChips } from '@/components/match-rooms/form-sections/lineup-participant-chips'
 
 type Props = {
@@ -19,6 +18,8 @@ type Props = {
     /** 경기당 시간(분) — 권장 경기 수의 분모 */
     slotMinutes: number
     onSlotMinutesChange: (n: number) => void
+    /** 권장 1인당 경기 수 — 드롭다운의 그 항목에 「권장」이 붙는다. 방이 소요 시간을 모르면 없다 */
+    recommendedPerPlayer?: number
     /** 권장 줄 — 방이 소요 시간을 모르면 넘어오지 않는다 */
     recommendation?: ReactNode
     preset: LineupPreset
@@ -29,17 +30,13 @@ type Props = {
     onOpenChange: (open: boolean) => void
 }
 
-// base-ui Select는 items 참조로 라벨을 찾으므로 모듈 상수로 고정한다(렌더마다 새 배열이면 매핑이 흔들린다)
-const PER_PLAYER_ITEMS = PER_PLAYER_OPTIONS.map((n) => ({ value: String(n), label: `${n}경기` }))
-const SLOT_ITEMS = SLOT_MINUTES_OPTIONS.map((n) => ({ value: String(n), label: `${n}분` }))
-
 /**
  * 대진 옵션 — 누가 뛰는지 · 1인당 몇 경기 · 어떤 기준으로 섞을지.
  * 요약 줄이 항상 위에 남아, 접은 상태에서도 무엇으로 뽑은 대진인지 알 수 있다.
  */
 export function LineupOptions({
     candidates, included, onToggle, perPlayer, onPerPlayerChange, slotMinutes, onSlotMinutesChange,
-    preset, onPresetChange, gameCount, recommendation, open, onOpenChange,
+    recommendedPerPlayer, preset, onPresetChange, gameCount, recommendation, open, onOpenChange,
 }: Props) {
     const active = LINEUP_PRESETS.find((p) => p.value === preset)
 
@@ -65,32 +62,13 @@ export function LineupOptions({
                 <div className="space-y-4">
                     <LineupParticipantChips candidates={candidates} included={included} onToggle={onToggle} />
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className={MATCH_FORM_LABEL}>1인당 경기 수 *</label>
-                            <EnumSelect
-                                value={String(perPlayer)}
-                                onValueChange={(v) => onPerPlayerChange(Number(v))}
-                                options={PER_PLAYER_ITEMS}
-                                ariaLabel="1인당 경기 수"
-                            />
-                            <p className={`mt-2 ${TYPO.caption} break-keep`}>
-                                덜 뛴 사람이 먼저 들어갑니다. 출전 편차는 1 이내입니다.
-                            </p>
-                        </div>
-                        <div>
-                            <label className={MATCH_FORM_LABEL}>경기 시간 *</label>
-                            <EnumSelect
-                                value={String(slotMinutes)}
-                                onValueChange={(v) => onSlotMinutesChange(Number(v))}
-                                options={SLOT_ITEMS}
-                                ariaLabel="경기 시간"
-                            />
-                            <p className={`mt-2 ${TYPO.caption} break-keep`}>
-                                한 경기에 걸리는 시간입니다. 몇 경기가 좋을지 여기서 갈립니다.
-                            </p>
-                        </div>
-                    </div>
+                    <LineupCountFields
+                        perPlayer={perPlayer}
+                        onPerPlayerChange={onPerPlayerChange}
+                        slotMinutes={slotMinutes}
+                        onSlotMinutesChange={onSlotMinutesChange}
+                        recommendedPerPlayer={recommendedPerPlayer}
+                    />
 
                     <div>
                         <FieldToggle

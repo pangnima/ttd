@@ -68,6 +68,13 @@ describe('roomGamesEmptyMessage', () => {
             .toContain('게임 입력')
     })
 
+    it('미확정 로테이션의 방장에게는 [자동 대진표]도 말한다 — 참가자에게는 없는 버튼이라 말하지 않는다', () => {
+        const pending = detailWith({ kind: 'rotation', isFinalized: false })
+        expect(roomGamesEmptyMessage(pending, true)).toContain('자동 대진표')
+        expect(roomGamesEmptyMessage(pending, false)).not.toContain('자동 대진표')
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: true }), true)).not.toContain('자동 대진표')
+    })
+
     it('확정된 로테이션은 게임 추가 안내', () => {
         expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: true })))
             .toContain('게임을 추가하세요')

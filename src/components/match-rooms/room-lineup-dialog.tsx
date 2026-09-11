@@ -60,6 +60,7 @@ export function RoomLineupDialog({
                         onPerPlayerChange={lineup.setPerPlayer}
                         slotMinutes={lineup.slotMinutes}
                         onSlotMinutesChange={lineup.setSlotMinutes}
+                        recommendedPerPlayer={lineup.recommendation?.perPlayer}
                         recommendation={(
                             <LineupRecommendation
                                 recommendation={lineup.recommendation}

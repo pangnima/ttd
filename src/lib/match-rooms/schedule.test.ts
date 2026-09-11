@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+    describeRecommendation,
     estimateMinutes,
     formatDurationLabel,
     formatRoomWhen,
@@ -107,6 +108,26 @@ describe('recommendGames — 시간과 코트 면 수로 권장 경기 수', () 
     it('단식은 두 명부터 추천한다', () => {
         expect(recommendGames({ ...base, matchType: 'singles', courtCount: 1, playerCount: 1 })).toBeNull()
         expect(recommendGames({ ...base, matchType: 'singles', courtCount: 1, playerCount: 2 })).not.toBeNull()
+    })
+})
+
+describe('describeRecommendation — 매칭 만들기 요약과 룸 힌트가 공유하는 한 문장', () => {
+    const rec = { rounds: 4, courts: 2, games: 8, perPlayer: 3, notes: [] }
+
+    it('고른 면 수를 다 쓰면 면 수를 말하지 않는다', () => {
+        expect(describeRecommendation({ recommendation: rec, courtCount: 2, playerCount: 11 }))
+            .toBe('참가 예정 11명이면 1인당 3경기 권장')
+    })
+
+    it('인원이 모자라 실효 면 수가 깎이면 "M면 기준"을 밝힌다', () => {
+        expect(describeRecommendation({ recommendation: rec, courtCount: 3, playerCount: 11 }))
+            .toBe('참가 예정 11명이면 2면 기준 1인당 3경기 권장')
+    })
+
+    it('recommendGames의 결과를 그대로 받는다', () => {
+        const r = recommendGames({ durationMinutes: 120, slotMinutes: 30, courtCount: 3, playerCount: 11, matchType: 'men_doubles' })
+        expect(r).not.toBeNull()
+        expect(describeRecommendation({ recommendation: r!, courtCount: 3, playerCount: 11 })).toContain('2면 기준')
     })
 })
 

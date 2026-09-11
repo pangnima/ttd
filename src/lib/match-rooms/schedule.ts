@@ -119,6 +119,22 @@ export function recommendGames(input: RecommendInput): LineupRecommendation | nu
     return { rounds, courts, games, perPlayer, notes }
 }
 
+export type DescribeRecommendationInput = {
+    recommendation: LineupRecommendation
+    /** 방이 고른 면 수 — 실효 면 수가 이보다 작으면 "M면 기준"을 밝힌다 */
+    courtCount: number
+    playerCount: number
+}
+
+/**
+ * 권장값 한 문장 — 매칭 만들기 요약 줄과 룸 상세 힌트가 **같은 문장**을 쓴다(Week 47).
+ * 고른 면 수와 실제로 돌릴 수 있는 면 수가 다르면 밝힌다 — 안 그러면 "3면인데 왜 4경기"가 된다.
+ */
+export function describeRecommendation({ recommendation, courtCount, playerCount }: DescribeRecommendationInput): string {
+    const basisCourts = recommendation.courts < courtCount ? `${recommendation.courts}면 기준 ` : ''
+    return `참가 예정 ${playerCount}명이면 ${basisCourts}1인당 ${recommendation.perPlayer}경기 권장`
+}
+
 /** 이 경기 수를 소화하는 데 걸리는 시간 — 코트 면 수만큼 동시에 돈다 */
 export function estimateMinutes(games: number, slotMinutes: number, courtCount: number): number {
     if (games <= 0 || slotMinutes <= 0 || courtCount <= 0) return 0

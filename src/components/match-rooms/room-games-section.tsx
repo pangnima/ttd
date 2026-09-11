@@ -7,8 +7,8 @@ import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 import { canCreateRoomLineup, roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
 import { RoomGameRounds } from '@/components/match-rooms/room-game-rounds'
 import { RoomGameDialog } from '@/components/match-rooms/room-game-dialog'
-import { RoomLineupButton } from '@/components/match-rooms/room-lineup-button'
-import { RoomLineupEditButton } from '@/components/match-rooms/room-lineup-edit-button'
+import { RoomGamesActions } from '@/components/match-rooms/room-games-actions'
+import { RoomLineupHint } from '@/components/match-rooms/room-lineup-hint'
 import { RoomRotationBuilder } from '@/components/match-rooms/room-rotation-builder'
 import { guestParticipants, type RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
@@ -46,6 +46,8 @@ export function RoomGamesSection({
 }: RoomGamesSectionProps) {
     const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
+    // [자동 대진표]의 노출 조건 — 권장 힌트와 빈 상태의 방장 문구가 같은 식을 본다(버튼 없는 안내를 막는다)
+    const canLineup = !!lineupCandidates && canCreateRoomLineup(detail, lineupCandidates.length)
 
     return (
         <section className="space-y-2">
@@ -53,33 +55,13 @@ export function RoomGamesSection({
                 <h2 className={TYPO.h3}>게임</h2>
                 {/* 로테이션 방장에게는 버튼 3개가 한꺼번에 보인다 — 좁은 화면에서 제목을 밀지 않도록 감싼다 */}
                 <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
-                    {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066).
-                        노출 조건은 RPC 가드의 거울이다 — 정산된 방에서는 거절당하므로 그리지 않는다 (0072) */}
-                    {lineupCandidates && canCreateRoomLineup(detail, lineupCandidates.length) && (
-                        <RoomLineupButton
-                            roomId={detail.room.id}
-                            matchType={detail.room.matchType}
-                            candidates={lineupCandidates}
-                            existingGames={detail.games.length}
-                            playedTime={detail.room.playedTime}
-                            durationMinutes={detail.room.durationMinutes}
-                            courtCount={detail.room.courtCount}
-                        />
-                    )}
-                    {/* 저장한 대진 고치기 — 결과·협상이 없는 라인업 게임이 남아 있을 때만 (0071).
-                        정산된 방은 대표 게임이 전부 확정이라 editableLineup이 비고 버튼이 스스로 사라진다 */}
-                    {lineupCandidates && editableLineup && (
-                        <RoomLineupEditButton
-                            roomId={detail.room.id}
-                            matchType={detail.room.matchType}
-                            candidates={lineupCandidates}
-                            games={detail.games}
-                            editable={editableLineup}
-                            playedTime={detail.room.playedTime}
-                            durationMinutes={detail.room.durationMinutes}
-                            courtCount={detail.room.courtCount}
-                        />
-                    )}
+                    {/* 방장 액션 둘 — 자동 대진표·대진 편집 */}
+                    <RoomGamesActions
+                        detail={detail}
+                        lineupCandidates={lineupCandidates}
+                        editableLineup={editableLineup}
+                        canLineup={canLineup}
+                    />
                     {/* 미확정 로테이션 방은 참가자 누구나 자기 기준으로 게임을 넣는다 (0050) */}
                     {isPendingRotation && isMember && rotationSession && picker && (
                         <RoomRotationBuilder
@@ -101,9 +83,13 @@ export function RoomGamesSection({
                 </div>
             </div>
             {detail.games.length === 0 ? (
-                <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail)}</div>
+                <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail, canLineup)}</div>
             ) : (
                 <RoomGameRounds detail={detail} viewerId={viewerId} confirmations={confirmations} />
+            )}
+            {/* 권장 경기 수를 다이얼로그 밖에서 미리 말한다 (Week 47) — 버튼과 같은 조건, 같은 인원 */}
+            {lineupCandidates && canLineup && (
+                <RoomLineupHint detail={detail} playerCount={lineupCandidates.length} />
             )}
         </section>
     )

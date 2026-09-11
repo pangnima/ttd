@@ -7,6 +7,7 @@ import {
     COURT_COUNT_OPTIONS,
     DEFAULT_SLOT_MINUTES,
     DURATION_OPTIONS,
+    describeRecommendation,
     formatDurationLabel,
     formatRoomWhen,
     recommendGames,
@@ -103,14 +104,11 @@ function RoomScheduleSummary({
     const recommendation = recommendGames({
         durationMinutes, slotMinutes: DEFAULT_SLOT_MINUTES, courtCount, playerCount, matchType,
     })
-    const basisCourts = recommendation && recommendation.courts < courtCount ? `${recommendation.courts}면 기준 ` : ''
     const parts = [
         when ? `${when} (${formatDurationLabel(durationMinutes)})` : '시각을 고르면 종료 시각이 계산됩니다',
         `코트 ${courtCount}면`,
-        // 고른 면 수와 실제로 돌릴 수 있는 면 수가 다르면 밝힌다 — 안 그러면 "3면인데 왜 4경기"가 된다
-        recommendation
-            ? `참가 예정 ${playerCount}명이면 ${basisCourts}1인당 ${recommendation.perPlayer}경기 권장`
-            : null,
+        // 문장은 룸 상세 힌트와 공유한다(Week 47) — 실효 면 수가 깎이면 "M면 기준"을 밝히는 규칙도 거기에 있다
+        recommendation ? describeRecommendation({ recommendation, courtCount, playerCount }) : null,
     ].filter(Boolean)
 
     return <p className={`${TYPO.caption} break-keep`}>{parts.join(' · ')}</p>
