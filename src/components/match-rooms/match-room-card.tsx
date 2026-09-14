@@ -52,7 +52,9 @@ export function MatchRoomCard({ room, turn }: Props) {
                     ) : null}
                     {/* 비노출 방(0082)은 참여 중인 매칭에서만 그려진다 — 리스트에 없는 방임을 칩으로 말한다 */}
                     {!room.isListed && <span className={`${PILL_BASE} border-border text-muted-foreground`}>비공개</span>}
-                    {room.isSettled && <span className={`${PILL_BASE} border-border text-muted-foreground`}>결과 확정</span>}
+                    {room.closedAt
+                        ? <span className={`${PILL_BASE} border-border bg-muted text-muted-foreground`}>마감</span>
+                        : room.isSettled && <span className={`${PILL_BASE} border-border text-muted-foreground`}>결과 확정</span>}
                 </div>
             </div>
         </Link>

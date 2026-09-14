@@ -38,6 +38,10 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['duplicate_guest_name', '이미 같은 이름의 참가자가 있습니다. 구별되는 이름으로 입력해주세요.'],
     ['guest_not_found', '이미 명단에서 빠진 참가자입니다.'],
     ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
+    // 0083 — 방장이 닫은 방. 기존 room_already_closed(정산됨)와 뜻이 다르다
+    ['room_closed', '방장이 마감한 매칭입니다. 고치려면 방장이 다시 열어야 합니다.'],
+    ['room_not_settled', '모든 게임의 결과가 확정된 뒤에 마감할 수 있습니다.'],
+    ['room_not_closed', '마감되지 않은 매칭입니다.'],
     ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
     ['host_cannot_leave', '방장은 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
     ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
@@ -439,6 +443,36 @@ export async function closeRotationRoomAction(roomId: string): Promise<ActionRes
 
     const { error } = await supabase.rpc('close_rotation_room', { p_room_id: roomId })
     if (error) return { error: translate(error.message, '게임 입력 종료에 실패했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/me/personal-matches')
+    return { error: null }
+}
+
+/**
+ * 방 닫기(0083) — 정산된 방을 방장이 마감한다. 결과 정정·게임 추가·초대·대진 편집·기록 수정이 전부 잠기고,
+ * 정산을 되돌리는 어떤 경로도 recompute_match_room_settled에서 room_closed로 막힌다.
+ * 확정된 전적은 이미 개인 경기 결과에 있다 — 닫기는 노출을 바꾸지 않고 잠금만 얹는다.
+ */
+export async function closeMatchRoomAction(roomId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('close_match_room', { p_room_id: roomId })
+    if (error) return { error: translate(error.message, '매칭을 마감하지 못했습니다.') }
+
+    revalidateRoomPaths(roomId)
+    revalidatePath('/me/personal-matches')
+    return { error: null }
+}
+
+/** 다시 열기(0083) — 방장만. 잘못 확정한 결과를 [결과 정정]으로 고칠 유일한 탈출구 */
+export async function reopenMatchRoomAction(roomId: string): Promise<ActionResult> {
+    const { supabase, user } = await requireUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const { error } = await supabase.rpc('reopen_match_room', { p_room_id: roomId })
+    if (error) return { error: translate(error.message, '매칭을 다시 열지 못했습니다.') }
 
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')

@@ -76,7 +76,28 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
  */
 export async function fetchSettledPersonalMatches(userId: string): Promise<PersonalMatch[]> {
     const matches = await fetchPersonalMatchesByHasResult(userId, true)
-    return attachConfirmations(matches, userId)
+    return attachRoomState(await attachConfirmations(matches, userId))
+}
+
+/**
+ * 방의 마감 여부(0083)를 확정 기록에 부착한다 — 확정 카드의 [결과 정정]·[수정]·[삭제]는 닫힌 방에서 잠긴다.
+ * `PersonalMatch`는 roomId만 알므로 방 id를 모아 `match_rooms(id, closed_at)`를 **1회** in() 조회한다
+ * (방 메타는 로그인 회원 전원 SELECT). 확정 목록에서만 붙인다 — 미확정 행은 정의상 닫힌 방에 없다(closed ⊆ settled).
+ */
+async function attachRoomState(matches: PersonalMatch[]): Promise<PersonalMatch[]> {
+    const roomIds = [...new Set(matches.map((m) => m.roomId).filter((id): id is string => !!id))]
+    if (roomIds.length === 0) return matches
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('match_rooms')
+        .select('id, closed_at')
+        .in('id', roomIds)
+        .not('closed_at', 'is', null)
+    if (error || !data || data.length === 0) return matches
+
+    const closedAt = new Map(data.map((r) => [r.id, r.closed_at as string]))
+    return matches.map((m) => (m.roomId && closedAt.has(m.roomId) ? { ...m, roomClosedAt: closedAt.get(m.roomId) } : m))
 }
 
 /** 결과 미확정 개인 경기만 — 확인 요청 허브의 작업 큐(classifyPendingMatch 입력). confirmation 부착 필수 */

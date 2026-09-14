@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { MATCH_FORM_INPUT, MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
 import { ROOM_PASSWORD_MAX, ROOM_PASSWORD_MIN } from '@/lib/match-rooms/password'
 import { closeRotationRoomAction, deleteMatchRoomAction, updateRoomPasswordAction } from '@/lib/actions/match-rooms'
+import { RoomCloseButton } from '@/components/match-rooms/room-close-button'
 
 type Props = {
     roomId: string
@@ -15,10 +16,13 @@ type Props = {
     canCloseRotation?: boolean
     /** 비노출 방(0082)은 비밀번호가 없다 — [비밀번호 변경]이 없고 '내리기'는 '삭제'다(리스트에 오른 적이 없다) */
     isListed?: boolean
+    /** 정산됐으면 [방 닫기], 닫혔으면 [다시 열기] (0083 — RoomCloseButton) */
+    isSettled?: boolean
+    closedAt?: string
 }
 
-/** 방장 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 매칭 리스트에서 내리기(방 삭제, 기록은 유지) */
-export function RoomHostActions({ roomId, canCloseRotation = false, isListed = true }: Props) {
+/** 방장 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 방 닫기/다시 열기 · 매칭 리스트에서 내리기(방 삭제, 기록은 유지) */
+export function RoomHostActions({ roomId, canCloseRotation = false, isListed = true, isSettled = false, closedAt }: Props) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
     const [password, setPassword] = useState('')
@@ -68,6 +72,7 @@ export function RoomHostActions({ roomId, canCloseRotation = false, isListed = t
             {canCloseRotation && (
                 <Button size="sm" variant="outline" disabled={isPending} onClick={closeRotation}>게임 입력 종료</Button>
             )}
+            <RoomCloseButton roomId={roomId} isSettled={isSettled} closedAt={closedAt} />
             <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={isPending} onClick={unlist}>
                 {isListed ? '매칭 리스트에서 내리기' : '매칭 삭제'}
             </Button>

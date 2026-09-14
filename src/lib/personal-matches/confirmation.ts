@@ -299,8 +299,9 @@ export function bystanderWaitingBadge(c?: PersonalMatchConfirmation): BystanderW
  * 조건은 RPC의 통과 조건과 같다 — 상호 확인 경기(requestId 있음) · 결과 확정 상태 ·
  * 뷰어가 이 요청의 좌석 중 하나(0059부터 파트너·상대2 포함). 확인할 수 있는 사람이 되돌릴 수도 있어야 일관된다.
  * 자유 기록은 애초에 본인이 수정·삭제할 수 있으므로 이 경로가 필요 없다.
+ * 방장이 닫은 방(0083)에서는 좌석이어도 되돌릴 수 없다 — RPC의 room_closed 가드의 거울.
  */
-export function canReopenResult(c?: PersonalMatchConfirmation): boolean {
-    if (!c) return false
+export function canReopenResult(c?: PersonalMatchConfirmation, opts: { roomClosed?: boolean } = {}): boolean {
+    if (!c || opts.roomClosed) return false
     return c.status === 'confirmed' && c.viewerIsParty
 }

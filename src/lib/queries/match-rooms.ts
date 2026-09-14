@@ -18,7 +18,7 @@ import type {
  */
 
 // 공개 메타 컬럼만 명시 (select('*') 금지 — 방 행에는 없지만 습관적으로 secrets를 조인하지 않기 위한 규약)
-const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, duration_minutes, court_count, slot_minutes, is_settled, is_listed'
+const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, duration_minutes, court_count, slot_minutes, is_settled, is_listed, closed_at'
 const HOST_JOIN = 'host:users!match_rooms_host_user_id_fkey(id, name, nickname, profile_image, deleted_at)'
 const MEMBERS_JOIN = 'members:match_room_members(user_id, role, status)'
 
@@ -38,6 +38,7 @@ type RoomListRow = {
     slot_minutes: number | null
     is_settled: boolean
     is_listed: boolean
+    closed_at: string | null
     host: HostRow
     members: MemberRow[]
 }
@@ -70,6 +71,7 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
         slotMinutes: row.slot_minutes ?? undefined,
         isSettled: row.is_settled,
         isListed: row.is_listed,
+        closedAt: row.closed_at ?? undefined,
         joinedCount: countJoined(members.map((m) => ({ role: m.role as MatchRoomMemberRole, status: m.status as MatchRoomMemberStatus }))),
         host: mapHost(row.host, row.host_user_id),
         viewer: mine ? { role: mine.role as MatchRoomMemberRole, status: mine.status as MatchRoomMemberStatus } : undefined,
@@ -364,6 +366,16 @@ function toParticipantCandidate(u: NonNullable<ParticipantRow['users']>): Oppone
         isGuest: u.is_guest ?? false,
         clubNames: [],
     }
+}
+
+/**
+ * 방이 마감됐는가(0083) — 기록 수정 페이지가 폼을 그리기 전에 돌려보내는 데 쓴다.
+ * 방 메타는 로그인 회원 전원 SELECT라 참가 여부와 무관하게 읽힌다. 방이 없으면(삭제됨) 열린 것으로 본다.
+ */
+export async function isRoomClosed(roomId: string): Promise<boolean> {
+    const supabase = await createClient()
+    const { data } = await supabase.from('match_rooms').select('closed_at').eq('id', roomId).maybeSingle()
+    return !!data?.closed_at
 }
 
 /**

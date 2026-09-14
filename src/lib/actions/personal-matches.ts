@@ -18,6 +18,12 @@ import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/reval
 import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 
 /**
+ * 방장이 마감한 방(0083)의 기록을 고치거나 지우려 할 때 — RPC·정책의 room_closed와 같은 뜻.
+ * match-rooms 액션의 에러 맵(`room_closed`)과 문구를 맞춘다('use server' 파일은 상수를 export할 수 없어 여기 둔다).
+ */
+const ROOM_CLOSED_ERROR = '방장이 마감한 매칭입니다. 고치려면 방장이 다시 열어야 합니다.'
+
+/**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
  */
 function buildPersonalMatchBaseRow(input: PersonalMatchInput, userId: string) {
@@ -192,11 +198,13 @@ export async function updatePersonalMatchAction(
     // 리스트에 노출된 기록(모집형)은 참가자를 비운 채 수정할 수 있다. 세트가 있으면 validate-input이 거부한다.
     const { data: existing } = await supabase
         .from('personal_matches')
-        .select('room_id')
+        .select('room_id, room:match_rooms!personal_matches_room_id_fkey(closed_at)')
         .eq('id', id)
         .eq('user_id', user.id)
         .maybeSingle()
     const roomId = existing?.room_id ?? null
+    // 방장이 마감한 방의 기록은 소유자도 고칠 수 없다(0083) — 정책이 0행으로 거절하기 전에 사람 말로
+    if (existing?.room?.closed_at) return { error: ROOM_CLOSED_ERROR }
 
     const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!roomId })
     if (validationError) return { error: validationError }
@@ -249,6 +257,15 @@ export async function deletePersonalMatchAction(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
+
+    // 방장이 마감한 방의 기록은 지울 수 없다(0083) — 정책은 0행으로 조용히 거절하므로 먼저 이유를 말한다
+    const { data: existing } = await supabase
+        .from('personal_matches')
+        .select('room:match_rooms!personal_matches_room_id_fkey(closed_at)')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+    if (existing?.room?.closed_at) return { error: ROOM_CLOSED_ERROR }
 
     // 상호 확인 경기(source_request_id 보유)는 삭제 불가 — RESTRICTIVE RLS와 이중 방어
     // DELETE ... RETURNING으로 room_id를 함께 받는다 — 삭제 후에는 방 소속을 알 방법이 없다

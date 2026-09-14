@@ -78,7 +78,7 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation, slotL
                     자식을 감싸지 않아야 empty:hidden이 성립하므로 스코어는 mr-auto로 민다. */}
                 <div className="flex items-center justify-end gap-2 mt-2 empty:hidden">
                     {sets.length > 0 && <GameScoreChips sets={sets} className="mr-auto" />}
-                    <RoomGameActions game={game} viewerId={viewerId} confirmation={confirmation} />
+                    <RoomGameActions game={game} viewerId={viewerId} confirmation={confirmation} roomClosed={!!detail.room.closedAt} />
                 </div>
             </div>
         </div>

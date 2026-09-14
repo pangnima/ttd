@@ -835,6 +835,7 @@ export type Database = {
       }
       match_rooms: {
         Row: {
+          closed_at: string | null
           court_count: number
           court_name: string | null
           created_at: string
@@ -852,6 +853,7 @@ export type Database = {
           surface: string | null
         }
         Insert: {
+          closed_at?: string | null
           court_count?: number
           court_name?: string | null
           created_at?: string
@@ -869,6 +871,7 @@ export type Database = {
           surface?: string | null
         }
         Update: {
+          closed_at?: string | null
           court_count?: number
           court_name?: string | null
           created_at?: string
@@ -1245,6 +1248,7 @@ export type Database = {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
+      close_match_room: { Args: { p_room_id: string }; Returns: undefined }
       close_rotation_room: { Args: { p_room_id: string }; Returns: undefined }
       confirm_match_result: { Args: { p_request_id: string }; Returns: boolean }
       copy_personal_match_perspective: {
@@ -1498,6 +1502,7 @@ export type Database = {
         Args: { p_reason?: string; p_request_id: string }
         Returns: undefined
       }
+      reopen_match_room: { Args: { p_room_id: string }; Returns: undefined }
       replace_room_lineup: {
         Args: { p_game_ids: string[]; p_games: Json; p_room_id: string }
         Returns: number

@@ -1,7 +1,7 @@
 import { CircleDot, Hourglass } from 'lucide-react'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { ROOM_TURN_LABEL, isMyRoomTurn, type RoomTurnSummary } from '@/lib/match-rooms/room-turn'
-import { ROOM_STAGE_HINT, type RoomStage } from '@/lib/match-rooms/room-stage'
+import { ROOM_STAGE_HINT, isRoomFinished, type RoomStage } from '@/lib/match-rooms/room-stage'
 
 type Props = {
     turn: RoomTurnSummary | null
@@ -17,7 +17,7 @@ type Props = {
  */
 export function RoomTurnBanner({ turn, stage }: Props) {
     if (!turn) {
-        if (stage !== 'closed' && stage !== 'recruiting') return null
+        if (!isRoomFinished(stage) && stage !== 'recruiting') return null
         return (
             <div className={`${CARD_BASE} flex items-start gap-2.5 px-4 py-3`}>
                 <Hourglass className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />

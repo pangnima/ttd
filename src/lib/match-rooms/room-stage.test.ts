@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { MatchRoomGame, MatchRoomSource, MatchResultStatus } from '@/types'
-import { roomStage } from './room-stage'
+import { isRoomClosed, isRoomFinished, roomStage } from './room-stage'
 
 function game(over: Partial<MatchRoomGame> = {}): MatchRoomGame {
     return {
@@ -25,9 +25,9 @@ const finalizedRotation: MatchRoomSource = { kind: 'rotation', isFinalized: true
 
 describe('roomStage', () => {
     it('정산되면 게임 상태와 무관하게 종료다 — 판정의 권위는 DB에 있다', () => {
-        expect(roomStage({ room: { isSettled: true }, games: [], source: direct })).toBe('closed')
-        expect(roomStage({ room: { isSettled: true }, games: [open('a')], source: direct })).toBe('closed')
-        expect(roomStage({ room: { isSettled: true }, games: [], source: pendingRotation })).toBe('closed')
+        expect(roomStage({ room: { isSettled: true }, games: [], source: direct })).toBe('settled')
+        expect(roomStage({ room: { isSettled: true }, games: [open('a')], source: direct })).toBe('settled')
+        expect(roomStage({ room: { isSettled: true }, games: [], source: pendingRotation })).toBe('settled')
     })
 
     it('게임이 없으면 모집 중이다', () => {
@@ -84,5 +84,23 @@ describe('roomStage', () => {
             games: [scored('a'), scored('b')],
             source: finalizedRotation,
         })).toBe('reviewing')
+    })
+})
+
+describe('roomStage — 마감(0083)', () => {
+    it('방장이 닫았으면 정산보다 먼저 마감이다', () => {
+        expect(roomStage({ room: { isSettled: true, closedAt: '2026-09-14T00:00:00Z' }, games: [scored('a')], source: direct })).toBe('closed')
+    })
+
+    it('닫히지 않은 정산 방은 종전대로 종료다', () => {
+        expect(roomStage({ room: { isSettled: true, closedAt: undefined }, games: [scored('a')], source: direct })).toBe('settled')
+    })
+
+    it('isRoomClosed·isRoomFinished는 표시 술어다', () => {
+        expect(isRoomClosed({ closedAt: '2026-09-14T00:00:00Z' })).toBe(true)
+        expect(isRoomClosed({ closedAt: undefined })).toBe(false)
+        expect(isRoomFinished('settled')).toBe(true)
+        expect(isRoomFinished('closed')).toBe(true)
+        expect(isRoomFinished('playing')).toBe(false)
     })
 })

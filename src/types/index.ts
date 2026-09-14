@@ -161,6 +161,8 @@ export type PersonalMatch = {
     rotationSessionId?: string  // 로테이션 세션 tombstone id (0044) — 같은 값이면 같은 로테이션에서 분해된 게임(목록 그룹 키)
     groupSeq?: number           // 로테이션 세션 내 게임 순번 (0044). finalize 루프 순서 = 실제 입력 순서
     roomId?: string             // 매칭 리스트에 노출된 기록이면 방 id (0046) — 카드 '매칭 리스트에서 보기' 링크
+    // 그 방이 닫혔으면 시각 (0083) — 확정 카드의 [결과 정정]·[수정]·[삭제]를 잠근다. 확정 목록 조회에서만 부착된다
+    roomClosedAt?: string
     // 다른 참가자의 기록에서 파생된 관점 복사본 (0050). 방의 '대표 게임' 판정 술어(is_perspective=false)이며,
     // ⚠ 수락자(대표) 행도 true다 — '액션 불가'의 근거로 쓰면 안 된다(그 판정은 confirmation.viewerIsParty).
     isPerspective?: boolean
@@ -309,6 +311,11 @@ export type MatchRoomMeta = {
      * 비밀번호가 없고 초대로만 들어온다. 참여 중인 매칭(/me/match-rooms)은 멤버십 기준이라 노출과 무관하게 보인다
      */
     isListed: boolean
+    /**
+     * 방장이 닫은 시각 (0083). 정산 위의 잠금 — 있으면 결과 정정·게임 추가·초대·대진 편집·기록 수정이 막히고
+     * 방장만 다시 연다. closed ⊆ settled(DB CHECK). 없으면 열린 방
+     */
+    closedAt?: string
 }
 
 // 목록 카드용 — 참가 인원(방장 + joined 참가자)·방장·내 멤버 상태 포함

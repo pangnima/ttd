@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match-rooms'
 import { fetchRoomDetailExtras } from '@/lib/queries/room-detail-extras'
 import { buildRoomGameContext } from '@/lib/match-rooms/room-context'
-import { roomStage } from '@/lib/match-rooms/room-stage'
+import { isRoomFinished, roomStage } from '@/lib/match-rooms/room-stage'
 import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { viewerRoomTurn } from '@/lib/match-rooms/room-turn'
 import { PageContainer } from '@/components/common/page-container'
@@ -61,13 +61,23 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
             <RoomDetailHeader
                 detail={detail}
                 actions={x.isHost
-                    ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} isListed={detail.room.isListed} />
+                    ? (
+                        <RoomHostActions
+                            roomId={roomId}
+                            canCloseRotation={x.isPendingRotation}
+                            isListed={detail.room.isListed}
+                            isSettled={detail.room.isSettled}
+                            closedAt={detail.room.closedAt}
+                        />
+                    )
                     : undefined}
             />
             {notice === 'invite_failed' && <RoomInviteFailedNotice />}
             {notice === 'direct_room' && <RoomDirectCreatedNotice />}
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
-            {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
+            {x.isMember && (isRoomFinished(stage)
+                ? <RoomSettledNotice closed={stage === 'closed'} isHost={x.isHost} />
+                : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection
                 detail={detail}
                 viewerId={user.id}

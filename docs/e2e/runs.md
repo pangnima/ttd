@@ -54,4 +54,6 @@
 
 | 재실행 ④ (K-6) | PASS | 커밋 `a93d190` + 0078. `E2E-S52`(복식·4명·1면·10:00~12:00)에서 자동 대진표를 30분으로 열고 게임 하나를 지워 **3라운드**로 만들어 저장 — 팝업 미리보기 `10:00·10:30·11:00`, 저장 뒤 방 목록도 `10:00·10:30·11:00`. 종전에는 방이 120÷3=40분으로 역산해 `10:00·10:40·11:20`으로 갈렸다. DB `match_rooms.slot_minutes=30` 확인. 0078 롤백 스모크 8건 통과(슬롯 없이 저장 → null 유지 / 30 저장 / 45 재저장은 마지막이 이김 / 상세 RPC slotMinutes / 범위 밖 `invalid_slot_minutes` / 편집(replace)은 슬롯 보존 / 정산 방 `room_already_closed` / 참가자 `not_room_host`), 오버로드 1개 확인 |
 
+| 0083 롤백 스모크 | PASS | 0083 + 0083b(cleanup 트리거). 실 데이터 정산 방에서 ① 방장 `close_match_room` → `closed_at` 세팅 ② 두 번 닫기 → `room_closed` ③ requester `reopen_match_result` → `room_closed` ④ `invite_room_members` → `room_already_closed` ⑤ 타인 `reopen_match_room` → `not_room_host` ⑥ 방장 `reopen_match_room` 뒤 정정 통과 → `is_settled=false`. 합성 픽스처(방장 자유 기록 1건 방)에서 ⑦ 닫힌 방 direct 행 DELETE → 트리거 `room_closed` ⑧ 스코어 비우기 → recompute `room_closed` ⑨ 다시 연 뒤 DELETE 통과 + 마지막 행이라 방 삭제. **S12 브라우저 실행은 미실시** |
+
 **도구 메모** — Playwright MCP의 입력 미도달이 이번에도 나왔다(첫 탭에서 `click`이 팝업을 열지 못함). `page.context().newPage()`로 같은 세션의 새 탭을 여는 우회가 매번 통했다. 네이티브 `confirm()`은 `page.on('dialog', d => d.accept())`를 **클릭 전에** 걸어야 하고, `once`는 첫 시도가 실패하면 소진되어 다음 클릭에서 창이 그대로 막는다.

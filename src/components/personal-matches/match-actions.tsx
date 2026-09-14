@@ -22,18 +22,31 @@ const LOCKED_BADGE = 'text-caption px-1.5 py-0.5 rounded-sm border border-primar
  * 미확정 경기의 결과 입력·확인·참가자 채우기는 확인 요청 허브(PendingMatchActions)가 담당한다.
  */
 export function MatchActions({ match }: Props) {
+    // 방장이 닫은 방의 기록(0083)은 상호 확인·자유 기록 가리지 않고 잠긴다 — 정정·수정·삭제 전부.
+    // 서버(reopen_match_result의 room_closed · personal_matches 정책)와 같은 규칙을 화면이 먼저 말한다.
+    const roomClosed = !!match.roomClosedAt
     if (match.sourceRequestId) {
         const requestId = match.confirmation?.requestId
         return (
             <span className="flex items-center gap-2">
-                <MutualLockedBadge />
-                {requestId && canReopenResult(match.confirmation) && (
+                {roomClosed ? <RoomClosedBadge /> : <MutualLockedBadge />}
+                {requestId && canReopenResult(match.confirmation, { roomClosed }) && (
                     <ReopenResultButton requestId={requestId} description={formatTeams(match)} />
                 )}
             </span>
         )
     }
+    if (roomClosed) return <RoomClosedBadge />
     return <FreeMatchEditActions match={match} />
+}
+
+/** 방장이 마감한 매칭의 기록 표식(0083) — 고치려면 방장이 방을 다시 열어야 한다 */
+export function RoomClosedBadge() {
+    return (
+        <span className={LOCKED_BADGE} title="방장이 마감한 매칭의 기록은 수정·정정할 수 없습니다. 방장이 다시 열면 풀립니다">
+            마감
+        </span>
+    )
 }
 
 /** 상대 확인으로 확정된 경기 표식 — 상호 확인 경기는 양쪽 기록이 한 쌍이라 혼자 고칠 수 없다 */

@@ -238,10 +238,28 @@
 | 10.13 | B | 남의 방(비참가) 상세에서 SQL `leave_match_room` | `not_room_member` | — | S |
 | 10.14 | C | 비로그인으로 상세 URL | `/login?next=` | middleware | B |
 
+## S12 방 닫기 · 다시 열기 (A 방장 · B 참가자) — 0083, 정산된 S1 방 재사용
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 12.1 | A | 정산된 방 상세 | 헤더 칩 `종료`, 안내 `모든 결과가 확정됐습니다 … 더 고칠 것이 없으면 [방 닫기]로 마감할 수 있습니다.`, 방장 액션에 [방 닫기] | `isSettled` | B |
+| 12.2 | B | 같은 방 | 참가자에게는 [방 닫기] 없음, 확정 게임 행에 [결과 정정] 있음 | — | B |
+| 12.3 | A | 미정산 방(S5 등)의 방장 액션 | [방 닫기] 없음 / SQL `close_match_room` → `room_not_settled` | 버튼 없음 ↔ 가드 | B+S |
+| 12.4 | A | [방 닫기](confirm) | 칩 `마감`(채운 muted), 안내 `매칭이 마감되었습니다. … [다시 열기]로 잠금을 풉니다.`, 같은 자리에 [다시 열기], 게임 행의 [결과 정정] 사라짐 | `closedAt` | B |
+| 12.5 | B | 같은 방 | 안내 `… 방장에게 다시 열기를 요청하세요.`, [결과 정정] 없음 / SQL `reopen_match_result` → `room_closed` | `canReopenResult(c, { roomClosed })` | B+S |
+| 12.6 | B | 참여 중인 매칭 · 매칭 리스트 | 카드 필 `마감`(`결과 확정` 대신), 뱃지 변화 없음(닫기는 차례를 만들지 않는다) | — | B |
+| 12.7 | B | 개인 경기 결과의 그 방 게임 카드 | 배지 `마감`(`상호 확인` 대신), [결과 정정]·[수정]·[삭제] 없음. 방장 자유 기록 카드도 같음 | `roomClosedAt` | B |
+| 12.8 | A | 방장 소유 자유 기록의 `/me/personal-matches/[id]/edit` URL 직접 진입 | 방 상세로 리다이렉트 / SQL 소유자 DELETE → 정책 0행, security definer 경로는 `room_closed` | `isRoomClosed` · 0083b 트리거 | B+S |
+| 12.9 | A | SQL `kick_room_member`·`enter_match_room`·`invite_room_members`·`replace_room_lineup(p_game_ids=[])` | `room_closed` · `room_closed` · `room_already_closed` · `room_already_closed` | 노출 ↔ 가드 | S |
+| 12.10 | C | 초대만 걸린 채 닫힌 방의 초대 카드에서 [수락] | 수락된다(닫혀도 초대 응답은 막지 않는다 — 뱃지가 영영 남는 것을 막기 위해) | `respond_room_invite` | B |
+| 12.11 | A | [다시 열기](confirm) | 칩 `종료`, [방 닫기] 복귀, B의 [결과 정정] 복귀 → B가 정정하면 방이 미정산으로 돌아가고 [방 닫기]가 사라진다 | `reopen_match_room` → recompute | B |
+| 12.12 | B | SQL `reopen_match_room` | `not_room_host` / 열린 방에 다시 호출 → `room_not_closed` | — | S |
+
 ## 회귀 고정 행 (이력에서 E2E가 잡았던 것)
 
 | 근거 | 시나리오 행 |
 |---|---|
+| Week 53 · 0083b cleanup 트리거가 닫힌 방을 먼저 지우던 것 | 12.8 |
 | Week 44 · 0075 저장 순서(라운드 중복) | 4.4·4.5 |
 | Week 44 · 팝업 영문 Close 없음 | 3.8(자동 대진표)·3.15(대진 편집) 팝업 하단에 `Close` 없음 |
 | Week 45 · 뱃지 vs 탭 축 | 8.4·8.9 |
