@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { randomAvatarPath } from '@/lib/default-images'
-import { mapAuthError } from '@/lib/auth/auth-error-messages'
+import { DELETED_ACCOUNT_MESSAGE, mapAuthError, OAUTH_ERROR_PARAM } from '@/lib/auth/auth-error-messages'
+import { isSafeNext } from '@/lib/supabase/middleware'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 import { checkIdentityFields } from '@/lib/profile/identity-fields'
@@ -32,7 +33,7 @@ export async function loginAction(
             .single()
         if (profile?.deleted_at) {
             await supabase.auth.signOut()
-            return { error: '탈퇴한 계정입니다.' }
+            return { error: DELETED_ACCOUNT_MESSAGE }
         }
     }
 
@@ -40,7 +41,7 @@ export async function loginAction(
     // 그 외에는 내 전적 > 개인 탭을 기본 진입점으로 한다.
     const next = formData.get('next') as string | null
     const fallback = data.user ? `/profile/${data.user.id}?scope=personal` : '/clubs'
-    const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : fallback
+    const dest = isSafeNext(next) ? next : fallback
 
     revalidatePath('/', 'layout')
     redirect(dest)
@@ -265,4 +266,43 @@ export async function resetPasswordAction(
     await supabase.auth.signOut()
     revalidatePath('/', 'layout')
     redirect('/login')
+}
+
+/**
+ * 소셜 로그인 시작 — provider 동의 화면 URL로 보낸다.
+ *
+ * 흐름은 세 주소를 지난다(docs/social-login.md §1):
+ *   우리 앱 → provider 동의 화면 → **Supabase**(`.../auth/v1/callback`) → **우리 앱**(`/auth/callback`)
+ * 그래서 provider 콘솔에 등록할 리디렉션 URI는 Supabase 주소이고, 여기서 넘기는 `redirectTo`는
+ * 우리 앱 주소다. 둘을 헷갈리면 `redirect_uri_mismatch`가 난다.
+ *
+ * Server Action인 이유는 이 레포의 "쓰기는 Server Action으로만" 규칙 때문이고, 덕분에
+ * `SocialLoginButtons`를 서버 컴포넌트인 채로 둘 수 있다.
+ */
+export async function signInWithOAuthAction(formData: FormData): Promise<void> {
+    const provider = formData.get('provider')
+    // 카카오는 콘솔 설정(비즈 앱 전환·Client Secret)이 끝나면 버튼만 노출하면 된다 — 배선은 같다.
+    if (provider !== 'google' && provider !== 'kakao') redirect('/login')
+
+    const rawNext = formData.get('next')
+    const next = typeof rawNext === 'string' && isSafeNext(rawNext) ? rawNext : null
+
+    // redirectTo 베이스 — requestPasswordResetAction과 같은 관용구
+    const headerStore = await headers()
+    const origin =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        headerStore.get('origin') ||
+        `https://${headerStore.get('host')}`
+
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+            redirectTo: `${origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`,
+        },
+    })
+    // ⚠ redirect()는 예외를 던진다 — try/catch 안에 두면 안 된다
+    if (error || !data.url) redirect(`/login?error=${OAUTH_ERROR_PARAM}`)
+
+    redirect(data.url)
 }

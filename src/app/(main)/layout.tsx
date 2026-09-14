@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { needsProfileOnboarding, PROFILE_ONBOARDING_PATH } from '@/lib/profile/onboarding-gate'
 import { fetchRoomQueue } from '@/lib/queries/room-queue'
 import { roomBadgeTotal } from '@/lib/match-rooms/room-turn'
 import { Header } from '@/components/common/header'
@@ -29,9 +31,16 @@ export default async function MainLayout({
     if (user) {
         const { data: profile } = await supabase
             .from('users')
-            .select('name, nickname, role, profile_image')
+            .select('name, nickname, role, profile_image, ntrp')
             .eq('id', user.id)
             .single()
+
+        // 프로필 완성 게이트 — 소셜 가입자는 테니스 정보를 고를 기회가 없었다(0084).
+        // 이 select는 원래 헤더 표시용으로 이미 돌던 것이라 **쿼리가 늘지 않는다**.
+        // 미들웨어에 넣으면 모든 요청에 조회가 하나씩 붙는다.
+        // 완성 화면은 이 레이아웃 밖(`/onboarding`)이라 되돌아오는 루프가 없다.
+        if (needsProfileOnboarding(profile)) redirect(PROFILE_ONBOARDING_PATH)
+
         if (profile) {
             userDisplay = {
                 id: user.id,

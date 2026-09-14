@@ -26,3 +26,25 @@ export function mapAuthError(message: string | null | undefined): string {
     const rule = ERROR_RULES.find((r) => lower.includes(r.match))
     return rule ? rule.message : FALLBACK_MESSAGE
 }
+
+// ── 로그인 화면이 쿼리로 받는 신호 (`/login?error=…`) ──────────────────────
+// 출처가 다르다 — 위 ERROR_RULES는 **Supabase가 돌려준 영문 메시지** 전용이고, 이쪽은
+// 우리 콜백 라우트·Server Action이 스스로 붙이는 코드다. 한 배열에 섞으면 "영문 포함 검사"라는
+// 규칙이 깨진다(0079에서 23505를 mapAuthError에 넣지 않은 것과 같은 이유).
+
+export const OAUTH_ERROR_PARAM = 'oauth'
+export const DELETED_ERROR_PARAM = 'deleted'
+
+/** 탈퇴 계정 차단 문구 — 비밀번호 로그인(loginAction)과 소셜 콜백이 같은 말을 해야 한다 */
+export const DELETED_ACCOUNT_MESSAGE = '탈퇴한 계정입니다.'
+
+const QUERY_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+    [OAUTH_ERROR_PARAM]: '소셜 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+    [DELETED_ERROR_PARAM]: DELETED_ACCOUNT_MESSAGE,
+}
+
+/** `?error=` 값 → 화면 문구. 모르는 값이면 null(배너를 그리지 않는다). */
+export function mapAuthQueryError(code: string | null | undefined): string | null {
+    if (!code) return null
+    return QUERY_ERROR_MESSAGES[code] ?? null
+}

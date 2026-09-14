@@ -2,14 +2,15 @@ import Link from 'next/link'
 
 import { LoginForm } from '@/components/auth/login-form'
 import { LoginHero } from '@/components/auth/login-hero'
+import { mapAuthQueryError } from '@/lib/auth/auth-error-messages'
 import { TYPO } from '@/lib/dashboard/tokens'
 
 export default async function LoginPage({
     searchParams,
 }: {
-    searchParams: Promise<{ next?: string }>
+    searchParams: Promise<{ next?: string; error?: string }>
 }) {
-    const { next } = await searchParams
+    const { next, error } = await searchParams
     // 오픈 리다이렉트 방지: 내부 경로만 폼으로 전달
     const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : undefined
     return (
@@ -31,7 +32,7 @@ export default async function LoginPage({
                     </p>
 
                     <div className="mt-8">
-                        <LoginForm next={safeNext} />
+                        <LoginForm next={safeNext} notice={mapAuthQueryError(error) ?? undefined} />
                     </div>
                 </div>
             </div>

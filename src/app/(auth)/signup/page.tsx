@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SignupForm } from '@/components/auth/signup-form'
+import { SocialLoginButtons } from '@/components/auth/social-login-buttons'
 import { BrandLogo } from '@/components/common/brand-logo'
 
 export default function SignupPage() {
@@ -22,6 +23,16 @@ export default function SignupPage() {
                     </div>
 
                     <SignupForm />
+
+                    {/* 소셜 버튼은 폼 **밖**에 둔다 — Server Action에 제출하는 자체 form이라 중첩할 수 없다 */}
+                    <div className="mt-5 space-y-5">
+                        <div className="flex items-center gap-3 text-caption text-muted-foreground">
+                            <span className="h-px flex-1 bg-border" />
+                            OR
+                            <span className="h-px flex-1 bg-border" />
+                        </div>
+                        <SocialLoginButtons />
+                    </div>
                 </div>
             </div>
         </div>

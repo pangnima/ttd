@@ -21,6 +21,7 @@ const ALLOWLIST = [
     'lib/rating/tier.ts', // 티어 8계급 = 게임 랭크 정체성, 브랜드 팔레트와 분리
     'lib/og/brand.ts', // Satori는 CSS 변수 미지원 — 아래에서 값 일치를 따로 검증
     'app/layout.tsx', // viewport.themeColor(브라우저 크롬)는 CSS 변수 미지원 — 〃
+    'components/auth/provider-marks.tsx', // 제3자 브랜드 마크 — 구글 가이드가 정한 색이라 팔레트 교체 대상이 아니다
 ]
 
 function collectSources(dir: string, acc: string[] = []): string[] {

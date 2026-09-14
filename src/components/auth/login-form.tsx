@@ -10,12 +10,19 @@ import { loginAction } from '@/lib/actions/auth'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, notice }: { next?: string; notice?: string }) {
     const [state, formAction, isPending] = useActionState(loginAction, null)
     const [showPassword, setShowPassword] = useState(false)
 
     return (
         <div className="space-y-5">
+            {/* 소셜 콜백 등 **폼 밖에서** 온 실패 신호 — 폼 상태(state.error)와 출처가 달라 자리도 위다 */}
+            {notice && (
+                <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                    {notice}
+                </p>
+            )}
+
             <form action={formAction} className="space-y-4">
                 {next && <input type="hidden" name="next" value={next} />}
                 <div>
@@ -96,7 +103,7 @@ export function LoginForm({ next }: { next?: string }) {
                 <span className="h-px flex-1 bg-border" />
             </div>
 
-            <SocialLoginButtons />
+            <SocialLoginButtons next={next} />
         </div>
     )
 }
