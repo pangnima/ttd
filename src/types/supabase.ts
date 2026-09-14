@@ -1420,6 +1420,10 @@ export type Database = {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_nickname_taken: {
+        Args: { p_exclude_user_id?: string; p_nickname: string }
+        Returns: boolean
+      }
       is_request_party: { Args: { p_request_id: string }; Returns: boolean }
       is_room_participant: { Args: { p_room_id: string }; Returns: boolean }
       is_rotation_session_party: {

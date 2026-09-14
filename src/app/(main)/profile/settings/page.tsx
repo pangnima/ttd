@@ -23,9 +23,9 @@ export default async function ProfileSettingsPage() {
         <PageContainer>
             <PageHeader
                 title="내 정보 수정"
-                description="닉네임, 연락처, 주력 라켓, 프로필 사진, 통계 공개 여부를 수정합니다."
+                description="닉네임, 휴대폰 번호, 주력 라켓, 프로필 사진, 통계 공개 여부를 수정합니다."
             />
-            <ProfileSettingsForm initialProfile={data} />
+            <ProfileSettingsForm initialProfile={data} userId={user.id} />
             <PasswordChangeForm />
             <DeleteAccountButton />
         </PageContainer>

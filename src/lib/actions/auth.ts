@@ -8,6 +8,8 @@ import { randomAvatarPath } from '@/lib/default-images'
 import { mapAuthError } from '@/lib/auth/auth-error-messages'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
+import { checkIdentityFields } from '@/lib/profile/identity-fields'
+import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -57,6 +59,11 @@ export async function signupAction(
         return { error: '비밀번호가 일치하지 않습니다.' }
     }
 
+    // 개인정보 수집·이용 동의 — 폼의 required는 브라우저가 지키는 것이라 서버에서 한 번 더 본다.
+    if (formData.get('agree_privacy') !== 'true') {
+        return { error: '개인정보 수집·이용에 동의해 주세요.' }
+    }
+
     // 테니스 정보 검증 — handle_new_user 트리거는 auth.users INSERT와 같은 트랜잭션이라
     // 캐스팅/CHECK 실패 시 가입 전체가 불투명한 에러로 롤백된다. 반드시 signUp 호출 전에 걸러낸다.
     const gender = formData.get('gender')
@@ -80,6 +87,22 @@ export async function signupAction(
         formData.get('racket_other') as string | null
     )
 
+    // 이름·닉네임·휴대폰 — 같은 이유로 signUp 전에 본다. 0079가 셋 모두에 DB 제약을 걸었으므로
+    // 여기서 놓치면 트리거가 CHECK에 걸려 가입이 통째로 롤백된다(사용자에겐 불투명한 에러만 보인다).
+    const identity = checkIdentityFields({
+        name: formData.get('name'),
+        nickname: formData.get('nickname'),
+        phone: formData.get('phone'),
+    })
+    if (!identity.ok) return { error: identity.error }
+
+    // 닉네임 유일성의 권위는 users_nickname_unique_idx(0079)지만, 인덱스에서 걸리면 트리거 롤백이라
+    // 메시지가 불투명하다. 그래서 여기서 한 번 더 묻는다 — 화면 검사와 같은 RPC(0080)를 본다.
+    const { data: taken } = await supabase.rpc('is_nickname_taken', {
+        p_nickname: identity.values.nickname,
+    })
+    if (taken) return { error: NICKNAME_TAKEN_MESSAGE }
+
     // options.data는 Supabase Auth metadata로 전달되며,
     // handle_new_user DB 트리거가 이 값을 읽어 public.users row를 자동 생성함.
     const { data, error } = await supabase.auth.signUp({
@@ -87,9 +110,9 @@ export async function signupAction(
         password,
         options: {
             data: {
-                name: formData.get('name'),
-                nickname: formData.get('nickname'),
-                phone: formData.get('phone'),
+                name: identity.values.name,
+                nickname: identity.values.nickname,
+                phone: identity.values.phone,
                 gender,
                 dominant_hand: dominantHand,
                 tennis_start_date: tennisStartDate,

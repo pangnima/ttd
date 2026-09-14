@@ -1,7 +1,21 @@
 /**
  * 회원가입 폼 선택지 상수·정규화 헬퍼 (순수 함수, DB 접근 없음).
- * NTRP·라켓·시작일은 가입 시 1회 입력하며 프로필 설정에서는 읽기 전용이다.
+ * 이름·성별·주력손·시작일·NTRP는 가입 시 1회 입력하고 프로필 설정에서는 읽기 전용이다.
+ * (라켓은 0036에서 '변경 불가' 정책이 철회되어 프로필 설정에서도 수정 가능하다.)
+ *
+ * 닉네임은 프로필 설정에서 수정 가능해 이 모듈이 아니라 `nickname.ts`가 규칙을 쥔다.
  */
+
+/** users_name_check(0079)와 동일 — 앞뒤 공백을 뺀 길이 */
+export const NAME_MAX_LEN = 20
+
+/** 실명 검증. 문제가 있으면 화면 문구를, 없으면 null을 돌려준다(`validateNickname`과 같은 결). */
+export function validateName(value: string | null | undefined): string | null {
+    const name = (value ?? '').trim()
+    if (name.length === 0) return '이름을 입력해 주세요.'
+    if (name.length > NAME_MAX_LEN) return `이름은 ${NAME_MAX_LEN}자 이하여야 합니다.`
+    return null
+}
 
 export const GENDER_OPTIONS = [
     { value: 'male', label: '남성' },

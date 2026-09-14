@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
+import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
+import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 
 export type ProfileActionState = { error?: string; success?: boolean }
 
@@ -15,6 +17,13 @@ export async function updateProfileAction(
         data: { user },
     } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다' }
+
+    // 가입 폼과 같은 검증을 본다 — 여기에 없으면 가입 후 프로필에서 남의 닉네임으로 바꾸는 우회로가 남는다.
+    const identity = checkIdentityFields({
+        nickname: formData.get('nickname'),
+        phone: formData.get('phone'),
+    })
+    if (!identity.ok) return { error: identity.error }
 
     let profileImage: string | undefined
 
@@ -35,8 +44,8 @@ export async function updateProfileAction(
     // 이름·성별·주력손·테니스 시작일·NTRP는 가입 시 1회 입력, 변경 불가 정책 —
     // update 대상에서 제외해 서버에서 무시한다. (ntrp를 여기 남기면 폼에 필드가 없어 매 저장마다 NULL로 덮이므로 주의)
     const updates = {
-        nickname: formData.get('nickname') as string,
-        phone: (formData.get('phone') as string) || null,
+        nickname: identity.values.nickname,
+        phone: identity.values.phone || null,
         racket_brand: resolveRacketBrand(
             formData.get('racket_choice') as string | null,
             formData.get('racket_other') as string | null
@@ -47,6 +56,8 @@ export async function updateProfileAction(
     }
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id)
+    // 화면 검사를 통과한 뒤 남이 같은 닉네임을 먼저 저장한 경우 — 인덱스가 잡는다(0079).
+    if (isNicknameConflict(error)) return { error: NICKNAME_TAKEN_MESSAGE }
     if (error) return { error: error.message }
 
     revalidatePath('/profile/settings')

@@ -8,9 +8,11 @@ import { Switch } from '@/components/ui/switch'
 import { ImagePlus, Shuffle } from 'lucide-react'
 import { ProfileReadonlyFields } from '@/components/profile/profile-readonly-fields'
 import { RacketField } from '@/components/common/racket-field'
+import { NicknameField } from '@/components/auth/nickname-field'
+import { PhoneField } from '@/components/auth/phone-field'
 import { updateProfileAction } from '@/lib/actions/profile'
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
-import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { CARD_BASE, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 // 변경 불가 필드 표시용 (입력 불가, 회색 톤)
 const readonlyFieldCls = [
@@ -36,9 +38,11 @@ type ProfileData = {
 
 type Props = {
     initialProfile: ProfileData
+    /** 본인 행을 닉네임 중복으로 세지 않기 위해 NicknameField로 내려준다 */
+    userId: string
 }
 
-export function ProfileSettingsForm({ initialProfile }: Props) {
+export function ProfileSettingsForm({ initialProfile, userId }: Props) {
     const router = useRouter()
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     // "기본 이미지로 변경"으로 선택한 기본 아바타 경로 (null이면 미선택)
@@ -117,16 +121,10 @@ export function ProfileSettingsForm({ initialProfile }: Props) {
                     {/* 이름은 변경 불가 — 표시만, 폼 전송 안 함 */}
                     <div className={readonlyFieldCls}>{initialProfile.name}</div>
                 </div>
-                <div>
-                    <label htmlFor="nickname" className={labelCls}>닉네임</label>
-                    <input id="nickname" name="nickname" defaultValue={initialProfile.nickname} required className={inputCls} />
-                </div>
+                <NicknameField defaultValue={initialProfile.nickname} excludeUserId={userId} />
             </div>
 
-            <div>
-                <label htmlFor="phone" className={labelCls}>연락처</label>
-                <input id="phone" name="phone" defaultValue={initialProfile.phone ?? ''} placeholder="010-0000-0000" className={inputCls} />
-            </div>
+            <PhoneField defaultValue={initialProfile.phone ?? ''} />
 
             {/* 가입 시 1회 입력한 테니스 정보 — 표시만, 폼 전송 안 함 */}
             <ProfileReadonlyFields
