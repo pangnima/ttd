@@ -162,7 +162,7 @@ export const ROOM_TURN_PILL: Record<Exclude<RoomGameTurn, 'none'>, string> = {
     confirmResult: '결과 확인',
     enterResult: '결과 입력',
     fillLineup: '참가자 채우기',
-    closeRotation: '입력 종료',
+    closeRotation: '게임 입력 종료',
     waiting: '상대 대기',
 }
 

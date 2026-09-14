@@ -300,7 +300,7 @@ export function buildRoomLineup(players: LineupPlayer[], opts: BuildRoomLineupOp
     const freeGames = games.filter((g) => !(g.team1.some((p) => p.isMember) && g.team2.some((p) => p.isMember)))
     if (freeGames.length > 0) {
         warnings.push(
-            `회원이 한 팀에만 있는 게임 ${freeGames.length}개는 그 회원의 자유 기록으로 저장됩니다. 확인해 줄 상대가 없어 결과를 넣으면 곧 확정됩니다.`,
+            `회원이 한 팀에만 있는 게임 ${freeGames.length}개는 그 회원의 개인 기록으로만 저장됩니다. 확인해 줄 상대가 없어 결과를 넣으면 곧 확정됩니다.`,
         )
     }
     if (games.some((g) => !isGenderMatched(g))) {

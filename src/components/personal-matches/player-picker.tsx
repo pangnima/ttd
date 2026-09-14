@@ -75,7 +75,7 @@ export function PlayerPicker({
                 <label className={`${MATCH_FORM_LABEL} mb-0`}>{label}</label>
                 {value.userId && (
                     <span className="text-micro px-1.5 py-0.5 rounded-sm border border-primary/40 text-primary">
-                        {linked?.isGuest ? '게스트 회원' : '회원 연결됨'}
+                        {linked?.isGuest ? '비회원' : '회원 연결됨'}
                     </span>
                 )}
             </div>

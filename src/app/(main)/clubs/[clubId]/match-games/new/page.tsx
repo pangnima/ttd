@@ -15,7 +15,7 @@ export default async function NewMatchGamePage({ params }: NewMatchGamePageProps
 
     return (
         <PageContainer>
-            <PageHeader title="대진표 작성" />
+            <PageHeader title="대진표 만들기" />
             <MatchGameCreateForm clubId={clubId} members={members} />
         </PageContainer>
     )

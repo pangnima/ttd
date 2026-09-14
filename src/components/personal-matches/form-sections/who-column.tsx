@@ -53,7 +53,7 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                 )}
                 {s.isRoomGame && (
                     <p className="text-caption text-muted-foreground break-keep">
-                        회원을 고르면 상호 확인 게임이 되고, 비회원이면 내 자유 기록으로 남습니다.
+                        회원을 고르면 상호 확인 게임이 되고, 비회원이면 내 기록으로만 남습니다.
                     </p>
                 )}
                 {s.isRotation ? (

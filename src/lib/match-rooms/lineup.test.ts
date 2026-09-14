@@ -271,7 +271,7 @@ describe('buildRoomLineup — 만들 수 없는 경우', () => {
         }
         expect(result.playCounts.m1).toBe(2)
         // 4명이 2게임이면 전원 2회라 편차 초과는 없다 — 대신 자유 기록으로 저장된다는 안내가 붙는다
-        expect(result.warnings.some((w) => w.includes('자유 기록'))).toBe(true)
+        expect(result.warnings.some((w) => w.includes('개인 기록으로만'))).toBe(true)
         expect(result.warnings.some((w) => w.includes('더 자주'))).toBe(false)
     })
 

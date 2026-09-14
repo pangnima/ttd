@@ -18,7 +18,7 @@ type Props = {
 
 /**
  * 회원 초대 — 지목한 사람은 비밀번호를 몰라도 초대 수락만으로 들어온다(0065).
- * 게스트 회원(is_guest)은 로그인해 수락할 수 없으므로 후보에서 빠진다 — 비회원은 [비회원 초대]가 맡는다.
+ * 게스트 회원(is_guest)은 로그인해 수락할 수 없으므로 후보에서 빠진다 — 비회원은 [비회원 등록]이 맡는다.
  * 호스트가 열었을 때만 내보낸 회원이 후보에 남는다(excludedUserIds) — 강퇴를 되돌리는 유일한 경로다.
  */
 export function RoomInviteMemberSearch({ roomId, selfUserId, candidates, excludedUserIds, onDone }: Props) {

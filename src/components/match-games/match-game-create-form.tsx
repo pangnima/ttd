@@ -616,7 +616,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
 
             {initialData && (
                 <p className="text-caption text-muted-foreground text-center">
-                    선수가 바뀐 경기의 점수는 초기화됩니다.
+                    선수가 바뀐 경기의 스코어는 초기화됩니다.
                 </p>
             )}
 
