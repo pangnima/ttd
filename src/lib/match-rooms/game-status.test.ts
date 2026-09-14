@@ -56,7 +56,7 @@ describe('roomGamesEmptyMessage', () => {
             id: 'r1', hostUserId: 'u1', sourceKind: source.kind, playedAt: '2026-09-12',
             matchType: 'singles', courtCount: 1, isSettled: false, isListed: true, createdAt: '2026-09-01T00:00:00Z',
         },
-        host: { id: 'u1', name: '방장', nickname: '', deleted: false },
+        host: { id: 'u1', name: '호스트', nickname: '', deleted: false },
         members: [],
         guests: [],
         source,
@@ -68,7 +68,7 @@ describe('roomGamesEmptyMessage', () => {
             .toContain('게임 입력')
     })
 
-    it('미확정 로테이션의 방장에게는 [자동 대진표]도 말한다 — 참가자에게는 없는 버튼이라 말하지 않는다', () => {
+    it('미확정 로테이션의 호스트에게는 [자동 대진표]도 말한다 — 참가자에게는 없는 버튼이라 말하지 않는다', () => {
         const pending = detailWith({ kind: 'rotation', isFinalized: false })
         expect(roomGamesEmptyMessage(pending, true)).toContain('자동 대진표')
         expect(roomGamesEmptyMessage(pending, false)).not.toContain('자동 대진표')
@@ -120,14 +120,14 @@ describe('canCreateRoomLineup — create_room_lineup 가드의 거울', () => {
             id: 'r1', hostUserId: 'u1', sourceKind: 'rotation', playedAt: '2026-09-12',
             matchType: 'men_doubles', courtCount: 1, isSettled: false, isListed: true, createdAt: '2026-09-01T00:00:00Z', ...over,
         },
-        host: { id: 'u1', name: '방장', nickname: '', deleted: false },
+        host: { id: 'u1', name: '호스트', nickname: '', deleted: false },
         members: [],
         guests: [],
         source: { kind: 'rotation', isFinalized: false },
         games: [],
     })
 
-    it('후보가 없으면(= 방장이 아니면) 그리지 않는다', () => {
+    it('후보가 없으면(= 호스트가 아니면) 그리지 않는다', () => {
         expect(canCreateRoomLineup(room(), 0, 0)).toBe(false)
     })
 

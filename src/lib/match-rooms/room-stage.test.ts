@@ -88,7 +88,7 @@ describe('roomStage', () => {
 })
 
 describe('roomStage — 마감(0083)', () => {
-    it('방장이 닫았으면 정산보다 먼저 마감이다', () => {
+    it('호스트가 닫았으면 정산보다 먼저 마감이다', () => {
         expect(roomStage({ room: { isSettled: true, closedAt: '2026-09-14T00:00:00Z' }, games: [scored('a')], source: direct })).toBe('closed')
     })
 

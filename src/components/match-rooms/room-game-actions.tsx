@@ -18,7 +18,7 @@ type Props = {
      * `canRespondToProposal`(제안자도 아니고 아직 확인하지 않은 좌석, 0060)이 판정한다.
      */
     confirmation?: PersonalMatchConfirmation
-    /** 방장이 닫은 방(0083) — 확정 결과의 [결과 정정]까지 잠긴다 */
+    /** 호스트가 닫은 방(0083) — 확정 결과의 [결과 정정]까지 잠긴다 */
     roomClosed?: boolean
 }
 
@@ -33,7 +33,7 @@ export function RoomGameActions({ game, viewerId, confirmation: c, roomClosed = 
     // 결과가 이미 있으면 스코어만 보여준다 (roomGameStatusLabel도 null).
     // 예외: 상호 확인 게임을 확정한 좌석에게는 [결과 정정]을 남긴다 — 확정 후 오입력을
     // 고칠 유일한 경로이고, 룸을 떠나지 않고 끝내는 이 화면의 원칙과도 같다(0055).
-    // 방장이 닫은 방(0083)은 그 예외마저 닫는다 — RPC room_closed와 짝.
+    // 호스트가 닫은 방(0083)은 그 예외마저 닫는다 — RPC room_closed와 짝.
     if (game.setScores.length > 0) {
         const settledRequestId = game.sourceRequestId
         if (!settledRequestId || !canReopenResult(c, { roomClosed })) return null

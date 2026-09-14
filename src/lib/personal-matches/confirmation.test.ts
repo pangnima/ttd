@@ -273,7 +273,7 @@ describe('canReopenResult', () => {
         expect(canReopenResult(undefined)).toBe(false)
     })
 
-    it('방장이 닫은 방에서는 좌석이어도 되돌릴 수 없다 (0083 room_closed의 거울)', () => {
+    it('호스트가 닫은 방에서는 좌석이어도 되돌릴 수 없다 (0083 room_closed의 거울)', () => {
         expect(canReopenResult(conf('confirmed', true), { roomClosed: true })).toBe(false)
         expect(canReopenResult(conf('confirmed', true), { roomClosed: false })).toBe(true)
     })

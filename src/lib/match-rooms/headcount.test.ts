@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { countJoined, formatHeadcount, isViewerJoined, viewerStatusLabel } from './headcount'
 
 describe('countJoined', () => {
-    it('방장·참가자 joined만 세고 초대 대기·거절은 제외', () => {
+    it('호스트·참가자 joined만 세고 초대 대기·거절은 제외', () => {
         expect(countJoined([
             { role: 'host', status: 'joined' },
             { role: 'player', status: 'joined' },
@@ -23,7 +23,7 @@ describe('isViewerJoined — 게임 등록 자격 · 「참여 중인 매칭」 
         expect(isViewerJoined({ role: 'player', status: 'invited' })).toBe(false)
     })
 
-    it('수락하면(joined) 참여다. 방장 행도 joined이고, 거절·미입장은 아니다', () => {
+    it('수락하면(joined) 참여다. 호스트 행도 joined이고, 거절·미입장은 아니다', () => {
         expect(isViewerJoined({ role: 'host', status: 'joined' })).toBe(true)
         expect(isViewerJoined({ role: 'player', status: 'joined' })).toBe(true)
         expect(isViewerJoined({ role: 'player', status: 'declined' })).toBe(false)
@@ -34,8 +34,8 @@ describe('isViewerJoined — 게임 등록 자격 · 「참여 중인 매칭」 
 describe('viewerStatusLabel', () => {
     it('역할·상태별 라벨', () => {
         expect(viewerStatusLabel(undefined)).toBeNull()
-        expect(viewerStatusLabel({ role: 'host', status: 'joined' })).toBe('방장')
-        expect(viewerStatusLabel({ role: 'player', status: 'invited' })).toBe('초대됨')
+        expect(viewerStatusLabel({ role: 'host', status: 'joined' })).toBe('호스트')
+        expect(viewerStatusLabel({ role: 'player', status: 'invited' })).toBe('초대 대기')
         expect(viewerStatusLabel({ role: 'player', status: 'joined' })).toBe('참가')
         expect(viewerStatusLabel({ role: 'player', status: 'declined' })).toBeNull()
     })

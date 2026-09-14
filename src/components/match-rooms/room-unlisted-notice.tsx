@@ -11,7 +11,7 @@ export function RoomUnlistedNotice() {
             <p className={`${TYPO.body2} font-medium break-keep`}>초대받은 사람만 볼 수 있는 매칭입니다.</p>
             <p className={`${TYPO.caption} mt-1 break-keep`}>
                 직접 기록에서 만든 비공개 매칭이라 매칭 리스트에 오르지 않고 비밀번호 입장도 없습니다.
-                참가하려면 방장이나 참가자의 초대가 필요합니다.
+                참가하려면 호스트나 참가자의 초대가 필요합니다.
             </p>
         </div>
     )

@@ -16,7 +16,7 @@ const ROLE_LABEL: Record<string, string> = {
     pool: '참가자 풀에',
 }
 
-/** 「나를 초대한 매칭」 카드 — 방장·참가자가 나를 초대한 방. 수락하면 비밀번호 없이 방 참가자가 된다 */
+/** 「나를 초대한 매칭」 카드 — 호스트·참가자가 나를 초대한 방. 수락하면 비밀번호 없이 방 참가자가 된다 */
 export function RoomInviteCard({ invite }: Props) {
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)

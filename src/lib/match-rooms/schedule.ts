@@ -81,7 +81,7 @@ export function recommendGames(input: RecommendInput): LineupRecommendation | nu
     if (slotMinutes <= 0 || courtCount <= 0) return null
 
     // 대진을 만들 수 없는 인원이면 권장값도 뜻이 없다 — buildRoomLineup의 게이트와 같은 눈높이.
-    // 이걸 빼면 방장 혼자 있는 방에서 '1인당 10경기' 같은 숫자가 나온다.
+    // 이걸 빼면 호스트 혼자 있는 방에서 '1인당 10경기' 같은 숫자가 나온다.
     const slots = courtNeed(matchType).size
     if (playerCount < slots) return null
 

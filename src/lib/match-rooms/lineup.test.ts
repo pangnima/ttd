@@ -327,14 +327,14 @@ describe('buildRoomLineup — 단식', () => {
     })
 })
 
-describe('buildRoomLineup — 단식 · 방장 + 게스트 (0076)', () => {
-    // 남자25 방 재현 — 회원 1명(방장) + 게스트 4명, 1인당 1경기 → 3게임
+describe('buildRoomLineup — 단식 · 호스트 + 게스트 (0076)', () => {
+    // 남자25 방 재현 — 회원 1명(호스트) + 게스트 4명, 1인당 1경기 → 3게임
     const hostAndGuests = [
         p('host', 'male', 3.5),
         ...['g1', 'g2', 'g3', 'g4'].map((k) => p(k, 'male', 3.0, false)),
     ]
 
-    it('방장 vs 게스트 게임이 나온다 — 방장이 team1 첫 자리, 게스트는 편차 1 이내', () => {
+    it('호스트 vs 게스트 게임이 나온다 — 호스트가 team1 첫 자리, 게스트는 편차 1 이내', () => {
         const games = gamesForPerPlayer(hostAndGuests.length, 1, false)
         expect(games).toBe(3)
         const result = buildRoomLineup(hostAndGuests, { matchType: 'singles', games, preset: 'balanced', seed: 1 })
@@ -350,7 +350,7 @@ describe('buildRoomLineup — 단식 · 방장 + 게스트 (0076)', () => {
         expect(result.warnings.some((w) => w.includes('게임 3개는'))).toBe(true)
     })
 
-    it('2면 방에서는 방장이 한 라운드에 한 코트만 서므로 라운드당 1게임에서 멈춘다', () => {
+    it('2면 방에서는 호스트가 한 라운드에 한 코트만 서므로 라운드당 1게임에서 멈춘다', () => {
         const result = buildRoomLineup(hostAndGuests, { matchType: 'singles', games: 3, preset: 'balanced', seed: 1, courtCount: 2 })
         // 라운드 1: host vs g? 뒤 두 번째 코트에는 회원이 없다 → 중단 경고와 함께 1게임
         expect(result.games).toHaveLength(1)

@@ -6,6 +6,7 @@ import { PageContainer } from '@/components/common/page-container'
 import { RoomPasswordGate } from '@/components/match-rooms/room-password-gate'
 import { RoomRemovedNotice } from '@/components/match-rooms/room-removed-notice'
 import { RoomUnlistedNotice } from '@/components/match-rooms/room-unlisted-notice'
+import { HOST_LABEL } from '@/lib/match-rooms/member-labels'
 
 type Props = { roomId: string; summary: MatchRoomSummary }
 
@@ -24,7 +25,7 @@ export function RoomGateView({ roomId, summary }: Props) {
         <PageContainer>
             <PageHeader
                 title={buildRoomTitle(summary)}
-                description={`방장 ${summary.host.name} · ${formatHeadcount(summary.joinedCount)}`}
+                description={`${HOST_LABEL} ${summary.host.name} · ${formatHeadcount(summary.joinedCount)}`}
             />
             {removed ? <RoomRemovedNotice /> : !summary.isListed ? <RoomUnlistedNotice /> : <RoomPasswordGate roomId={roomId} />}
         </PageContainer>

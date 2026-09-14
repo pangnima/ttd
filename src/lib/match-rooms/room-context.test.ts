@@ -8,7 +8,7 @@ function detail(source: MatchRoomSource, isSettled = false, viewerStatus?: 'join
             id: 'r1', hostUserId: 'host', sourceKind: source.kind, playedAt: '2026-09-12',
             matchType: 'singles', courtCount: 1, isSettled, isListed: true, createdAt: '2026-09-01T00:00:00Z',
         },
-        host: { id: 'host', name: '방장', nickname: '', deleted: false },
+        host: { id: 'host', name: '호스트', nickname: '', deleted: false },
         members: [],
         guests: [],
         source,
@@ -33,14 +33,14 @@ describe('canAddRoomGame — 출처별 게임 추가 가능 여부', () => {
 })
 
 describe('canViewerAddRoomGame — 참가자 자격까지', () => {
-    it('방장과 joined 참가자만', () => {
+    it('호스트와 joined 참가자만', () => {
         expect(canViewerAddRoomGame(detail({ kind: 'direct' }), 'host')).toBe(true)
         expect(canViewerAddRoomGame(detail({ kind: 'direct' }, false, 'joined'), 'p')).toBe(true)
         expect(canViewerAddRoomGame(detail({ kind: 'direct' }, false, 'invited'), 'p')).toBe(false)
         expect(canViewerAddRoomGame(detail({ kind: 'direct' }), 'stranger')).toBe(false)
     })
 
-    it('정산되면 방장도 못 붙인다', () => {
+    it('정산되면 호스트도 못 붙인다', () => {
         expect(canViewerAddRoomGame(detail({ kind: 'direct' }, true), 'host')).toBe(false)
     })
 })

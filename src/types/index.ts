@@ -268,13 +268,13 @@ export type RotationSession = {
 
 // ── 매칭 리스트(매칭 룸) (0046·0048) ────────────────────────────────
 // 등록 폼에서 '리스트에 노출'을 켠 기록이 방 1개가 된다. 공개 메타는 로그인 회원 전원이 보고,
-// 상세(참가자·메모·게임)는 방장·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
-// 정원은 없다 — 비밀번호를 알고 들어오면 곧 참가자이고, 방장은 들어온 참가자로 게임을 여러 건 구성한다(0048).
+// 상세(참가자·메모·게임)는 호스트·초대 수락자·비밀번호 입장자만 본다(get_match_room_detail RPC 게이트).
+// 정원은 없다 — 비밀번호를 알고 들어오면 곧 참가자이고, 호스트는 들어온 참가자로 게임을 여러 건 구성한다(0048).
 
 export type MatchRoomSourceKind = 'direct' | 'confirmation' | 'rotation'
 export type MatchRoomMemberRole = 'host' | 'player'
 // invited → joined|declined (초대 응답) / 비밀번호 입장 = player·joined (거절했던 사람도 다시 들어오면 joined)
-// removed = 방장이 내보냄(0068). declined(본인이 나감)와 달리 재입장이 막히고 명단에 남는다
+// removed = 호스트가 내보냄(0068). declined(본인이 나감)와 달리 재입장이 막히고 명단에 남는다
 export type MatchRoomMemberStatus = 'invited' | 'joined' | 'declined' | 'removed'
 export type MatchRoomSourceRole = 'opponent' | 'partner' | 'opponent2' | 'pool'
 
@@ -302,7 +302,7 @@ export type MatchRoomMeta = {
     durationMinutes?: number
     /** 동시에 쓰는 코트 면 수 — 권장 경기 수 계산과 표시에만 쓴다. 기본 1면 (0073) */
     courtCount: number
-    /** 경기당 시간(분) — 방장이 자동 대진표를 저장할 때 고른 값(0078). 없으면 화면이 소요 시간으로 역산한다 */
+    /** 경기당 시간(분) — 호스트가 자동 대진표를 저장할 때 고른 값(0078). 없으면 화면이 소요 시간으로 역산한다 */
     slotMinutes?: number
     // 방의 대표 게임이 1건 이상이고 전부 확정 — 매칭 리스트에서 '지난 경기'로 내려간다 (0049)
     isSettled: boolean
@@ -312,13 +312,13 @@ export type MatchRoomMeta = {
      */
     isListed: boolean
     /**
-     * 방장이 닫은 시각 (0083). 정산 위의 잠금 — 있으면 결과 정정·게임 추가·초대·대진 편집·기록 수정이 막히고
-     * 방장만 다시 연다. closed ⊆ settled(DB CHECK). 없으면 열린 방
+     * 호스트가 닫은 시각 (0083). 정산 위의 잠금 — 있으면 결과 정정·게임 추가·초대·대진 편집·기록 수정이 막히고
+     * 호스트만 다시 연다. closed ⊆ settled(DB CHECK). 없으면 열린 방
      */
     closedAt?: string
 }
 
-// 목록 카드용 — 참가 인원(방장 + joined 참가자)·방장·내 멤버 상태 포함
+// 목록 카드용 — 참가 인원(호스트 + joined 참가자)·호스트·내 멤버 상태 포함
 export type MatchRoomSummary = MatchRoomMeta & {
     joinedCount: number
     host: MatchRoomHost
@@ -345,7 +345,7 @@ export type MatchRoomMember = {
 export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }
 
 /**
- * 방의 대표 게임 한 벌 (0049) — 작성자가 방장이 아니어도 방 전원에게 보인다.
+ * 방의 대표 게임 한 벌 (0049) — 작성자가 호스트가 아니어도 방 전원에게 보인다.
  * 참가자 각자의 관점 복사본은 같은 게임이므로 목록에서 제외되고, 여기 나오는 행은 작성자(owner) 관점이다.
  * 세트 없는 행(모집 중·결과 미입력·결과 확인 대기) 포함.
  */
@@ -384,7 +384,7 @@ export type MatchRoomGuest = {
     hand?: 'right' | 'left'
     ntrp?: number
     gender?: 'male' | 'female'
-    createdBy?: string   // 등록한 회원 — 방장이 아니어도 본인이 부른 게스트는 뺄 수 있다
+    createdBy?: string   // 등록한 회원 — 호스트가 아니어도 본인이 부른 게스트는 뺄 수 있다
 }
 
 export type MatchRoomDetail = {

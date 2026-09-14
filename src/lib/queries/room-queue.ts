@@ -17,7 +17,7 @@ import { closeRotationRooms, rollUpRoomTurns, turnOfBucket, type RoomTurnSummary
  *
  * 방 세션(로테이션 방의 빈 풀)은 **차례로 세지 않는다**(0077). 방 안 [게임 입력]은 상시 가능한 액션이지
  * 누가 응답을 기다리는 일이 아니고, 세지면 게임을 다 확정한 뒤에도 풀 회원 전원에게 뱃지가 남았다(E2E S4.13).
- * 대신 방장에게는 "게임이 전부 확정됐으니 종료하라"는 차례를 준다 — 그것이 방을 정산으로 옮기는 마지막 손이다.
+ * 대신 호스트에게는 "게임이 전부 확정됐으니 종료하라"는 차례를 준다 — 그것이 방을 정산으로 옮기는 마지막 손이다.
  */
 export type RoomQueue = {
     /** roomId → 그 방에서 내가 지금 할 일 (없는 방은 키 자체가 없다) */
@@ -49,7 +49,7 @@ export const fetchRoomQueue = cache(async (userId: string): Promise<RoomQueue> =
     return { turns, invites: queue.roomInvites }
 })
 
-/** 방별 대표 게임의 총수·확정 수 — 방장 종료 차례의 재료. 관점 행은 세지 않는다 */
+/** 방별 대표 게임의 총수·확정 수 — 호스트 종료 차례의 재료. 관점 행은 세지 않는다 */
 async function fetchRoomGameTallies(roomIds: string[]): Promise<Record<string, { total: number; settled: number }>> {
     const supabase = await createClient()
     const { data } = await supabase

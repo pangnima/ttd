@@ -50,7 +50,7 @@ export function roomGameMemberIds(games: MatchRoomGame[]): Set<string> {
 /**
  * [자동 대진표]를 그릴 수 있는가 — `create_room_lineup` 가드의 거울(0072).
  *
- * 방장 여부는 `candidateCount`가 대신 말한다(대진 후보는 방장에게만 조회된다).
+ * 호스트 여부는 `candidateCount`가 대신 말한다(대진 후보는 호스트에게만 조회된다).
  * 정산된 방을 빼는 이유는 RPC가 `room_already_closed`로 거절하기 때문이고, **거절할 것을 그리지
  * 않는 것**이 `roomGameMemberIds`가 [내보내기]에 쓰는 것과 같은 원칙이다.
  *
@@ -58,13 +58,13 @@ export function roomGameMemberIds(games: MatchRoomGame[]): Set<string> {
  * 자동 대진표는 바로 그 방을 위해 만들어졌다(0066 머리말·0072).
  */
 export function canCreateRoomLineup(detail: MatchRoomDetail, candidateCount: number, memberCount: number): boolean {
-    // 회원이 한 명도 없으면 어떤 게임도 저장할 자리가 없다(0076) — 방장이 회원이라 사실상 항상 참이지만 거울은 지킨다
+    // 회원이 한 명도 없으면 어떤 게임도 저장할 자리가 없다(0076) — 호스트가 회원이라 사실상 항상 참이지만 거울은 지킨다
     return candidateCount > 0 && memberCount > 0 && !detail.room.isSettled
 }
 
 /**
  * 게임이 하나도 없을 때의 안내 — 출처별로 다음에 할 일이 다르다.
- * 방장에게는 [자동 대진표]도 있다는 것을 말한다(Week 47) — 그 버튼은 방장에게만 보이므로
+ * 호스트에게는 [자동 대진표]도 있다는 것을 말한다(Week 47) — 그 버튼은 호스트에게만 보이므로
  * 참가자 문구에 섞으면 "없는 버튼을 가리키는" 안내가 된다.
  */
 export function roomGamesEmptyMessage(detail: MatchRoomDetail, isHost = false): string {

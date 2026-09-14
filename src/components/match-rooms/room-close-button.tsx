@@ -14,7 +14,7 @@ type Props = {
 }
 
 /**
- * 방장 전용 [방 닫기] / [다시 열기] (0083).
+ * 호스트 전용 [방 닫기] / [다시 열기] (0083).
  *
  * 닫기는 정산 위의 잠금이다 — 결과 정정·게임 추가·초대·대진 편집·기록 수정이 전부 막힌다.
  * 버튼은 정산된 방에서만 보인다(가드와 노출을 함께, 0072). 닫힌 뒤 유일한 탈출구가 [다시 열기]라
@@ -37,7 +37,7 @@ export function RoomCloseButton({ roomId, isSettled, closedAt }: Props) {
     }
 
     function close() {
-        if (!confirm('매칭을 마감할까요? 결과 정정을 포함한 모든 수정이 잠기고, 방장만 다시 열 수 있습니다.')) return
+        if (!confirm('매칭을 마감할까요? 결과 정정을 포함한 모든 수정이 잠기고, 호스트만 다시 열 수 있습니다.')) return
         run(() => closeMatchRoomAction(roomId))
     }
 

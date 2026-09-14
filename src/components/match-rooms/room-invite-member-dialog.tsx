@@ -18,7 +18,7 @@ type Props = {
 
 /**
  * [회원 초대] — 지목한 회원은 비밀번호를 몰라도 초대 수락만으로 들어온다(0065).
- * 방장이 열면 내보낸 회원도 후보에 다시 뜬다 — 강퇴를 되돌리는 유일한 경로다(0068 §5).
+ * 호스트가 열면 내보낸 회원도 후보에 다시 뜬다 — 강퇴를 되돌리는 유일한 경로다(0068 §5).
  */
 export function RoomInviteMemberDialog({ roomId, selfUserId, candidates, excludedUserIds }: Props) {
     const [open, setOpen] = useState(false)

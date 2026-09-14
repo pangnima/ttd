@@ -25,7 +25,7 @@ type FieldsProps = {
     /** 시작 시각 'HH:MM' — 요약 줄이 종료 시각을 환산해 말한다 */
     playedTime: string
     matchType: MatchType
-    /** 방장 + 초대 대상 — 비밀번호로 더 들어올 수 있으므로 어디까지나 예상이다 */
+    /** 호스트 + 초대 대상 — 비밀번호로 더 들어올 수 있으므로 어디까지나 예상이다 */
     playerCount: number
 }
 
@@ -86,7 +86,7 @@ type SummaryProps = {
     durationMinutes: number
     courtCount: number
     matchType: MatchType
-    /** 방장 + 초대 대상 — 비밀번호로 더 들어올 수 있으므로 어디까지나 예상이다 */
+    /** 호스트 + 초대 대상 — 비밀번호로 더 들어올 수 있으므로 어디까지나 예상이다 */
     playerCount: number
 }
 
@@ -95,7 +95,7 @@ type SummaryProps = {
  *
  * 권장값을 방을 만들 때 미리 보여주는 이유는 자동 대진표에서 처음 만나면 늦기 때문이다.
  * 인원이 모자라 추천이 서지 않으면(`recommendGames`가 null) 앞의 두 조각만 말한다 —
- * 방장 혼자인 방에서 헛숫자가 나오지 않게 하는 기존 게이트를 그대로 탄다.
+ * 호스트 혼자인 방에서 헛숫자가 나오지 않게 하는 기존 게이트를 그대로 탄다.
  */
 function RoomScheduleSummary({
     playedTime, durationMinutes, courtCount, matchType, playerCount,

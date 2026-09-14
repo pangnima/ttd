@@ -169,11 +169,11 @@ describe('isMyRoomTurn', () => {
     })
 })
 
-describe('viewerRoomTurn — 방장의 게임 입력 종료 차례 (0077)', () => {
+describe('viewerRoomTurn — 호스트의 게임 입력 종료 차례 (0077)', () => {
     const done = game({ setScores: [{ me: 6, opp: 3 }] })
     const open = game({ id: 'g2', sourceRequestId: 'r2' })
 
-    it('미확정 로테이션 방장이고 게임이 전부 확정됐으면 closeRotation', () => {
+    it('미확정 로테이션 호스트고 게임이 전부 확정됐으면 closeRotation', () => {
         expect(viewerRoomTurn([done], ME, {}, { hostOfPendingRotation: true }))
             .toEqual({ turn: 'closeRotation', count: 1 })
     })
@@ -196,7 +196,7 @@ describe('viewerRoomTurn — 방장의 게임 입력 종료 차례 (0077)', () =
     })
 })
 
-describe('closeRotationRooms — 목록에서 방장 종료 차례 (0077)', () => {
+describe('closeRotationRooms — 목록에서 호스트 종료 차례 (0077)', () => {
     const sessions = [
         { roomId: 'r-mine-done', userId: ME },
         { roomId: 'r-mine-open', userId: ME },

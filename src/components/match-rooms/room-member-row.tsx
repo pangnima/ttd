@@ -3,6 +3,9 @@ import { ProfileLink } from '@/components/common/profile-link'
 import { PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
 import { canKickRoomMember, canRemoveRoomGuest } from '@/lib/match-rooms/kick'
+import {
+    HOST_LABEL, INVITED_LABEL, JOINED_LABEL, PENDING_CONFIRM_LABEL,
+} from '@/lib/match-rooms/member-labels'
 import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
 import { RoomMemberHostActions } from '@/components/match-rooms/room-member-host-actions'
 import { RoomGuestRemoveButton } from '@/components/match-rooms/room-guest-remove-button'
@@ -11,19 +14,20 @@ type Props = {
     row: MemberRowView
     roomId: string
     isSettled: boolean
-    /** 보고 있는 사람 — 게스트 [빼기]는 방장이 아니어도 '등록한 본인'에게 열린다(0069) */
+    /** 보고 있는 사람 — 게스트 [빼기]는 호스트가 아니어도 '등록한 본인'에게 열린다(0069) */
     viewerId: string
     /** 이 방의 경기에 배정된 회원 — 내보내기 대상이 아니다(0070) */
     hasGames?: boolean
-    /** 방장에게만 넘어온다 — 내보내기·다시 초대 */
+    /** 호스트에게만 넘어온다 — 내보내기·다시 초대 */
     host?: { viewerId: string }
 }
 
+// 키가 곧 라벨 문자열이다 — member-labels의 상수를 계산 키로 써서 라벨과 색이 갈릴 자리를 없앤다
 const STATUS_CLASS: Record<string, string> = {
-    '방장': 'border-primary/40 text-primary',
-    '참가': 'border-win/40 text-win',
-    '초대 대기': 'border-spot/50 text-spot',
-    '확인 대기': 'border-spot/50 text-spot',
+    [HOST_LABEL]: 'border-primary/40 text-primary',
+    [JOINED_LABEL]: 'border-win/40 text-win',
+    [INVITED_LABEL]: 'border-spot/50 text-spot',
+    [PENDING_CONFIRM_LABEL]: 'border-spot/50 text-spot',
 }
 
 // NTRP는 이름 옆에 붙는다 — 실력이 곧 그 사람을 고르는 기준이라 이름과 한 덩어리로 읽혀야 한다.

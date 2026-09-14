@@ -4,7 +4,7 @@ import type { OpponentCandidate } from '@/lib/queries/users'
 /**
  * 방 게임 구성 컨텍스트(0048·0049·0054) — 방 참가자가 방 상세 '게임 추가'로 등록 폼을 열 때 넘기는 값.
  * 일시·타입·표면·코트명·메모는 방 값으로 고정되고(폼에서 수정 불가), 참가자 자동완성에 방 참가자가 최상단에 뜬다.
- * 방장/참가자를 구분하지 않는다 — 0054에서 INSERT 정책이 is_room_participant로 완화되어
+ * 호스트/참가자를 구분하지 않는다 — 0054에서 INSERT 정책이 is_room_participant로 완화되어
  * 참가자도 비회원 상대 게임을 자유 기록으로 남길 수 있다.
  */
 export type RoomGameContext = {
@@ -33,7 +33,7 @@ export function canAddRoomGame(detail: Pick<MatchRoomDetail, 'source' | 'room'>)
     return s.requestStatus === 'accepted'
 }
 
-/** 방에 참가한 회원(방장 포함)이면 게임을 추가할 수 있다 (0049 — 입장 = 참가 = 게임 등록 자격) */
+/** 방에 참가한 회원(호스트 포함)이면 게임을 추가할 수 있다 (0049 — 입장 = 참가 = 게임 등록 자격) */
 export function canViewerAddRoomGame(detail: MatchRoomDetail, viewerId: string): boolean {
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
     return isMember && canAddRoomGame(detail)

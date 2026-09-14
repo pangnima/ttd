@@ -5,18 +5,18 @@ const HOST = 'h'
 const base = { isHost: true, viewerId: HOST, isSettled: false }
 const row = (statusLabel: string, userId?: string) => ({ userId, statusLabel })
 
-describe('canKickRoomMember — 방장이 참가자를 내보낼 수 있는가', () => {
-    it('방장은 참가·초대 대기 회원을 내보낼 수 있다', () => {
+describe('canKickRoomMember — 호스트가 참가자를 내보낼 수 있는가', () => {
+    it('호스트는 참가·초대 대기 회원을 내보낼 수 있다', () => {
         expect(canKickRoomMember({ ...base, row: row('참가', 'p') })).toBe(true)
         expect(canKickRoomMember({ ...base, row: row('초대 대기', 'i') })).toBe(true)
     })
 
-    it('방장이 아니면 못 한다', () => {
+    it('호스트가 아니면 못 한다', () => {
         expect(canKickRoomMember({ ...base, isHost: false, row: row('참가', 'p') })).toBe(false)
     })
 
     it('자기 자신은 못 내보낸다 — 방을 없애려면 리스트에서 내리기를 쓴다', () => {
-        expect(canKickRoomMember({ ...base, row: row('방장', HOST) })).toBe(false)
+        expect(canKickRoomMember({ ...base, row: row('호스트', HOST) })).toBe(false)
     })
 
     it('비회원 행은 멤버 테이블에 없어 대상이 아니다', () => {
@@ -24,7 +24,7 @@ describe('canKickRoomMember — 방장이 참가자를 내보낼 수 있는가',
     })
 
     it('내보낸 사람은 명단에서 사라지므로 대상이 아니다 — 되돌리는 길은 [회원 초대]다', () => {
-        expect(canKickRoomMember({ ...base, row: row('강퇴됨', 'p') })).toBe(false)
+        expect(canKickRoomMember({ ...base, row: row('내보내짐', 'p') })).toBe(false)
     })
 
     it('경기에 배정된 회원은 내보낼 수 없다 — 방을 못 보게 되면 결과를 확인할 수 없다(0070)', () => {
@@ -41,15 +41,15 @@ describe('canKickRoomMember — 방장이 참가자를 내보낼 수 있는가',
 describe('canRemoveRoomGuest — 방에 등록된 비회원 빼기 (0069)', () => {
     const guestRow = { guestId: 'g1', guestCreatedBy: 'p' }
 
-    it('방장은 누가 부른 게스트든 뺄 수 있다', () => {
+    it('호스트는 누가 부른 게스트든 뺄 수 있다', () => {
         expect(canRemoveRoomGuest({ isHost: true, isSettled: false, viewerId: 'h', row: guestRow })).toBe(true)
     })
 
-    it('내가 부른 게스트는 방장이 아니어도 뺀다 — 잘못 부른 것을 되돌릴 경로', () => {
+    it('내가 부른 게스트는 호스트가 아니어도 뺀다 — 잘못 부른 것을 되돌릴 경로', () => {
         expect(canRemoveRoomGuest({ isHost: false, isSettled: false, viewerId: 'p', row: guestRow })).toBe(true)
     })
 
-    it('남이 부른 게스트는 방장만', () => {
+    it('남이 부른 게스트는 호스트만', () => {
         expect(canRemoveRoomGuest({ isHost: false, isSettled: false, viewerId: 'x', row: guestRow })).toBe(false)
     })
 

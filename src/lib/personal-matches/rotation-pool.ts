@@ -3,7 +3,7 @@ import type { MatchRoomGuest, RotationPoolPlayer } from '@/types'
 /**
  * 로테이션 게임 빌더의 선수 풀 파생 (순수 함수, 0050).
  *
- * 0049까지 빌더의 '나'는 세션 소유자(방장)로 고정이었고 풀은 rotation_sessions.players 그대로였다.
+ * 0049까지 빌더의 '나'는 세션 소유자(호스트)로 고정이었고 풀은 rotation_sessions.players 그대로였다.
  * 방을 참가자 공유 자원으로 바꾸면서 앵커가 **입력자(로그인한 참가자)**로 바뀌었으므로,
  * 풀도 "세션 풀 ∪ 방 참가자(joined) − 나"로 다시 계산해야 한다.
  *  - 세션 소유자는 players에 들어 있지 않으므로 방 참가자 목록(host 멤버 행)에서 합쳐진다.
@@ -48,7 +48,7 @@ function keyOf(p: RotationPoolPlayer): string {
 
 /**
  * 빌더 풀 = 세션 풀 ∪ 방 참가자 − 나.
- * 세션 풀 항목을 먼저 두어 방장이 입력한 순서를 보존하고, 중복 회원은 방 참가자의 최신 프로필로 보강한다.
+ * 세션 풀 항목을 먼저 두어 호스트가 입력한 순서를 보존하고, 중복 회원은 방 참가자의 최신 프로필로 보강한다.
  */
 export function buildBuilderPool(
     sessionPlayers: RotationPoolPlayer[],

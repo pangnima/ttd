@@ -6,7 +6,7 @@ import { RoomLineupEditButton } from '@/components/match-rooms/room-lineup-edit-
 
 type Props = {
     detail: MatchRoomDetail
-    /** 방장에게만 채워진다 — 대진 생성·수정의 배치 대상 */
+    /** 호스트에게만 채워진다 — 대진 생성·수정의 배치 대상 */
     lineupCandidates?: OpponentCandidate[]
     /** 아직 고칠 수 있는 대진(0071) — 비면 [대진 편집]이 사라진다 */
     editableLineup?: EditableLineupGame[]
@@ -15,7 +15,7 @@ type Props = {
 }
 
 /**
- * 게임 섹션 헤더의 방장 액션 — [자동 대진표]와 [대진 편집].
+ * 게임 섹션 헤더의 호스트 액션 — [자동 대진표]와 [대진 편집].
  * 참가자 액션(게임 입력·게임 추가)은 자격 판정이 달라 섹션 본체가 그대로 그린다.
  */
 export function RoomGamesActions({ detail, lineupCandidates, editableLineup, canLineup }: Props) {
@@ -30,7 +30,7 @@ export function RoomGamesActions({ detail, lineupCandidates, editableLineup, can
 
     return (
         <>
-            {/* 대진을 미리 짜는 유일한 진입점 — 방장 전용이고 기존 게임을 덮어쓰지 않는다 (0066).
+            {/* 대진을 미리 짜는 유일한 진입점 — 호스트 전용이고 기존 게임을 덮어쓰지 않는다 (0066).
                 노출 조건은 RPC 가드의 거울이다 — 정산된 방에서는 거절당하므로 그리지 않는다 (0072) */}
             {canLineup && (
                 <RoomLineupButton

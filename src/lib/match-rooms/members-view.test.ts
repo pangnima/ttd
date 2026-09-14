@@ -4,11 +4,11 @@ import { buildMemberRows, inviteExcludedUserIds, memberMetaLine, type MemberRowV
 
 const base: MatchRoomDetail = {
     room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', courtCount: 1, isSettled: false, isListed: true, createdAt: '' },
-    host: { id: 'h', name: '호스트', nickname: 'host', deleted: false },
+    host: { id: 'h', name: '개설자', nickname: 'host', deleted: false },
     viewer: { role: 'host', status: 'joined' },
     members: [
         { userId: 'p2', name: '입장자', nickname: '', deleted: false, role: 'player', status: 'joined', sourceRole: 'pool' },
-        { userId: 'h', name: '호스트', nickname: 'host', deleted: false, role: 'host', status: 'joined' },
+        { userId: 'h', name: '개설자', nickname: 'host', deleted: false, role: 'host', status: 'joined' },
         { userId: 'd', name: '거절자', nickname: '', deleted: false, role: 'player', status: 'declined' },
         { userId: 'p', name: '참가자', nickname: '', deleted: false, role: 'player', status: 'joined' },
         { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player', status: 'invited', sourceRole: 'pool' },
@@ -19,10 +19,10 @@ const base: MatchRoomDetail = {
 }
 
 describe('buildMemberRows', () => {
-    it('방장→참가→초대→비회원 순, 거절자는 제외', () => {
+    it('호스트→참가→초대→비회원 순, 거절자는 제외', () => {
         const rows = buildMemberRows(base)
         expect(rows.map((r) => `${r.name}:${r.statusLabel}`)).toEqual([
-            '호스트:방장', '입장자:참가', '참가자:참가', '초대자:초대 대기', '비회원A:비회원',
+            '개설자:호스트', '입장자:참가', '참가자:참가', '초대자:초대 대기', '비회원A:비회원',
         ])
     })
 
@@ -32,7 +32,7 @@ describe('buildMemberRows', () => {
             members: [base.members[1]],
             source: { kind: 'confirmation', requestStatus: 'pending', repName: '대표', repUserId: 'rep', participants: [{ role: 'partner', name: '내파트너' }] },
         })
-        expect(rows.map((r) => `${r.name}:${r.statusLabel}`)).toEqual(['호스트:방장', '대표:확인 대기', '내파트너:비회원'])
+        expect(rows.map((r) => `${r.name}:${r.statusLabel}`)).toEqual(['개설자:호스트', '대표:확인 대기', '내파트너:비회원'])
     })
 
     it('게임 행의 비회원 참가자는 중복 없이 한 번만', () => {
@@ -40,7 +40,7 @@ describe('buildMemberRows', () => {
             ...base,
             source: { kind: 'direct' },
             games: [
-                { id: 'g1', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }], ownerUserId: 'h', ownerName: '호스트', sourceType: 'direct' as const },
+                { id: 'g1', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }], ownerUserId: 'h', ownerName: '개설자', sourceType: 'direct' as const },
                 { id: 'g2', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '외부상대' }], ownerUserId: 'p', ownerName: '참가자', sourceType: 'direct' as const },
             ],
         })
@@ -58,19 +58,19 @@ describe('buildMemberRows — 지금 방에 있는 사람만', () => {
 
     it('스스로 나간 사람과 같은 처리 — 라벨도 남지 않는다', () => {
         const rows = buildMemberRows({ ...base, members: [...base.members, kicked] })
-        expect(rows.map((r) => r.statusLabel)).not.toContain('강퇴됨')
+        expect(rows.map((r) => r.statusLabel)).not.toContain('내보내짐')
     })
 })
 
 describe('inviteExcludedUserIds — [회원 초대] 후보에서 뺄 회원', () => {
     const members = [
-        { userId: 'h', name: '호스트', nickname: '', deleted: false, role: 'host' as const, status: 'joined' as const },
+        { userId: 'h', name: '개설자', nickname: '', deleted: false, role: 'host' as const, status: 'joined' as const },
         { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player' as const, status: 'invited' as const },
         { userId: 'd', name: '나간이', nickname: '', deleted: false, role: 'player' as const, status: 'declined' as const },
         { userId: 'k', name: '강퇴자', nickname: '', deleted: false, role: 'player' as const, status: 'removed' as const },
     ]
 
-    it('방장에게는 강퇴자가 후보로 남는다 — 그 사람을 다시 부를 유일한 경로', () => {
+    it('호스트에게는 강퇴자가 후보로 남는다 — 그 사람을 다시 부를 유일한 경로', () => {
         expect(inviteExcludedUserIds(members, true)).toEqual(['h', 'i', 'd'])
     })
 
@@ -98,7 +98,7 @@ describe('buildMemberRows — 방에 등록된 비회원(0069)', () => {
             source: { kind: 'direct' },
             guests: [guest],
             games: [
-                { id: 'g', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '게스트김' }], ownerUserId: 'h', ownerName: '호스트', sourceType: 'direct' as const },
+                { id: 'g', matchType: 'singles', setScores: [], participants: [{ role: 'opponent', name: '게스트김' }], ownerUserId: 'h', ownerName: '개설자', sourceType: 'direct' as const },
             ],
         })
         const hits = rows.filter((r) => r.name === '게스트김')

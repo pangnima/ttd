@@ -174,7 +174,7 @@ export async function fetchRoomPage(
 }
 
 /**
- * 내가 **참가한** 방 id — `joined`만(방장 행도 joined다). 앱 술어 `isViewerJoined`의 거울이다.
+ * 내가 **참가한** 방 id — `joined`만(호스트 행도 joined다). 앱 술어 `isViewerJoined`의 거울이다.
  * 「참여 중인 매칭」 목록의 좁히기 인자이자 그 화면 '진행 중' 배지 숫자의 출처다.
  *
  * ⚠ 초대 대기(invited)는 세지 않는다(Week 39). 아직 수락하지 않은 매칭까지 '참여 중'으로
@@ -230,7 +230,7 @@ export async function fetchMatchRoomSummary(roomId: string, viewerId: string): P
     return mapRoomRow(data, viewerId)
 }
 
-/** 상세 — 방장·초대 수락자·비밀번호 입장자만. 멤버가 아니면 null (게이트 렌더) */
+/** 상세 — 호스트·초대 수락자·비밀번호 입장자만. 멤버가 아니면 null (게이트 렌더) */
 export async function fetchMatchRoomDetail(roomId: string): Promise<MatchRoomDetail | null> {
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('get_match_room_detail', { p_room_id: roomId })
@@ -301,10 +301,10 @@ function toCandidates(data: unknown): OpponentCandidate[] {
 }
 
 /**
- * 방에 참가(joined)한 회원 — 방장이 게임을 구성할 때 자동완성 '방 참가자' 그룹(0048).
+ * 방에 참가(joined)한 회원 — 호스트가 게임을 구성할 때 자동완성 '방 참가자' 그룹(0048).
  * ⚠ 방 게스트(0069)는 여기 넣지 않는다 — create_room_game의 상대(대표)는 방에 참가한 **회원**이어야 하므로
  *    (opponent_not_in_room) 고를 수 있게 두면 그것이 곧 함정이다. 게스트는 파트너·상대2 슬롯에 이름으로 들어간다.
- * 방장 본인·탈퇴 회원은 제외. 멤버 행은 전원 SELECT, users 프로필 컬럼은 전체 회원 검색과 같은 공개 컬럼이다.
+ * 호스트 본인·탈퇴 회원은 제외. 멤버 행은 전원 SELECT, users 프로필 컬럼은 전체 회원 검색과 같은 공개 컬럼이다.
  */
 export async function fetchRoomParticipantCandidates(roomId: string, excludeUserId: string): Promise<OpponentCandidate[]> {
     const supabase = await createClient()
@@ -319,7 +319,7 @@ export async function fetchRoomParticipantCandidates(roomId: string, excludeUser
 }
 
 /**
- * 자동 대진표의 배치 대상 — 참가자 **전원**(방장 본인 포함, Week 40).
+ * 자동 대진표의 배치 대상 — 참가자 **전원**(호스트 본인 포함, Week 40).
  * 게임 구성 자동완성과 달리 대진은 "모인 사람을 다 넣는" 것이라 뷰어를 빼면 안 된다.
  *
  * 방에 등록된 비회원(0069)도 함께 온다 — 코트에 있는 사람은 대진에 들어가야 한다.
@@ -472,14 +472,14 @@ export async function fetchMyRoomMemberships(
     }
 }
 
-/** 방장이 지금 고칠 수 있는 대진 — 게임 id(personal_matches 대표 행). 요청 id는 상호 확인 게임에만 있다(0076) */
+/** 호스트가 지금 고칠 수 있는 대진 — 게임 id(personal_matches 대표 행). 요청 id는 상호 확인 게임에만 있다(0076) */
 export type EditableLineupGame = { gameId: string; requestId: string | null }
 
 /**
  * 저장된 대진 중 아직 손댈 수 있는 것(0071) — 라인업이 만들었고, 스코어도 결과 협상도 없는 게임.
  * 회원이 한 팀에만 있어 자유 기록으로 저장된 라인업 게임도 포함된다(0076, requestId null).
  *
- * 상세 RPC와 따로 두는 이유는 권한 때문이다. 방장은 자기가 뛰지 않는 게임의 `match_requests` 행을
+ * 상세 RPC와 따로 두는 이유는 권한 때문이다. 호스트는 자기가 뛰지 않는 게임의 `match_requests` 행을
  * 직접 읽을 수 없다(정책이 당사자 둘만 통과시킨다). 이 목록이 [대진 편집] 버튼을 그릴지도 정한다.
  */
 export async function fetchEditableLineupGames(roomId: string): Promise<EditableLineupGame[]> {

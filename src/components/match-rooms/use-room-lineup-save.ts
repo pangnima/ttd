@@ -25,7 +25,7 @@ export function useRoomLineupSave({ roomId, onDone }: Options): RoomLineupSaveSt
     return {
         saving,
         error,
-        // 방장이 고른 경기당 시간을 함께 보낸다(0078) — 방이 그 값을 기억해야 라운드 예상 시각이
+        // 호스트가 고른 경기당 시간을 함께 보낸다(0078) — 방이 그 값을 기억해야 라운드 예상 시각이
         // 팝업에서 본 것과 같아진다. 안 보내면 방은 소요 시간으로 역산한다(옛 동작).
         save: async (games, slotMinutes) => {
             setSaving(true)

@@ -10,13 +10,13 @@ import { RoomInviteMembers } from '@/components/match-rooms/room-invite-members'
 type Props = {
     detail: MatchRoomDetail
     viewerId: string
-    /** 방장 전용 액션(내보내기·다시 초대)을 행에 붙일지 — 방장에게만 참이다 */
+    /** 호스트 전용 액션(내보내기·다시 초대)을 행에 붙일지 — 호스트에게만 참이다 */
     host?: { viewerId: string }
-    /** 초대 자격(방장·참가자)이 있을 때만 넘어온다 — 없으면 명단만 그린다 */
+    /** 초대 자격(호스트·참가자)이 있을 때만 넘어온다 — 없으면 명단만 그린다 */
     invite?: { selfUserId: string; candidates: OpponentCandidate[] }
 }
 
-/** 참가자 명단 — 회원 멤버(방장·참가·초대 대기) + 출처 기록의 비회원. 정원 없이 참가 인원만 표시(0048) */
+/** 참가자 명단 — 회원 멤버(호스트·참가·초대 대기) + 출처 기록의 비회원. 정원 없이 참가 인원만 표시(0048) */
 export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
     const rows = buildMemberRows(detail)
     const joined = countJoined(detail.members)

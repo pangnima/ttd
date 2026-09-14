@@ -18,7 +18,7 @@ export type RoomGameTurn =
     | 'reenterResult'   // 이의를 받아 다시 입력할 차례
     | 'reentryReview'   // 이의 뒤 재제안된 결과를 확인할 차례
     | 'fillLineup'      // 모집 중 — 라인업을 채워야 결과를 넣을 수 있다
-    | 'closeRotation'   // 방장 — 게임이 전부 확정됐으니 [게임 입력 종료]로 마무리할 차례(0077)
+    | 'closeRotation'   // 호스트 — 게임이 전부 확정됐으니 [게임 입력 종료]로 마무리할 차례(0077)
     | 'waiting'         // 상대 차례
     | 'none'            // 나와 무관하거나 이미 끝난 게임
 
@@ -103,20 +103,20 @@ export function viewerRoomTurn(
 ): RoomTurnSummary | null {
     const turns = games.map((g) =>
         classifyRoomGameTurn(g, viewerId, g.sourceRequestId ? confirmations[g.sourceRequestId] : undefined))
-    // 방장의 마지막 할 일(0077) — 미확정 로테이션 방은 게임을 다 확정해도 세션이 남아 정산되지 않는다.
+    // 호스트의 마지막 할 일(0077) — 미확정 로테이션 방은 게임을 다 확정해도 세션이 남아 정산되지 않는다.
     // 그 사실을 아무도 말하지 않아 방이 영영 「진행 중」에 머물렀다(E2E S4.13). 게임이 있고 전부 끝났으면
-    // 방장에게 종료 차례를 준다. 미확정 게임이 하나라도 있으면 그쪽 차례가 우선한다(PRIORITY).
+    // 호스트에게 종료 차례를 준다. 미확정 게임이 하나라도 있으면 그쪽 차례가 우선한다(PRIORITY).
     if (opts.hostOfPendingRotation && allGamesSettled(games)) turns.push('closeRotation')
     return pickTurn(turns)
 }
 
-/** 게임이 하나 이상 있고 전부 스코어가 붙었는가 — 방장 종료 차례의 조건 */
+/** 게임이 하나 이상 있고 전부 스코어가 붙었는가 — 호스트 종료 차례의 조건 */
 export function allGamesSettled(games: ReadonlyArray<Pick<MatchRoomGame, 'setScores'>>): boolean {
     return games.length > 0 && games.every((g) => g.setScores.length > 0)
 }
 
 /**
- * 목록용 — 방장의 미확정 로테이션 세션 중 게임이 전부 확정된 방을 고른다(0077).
+ * 목록용 — 호스트의 미확정 로테이션 세션 중 게임이 전부 확정된 방을 고른다(0077).
  * `gamesByRoom`은 대표 게임(관점 행 제외)의 총수·확정 수. 조회는 호출자(room-queue.ts)가 한다.
  */
 export function closeRotationRooms(

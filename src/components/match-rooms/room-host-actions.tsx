@@ -12,7 +12,7 @@ import { RoomCloseButton } from '@/components/match-rooms/room-close-button'
 
 type Props = {
     roomId: string
-    /** 미확정 로테이션 방이면 참가자들이 아직 게임을 입력하는 중 — 방장이 닫을 수 있다(0050) */
+    /** 미확정 로테이션 방이면 참가자들이 아직 게임을 입력하는 중 — 호스트가 닫을 수 있다(0050) */
     canCloseRotation?: boolean
     /** 비노출 방(0082)은 비밀번호가 없다 — [비밀번호 변경]이 없고 '내리기'는 '삭제'다(리스트에 오른 적이 없다) */
     isListed?: boolean
@@ -21,7 +21,7 @@ type Props = {
     closedAt?: string
 }
 
-/** 방장 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 방 닫기/다시 열기 · 매칭 리스트에서 내리기(방 삭제, 기록은 유지) */
+/** 호스트 전용 — 입장 비밀번호 변경(Dialog) · 게임 입력 종료 · 방 닫기/다시 열기 · 매칭 리스트에서 내리기(방 삭제, 기록은 유지) */
 export function RoomHostActions({ roomId, canCloseRotation = false, isListed = true, isSettled = false, closedAt }: Props) {
     const router = useRouter()
     const [open, setOpen] = useState(false)

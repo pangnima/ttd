@@ -34,7 +34,7 @@ export function RoomGameRounds({ detail, viewerId, confirmations }: Props) {
         planned.map((g) => [g.ownerName, ...g.participants.map((p) => p.name)]),
         courts,
     )
-    // 방장이 고른 경기당 시간이 있으면 그것을 쓴다(0078) — 없을 때만 소요 시간으로 역산한다.
+    // 호스트가 고른 경기당 시간이 있으면 그것을 쓴다(0078) — 없을 때만 소요 시간으로 역산한다.
     // 종전에는 늘 역산이라 "팝업은 10:30인데 방은 10:40"이 됐다(K-6).
     const starts = roundStartLabels(
         detail.room.playedTime,

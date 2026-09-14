@@ -6,6 +6,7 @@ import { buildRoomTitle } from '@/lib/match-rooms/title'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { HOST_LABEL } from '@/lib/match-rooms/member-labels'
 import { roomStage } from '@/lib/match-rooms/room-stage'
 import { RoomStageBadge } from '@/components/match-rooms/room-stage-badge'
 
@@ -19,7 +20,7 @@ function courtLabel(courtName: string | undefined, courtCount: number): string |
 }
 
 /**
- * 상세 상단 — 자동 제목 + 단계 칩 + 방식/표면 eyebrow + 방장 + 시각·코트명·메모(MatchMetaLine).
+ * 상세 상단 — 자동 제목 + 단계 칩 + 방식/표면 eyebrow + 호스트 + 시각·코트명·메모(MatchMetaLine).
  * eyebrow는 방식 라벨(단식·남자 복식…)이다 — 출처(source_kind)의 '자유 기록'·'로테이션 복식'은 내부 어휘라
  * 단식 매칭을 만든 사람이 「자유 기록」을 읽게 됐다(E2E F-1).
  */
@@ -42,7 +43,7 @@ export function RoomDetailHeader({ detail, actions }: Props) {
             />
             <div className={`${CARD_BASE} px-4 py-3 space-y-1`}>
                 <p className="text-body2 text-foreground">
-                    방장{' '}
+                    {HOST_LABEL}{' '}
                     <ProfileLink userId={host.id} isGuest={host.deleted} className="font-medium hover:underline">
                         {host.name}
                     </ProfileLink>

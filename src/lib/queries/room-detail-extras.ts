@@ -20,13 +20,13 @@ export type RoomDetailExtras = {
     isHost: boolean
     isMember: boolean
     canAdd: boolean
-    /** 미확정 로테이션 방 — 게임이 더 들어올 수 있고, 세션을 닫는 건 방장만 한다(0050) */
+    /** 미확정 로테이션 방 — 게임이 더 들어올 수 있고, 세션을 닫는 건 호스트만 한다(0050) */
     isPendingRotation: boolean
     /** OpponentCandidate로 온다 — RoomParticipant(더 좁은 구조)로도 그대로 쓰인다 */
     participants: OpponentCandidate[]
-    /** 자동 대진표의 배치 대상 — 방장 본인을 포함한 참가자 전원 + 방 게스트(0069). 방장에게만 채운다 */
+    /** 자동 대진표의 배치 대상 — 호스트 본인을 포함한 참가자 전원 + 방 게스트(0069). 호스트에게만 채운다 */
     lineupCandidates: OpponentCandidate[]
-    /** 아직 고칠 수 있는 대진(0071) — 비어 있으면 [대진 편집]을 그리지 않는다. 방장에게만 채운다 */
+    /** 아직 고칠 수 있는 대진(0071) — 비어 있으면 [대진 편집]을 그리지 않는다. 호스트에게만 채운다 */
     editableLineup: EditableLineupGame[]
     opponentCandidates: OpponentCandidate[]
     pastOpponents: PastOpponent[]
@@ -57,7 +57,7 @@ export async function fetchRoomDetailExtras(detail: MatchRoomDetail, viewerId: s
         opponentCandidates, pastOpponents, confirmations, rotationSession,
     ] = await Promise.all([
         needsPicker ? fetchRoomParticipantCandidates(roomId, viewerId) : [],
-        // 대진 생성·수정은 방장 전용이라 방장에게만 조회한다
+        // 대진 생성·수정은 호스트 전용이라 호스트에게만 조회한다
         isHost ? fetchRoomLineupCandidates(roomId, detail.guests) : [],
         isHost ? fetchEditableLineupGames(roomId) : [],
         needsCandidates ? fetchOpponentCandidates(viewerId) : [],

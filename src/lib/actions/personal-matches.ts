@@ -18,10 +18,10 @@ import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/reval
 import { DIRECT_RECORD_MEMBER_ERROR, requiresRoom } from '@/lib/personal-matches/direct-record'
 
 /**
- * 방장이 마감한 방(0083)의 기록을 고치거나 지우려 할 때 — RPC·정책의 room_closed와 같은 뜻.
+ * 호스트가 마감한 방(0083)의 기록을 고치거나 지우려 할 때 — RPC·정책의 room_closed와 같은 뜻.
  * match-rooms 액션의 에러 맵(`room_closed`)과 문구를 맞춘다('use server' 파일은 상수를 export할 수 없어 여기 둔다).
  */
-const ROOM_CLOSED_ERROR = '방장이 마감한 매칭입니다. 고치려면 방장이 다시 열어야 합니다.'
+const ROOM_CLOSED_ERROR = '호스트가 마감한 매칭입니다. 고치려면 호스트가 다시 열어야 합니다.'
 
 /**
  * insert/update 공통: personal_matches 본체 행 (참가자 정보는 buildParticipantRows가 별도 생성).
@@ -203,7 +203,7 @@ export async function updatePersonalMatchAction(
         .eq('user_id', user.id)
         .maybeSingle()
     const roomId = existing?.room_id ?? null
-    // 방장이 마감한 방의 기록은 소유자도 고칠 수 없다(0083) — 정책이 0행으로 거절하기 전에 사람 말로
+    // 호스트가 마감한 방의 기록은 소유자도 고칠 수 없다(0083) — 정책이 0행으로 거절하기 전에 사람 말로
     if (existing?.room?.closed_at) return { error: ROOM_CLOSED_ERROR }
 
     const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!roomId })
@@ -258,7 +258,7 @@ export async function deletePersonalMatchAction(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다.' }
 
-    // 방장이 마감한 방의 기록은 지울 수 없다(0083) — 정책은 0행으로 조용히 거절하므로 먼저 이유를 말한다
+    // 호스트가 마감한 방의 기록은 지울 수 없다(0083) — 정책은 0행으로 조용히 거절하므로 먼저 이유를 말한다
     const { data: existing } = await supabase
         .from('personal_matches')
         .select('room:match_rooms!personal_matches_room_id_fkey(closed_at)')

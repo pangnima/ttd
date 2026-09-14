@@ -12,7 +12,7 @@ const STAGE_CLASS: Record<RoomStage, string> = {
     closed: 'border-border bg-muted text-muted-foreground',
 }
 
-/** 룸 헤더의 진행 단계 칩 — 모집 중 → 진행 중 → 결과 확인 중 → 종료 → (방장이 닫으면) 마감 */
+/** 룸 헤더의 진행 단계 칩 — 모집 중 → 진행 중 → 결과 확인 중 → 종료 → (호스트가 닫으면) 마감 */
 export function RoomStageBadge({ stage }: Props) {
     return <span className={`${PILL_BASE} ${STAGE_CLASS[stage]}`}>{ROOM_STAGE_LABEL[stage]}</span>
 }

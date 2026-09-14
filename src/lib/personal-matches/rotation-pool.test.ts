@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { RotationPoolPlayer } from '@/types'
 import { buildBuilderPool, type RoomParticipant } from './rotation-pool'
 
-const host: RoomParticipant = { id: 'host', name: '방장', dominantHand: 'right', ntrp: 3 }
+const host: RoomParticipant = { id: 'host', name: '호스트', dominantHand: 'right', ntrp: 3 }
 const bob: RoomParticipant = { id: 'bob', name: '밥', dominantHand: 'left', personalNtrp: 3.5, ntrp: 3 }
 const me: RoomParticipant = { id: 'me', name: '나', ntrp: 4 }
 
@@ -15,7 +15,7 @@ const pool: RotationPoolPlayer[] = [
 describe('buildBuilderPool', () => {
     it('방 참가자를 합치고 뷰어를 제외한다 (세션 소유자는 방 명단에서 합류)', () => {
         const out = buildBuilderPool(pool, [host, bob], 'me')
-        expect(out.map((p) => p.name)).toEqual(['밥', '인천게스트', '방장'])
+        expect(out.map((p) => p.name)).toEqual(['밥', '인천게스트', '호스트'])
     })
 
     it('세션 소유자가 뷰어면 방 참가자만 더해진다', () => {

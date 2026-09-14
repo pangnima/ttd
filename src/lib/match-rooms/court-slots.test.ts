@@ -76,7 +76,7 @@ describe('roundStartLabels', () => {
 })
 
 describe('derivedSlotMinutes — 저장된 방은 경기당 시간을 모른다', () => {
-    it('예정 시간에 들어맞게 짠 대진은 방장이 고른 값과 같아진다', () => {
+    it('예정 시간에 들어맞게 짠 대진은 호스트가 고른 값과 같아진다', () => {
         expect(derivedSlotMinutes(120, 4)).toBe(30)
         expect(derivedSlotMinutes(90, 3)).toBe(30)
     })
@@ -149,7 +149,7 @@ describe('roomSlotMinutes — 저장된 값이 역산을 이긴다 (0078, K-6)',
         expect(roomSlotMinutes(null, null, 0)).toBeNull()
     })
 
-    it('라운드 시각이 방장이 고른 값을 따른다', () => {
+    it('라운드 시각이 호스트가 고른 값을 따른다', () => {
         expect(roundStartLabels('10:00', 3, roomSlotMinutes(30, 120, 3))).toEqual(['10:00', '10:30', '11:00'])
         // 저장 전 방은 역산이라 어긋난다 — 이것이 K-6이 말하던 증상이다
         expect(roundStartLabels('10:00', 3, roomSlotMinutes(null, 120, 3))).toEqual(['10:00', '10:40', '11:20'])

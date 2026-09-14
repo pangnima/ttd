@@ -51,7 +51,7 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
         : undefined
 
     const stage = roomStage(detail)
-    // 방장의 미확정 로테이션 방은 게임을 다 확정해도 세션이 남는다 — 종료 차례를 배너가 말한다(0077)
+    // 호스트의 미확정 로테이션 방은 게임을 다 확정해도 세션이 남는다 — 종료 차례를 배너가 말한다(0077)
     const turn = x.isMember
         ? viewerRoomTurn(detail.games, user.id, x.confirmations, { hostOfPendingRotation: x.isHost && x.isPendingRotation })
         : null
@@ -98,7 +98,7 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
                 lineupCandidates={x.isHost ? x.lineupCandidates : undefined}
                 editableLineup={x.isHost ? x.editableLineup : undefined}
             />
-            {/* 방장은 나갈 수 없다 — '매칭 리스트에서 내리기'가 방장의 퇴장이다(0054).
+            {/* 호스트는 나갈 수 없다 — '매칭 리스트에서 내리기'가 호스트의 퇴장이다(0054).
                 경기에 배정된 참가자도 나갈 수 없다(0077) — 강퇴 가드(member_has_games)와 같은 집합을 본다 */}
             {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && detail.viewer.status !== 'removed' && (
                 <RoomLeaveButton roomId={roomId} hasGames={roomGameMemberIds(detail.games).has(user.id)} />

@@ -29,9 +29,9 @@ export type RoomGamesSectionProps = {
     picker?: PoolPickerProps
     /** 그 세션에 이미 등록된 게임 (0064) — 빌더가 중복 입력을 눈으로 막고 선점 값을 만든다 */
     sessionGames?: EnteredRotationGame[]
-    /** 자동 대진표(0066) — 방장에게만 채워진다. 참가자 전원(방장 포함)이 배치 대상 */
+    /** 자동 대진표(0066) — 호스트에게만 채워진다. 참가자 전원(호스트 포함)이 배치 대상 */
     lineupCandidates?: OpponentCandidate[]
-    /** 아직 고칠 수 있는 대진(0071) — 비면 [대진 편집]이 사라진다. 방장에게만 채워진다 */
+    /** 아직 고칠 수 있는 대진(0071) — 비면 [대진 편집]이 사라진다. 호스트에게만 채워진다 */
     editableLineup?: EditableLineupGame[]
 }
 
@@ -46,7 +46,7 @@ export function RoomGamesSection({
 }: RoomGamesSectionProps) {
     const isPendingRotation = detail.source.kind === 'rotation' && !detail.source.isFinalized
     const isMember = detail.room.hostUserId === viewerId || detail.viewer?.status === 'joined'
-    // [자동 대진표]의 노출 조건 — 권장 힌트와 빈 상태의 방장 문구가 같은 식을 본다(버튼 없는 안내를 막는다)
+    // [자동 대진표]의 노출 조건 — 권장 힌트와 빈 상태의 호스트 문구가 같은 식을 본다(버튼 없는 안내를 막는다)
     const canLineup = !!lineupCandidates
         && canCreateRoomLineup(detail, lineupCandidates.length, lineupCandidates.filter((c) => !c.isGuest).length)
 
@@ -54,9 +54,9 @@ export function RoomGamesSection({
         <section className="space-y-2">
             <div className="flex items-center justify-between gap-3">
                 <h2 className={TYPO.h3}>게임</h2>
-                {/* 로테이션 방장에게는 버튼 3개가 한꺼번에 보인다 — 좁은 화면에서 제목을 밀지 않도록 감싼다 */}
+                {/* 로테이션 호스트에게는 버튼 3개가 한꺼번에 보인다 — 좁은 화면에서 제목을 밀지 않도록 감싼다 */}
                 <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
-                    {/* 방장 액션 둘 — 자동 대진표·대진 편집 */}
+                    {/* 호스트 액션 둘 — 자동 대진표·대진 편집 */}
                     <RoomGamesActions
                         detail={detail}
                         lineupCandidates={lineupCandidates}

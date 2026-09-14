@@ -138,7 +138,7 @@ export async function fetchQueueRotationSessions(userId: string, joinedRoomIds: 
 /**
  * 방의 미확정 로테이션 세션 1건 — RLS가 방 참가자에게만 허용한다(0050).
  * 0050 이후 방 세션은 finalize 후에도 남고(참가자 여러 명이 각자 입력한다),
- * 방장의 close_rotation_room이 지운다 — 즉 행이 있으면 아직 입력을 받는 중이다.
+ * 호스트의 close_rotation_room이 지운다 — 즉 행이 있으면 아직 입력을 받는 중이다.
  */
 export async function fetchRoomRotationSession(roomId: string, viewerId?: string): Promise<RotationSession | null> {
     const supabase = await createClient()

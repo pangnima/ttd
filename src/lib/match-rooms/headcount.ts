@@ -1,15 +1,16 @@
 import type { MatchRoomMember, MatchRoomMemberRole, MatchRoomMemberStatus } from '@/types'
+import { HOST_LABEL, INVITED_LABEL, JOINED_LABEL, REMOVED_LABEL } from '@/lib/match-rooms/member-labels'
 
 type MemberLike = Pick<MatchRoomMember, 'role' | 'status'>
 type ViewerLike = { role: MatchRoomMemberRole; status: MatchRoomMemberStatus }
 
-/** 참가 인원 — 방장 + joined된 참가자. 초대 대기·거절은 제외. (정원 개념은 없다 — 0048) */
+/** 참가 인원 — 호스트 + joined된 참가자. 초대 대기·거절은 제외. (정원 개념은 없다 — 0048) */
 export function countJoined(members: MemberLike[]): number {
     return members.filter((m) => m.status === 'joined').length
 }
 
 /**
- * 실제 참여 — '참가 인원'에 잡히는 상태(방장 행도 joined다).
+ * 실제 참여 — '참가 인원'에 잡히는 상태(호스트 행도 joined다).
  * 게임 등록 자격과 **「참여 중인 매칭」**(fetchMyRoomIds)이 함께 보는 단일 술어다.
  *
  * ⚠ 초대 대기(invited)는 참여가 아니다(Week 39). 종전에는 "초대도 내 경기"라며 세었지만,
@@ -28,10 +29,10 @@ export function formatHeadcount(joined: number): string {
 /** 목록 카드 상태 칩 라벨 — 없으면 아직 입장하지 않은 방 */
 export function viewerStatusLabel(viewer?: ViewerLike): string | null {
     if (!viewer) return null
-    if (viewer.role === 'host') return '방장'
-    if (viewer.status === 'invited') return '초대됨'
+    if (viewer.role === 'host') return HOST_LABEL
+    if (viewer.status === 'invited') return INVITED_LABEL
     if (viewer.status === 'declined') return null
-    // 강퇴는 나간 것과 다르다 — 목록 카드가 '참가'라고 말하면 왜 아무것도 못 하는지 알 수 없다
-    if (viewer.status === 'removed') return '강퇴됨'
-    return '참가'
+    // 내보내진 것은 나간 것과 다르다 — 목록 카드가 '참가'라고 말하면 왜 아무것도 못 하는지 알 수 없다
+    if (viewer.status === 'removed') return REMOVED_LABEL
+    return JOINED_LABEL
 }

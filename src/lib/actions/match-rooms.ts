@@ -9,7 +9,7 @@ import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput }
 import { translateError } from '@/lib/match-rooms/error-map'
 
 /**
- * 매칭 리스트(매칭 룸) 쓰기 — 매칭 만들기·입장·초대 응답·방장 관리·방 게임 등록.
+ * 매칭 리스트(매칭 룸) 쓰기 — 매칭 만들기·입장·초대 응답·호스트 관리·방 게임 등록.
  * 비밀번호 검증과 멤버 전이는 전부 SECURITY DEFINER RPC(0046·0048·0065) 안에서 하고,
  * 여기서는 사용자 문구로 번역만 한다.
  */
@@ -27,23 +27,23 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
     ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
-    ['cannot_kick_host', '방장은 내보낼 수 없습니다.'],
+    ['cannot_kick_host', '호스트는 내보낼 수 없습니다.'],
     // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품는다(긴 키 우선이라 순서는 무관)
-    ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 방장에게 대진 수정을 요청해주세요.'],
+    ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 호스트에게 대진 수정을 요청해주세요.'],
     ['member_has_games', '이미 배정된 경기가 있어 내보낼 수 없습니다.'],
-    ['room_member_removed', '방장이 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
-    ['not_host', '방장만 할 수 있습니다.'],
-    ['not_room_host', '방장만 할 수 있습니다.'],
+    ['room_member_removed', '호스트가 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
+    ['not_host', '호스트만 할 수 있습니다.'],
+    ['not_room_host', '호스트만 할 수 있습니다.'],
     ['invalid_guest_name', '이름을 1~40자로 입력해주세요.'],
     ['duplicate_guest_name', '이미 같은 이름의 참가자가 있습니다. 구별되는 이름으로 입력해주세요.'],
     ['guest_not_found', '이미 명단에서 빠진 참가자입니다.'],
     ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
-    // 0083 — 방장이 닫은 방. 기존 room_already_closed(정산됨)와 뜻이 다르다
-    ['room_closed', '방장이 마감한 매칭입니다. 고치려면 방장이 다시 열어야 합니다.'],
+    // 0083 — 호스트가 닫은 방. 기존 room_already_closed(정산됨)와 뜻이 다르다
+    ['room_closed', '호스트가 마감한 매칭입니다. 고치려면 호스트가 다시 열어야 합니다.'],
     ['room_not_settled', '모든 게임의 결과가 확정된 뒤에 마감할 수 있습니다.'],
     ['room_not_closed', '마감되지 않은 매칭입니다.'],
     ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
-    ['host_cannot_leave', '방장은 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
+    ['host_cannot_leave', '호스트는 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
     ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
     ['cannot_request_self', '자기 자신과의 게임은 등록할 수 없습니다.'],
     ['invalid_opponent', '게임 상대를 다시 선택해주세요.'],
@@ -145,7 +145,7 @@ export async function createMatchRoomAction(
 
 /**
  * 비밀번호 입장 — 성공 시 곧바로 참가자(player·joined)가 되고 재입장 때는 비밀번호를 묻지 않는다.
- * 미확정 로테이션 방이면 세션 참가자 풀에도 추가되므로 방장의 결과 입력 카드도 갱신한다.
+ * 미확정 로테이션 방이면 세션 참가자 풀에도 추가되므로 호스트의 결과 입력 카드도 갱신한다.
  */
 export async function enterMatchRoomAction(roomId: string, password: string): Promise<ActionResult> {
     const validationError = validateRoomPassword(password)
@@ -162,7 +162,7 @@ export async function enterMatchRoomAction(roomId: string, password: string): Pr
 
 /**
  * 룸 안에서 회원을 추가로 부른다 (0065).
- * 자격은 방장 또는 이미 참가한 회원 — 방에 들어와 있으면 사람을 부를 수 있다(게임 등록과 같은 눈높이).
+ * 자격은 호스트 또는 이미 참가한 회원 — 방에 들어와 있으면 사람을 부를 수 있다(게임 등록과 같은 눈높이).
  * 초대받은 사람은 비밀번호 없이 수락만으로 참가한다.
  */
 export async function inviteRoomMembersAction(roomId: string, userIds: string[]): Promise<ActionResult> {
@@ -179,10 +179,10 @@ export async function inviteRoomMembersAction(roomId: string, userIds: string[])
 }
 
 /**
- * 방장이 참가자를 내보낸다 (0068).
+ * 호스트가 참가자를 내보낸다 (0068).
  *
  * 강퇴는 '차단'이다 — 비밀번호를 알아도 재입장할 수 없고, 룸 상세도 더는 보이지 않으며(0070),
- * 방장의 재초대(inviteRoomMembersAction)로만 풀린다.
+ * 호스트의 재초대(inviteRoomMembersAction)로만 풀린다.
  * 그래서 **배정된 경기가 있는 사람은 내보낼 수 없다**(member_has_games): 방을 못 보게 하면
  * 그 사람이 결과를 확인할 수 없고, 좌석 만장일치가 채워지지 않아 방이 영영 정산되지 않는다.
  */
@@ -235,7 +235,7 @@ export async function addRoomGuestAction(roomId: string, input: RoomGuestInput):
 }
 
 /**
- * 룸 명단에서 비회원을 뺀다 (0069) — 방장 ∨ 등록한 본인.
+ * 룸 명단에서 비회원을 뺀다 (0069) — 호스트 ∨ 등록한 본인.
  * 이미 저장된 게임은 지워지지 않는다: 그 게임이 남아 있는 한 파생 '비회원' 행으로 계속 보인다.
  */
 export async function removeRoomGuestAction(roomId: string, guestId: string): Promise<ActionResult> {
@@ -264,7 +264,7 @@ export async function respondRoomInviteAction(roomId: string, accept: boolean): 
 
 /**
  * 방 나가기(0054) — 명단에서 declined로 빠진다. 내가 올린 기록은 그대로 남는다
- * (기록을 방에서 떼는 것은 방장의 '매칭 리스트에서 내리기'가 하는 일이다).
+ * (기록을 방에서 떼는 것은 호스트의 '매칭 리스트에서 내리기'가 하는 일이다).
  * 미확정 로테이션 방이면 선수 풀에서도 빠지고, 다시 비밀번호로 입장하면 원래대로 돌아온다.
  */
 export async function leaveMatchRoomAction(roomId: string): Promise<ActionResult> {
@@ -356,16 +356,16 @@ export type RoomLineupGameInput = {
 }
 
 /**
- * 자동 대진표 저장(0066, Week 40) — 방장이 전원의 대진을 한 번에 만든다.
+ * 자동 대진표 저장(0066, Week 40) — 호스트가 전원의 대진을 한 번에 만든다.
  *
  * create_room_game과 달리 **호출자가 슬롯에 없어도 된다**: 참가자가 5명 이상이면 대진을 짠
- * 방장도 언젠가 쉬기 때문이다. 그 제약을 푸는 것이 create_room_lineup의 존재 이유다.
+ * 호스트도 언젠가 쉬기 때문이다. 그 제약을 푸는 것이 create_room_lineup의 존재 이유다.
  * 저장된 게임은 스코어가 없는 상태로 방 게임 목록에 뜨고, 결과 입력부터는 기존 경로를 그대로 탄다.
  */
 export async function createRoomLineupAction(
     roomId: string,
     games: RoomLineupGameInput[],
-    /** 방장이 고른 경기당 시간(분) — 방에 남아 라운드 예상 시각의 근거가 된다 (0078) */
+    /** 호스트가 고른 경기당 시간(분) — 방에 남아 라운드 예상 시각의 근거가 된다 (0078) */
     slotMinutes?: number,
 ): Promise<ActionResult> {
     const { supabase, user } = await requireUser()
@@ -393,7 +393,7 @@ export async function createRoomLineupAction(
 }
 
 /**
- * 저장한 대진 고치기(0071, Week 42) — 방장이 라인업 게임을 지우고 새 대진을 넣는다.
+ * 저장한 대진 고치기(0071, Week 42) — 호스트가 라인업 게임을 지우고 새 대진을 넣는다.
  *
  * 자리 하나만 바꿔도 requester가 달라져 관점 행의 기준 자체가 바뀌므로 부분 수정이 아니라 **교체**다.
  * 그래서 `gameIds`는 편집 화면에 올라온 게임(personal_matches 대표 행) 전량이고, `games`는 편집을 마친 대진 전량이다.
@@ -433,8 +433,8 @@ export async function replaceRoomLineupAction(
 }
 
 /**
- * '게임 입력 종료' — 미확정 로테이션 세션을 닫는다(방장 전용, 0050).
- * finalize는 세션을 남겨 두므로(참가자 여러 명이 각자 입력할 수 있어야 한다) 종료는 방장이 명시적으로 한다.
+ * '게임 입력 종료' — 미확정 로테이션 세션을 닫는다(호스트 전용, 0050).
+ * finalize는 세션을 남겨 두므로(참가자 여러 명이 각자 입력할 수 있어야 한다) 종료는 호스트가 명시적으로 한다.
  * 닫으면 방이 정산 대상이 되고, 이후 게임은 '게임 추가'(create_room_game) 경로로 붙는다.
  */
 export async function closeRotationRoomAction(roomId: string): Promise<ActionResult> {
@@ -450,7 +450,7 @@ export async function closeRotationRoomAction(roomId: string): Promise<ActionRes
 }
 
 /**
- * 방 닫기(0083) — 정산된 방을 방장이 마감한다. 결과 정정·게임 추가·초대·대진 편집·기록 수정이 전부 잠기고,
+ * 방 닫기(0083) — 정산된 방을 호스트가 마감한다. 결과 정정·게임 추가·초대·대진 편집·기록 수정이 전부 잠기고,
  * 정산을 되돌리는 어떤 경로도 recompute_match_room_settled에서 room_closed로 막힌다.
  * 확정된 전적은 이미 개인 경기 결과에 있다 — 닫기는 노출을 바꾸지 않고 잠금만 얹는다.
  */
@@ -466,7 +466,7 @@ export async function closeMatchRoomAction(roomId: string): Promise<ActionResult
     return { error: null }
 }
 
-/** 다시 열기(0083) — 방장만. 잘못 확정한 결과를 [결과 정정]으로 고칠 유일한 탈출구 */
+/** 다시 열기(0083) — 호스트만. 잘못 확정한 결과를 [결과 정정]으로 고칠 유일한 탈출구 */
 export async function reopenMatchRoomAction(roomId: string): Promise<ActionResult> {
     const { supabase, user } = await requireUser()
     if (!user) return { error: '로그인이 필요합니다.' }
@@ -479,7 +479,7 @@ export async function reopenMatchRoomAction(roomId: string): Promise<ActionResul
     return { error: null }
 }
 
-/** '리스트에서 내리기' — 방만 삭제(RLS: 방장), 출처 기록은 room_id가 null로 풀리며 그대로 남는다 */
+/** '리스트에서 내리기' — 방만 삭제(RLS: 호스트), 출처 기록은 room_id가 null로 풀리며 그대로 남는다 */
 export async function deleteMatchRoomAction(roomId: string): Promise<ActionResult> {
     const { supabase, user } = await requireUser()
     if (!user) return { error: '로그인이 필요합니다.' }
@@ -491,7 +491,7 @@ export async function deleteMatchRoomAction(roomId: string): Promise<ActionResul
         .eq('host_user_id', user.id)
         .select('id')
     if (error) return { error: '리스트에서 내리기에 실패했습니다.' }
-    if (!data?.length) return { error: '이미 내려갔거나 방장이 아닙니다.' }
+    if (!data?.length) return { error: '이미 내려갔거나 호스트가 아닙니다.' }
 
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')

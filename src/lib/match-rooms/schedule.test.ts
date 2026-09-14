@@ -99,7 +99,7 @@ describe('recommendGames — 시간과 코트 면 수로 권장 경기 수', () 
         expect(many?.perPlayer).toBe(10)
     })
 
-    it('대진을 만들 수 없는 인원이면 추천하지 않는다 — 방장 혼자인 방에서 헛숫자가 나오지 않게', () => {
+    it('대진을 만들 수 없는 인원이면 추천하지 않는다 — 호스트 혼자인 방에서 헛숫자가 나오지 않게', () => {
         expect(recommendGames({ ...base, courtCount: 2, playerCount: 0 })).toBeNull()
         expect(recommendGames({ ...base, courtCount: 2, playerCount: 3 })).toBeNull()
         expect(recommendGames({ ...base, courtCount: 2, playerCount: 4 })).not.toBeNull()

@@ -217,7 +217,7 @@ const FINALIZE_ERROR_MESSAGES: Array<[string, string]> = [
 /**
  * 게임별 기록으로 분해 저장 (RPC 한 트랜잭션).
  * 방 세션이면 방에 참가한 회원 누구나 자기 기준으로 입력할 수 있고, 상대팀에 회원이 있으면
- * 상호 확인 경기로 만들어져 회원 참가자 전원의 확인 후 확정된다(0060). 세션 행은 방장이 닫을 때까지 남는다(0050).
+ * 상호 확인 경기로 만들어져 회원 참가자 전원의 확인 후 확정된다(0060). 세션 행은 호스트가 닫을 때까지 남는다(0050).
  */
 export async function finalizeRotationSessionAction(
     sessionId: string,
