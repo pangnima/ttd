@@ -1,8 +1,9 @@
 # 소셜 로그인(구글·카카오) 도입 계획
 
-> **진행 상태(Week 55 갱신)** — **구글은 코드가 전부 들어갔다**(마이그레이션 0084 적용 완료).
-> 남은 것은 **§4의 콘솔 설정뿐**이고, 그것이 끝나기 전에는 로그인이 동작하지 않는다
-> (`curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"`의 `external.google`이 아직 `false`다).
+> **진행 상태(Week 55 갱신)** — **구글 로그인은 실제로 동작한다.** 코드(마이그레이션 0084 포함)와
+> 콘솔 설정이 모두 끝났고, 첫 구글 가입이 완성 화면(`/onboarding/profile`)을 거쳐 정상 생성되는 것까지 확인했다.
+> provider 메타데이터 **실측 결과는 §5의 [실측 완료] 블록**에 적었다.
+> 상태 확인은 `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"` → `external.google: true`.
 > **카카오는 배선만 있고 버튼을 노출하지 않았다** — 켜려면 §4.2를 마친 뒤
 > `social-login-buttons.tsx`의 `PROVIDERS`에 한 줄을 더한다(액션은 이미 `kakao`를 받아들인다).
 > 실제 구현이 계획과 갈린 곳은 §5·§6·§7 각 절 머리의 **[구현됨]** 메모에 적었다.
@@ -108,7 +109,10 @@ NTRP는 레이팅·티어·통계의 입력값이라 3.0이 박히는 건 **데�
 
 1. 프로젝트 생성(이미 있으면 선택)
 2. **OAuth consent screen(동의 화면)** 구성
-   - 개인정보처리방침·이용약관 링크가 **필수**다. 아직 없다면 임시 페이지라도 필요하다
+   - 개인정보처리방침·이용약관 링크는 **프로덕션 게시 때** 필요하다. **테스트 상태에서는 없어도 로그인이 된다**
+     (본인 계정을 테스트 사용자로 등록하면 약관 없이 끝까지 확인할 수 있다 — Week 55에 그렇게 했다)
+   - **개인 Gmail로 충분하다.** 회사(Workspace) 계정이 있어야 고를 수 있는 것은 `Internal` 하나뿐인데,
+     일반 사용자가 가입하는 서비스는 어차피 `External`이 맞다
    - 앱 이름은 사용자에게 그대로 보인다("BASELINE에서 내 Google 계정에 접근하려고 합니다")
    - 외부(External) 사용자로 두면 테스트 단계에서는 **테스트 사용자로 등록한 계정만** 로그인된다. 본인 계정을 꼭 추가할 것
 3. **사용자 인증 정보 → OAuth 클라이언트 ID 만들기 → 애플리케이션 유형: 웹 애플리케이션**
@@ -186,6 +190,29 @@ select identity_data from auth.identities order by created_at desc limit 1;
 ```
 
 를 읽어 키 이름을 눈으로 보고 트리거를 쓴다. (흔히 `name`·`full_name`·`avatar_url`·`picture`·`email`이 오지만 **보장은 없다**.)
+
+> **[실측 완료 — 구글, Week 55]** 첫 구글 로그인 뒤 `raw_user_meta_data`를 읽은 결과는 아래와 같다.
+> `name`과 `full_name`이 **둘 다**, `picture`와 `avatar_url`이 **둘 다** 온다(Supabase가 provider 필드를
+> 자기 이름으로 정규화해 함께 넣는다). `profile_image`는 오지 않는다 — 그 키는 우리 이메일 가입 경로의 것이다.
+> 그래서 0084의 coalesce 사슬은 이름을 `name`에서, 사진을 `avatar_url`에서 집는다.
+>
+> ```json
+> {
+>   "iss": "https://accounts.google.com",
+>   "sub": "1045709996044742…",          // provider_id와 같은 값
+>   "name": "J Pi",
+>   "full_name": "J Pi",
+>   "email": "…@gmail.com",
+>   "email_verified": true,
+>   "picture": "https://lh3.googleusercontent.com/a/…=s96-c",
+>   "avatar_url": "https://lh3.googleusercontent.com/a/…=s96-c",
+>   "provider_id": "1045709996044742…",
+>   "phone_verified": false
+> }
+> ```
+>
+> ⚠ **카카오는 아직 실측하지 않았다.** 버튼을 켤 때 같은 조회를 다시 한다 — 특히 이메일 미동의 계정에서
+> `email` 키가 아예 없는지(그러면 0084의 폴백이 도는지) 확인할 것.
 
 바꿀 것은 셋이다.
 
@@ -387,13 +414,15 @@ NTRP 3.0이 박히는 창을 아예 만들지 않았기 때문이다 — 원래 
 
 **남은 것 — 전부 콘솔에서 손으로 하는 일이다**
 
-- [ ] **1** §4.1 Google Cloud Console → OAuth 동의 화면 + 웹 클라이언트 ID 발급
-      (⚠ 동의 화면이 **개인정보처리방침·이용약관 링크를 필수로 요구**한다. 아직 없으므로 이것이 선행 조건이다)
-- [ ] **2** §4.3 Supabase → Authentication › Providers › **Google 활성화** + Client ID/Secret 붙여넣기
+- [x] **1** §4.1 Google Cloud Console → OAuth 동의 화면 + 웹 클라이언트 ID 발급
+      (개인정보처리방침·이용약관 링크는 **프로덕션 게시 때** 필요하고 **테스트 상태에서는 없어도 로그인이 된다** —
+       §4.1의 "필수"는 게시 기준의 이야기다. 우리 scope는 `openid`·`email`·`profile`뿐인 **비민감 scope**라
+       2~6주짜리 구글 심사는 받지 않는다. 테스트 상태의 제약은 테스트 사용자 100명·"확인되지 않은 앱" 경고·동의 7일 만료)
+- [x] **2** §4.3 Supabase → Authentication › Providers › **Google 활성화** + Client ID/Secret 붙여넣기
 - [ ] **3** §4.3 Supabase → URL Configuration › **Redirect URLs에 `http://localhost:3000/**` 추가**
       (지금은 `/auth/confirm`만 등록돼 있다)
-- [ ] **4** 켜졌는지 확인: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"` → `external.google: true`
-- [ ] **5** 자기 계정으로 한 번 로그인한 뒤 **§5가 경고한 실측**:
+- [x] **4** 켜졌는지 확인: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"` → **`external.google: true` 확인됨**
+- [x] **5** ~~자기 계정으로 한 번 로그인한 뒤 **§5가 경고한 실측**~~ — **완료(Week 55)**. §5의 [실측 완료] 블록 참고:
       `select raw_user_meta_data from auth.users order by created_at desc limit 1;`
       → 0084의 coalesce 사슬(`full_name`·`avatar_url`)이 실제 키와 맞는지 눈으로 본다
 - [ ] **6** §9 시나리오 통과 (**⑤ 카카오는 버튼이 없어 해당 없음**)
