@@ -4,6 +4,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/supabase'
+import { personalNavHref } from '@/lib/nav-items'
 
 // 오픈 리다이렉트 방지: 같은 사이트 내부 경로(/ 로 시작, // 프로토콜상대 제외)만 허용.
 export function isSafeNext(next: string | null | undefined): next is string {
@@ -64,8 +65,14 @@ export async function updateSession(request: NextRequest) {
     const isAuthRoute = path === '/login' || path === '/signup'
     if (isAuthRoute && user) {
         const next = request.nextUrl.searchParams.get('next')
-        const dest = isSafeNext(next) ? next : `/profile/${user.id}?scope=personal`
+        const dest = isSafeNext(next) ? next : personalNavHref(user.id)
         return NextResponse.redirect(new URL(dest, request.url))
+    }
+
+    // 랜딩(/): 로그인 상태면 서비스 소개가 아니라 '개인' 메뉴로 보낸다.
+    // 착지 경로는 로그인 직후와 같아야 하므로 personalNavHref 하나만 본다.
+    if (path === '/' && user) {
+        return NextResponse.redirect(new URL(personalNavHref(user.id), request.url))
     }
 
     return supabaseResponse

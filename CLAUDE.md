@@ -64,7 +64,7 @@ src/
 
 ## 페이지 구조 (사이트맵)
 ```
-/                                   랜딩
+/                                   랜딩 (로그인 상태면 middleware가 `/profile/[내id]?scope=personal`로 리다이렉트)
 /login /signup /forgot-password /reset-password /auth/confirm
 /clubs · /clubs/new · /clubs/join/[token] · /clubs/[clubId]{ , dashboard→홈, members, match-games, match-games/new, match-games/[id], settings(owner)}
 /profile/[userId]                   개인 통계 허브 (본인 = 개인/클럽/통합 탭 스캐폴드 — 개인만 동작 + AI 코칭 / 타인 = 공개 요약)
