@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMyRoomIds, fetchOpenRoomCount, fetchRoomPage } from '@/lib/queries/match-rooms'
@@ -8,6 +7,7 @@ import { parseRoomCursor } from '@/lib/match-rooms/room-cursor'
 import { MY_ROOMS_PATH, MY_ROOM_TABS, resolveRoomListTab, roomTabMeta } from '@/lib/match-rooms/tabs'
 import { sortByMyTurnFirst } from '@/lib/match-rooms/room-sort'
 import { LinkTabs } from '@/components/common/link-tabs'
+import { RoomCreateLink } from '@/components/match-rooms/room-create-link'
 import { RoomInvitesSection } from '@/components/match-rooms/room-invites-section'
 import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
@@ -55,21 +55,20 @@ export default async function MyMatchRoomsPage({ searchParams }: Props) {
             <PageHeader
                 title="참여 중인 매칭"
                 description="내가 참가한 매칭입니다. 결과 입력·확인은 각 매칭 안에서 합니다"
-                actions={
-                    <Link href="/match-rooms/new" className="text-body2 font-medium text-primary hover:underline whitespace-nowrap">
-                        + 매칭 만들기
-                    </Link>
-                }
             />
 
-            <LinkTabs
-                ariaLabel="참여 중인 매칭 탭"
-                activeKey={activeTab}
-                items={MY_ROOM_TABS.map((t) => ({
-                    ...t,
-                    count: t.key === 'open' ? openCount : undefined,
-                }))}
-            />
+            {/* 만들기는 아래 목록에 딸린 행동이라 탭 바와 한 묶음으로 둔다(헤더 actions 아님) */}
+            <div className="space-y-3">
+                <RoomCreateLink />
+                <LinkTabs
+                    ariaLabel="참여 중인 매칭 탭"
+                    activeKey={activeTab}
+                    items={MY_ROOM_TABS.map((t) => ({
+                        ...t,
+                        count: t.key === 'open' ? openCount : undefined,
+                    }))}
+                />
+            </div>
 
             {/* 초대는 고르는 것이 아니라 답해야 하는 것이라 탭 뒤에 숨기지 않는다 */}
             <RoomInvitesSection invites={roomQueue.invites} />

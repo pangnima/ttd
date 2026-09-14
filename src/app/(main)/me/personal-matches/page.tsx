@@ -6,7 +6,7 @@ import { fetchMatchQueue } from '@/lib/queries/match-queue'
 import { fetchRotationBuilderContext } from '@/lib/queries/rotation-builder-context'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { PendingResultsSection } from '@/components/personal-matches/pending-results-section'
-import { EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 
@@ -35,10 +35,7 @@ export default async function PersonalMatchesPage() {
                 title="개인 경기 결과"
                 description="확정된 전적을 봅니다. 비회원과 친 경기는 여기서 직접 기록할 수 있습니다"
                 actions={
-                    <Link
-                        href="/me/personal-matches/new"
-                        className="inline-flex items-center gap-1 text-body2 border border-border rounded-[4px] px-3 py-2 hover:border-input transition-colors"
-                    >
+                    <Link href="/me/personal-matches/new" className={HEADER_ACTION_LINK}>
                         + 직접 기록
                     </Link>
                 }

@@ -86,6 +86,18 @@ export const FORM_ACTION_ROW = 'flex w-full gap-3 lg:justify-end'
 export const FORM_SUBMIT = 'h-11 flex-1 lg:flex-none lg:min-w-44'
 export const FORM_CANCEL = 'h-11 lg:min-w-24'
 
+/**
+ * 목록 화면 상단의 "만들기·기록" 링크 — 개인 경기 결과의 [직접 기록] 칩이 정본이다
+ * (테두리만 있고 채움 없음, hover는 배경이 아니라 테두리 색).
+ * radius는 PILL_BASE와 같은 4px(rounded-sm).
+ *
+ * ⚠ Button의 outline variant를 쓰지 않는 이유 — button.tsx base가 `text-sm`이라
+ * 페이지에서 buttonVariants를 가져다 쓰면 시맨틱 타이포 규칙을 우회하게 된다.
+ * 남은 통일 대상: 클럽 만들기(rounded-full + Plus 아이콘)·대진표 만들기(primary 필).
+ */
+export const HEADER_ACTION_LINK =
+    'inline-flex items-center gap-1 text-body2 border border-border rounded-sm px-3 py-2 hover:border-input transition-colors whitespace-nowrap'
+
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
     strength: 'text-win', // 강점 → 민트

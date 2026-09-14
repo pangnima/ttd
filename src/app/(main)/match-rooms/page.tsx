@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchOpenRoomCount, fetchRoomPage } from '@/lib/queries/match-rooms'
@@ -9,6 +8,7 @@ import {
     MATCH_ROOMS_PATH, MY_ROOMS_PATH, resolveRoomListTab, roomTabHref, roomTabMeta, ROOM_LIST_TABS,
 } from '@/lib/match-rooms/tabs'
 import { LinkTabs } from '@/components/common/link-tabs'
+import { RoomCreateLink } from '@/components/match-rooms/room-create-link'
 import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
@@ -59,22 +59,21 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
             <PageHeader
                 title="매칭 리스트"
                 description="리스트에 노출된 경기입니다. 비밀번호를 입력하면 참가자·결과를 볼 수 있습니다"
-                actions={
-                    <Link href="/match-rooms/new" className="text-body2 font-medium text-primary hover:underline whitespace-nowrap">
-                        + 매칭 만들기
-                    </Link>
-                }
             />
 
-            {/* 배지는 head count라 페이지 크기와 무관하게 정확하다. 종료 탭은 무한히 자라 숫자를 붙이지 않는다 */}
-            <LinkTabs
-                ariaLabel="매칭 리스트 탭"
-                activeKey={activeTab}
-                items={ROOM_LIST_TABS.map((t) => ({
-                    ...t,
-                    count: t.key === 'open' ? openCount : undefined,
-                }))}
-            />
+            {/* 만들기는 아래 목록에 딸린 행동이라 탭 바와 한 묶음으로 둔다(헤더 actions 아님) */}
+            <div className="space-y-3">
+                <RoomCreateLink />
+                {/* 배지는 head count라 페이지 크기와 무관하게 정확하다. 종료 탭은 무한히 자라 숫자를 붙이지 않는다 */}
+                <LinkTabs
+                    ariaLabel="매칭 리스트 탭"
+                    activeKey={activeTab}
+                    items={ROOM_LIST_TABS.map((t) => ({
+                        ...t,
+                        count: t.key === 'open' ? openCount : undefined,
+                    }))}
+                />
+            </div>
 
             <RoomListSection
                 rooms={page.rooms}
