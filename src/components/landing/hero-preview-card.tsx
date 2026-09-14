@@ -14,7 +14,7 @@ export function HeroPreviewCard() {
             <div className={cn(CARD_BASE, 'w-full max-w-sm p-5 pb-12')}>
                 <div className="mb-4 flex items-center justify-between">
                     <span className="text-caption font-medium tracking-eyebrow uppercase text-muted-foreground">매치 · 8월 8일</span>
-                    <Chip variant="solid" tone="win">WIN</Chip>
+                    <Chip variant="solid" tone="win">승</Chip>
                 </div>
                 <div className="space-y-3">
                     {ROWS.map((row) => (

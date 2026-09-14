@@ -1,6 +1,6 @@
 import type { PersonalMatchSetScore, PersonalMatchWinner } from '@/types'
 import {
-    PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL, formatGameSummary,
+    OUTCOME_LABEL, PENDING_RESULT_BADGE, PENDING_RESULT_BAR, PENDING_RESULT_LABEL, formatGameSummary,
 } from '@/lib/dashboard/outcome'
 import { resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
 
@@ -9,8 +9,11 @@ import { resolveSetWinner, tallySets } from '@/lib/personal-matches/winner'
  * 경기 카드와 스코어 칩 패널이 같은 규칙을 두 번 구현하던 것을 여기로 모았다 —
  * 한쪽만 고치면 같은 경기가 화면마다 다른 승패로 보인다.
  *
- * 세트 1개 = 게임 1개. 게임 1개면 WIN/LOSS/무, 2개 이상이면 'N게임 · N승 M패'(다수결 승자는 두지 않는다),
+ * 세트 1개 = 게임 1개. 게임 1개면 승/패/무, 2개 이상이면 'N게임 · N승 M패'(다수결 승자는 두지 않는다),
  * 게임이 없으면 미확정.
+ *
+ * 승패 문구는 `OUTCOME_LABEL`(outcome.ts)이 단일 출처다 — 이 배지만 'WIN'·'LOSS'로 영문이고
+ * 무승부만 한글이라, 같은 화면의 전적 요약('3게임 · 1승 2패')과 어휘가 갈려 있었다.
  */
 
 export type ResultBadge = {
@@ -20,9 +23,9 @@ export type ResultBadge = {
 }
 
 const SINGLE_GAME: Record<PersonalMatchWinner, ResultBadge> = {
-    me: { label: 'WIN', badgeClass: 'bg-win text-win-foreground', barClass: 'bg-win-solid' },
-    opponent: { label: 'LOSS', badgeClass: 'bg-loss text-loss-foreground', barClass: 'bg-loss-solid' },
-    draw: { label: '무', badgeClass: 'bg-muted text-muted-foreground', barClass: 'bg-muted-foreground/40' },
+    me: { label: OUTCOME_LABEL.win, badgeClass: 'bg-win text-win-foreground', barClass: 'bg-win-solid' },
+    opponent: { label: OUTCOME_LABEL.loss, badgeClass: 'bg-loss text-loss-foreground', barClass: 'bg-loss-solid' },
+    draw: { label: OUTCOME_LABEL.draw, badgeClass: 'bg-muted text-muted-foreground', barClass: 'bg-muted-foreground/40' },
 }
 
 /** 결과 미확정 — 게임 스코어 미등록. 통계에 반영되지 않는다. */

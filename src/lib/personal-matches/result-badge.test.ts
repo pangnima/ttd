@@ -6,9 +6,9 @@ describe('resolveResultBadge — 게임 1개 = 세트 1개', () => {
         expect(resolveResultBadge([]).label).toBe('미확정')
     })
 
-    it('게임 1개는 WIN/LOSS/무', () => {
-        expect(resolveResultBadge([{ me: 6, opp: 4 }]).label).toBe('WIN')
-        expect(resolveResultBadge([{ me: 4, opp: 6 }]).label).toBe('LOSS')
+    it('게임 1개는 승/패/무', () => {
+        expect(resolveResultBadge([{ me: 6, opp: 4 }]).label).toBe('승')
+        expect(resolveResultBadge([{ me: 4, opp: 6 }]).label).toBe('패')
         expect(resolveResultBadge([{ me: 6, opp: 6 }]).label).toBe('무')
     })
 
