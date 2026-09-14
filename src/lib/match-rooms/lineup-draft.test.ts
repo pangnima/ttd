@@ -211,7 +211,7 @@ describe('fromRoomGames — 저장된 게임을 되살린다', () => {
         const slot = g.team2[1]
         expect(slot?.name).toBe('손님')
         expect(isMissingPlayer(slot)).toBe(true)
-        expect(validateDraft([g])).toEqual(['게임 1: 손님 님은 방 명단에 없습니다.'])
+        expect(validateDraft([g])).toEqual(['게임 1: 손님 님은 매칭 명단에 없습니다.'])
     })
 
     it('단식은 자리가 한 개씩이다', () => {

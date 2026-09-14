@@ -167,7 +167,7 @@ export async function createPersonalMatchesAction(
 
     const baseRows = inputs.map((input) => ({ ...buildPersonalMatchBaseRow(input, user.id), room_id: options.roomId ?? null }))
     const { data: inserted, error } = await supabase.from('personal_matches').insert(baseRows).select('id')
-    if (error || !inserted) return { error: options.roomId ? '방의 게임 저장에 실패했습니다. 방에 참가한 뒤 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }
+    if (error || !inserted) return { error: options.roomId ? '매칭 게임 저장에 실패했습니다. 매칭에 참가한 뒤 게임을 추가할 수 있습니다.' : '경기 저장에 실패했습니다.' }
 
     const participantRows = inputs.flatMap((input, i) => buildParticipantRows(input, inserted[i].id))
     if (participantRows.length > 0) {

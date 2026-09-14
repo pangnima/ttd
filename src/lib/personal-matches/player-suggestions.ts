@@ -38,7 +38,7 @@ export type PlayerSuggestionSources = {
 }
 
 export const SUGGESTION_GROUP_LABELS: Record<PlayerSuggestionSource, string> = {
-    room: '방 참가자',
+    room: '매칭 참가자',
     past: '만나본 사람',
     club: '클럽 회원',
     search: '전체 회원',

@@ -121,7 +121,7 @@ export async function respondRotationPlanAction(sessionId: string, accept: boole
 /** 풀 편집 RPC가 raise하는 식별자 → 사용자 안내 문구 */
 const POOL_ERROR_MESSAGES: Array<[string, string]> = [
     ['session_not_found', '삭제되었거나 종료된 일정입니다.'],
-    ['room_session_invite_unsupported', '매칭 리스트에 올린 경기는 방 비밀번호로 입장해 참가합니다.'],
+    ['room_session_invite_unsupported', '매칭 리스트에 올린 경기는 매칭 비밀번호로 입장해 참가합니다.'],
     ['not_session_participant', '참여를 수락한 사람만 참가자를 초대할 수 있습니다.'],
     ['not_session_owner', '참가자를 빼는 것은 경기를 만든 사람만 할 수 있습니다.'],
     ['already_in_pool', '이미 참가자로 등록된 회원입니다.'],

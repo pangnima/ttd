@@ -50,7 +50,7 @@ export function RoomCloseButton({ roomId, isSettled, closedAt }: Props) {
         <>
             {closedAt
                 ? <Button size="sm" variant="outline" disabled={isPending} onClick={reopen}>다시 열기</Button>
-                : <Button size="sm" variant="outline" disabled={isPending} onClick={close}>방 닫기</Button>}
+                : <Button size="sm" variant="outline" disabled={isPending} onClick={close}>매칭 닫기</Button>}
             {error && <p className="w-full text-caption text-destructive">{error}</p>}
         </>
     )

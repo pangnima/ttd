@@ -97,7 +97,7 @@ export function PoolEditorBlock({ pool, picker, onAdd, onUpdate, onRemove, poolA
             <p className="mt-2 text-caption text-muted-foreground break-keep">
                 {poolAdmin
                     ? '회원을 고르고 [초대]를 누르면 참가자로 등록되고 그분 화면에 참여 요청이 갑니다. 초대한 회원이 모두 응답해야 결과를 입력할 수 있고, 응답이 없으면 [게스트로 대체]로 명단에서 뺄 수 있습니다. 비회원은 이 게임 구성에만 쓰입니다.'
-                    : '여기서 추가한 선수는 이 게임 구성에만 쓰이고 방 참가자·초대에는 반영되지 않습니다. 회원은 방 상세에서 비밀번호로 입장하면 자동으로 참가자 풀에 추가됩니다.'}
+                    : '여기서 추가한 선수는 이 게임 구성에만 쓰이고 매칭 참가자·초대에는 반영되지 않습니다. 회원은 매칭 상세에서 비밀번호로 입장하면 자동으로 참가자 풀에 추가됩니다.'}
             </p>
 
             {poolAdmin && (

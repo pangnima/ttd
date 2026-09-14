@@ -26,7 +26,7 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
-    ['target_not_room_member', '이미 방에 없는 참가자입니다.'],
+    ['target_not_room_member', '이미 매칭에 없는 참가자입니다.'],
     ['cannot_kick_host', '호스트는 내보낼 수 없습니다.'],
     // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품는다(긴 키 우선이라 순서는 무관)
     ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 호스트에게 대진 수정을 요청해주세요.'],
@@ -42,13 +42,13 @@ const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['room_closed', '호스트가 마감한 매칭입니다. 고치려면 호스트가 다시 열어야 합니다.'],
     ['room_not_settled', '모든 게임의 결과가 확정된 뒤에 마감할 수 있습니다.'],
     ['room_not_closed', '마감되지 않은 매칭입니다.'],
-    ['not_room_member', '방에 참가한 뒤 게임을 등록할 수 있습니다.'],
+    ['not_room_member', '매칭에 참가한 뒤 게임을 등록할 수 있습니다.'],
     ['host_cannot_leave', '호스트는 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
     ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
     ['cannot_request_self', '자기 자신과의 게임은 등록할 수 없습니다.'],
     ['invalid_opponent', '게임 상대를 다시 선택해주세요.'],
-    ['opponent_not_in_room', '상대는 이 방에 참가한 회원이어야 합니다.'],
-    ['participant_not_in_room', '참가자는 이 방에 참가한 회원이어야 합니다.'],
+    ['opponent_not_in_room', '상대는 이 매칭에 참가한 회원이어야 합니다.'],
+    ['participant_not_in_room', '참가자는 이 매칭에 참가한 회원이어야 합니다.'],
     ['doubles_players_required', '복식은 파트너와 상대팀 2번째 선수를 모두 입력해주세요.'],
     ['duplicate_players', '같은 회원을 두 번 지정할 수 없습니다.'],
     ['invalid_partner', '파트너를 다시 선택해주세요.'],
@@ -272,7 +272,7 @@ export async function leaveMatchRoomAction(roomId: string): Promise<ActionResult
     if (!user) return { error: '로그인이 필요합니다.' }
 
     const { error } = await supabase.rpc('leave_match_room', { p_room_id: roomId })
-    if (error) return { error: translate(error.message, '방에서 나가지 못했습니다.') }
+    if (error) return { error: translate(error.message, '매칭에서 나가지 못했습니다.') }
     revalidateRoomPaths(roomId)
     revalidatePath('/me/personal-matches')
     revalidateRoomList()

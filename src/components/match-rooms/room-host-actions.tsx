@@ -43,8 +43,8 @@ export function RoomHostActions({ roomId, canCloseRotation = false, isListed = t
 
     function unlist() {
         const prompt = isListed
-            ? '매칭 리스트에서 내릴까요? 경기 기록은 그대로 남고, 방의 참가자 목록만 사라집니다.'
-            : '매칭을 삭제할까요? 경기 기록은 그대로 남고, 방의 참가자 목록만 사라집니다.'
+            ? '매칭 리스트에서 내릴까요? 경기 기록은 그대로 남고, 매칭의 참가자 목록만 사라집니다.'
+            : '매칭을 삭제할까요? 경기 기록은 그대로 남고, 매칭의 참가자 목록만 사라집니다.'
         if (!confirm(prompt)) return
         setError(null)
         startTransition(async () => {
@@ -55,7 +55,7 @@ export function RoomHostActions({ roomId, canCloseRotation = false, isListed = t
     }
 
     function closeRotation() {
-        if (!confirm('게임 입력을 종료할까요? 참가자들이 더 이상 게임 빌더로 결과를 넣을 수 없고, 이후에는 방 상세의 [게임 추가]로만 등록합니다.')) return
+        if (!confirm('게임 입력을 종료할까요? 참가자들이 더 이상 게임 빌더로 결과를 넣을 수 없고, 이후에는 매칭 상세의 [게임 추가]로만 등록합니다.')) return
         setError(null)
         startTransition(async () => {
             const res = await closeRotationRoomAction(roomId)

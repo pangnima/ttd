@@ -47,7 +47,7 @@ export function RoomInviteCard({ invite }: Props) {
                 </div>
             </div>
             <p className="text-caption text-muted-foreground break-keep">
-                수락하면 방 참가자로 등록됩니다. 방 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다.
+                수락하면 매칭 참가자로 등록됩니다. 매칭 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다.
             </p>
             {error && <p className="text-caption text-destructive">{error}</p>}
         </div>

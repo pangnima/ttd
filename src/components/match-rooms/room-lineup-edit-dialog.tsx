@@ -74,7 +74,7 @@ export function RoomLineupEditDialog({
 
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
                     <p className={`${TYPO.caption} break-keep`}>
-                        결과가 입력되었거나 확인이 시작된 경기는 여기에 오지 않습니다. 저장하면 이 목록이 방의 대진을 대체합니다.
+                        결과가 입력되었거나 확인이 시작된 경기는 여기에 오지 않습니다. 저장하면 이 목록이 매칭의 대진을 대체합니다.
                     </p>
                     {error && <p className={`${TYPO.caption} text-destructive break-keep`}>{error}</p>}
                     <LineupEditList

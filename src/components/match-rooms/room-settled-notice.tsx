@@ -42,7 +42,7 @@ export function RoomSettledNotice({ closed = false, isHost = false }: Props) {
                     확정된 전적은{' '}
                     <Link href="/me/personal-matches" className="text-primary hover:underline">개인 경기 결과</Link>
                     에서 볼 수 있습니다.
-                    {isHost && ' 더 고칠 것이 없으면 [방 닫기]로 마감할 수 있습니다.'}
+                    {isHost && ' 더 고칠 것이 없으면 [매칭 닫기]로 마감할 수 있습니다.'}
                 </span>
             </p>
         </div>

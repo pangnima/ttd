@@ -32,7 +32,7 @@ export function RoomLeaveButton({ roomId, hasGames = false }: Props) {
     }
 
     function leave() {
-        if (!confirm('이 방에서 나갈까요? 내가 올린 기록은 그대로 남고, 참가자 명단에서만 빠집니다.')) return
+        if (!confirm('이 매칭에서 나갈까요? 내가 올린 기록은 그대로 남고, 참가자 명단에서만 빠집니다.')) return
         setError(null)
         startTransition(async () => {
             const res = await leaveMatchRoomAction(roomId)
@@ -49,7 +49,7 @@ export function RoomLeaveButton({ roomId, hasGames = false }: Props) {
                 disabled={isPending}
                 className="text-caption text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
             >
-                방 나가기
+                매칭 나가기
             </button>
             {error && <p className="text-caption text-destructive">{error}</p>}
         </div>

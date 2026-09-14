@@ -32,7 +32,7 @@ export function ConfirmFlowNotice({
                 <span className="text-foreground font-medium">{opponentName}</span>
                 {isRoomGame ? (
                     <>
-                        님과의 게임으로 등록됩니다. 저장하면 방에 참가한 회원{' '}
+                        님과의 게임으로 등록됩니다. 저장하면 매칭에 참가한 회원{' '}
                         {countLabel(memberCount ?? (isDoubles ? 4 : 2))} 모두의 기록에 미확정으로 추가되고,
                         결과는 한 명이 입력한 뒤 나머지 회원 참가자가 모두 확인하면 확정됩니다.
                     </>

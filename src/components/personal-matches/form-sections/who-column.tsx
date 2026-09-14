@@ -43,12 +43,12 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
             <FormSectionCard title={participantsTitle} step={s.isRoomGame ? '01' : '02'} contentClassName="space-y-4">
                 {s.allowEmptyPlayers && (
                     <p className="text-caption text-muted-foreground break-keep">
-                        매칭 리스트에 노출되므로 참가자를 비워 두고 모집할 수 있습니다. 채운 회원은 방에 자동 초대됩니다.
+                        매칭 리스트에 노출되므로 참가자를 비워 두고 모집할 수 있습니다. 채운 회원은 매칭에 자동 초대됩니다.
                     </p>
                 )}
                 {s.isRoomGame && (
                     <p className="text-caption text-muted-foreground break-keep">
-                        방에 참가한 회원이 자동완성 맨 위에 뜹니다. 비회원도 이름으로 입력할 수 있습니다.
+                        매칭에 참가한 회원이 자동완성 맨 위에 뜹니다. 비회원도 이름으로 입력할 수 있습니다.
                     </p>
                 )}
                 {s.isRoomGame && (

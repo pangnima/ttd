@@ -164,7 +164,7 @@ export function validateDraft(games: DraftGame[]): string[] {
         }
         const missing = filled.filter((p) => isMissingPlayer(p))
         if (missing.length > 0) {
-            errors.push(`${label}: ${missing.map((p) => p.name).join(', ')} 님은 방 명단에 없습니다.`)
+            errors.push(`${label}: ${missing.map((p) => p.name).join(', ')} 님은 매칭 명단에 없습니다.`)
         }
     })
 
