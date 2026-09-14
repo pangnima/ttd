@@ -168,12 +168,14 @@ export function compactPool(pool: PoolPlayer[]): PoolPlayer[] {
 export function validateRotationPool(
     pool: PoolPlayer[],
     meta: RotationSessionMeta,
-    options: { allowEmpty?: boolean } = {},
+    options: { allowEmpty?: boolean; roomMode?: boolean } = {},
 ): boolean {
     if (!meta.playedAt || !meta.playedTime || !meta.surface) return false
-    if (!options.allowEmpty && pool.length < 3) return false
+    // roomMode(비노출 방, 0082) — 풀은 방의 초대 명단일 뿐이라 인원 하한이 없고(사람은 나중에 더 들어온다),
+    // 회원 NTRP는 입장 시 서버가 프로필에서 파생하므로 묻지 않는다. 비회원은 게스트 등록값이라 종전대로 필수.
+    if (!options.allowEmpty && !options.roomMode && pool.length < 3) return false
     if (!pool.every((p) => isPlayerFilled(p.player))) return false
-    if (!pool.every((p) => isNtrpValid(p.ntrp))) return false
+    if (!pool.every((p) => (options.roomMode && p.player.userId) || isNtrpValid(p.ntrp))) return false
     return true
 }
 

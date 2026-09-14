@@ -158,6 +158,8 @@ export function parseRoomDetail(json: Json | null): MatchRoomDetail | null {
             slotMinutes: num(r.slotMinutes),
             notes: str(r.notes),
             isSettled: r.isSettled === true,
+            // 마이그레이션(0082)보다 앱이 먼저 떠도 종전 방은 전부 노출 방이다 — 키가 없으면 true
+            isListed: r.isListed !== false,
             createdAt: str(r.createdAt) ?? '',
         },
         host,

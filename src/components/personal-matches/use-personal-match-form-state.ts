@@ -8,7 +8,11 @@ import { isPlayerFilled } from '@/lib/personal-matches/validators'
 import { isSlotEmpty, isSlotOk } from '@/lib/personal-matches/lineup'
 import { isPlatformMember, resolveConfirmRep, resolveSaveOutcome } from '@/lib/personal-matches/confirm-flow'
 import { compactPool, type RotationSessionMeta } from '@/lib/personal-matches/rotation'
-import { requiresRoom } from '@/lib/personal-matches/direct-record'
+import {
+    requiresRoom, splitDirectPlayers, validateDirectRecordRoomInput,
+    type DirectRecordPlayerInput, type DirectRecordRoomInput,
+} from '@/lib/personal-matches/direct-record'
+import { DEFAULT_COURT_COUNT, DEFAULT_DURATION_MINUTES } from '@/lib/match-rooms/schedule'
 import type { PlayerPickerValue } from '@/components/personal-matches/player-picker'
 import { useRotationGames } from '@/components/personal-matches/use-rotation-games'
 import type { DoublesMode } from '@/components/personal-matches/doubles-mode-toggle'
@@ -109,7 +113,7 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
 
     // 상호 확인 게임의 대표 — 페어 고정/단식 + 상대팀에 플랫폼 회원(비게스트)이 있을 때.
     // ⚠ **방 안에서만** 계산한다(Week 39): 방 밖 확인 요청 경로가 사라졌으므로 방 밖에서 대표를 잡으면
-    // 저장할 수 없는 흐름의 라벨('확인 요청 보내기')과 안내가 뜬다. 방 밖 회원 상대는 memberNeedsRoom이 막는다.
+    // 저장할 수 없는 흐름의 라벨('확인 요청 보내기')과 안내가 뜬다. 방 밖 회원 상대는 roomAutoCreate가 방을 만든다.
     const rep = (!isEdit || seedFill) && !isRotation && selfUserId && allFilled && !!roomId
         ? resolveConfirmRep(
             { userId: opponent.player.userId, slot: opponent },
@@ -118,10 +122,25 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
         )
         : null
     const isConfirmFlow = !!rep
+
+    // 직접 기록의 경계(Week 39 → 0082). 방 밖 신규 기록에 회원이 끼면 **저장이 곧 비노출 방 생성**이다 —
+    // 회원은 초대되고 비회원은 명단에 등록되며, 게임과 결과는 룸에서 만든다.
+    // 수정 모드는 이미 저장된 방 밖 행이라 회원을 붙일 수 없다(방으로 옮길 길이 없다) — 그쪽은 여전히 막는다.
+    const directPlayers = isRotation
+        ? compactPool(rotation.pool).map((r) => ({ userId: r.player.userId }))
+        : SLOT_KEYS.map((k) => ({ userId: slots[k].player.userId }))
+    const memberInDirect = !roomId && !isRoomGame && requiresRoom(directPlayers)
+    const roomAutoCreate = !isEdit && memberInDirect
+    const memberBlockedInEdit = isEdit && memberInDirect
+    // 비노출 방의 시간 축 — 매칭 만들기와 같은 두 값(0073). 회원 모드에서만 화면에 나온다
+    const [durationMinutes, setDurationMinutes] = useState<number>(DEFAULT_DURATION_MINUTES)
+    const [courtCount, setCourtCount] = useState<number>(DEFAULT_COURT_COUNT)
+
     // 확인 플로우에서 회원 참가자의 NTRP는 수락 시 서버가 파생하므로 폼 검증을 면제한다
-    // (서버 actions/match-requests.ts의 skipNtrpFor와 짝을 이루는 규칙 — 화면 잠금은 isNtrpLocked가 따로 판정한다)
-    const hideNtrpFor: NtrpField[] = isConfirmFlow
-        ? SLOT_KEYS.filter((k) => isPlatformMember(slots[k].player, opponentCandidates))
+    // (서버 actions/match-requests.ts의 skipNtrpFor와 짝을 이루는 규칙 — 화면 잠금은 isNtrpLocked가 따로 판정한다).
+    // 비노출 방(roomAutoCreate)도 같다 — 회원은 입장 시 프로필에서 파생되고, 폼은 초대 명단만 받는다.
+    const hideNtrpFor: NtrpField[] = isConfirmFlow || roomAutoCreate
+        ? SLOT_KEYS.filter((k) => !!slots[k].player.userId && isPlatformMember(slots[k].player, opponentCandidates))
         : []
     // 슬롯 1개 판정 — 모집형이면 닫힌(비운) 슬롯만 통과, 열린 슬롯은 선수 입력 + NTRP 필수(확인 플로우 회원은 면제)
     const slotOk = (key: NtrpField, s: PlayerSlot) =>
@@ -135,17 +154,34 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
     const fixedValid =
         slotOk('opponent', opponent) &&
         (!isDoubles || (slotOk('partner', partner) && slotOk('opponent2', opponent2))) && metaOk
-    // 직접 기록은 비회원끼리의 경기 전용(Week 39) — 회원이 끼면 매칭 룸에서 기록해야 한다.
-    // 수정 모드와 방 게임은 이미 절차를 거친 기록이라 검사하지 않는다.
-    const directPlayers = isRotation
-        ? compactPool(rotation.pool).map((r) => ({ userId: r.player.userId }))
-        : SLOT_KEYS.map((k) => ({ userId: slots[k].player.userId }))
-    const memberNeedsRoom = !isEdit && !roomId && !isRoomGame && requiresRoom(directPlayers)
-
-    const isValid = (isRotation ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers }) : fixedValid)
-        && !memberNeedsRoom
-
     const num = (s: string) => (s.trim() ? Number(s) : undefined)
+
+    // 회원 모드의 로테이션 풀은 방의 초대 명단이라 인원 하한·회원 NTRP를 묻지 않는다(validateRotationPool roomMode)
+    const isValid = (isRotation
+        ? rotation.isPoolValid(meta, { allowEmpty: allowEmptyPlayers, roomMode: roomAutoCreate })
+        : fixedValid)
+        && !memberBlockedInEdit
+        && (!roomAutoCreate || validateDirectRecordRoomInput(buildRoomInput()) === null)
+
+    // 비노출 방 페이로드(0082) — 참가자 전원(회원·비회원)을 한 목록으로. 로테이션이면 풀, 아니면 채워진 슬롯
+    function buildRoomInput(): DirectRecordRoomInput {
+        const players: DirectRecordPlayerInput[] = isRotation
+            ? compactPool(rotation.pool).map((r) => ({
+                userId: r.player.userId, name: r.player.name, dominantHand: handOf(r.player), ntrp: num(r.ntrp),
+            }))
+            : SLOT_KEYS
+                .filter((k) => !isSlotEmpty(slots[k].player) && (k === 'opponent' || isDoubles))
+                .map((k) => ({
+                    userId: slots[k].player.userId, name: slots[k].player.name,
+                    dominantHand: handOf(slots[k].player), ntrp: num(slots[k].ntrp),
+                }))
+        return {
+            matchType, playedAt, playedTime, surface: surface as CourtSurface,
+            courtName: courtName.trim() || undefined, notes: notes.trim() || undefined,
+            durationMinutes, courtCount, players,
+        }
+    }
+
     // 자유 기록 페이로드. 세트는 신규면 빈 배열(미확정), 수정이면 기존 세트를 그대로 보존한다.
     function buildInput(): PersonalMatchInput {
         return {
@@ -174,17 +210,18 @@ export function usePersonalMatchFormState({ initialData, prefill, opponentCandid
         playedAt, setPlayedAt, playedTime, setPlayedTime, matchType, setMatchType, surface, setSurface, notes, setNotes,
         courtName, setCourtName,
         doublesMode, setDoublesMode, rotation,
-        allowEmptyPlayers, memberNeedsRoom,
+        allowEmptyPlayers, roomAutoCreate, memberBlockedInEdit,
+        durationMinutes, setDurationMinutes, courtCount, setCourtCount,
         openSlots, openSlot, closeSlot,
         roomContext: ctx, isRoomGame,
         roomId, seedFill, replaceMatchId: seedFill ? d?.id : undefined,
-        isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput,
+        isEdit, isDoubles, isRotation, rep, isConfirmFlow, hideNtrpFor, isValid, meta, buildInput, buildRoomInput,
         allFilled,
-        // 로테이션 풀의 회원 수 — 저장 시 참여 요청을 받을 사람 수(0057). 비회원은 요청 대상이 아니다.
-        rotationMemberCount: compactPool(rotation.pool).filter((r) => !!r.player.userId).length,
+        // 비노출 방에 들어갈 사람 수 — 안내 문구용(회원은 초대, 비회원은 등록)
+        directSplit: splitDirectPlayers(roomAutoCreate ? buildRoomInput().players : []),
         // 저장이 실제로 무슨 일을 하는지 — 안내 배너·버튼 라벨의 단일 출처
         saveOutcome: resolveSaveOutcome({
-            isRotation, hasRep: !!rep, roomId, allowEmptyPlayers, allFilled,
+            isRotation, hasRep: !!rep, roomId, allowEmptyPlayers, allFilled, roomAutoCreate,
         }),
         // 저장 후 목적지 판정용 — 폼은 세트를 받지 않으므로 '수정 전 결과 유무'가 곧 저장 후 결과 유무다
         initialHasResult: (d?.setScores?.length ?? 0) > 0,

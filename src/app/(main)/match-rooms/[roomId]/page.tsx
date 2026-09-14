@@ -10,6 +10,7 @@ import { PageContainer } from '@/components/common/page-container'
 import { RoomGateView } from '@/components/match-rooms/room-gate-view'
 import { RoomGoneNotice } from '@/components/match-rooms/room-gone-notice'
 import { RoomInviteFailedNotice } from '@/components/match-rooms/room-invite-failed-notice'
+import { RoomDirectCreatedNotice } from '@/components/match-rooms/room-direct-created-notice'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
 import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
@@ -59,9 +60,12 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
         <PageContainer>
             <RoomDetailHeader
                 detail={detail}
-                actions={x.isHost ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} /> : undefined}
+                actions={x.isHost
+                    ? <RoomHostActions roomId={roomId} canCloseRotation={x.isPendingRotation} isListed={detail.room.isListed} />
+                    : undefined}
             />
             {notice === 'invite_failed' && <RoomInviteFailedNotice />}
+            {notice === 'direct_room' && <RoomDirectCreatedNotice />}
             {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
             {x.isMember && (stage === 'closed' ? <RoomSettledNotice /> : <RoomTurnBanner turn={turn} stage={stage} />)}
             <RoomMembersSection

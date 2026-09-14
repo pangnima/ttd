@@ -47,10 +47,11 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
     const todayIso = todayIsoKst()
     const meta = roomTabMeta(ROOM_LIST_TABS, activeTab)
 
+    // 비노출 방(0082)은 여기 오지 않는다 — 숫자와 목록이 같은 집합을 보도록 두 호출이 같은 옵션을 쓴다
     const [openCount, roomQueue, page] = await Promise.all([
-        fetchOpenRoomCount(todayIso),
+        fetchOpenRoomCount(todayIso, { listedOnly: true }),
         fetchRoomQueue(user.id),
-        fetchRoomPage(user.id, activeTab, todayIso, { cursor }),
+        fetchRoomPage(user.id, activeTab, todayIso, { cursor, listedOnly: true }),
     ])
 
     return (

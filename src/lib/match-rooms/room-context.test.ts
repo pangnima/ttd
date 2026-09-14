@@ -6,7 +6,7 @@ function detail(source: MatchRoomSource, isSettled = false, viewerStatus?: 'join
     return {
         room: {
             id: 'r1', hostUserId: 'host', sourceKind: source.kind, playedAt: '2026-09-12',
-            matchType: 'singles', courtCount: 1, isSettled, createdAt: '2026-09-01T00:00:00Z',
+            matchType: 'singles', courtCount: 1, isSettled, isListed: true, createdAt: '2026-09-01T00:00:00Z',
         },
         host: { id: 'host', name: '방장', nickname: '', deleted: false },
         members: [],

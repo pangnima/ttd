@@ -74,6 +74,16 @@ export function isMatchTypeAllowed(format: MatchRoomFormat, matchType: MatchType
 }
 
 /**
+ * 방의 시간·면 수 검증 — DB CHECK(match_rooms.duration_minutes / court_count)의 거울.
+ * 매칭 만들기와 직접 기록의 비노출 방(0082)이 같은 규칙을 쓴다.
+ */
+export function validateRoomSchedule(input: { durationMinutes: number; courtCount: number }): string | null {
+    if (!(input.durationMinutes >= 30 && input.durationMinutes <= 600)) return '경기 시간을 선택해주세요.'
+    if (!(input.courtCount >= 1 && input.courtCount <= 12)) return '코트 면 수를 선택해주세요.'
+    return null
+}
+
+/**
  * 매칭 만들기 검증 — 폼 isValid와 서버 액션이 공유한다(클라·서버 동일 규칙).
  * 순서는 화면의 입력 순서를 따른다: 방식 → 일시 → 표면·코트 → 비밀번호 → 초대.
  */
@@ -82,9 +92,8 @@ export function validateCreateMatchRoomInput(input: CreateMatchRoomInput): strin
     if (!input.playedAt) return '경기 날짜를 입력해주세요.'
     if (!/^\d{2}:\d{2}$/.test(input.playedTime)) return '경기 시각을 선택해주세요.'
     if (!input.surface) return '코트 표면을 선택해주세요.'
-    // DB CHECK(match_rooms.duration_minutes / court_count)의 거울
-    if (!(input.durationMinutes >= 30 && input.durationMinutes <= 600)) return '경기 시간을 선택해주세요.'
-    if (!(input.courtCount >= 1 && input.courtCount <= 12)) return '코트 면 수를 선택해주세요.'
+    const scheduleError = validateRoomSchedule(input)
+    if (scheduleError) return scheduleError
 
     const courtNameError = validateCourtName(input.courtName)
     if (courtNameError) return courtNameError

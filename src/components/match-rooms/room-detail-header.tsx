@@ -25,7 +25,12 @@ function courtLabel(courtName: string | undefined, courtCount: number): string |
  */
 export function RoomDetailHeader({ detail, actions }: Props) {
     const { room, host } = detail
-    const eyebrow = [MATCH_TYPE_LABELS[room.matchType], room.surface ? SURFACE_LABELS[room.surface] : null].filter(Boolean).join(' · ')
+    // 비노출 방(0082)은 리스트에 없는 방임을 eyebrow에서 말한다 — 참가자가 "왜 목록에 없지"에서 멈추지 않게
+    const eyebrow = [
+        MATCH_TYPE_LABELS[room.matchType],
+        room.surface ? SURFACE_LABELS[room.surface] : null,
+        room.isListed ? null : '비공개',
+    ].filter(Boolean).join(' · ')
 
     return (
         <div className="space-y-3">

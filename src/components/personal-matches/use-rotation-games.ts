@@ -112,8 +112,8 @@ export function useRotationGames(initialPool?: PoolPlayer[]) {
         updateGameSets(gameId, (sets) => sets.map((s, idx) => (idx === i ? { ...s, oppAd: v } : s)))
     }
 
-    // allowEmpty(모집형) — 빈 행을 무시하고 최소 인원을 요구하지 않는다
-    function isPoolValid(meta: RotationSessionMeta, options?: { allowEmpty?: boolean }): boolean {
+    // allowEmpty(모집형) — 빈 행을 무시하고 최소 인원을 요구하지 않는다 / roomMode(비노출 방, 0082) — 하한 없음·회원 NTRP 면제
+    function isPoolValid(meta: RotationSessionMeta, options?: { allowEmpty?: boolean; roomMode?: boolean }): boolean {
         return validateRotationPool(pool, meta, options)
     }
     const isGamesValid = validateRotationGames(pool, games)

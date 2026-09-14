@@ -36,7 +36,7 @@ type Props = {
 /**
  * 개인 경기 등록/수정 폼 — 단식·복식(페어 고정/로테이션) 동일 구성. 세트는 받지 않고(미확정 저장) 카드 '결과 입력'에서 등록한다.
  * 로테이션은 선수 풀만 세션으로 저장하고 게임(팀 구성+세트)도 '결과 입력'에서 만든다.
- * 방을 만드는 경로는 여기가 아니다 — 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다(Week 39).
+ * 회원이 끼면 저장이 곧 **비노출 방** 생성이다(0082) — 회원은 초대, 비회원은 등록되고 게임·결과는 룸에서 만든다.
  * 방 게임(roomContext)은 방장이 방 참가자로 게임을 구성하는 경로 — 같은 폼에 참가자만 입력한다.
  */
 export function PersonalMatchForm({
@@ -47,8 +47,9 @@ export function PersonalMatchForm({
     const submit = usePersonalMatchSubmit(s, initialData?.id, nav)
     // 상호 확인은 이제 방 안에서만 일어난다(Week 39) — isConfirmFlow가 곧 방 게임이라 '확인 요청' 라벨은 없다
     const submitLabel = s.isConfirmFlow || s.isRoomGame ? '게임 저장'
-        : s.isEdit ? '수정 완료'
-            : '경기 저장'
+        : s.roomAutoCreate ? '매칭 만들고 초대'
+            : s.isEdit ? '수정 완료'
+                : '경기 저장'
 
     const isDialog = variant === 'dialog'
 

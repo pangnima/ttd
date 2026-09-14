@@ -200,6 +200,15 @@ export async function updatePersonalMatchAction(
 
     const validationError = validatePersonalMatchInput(input, { allowMissingPlayers: !!roomId })
     if (validationError) return { error: validationError }
+    // 방 밖 기록에 회원을 붙일 수 없다(Week 39) — 신규(create)만 보던 가드를 수정에도 건다(N-2).
+    // 폼은 수정 모드에서 회원 선택을 막지만 서버가 안 보면 그쪽이 곧 우회로다(direct-record.ts).
+    if (!roomId && requiresRoom([
+        { userId: input.opponentUserId },
+        { userId: input.partnerUserId },
+        { userId: input.opponent2UserId },
+    ])) {
+        return { error: DIRECT_RECORD_MEMBER_ERROR }
+    }
 
     // 상호 확인 경기(source_type='confirmation')는 수정 불가 — RESTRICTIVE RLS와 이중 방어
     const { user_id: _omit, source_type: _omit2, ...baseRow } = buildPersonalMatchBaseRow(input, user.id)

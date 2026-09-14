@@ -8,6 +8,7 @@ import { PendingResultNotice } from '@/components/personal-matches/form-sections
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
 import { NotesSection } from '@/components/personal-matches/form-sections/notes-section'
 import { RoomMetaSummaryCard } from '@/components/personal-matches/form-sections/room-meta-summary-card'
+import { RoomScheduleFields } from '@/components/match-rooms/form-sections/room-schedule-section'
 import type { PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 type Props = {
@@ -32,6 +33,18 @@ export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page'
                     playedTime={s.playedTime} onPlayedTimeChange={s.setPlayedTime}
                     surface={s.surface} onSurfaceChange={s.setSurface}
                     courtName={s.courtName} onCourtNameChange={s.setCourtName} recentCourtNames={recentCourtNames}
+                    // 회원이 끼면 저장이 곧 비노출 방 생성이다(0082) — 방의 시간 축(경기 시간·면 수)을 매칭 만들기와 같은 줄에
+                    scheduleExtra={s.roomAutoCreate ? (
+                        <RoomScheduleFields
+                            durationMinutes={s.durationMinutes}
+                            onDurationChange={s.setDurationMinutes}
+                            courtCount={s.courtCount}
+                            onCourtCountChange={s.setCourtCount}
+                            playedTime={s.playedTime}
+                            matchType={s.matchType}
+                            playerCount={1 + s.directSplit.memberIds.length + s.directSplit.guests.length}
+                        />
+                    ) : undefined}
                 />
                 {/* 같은 시각에 이미 잡아 둔 일정 — 저장은 막지 않고 알리기만 한다(0057) */}
                 {conflicts.length > 0 && (
@@ -43,7 +56,10 @@ export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page'
                         </p>
                     </div>
                 )}
-                <PendingResultNotice existingSets={existingSets} variant={s.isRotation ? 'rotation' : 'default'} />
+                <PendingResultNotice
+                    existingSets={existingSets}
+                    variant={s.roomAutoCreate ? 'room' : s.isRotation ? 'rotation' : 'default'}
+                />
             </FormSectionCard>
             <FormSectionCard title="메모" step="선택">
                 <NotesSection notes={s.notes} onNotesChange={s.setNotes} />

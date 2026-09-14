@@ -21,6 +21,8 @@ type ActionResult = { error: string | null; stale?: boolean }
 const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
     ['not_authenticated', '로그인이 필요합니다.'],
     ['room_not_found', '존재하지 않거나 리스트에서 내려간 경기입니다.'],
+    // 0082 — 비노출 방은 비밀번호 입장도, 비밀번호 만들기도 없다(초대로만 들어온다)
+    ['room_not_listed', '초대받은 사람만 들어올 수 있는 매칭입니다. 비밀번호 입장은 지원하지 않습니다.'],
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],

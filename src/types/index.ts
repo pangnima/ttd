@@ -304,6 +304,11 @@ export type MatchRoomMeta = {
     slotMinutes?: number
     // 방의 대표 게임이 1건 이상이고 전부 확정 — 매칭 리스트에서 '지난 경기'로 내려간다 (0049)
     isSettled: boolean
+    /**
+     * 매칭 리스트(/match-rooms)에 노출되는가 (0082). false = 직접 기록에서 회원을 불러 만든 **비노출 방** —
+     * 비밀번호가 없고 초대로만 들어온다. 참여 중인 매칭(/me/match-rooms)은 멤버십 기준이라 노출과 무관하게 보인다
+     */
+    isListed: boolean
 }
 
 // 목록 카드용 — 참가 인원(방장 + joined 참가자)·방장·내 멤버 상태 포함

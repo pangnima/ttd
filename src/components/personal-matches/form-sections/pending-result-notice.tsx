@@ -4,8 +4,8 @@ import type { PersonalMatchSetScore } from '@/types'
 type Props = {
     // 수정 모드에서 기존 레코드가 보유한 게임(세트) — 있으면 "유지됨" 안내로 바뀐다
     existingSets?: PersonalMatchSetScore[]
-    // rotation: 게임 구성까지 나중에 입력함을 안내
-    variant?: 'default' | 'rotation'
+    // rotation: 게임 구성까지 나중에 입력함을 안내 / room: 비노출 방(0082) — 게임·결과 전부 룸에서
+    variant?: 'default' | 'rotation' | 'room'
 }
 
 /**
@@ -24,6 +24,11 @@ export function PendingResultNotice({ existingSets = [], variant = 'default' }: 
                         <span className="text-foreground font-medium tabular-nums">
                             {existingSets.map((s) => `${s.me}-${s.opp}`).join(', ')}
                         </span>
+                    </>
+                ) : variant === 'room' ? (
+                    <>
+                        게임과 스코어는 저장 후 <span className="text-foreground font-medium">매칭 룸</span>에서 만들고 확인합니다.
+                        지금 저장하면 매칭과 초대만 생기며 통계에는 반영되지 않습니다.
                     </>
                 ) : variant === 'rotation' ? (
                     <>

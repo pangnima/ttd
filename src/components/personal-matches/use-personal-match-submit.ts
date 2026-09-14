@@ -5,17 +5,18 @@ import { useRouter } from 'next/navigation'
 import { createPersonalMatchesAction, updatePersonalMatchAction } from '@/lib/actions/personal-matches'
 import { createRoomGameAction } from '@/lib/actions/match-rooms'
 import { createRotationSessionAction } from '@/lib/actions/rotation-sessions'
+import { createDirectRecordRoomAction } from '@/lib/actions/direct-record-room'
 import { compactPool, poolToPlayers } from '@/lib/personal-matches/rotation'
 import { handOf, type PersonalMatchFormState } from '@/components/personal-matches/use-personal-match-form-state'
 
 /**
- * 개인 경기 등록/수정 폼 제출 — 3갈래.
- *  ① 로테이션: 선수 풀만 세션으로 저장 (게임은 카드 '결과 입력'에서)
+ * 개인 경기 등록/수정 폼 제출 — 4갈래.
+ *  ⓪ 비노출 방(0082): 방 밖 신규 기록에 회원이 있다 — 방을 만들어 회원은 초대, 비회원은 등록하고 룸으로 간다
+ *  ① 로테이션: 선수 풀만 세션으로 저장 (게임은 카드 '결과 입력'에서) — 0082부터 전원 비회원일 때만
  *  ② 방 게임(0049): 방 참가자끼리의 게임 — 수락 없이 참가자 전원 기록 생성, 결과는 제안·확인으로 확정
  *  ③ 자유 기록: 신규 INSERT 또는 수정 UPDATE (세트 없음 = 미확정)
  *
  * 방 밖 상호 확인 요청 갈래는 Week 39에 사라졌다 — **회원이 끼면 매칭 룸을 거친다**(direct-record.ts).
- * 방을 만드는 일도 여기서 하지 않는다: 매칭은 「매칭 만들기」(/match-rooms/new)에서 연다.
  */
 export type SubmitNavigation = {
     /** 저장 성공 후 — 다이얼로그를 닫고 새로고침한다. 주면 router.push(next)를 하지 않는다 */
@@ -42,6 +43,17 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
         setError(null)
         if (!s.isValid) {
             setError('필수 항목을 모두 정확히 입력해주세요.')
+            return
+        }
+
+        // 방 밖 신규 기록에 회원이 끼면 저장이 곧 비노출 방 생성이다(0082) — 로테이션보다 먼저 본다.
+        // 방은 만들어졌는데 초대·등록만 실패하면 방으로 보내되 쿼리로 알려 룸이 안내를 그린다(F-pre-1 관용구).
+        if (s.roomAutoCreate) {
+            startTransition(async () => {
+                const res = await createDirectRecordRoomAction(s.buildRoomInput())
+                if (res.roomId) router.push(`/match-rooms/${res.roomId}?notice=${res.error ? 'invite_failed' : 'direct_room'}`)
+                else setError(res.error ?? '매칭을 만들지 못했습니다.')
+            })
             return
         }
 

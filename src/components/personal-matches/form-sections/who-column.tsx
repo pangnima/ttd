@@ -7,7 +7,7 @@ import { FormSectionCard } from '@/components/common/form-section-card'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { ConfirmFlowNotice } from '@/components/personal-matches/form-sections/confirm-flow-notice'
 import { SaveOutcomeNotice } from '@/components/personal-matches/form-sections/save-outcome-notice'
-import { MemberNeedsRoomNotice } from '@/components/personal-matches/form-sections/member-needs-room-notice'
+import { MemberBlockedInEditNotice } from '@/components/personal-matches/form-sections/member-blocked-in-edit-notice'
 import { PlayersSection } from '@/components/personal-matches/form-sections/players-section'
 import { RecruitingPlayersSection } from '@/components/personal-matches/form-sections/recruiting-players-section'
 import { DoublesModeToggle } from '@/components/personal-matches/doubles-mode-toggle'
@@ -91,8 +91,8 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         searchSelfUserId={searchSelfUserId}
                     />
                 )}
-                {s.memberNeedsRoom ? (
-                    <MemberNeedsRoomNotice />
+                {s.memberBlockedInEdit ? (
+                    <MemberBlockedInEditNotice />
                 ) : s.rep ? (
                     <ConfirmFlowNotice
                         opponentName={s.rep.opponent.slot.player.name.trim() || '상대'}
@@ -102,8 +102,12 @@ export function WhoColumn({ s, opponentCandidates, pastOpponents, roomParticipan
                         memberCount={1 + s.hideNtrpFor.length}
                     />
                 ) : (
-                    // 대표가 없는 갈래(로테이션·전원 비회원·모집 중)에도 무슨 일이 일어날지 말해 준다(0057)
-                    <SaveOutcomeNotice outcome={s.saveOutcome} memberCount={s.rotationMemberCount} />
+                    // 대표가 없는 갈래(비노출 방·로테이션·전원 비회원·모집 중)에도 무슨 일이 일어날지 말해 준다(0057·0082)
+                    <SaveOutcomeNotice
+                        outcome={s.saveOutcome}
+                        memberCount={s.directSplit.memberIds.length}
+                        guestCount={s.directSplit.guests.length}
+                    />
                 )}
             </FormSectionCard>
         </div>

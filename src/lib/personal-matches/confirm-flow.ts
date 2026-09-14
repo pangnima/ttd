@@ -46,6 +46,7 @@ export function resolveConfirmRep<T extends RepCandidate>(
  * (`ConfirmFlowNotice`는 대표가 있을 때만 뜬다). 안내 배너 문구의 단일 출처.
  */
 export type SaveOutcome =
+    | 'unlistedRoom'    // 직접 기록에 회원이 끼었다 — 비노출 방을 만들어 초대한다(0082). 로테이션보다 먼저 본다
     | 'confirmRequest'  // 상대 대표에게 확인 요청
     | 'roomGame'        // 방 게임 — 입장이 곧 동의라 수락 단계 없이 참가자 기록에 남는다
     | 'rotationPlan'    // 로테이션 일정 — 풀 회원에게 참여 요청(0057)
@@ -60,7 +61,10 @@ export function resolveSaveOutcome(args: {
     allowEmptyPlayers: boolean
     /** 라인업이 모두 채워졌는가 */
     allFilled: boolean
+    /** 방 밖 신규 기록에 회원이 있다 — 저장이 곧 비노출 방 생성이다(0082) */
+    roomAutoCreate?: boolean
 }): SaveOutcome {
+    if (args.roomAutoCreate) return 'unlistedRoom'
     if (args.isRotation) return 'rotationPlan'
     if (args.hasRep) return args.roomId ? 'roomGame' : 'confirmRequest'
     if (args.allowEmptyPlayers && !args.allFilled) return 'recruiting'

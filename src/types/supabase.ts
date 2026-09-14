@@ -841,6 +841,7 @@ export type Database = {
           duration_minutes: number | null
           host_user_id: string
           id: string
+          is_listed: boolean
           is_settled: boolean
           match_type: string
           notes: string | null
@@ -857,6 +858,7 @@ export type Database = {
           duration_minutes?: number | null
           host_user_id: string
           id?: string
+          is_listed?: boolean
           is_settled?: boolean
           match_type: string
           notes?: string | null
@@ -873,6 +875,7 @@ export type Database = {
           duration_minutes?: number | null
           host_user_id?: string
           id?: string
+          is_listed?: boolean
           is_settled?: boolean
           match_type?: string
           notes?: string | null
@@ -1285,6 +1288,7 @@ export type Database = {
         Args: {
           p_court_count?: number
           p_duration_minutes?: number
+          p_listed?: boolean
           p_password: string
           p_source_id: string
           p_source_kind: string

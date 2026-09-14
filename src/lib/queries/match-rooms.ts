@@ -18,7 +18,7 @@ import type {
  */
 
 // 공개 메타 컬럼만 명시 (select('*') 금지 — 방 행에는 없지만 습관적으로 secrets를 조인하지 않기 위한 규약)
-const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, duration_minutes, court_count, slot_minutes, is_settled'
+const ROOM_COLUMNS = 'id, host_user_id, source_kind, played_at, played_time, match_type, surface, court_name, duration_minutes, court_count, slot_minutes, is_settled, is_listed'
 const HOST_JOIN = 'host:users!match_rooms_host_user_id_fkey(id, name, nickname, profile_image, deleted_at)'
 const MEMBERS_JOIN = 'members:match_room_members(user_id, role, status)'
 
@@ -37,6 +37,7 @@ type RoomListRow = {
     court_count: number | null
     slot_minutes: number | null
     is_settled: boolean
+    is_listed: boolean
     host: HostRow
     members: MemberRow[]
 }
@@ -68,6 +69,7 @@ function mapRoomRow(row: RoomListRow, viewerId: string): MatchRoomSummary {
         courtCount: row.court_count ?? 1,
         slotMinutes: row.slot_minutes ?? undefined,
         isSettled: row.is_settled,
+        isListed: row.is_listed,
         joinedCount: countJoined(members.map((m) => ({ role: m.role as MatchRoomMemberRole, status: m.status as MatchRoomMemberStatus }))),
         host: mapHost(row.host, row.host_user_id),
         viewer: mine ? { role: mine.role as MatchRoomMemberRole, status: mine.status as MatchRoomMemberStatus } : undefined,
@@ -131,9 +133,9 @@ export async function fetchRoomPage(
     viewerId: string,
     filter: RoomListFilter,
     todayIso: string,
-    opts: { cursor?: RoomCursor | null; roomIds?: string[]; limit?: number; axis?: RoomListAxis } = {},
+    opts: { cursor?: RoomCursor | null; roomIds?: string[]; limit?: number; axis?: RoomListAxis; listedOnly?: boolean } = {},
 ): Promise<RoomPage> {
-    const { cursor, roomIds, limit = ROOM_PAGE_SIZE, axis = 'schedule' } = opts
+    const { cursor, roomIds, limit = ROOM_PAGE_SIZE, axis = 'schedule', listedOnly = false } = opts
     // 참여 방이 하나도 없으면 .in([])으로 빈 결과를 굳이 왕복시키지 않는다
     if (roomIds && roomIds.length === 0) return EMPTY_PAGE
 
@@ -145,6 +147,8 @@ export async function fetchRoomPage(
         : asc
             ? base.eq('is_settled', false).gte('played_at', todayIso)
             : base.or(pastRoomFilter(todayIso))
+    // 비노출 방(0082)은 전체 목록에서만 뺀다 — 참여 중인 매칭은 roomIds(멤버십)가 이미 가른다
+    if (listedOnly) query = query.eq('is_listed', true)
     if (roomIds) query = query.in('id', roomIds)
     if (cursor) query = query.or(roomKeysetFilter(cursor, asc ? 'asc' : 'desc'))
 
@@ -195,9 +199,9 @@ export async function fetchMyRoomIds(viewerId: string): Promise<string[]> {
  */
 export async function fetchOpenRoomCount(
     todayIso: string,
-    opts: { roomIds?: string[]; axis?: RoomListAxis } = {},
+    opts: { roomIds?: string[]; axis?: RoomListAxis; listedOnly?: boolean } = {},
 ): Promise<number> {
-    const { roomIds, axis = 'schedule' } = opts
+    const { roomIds, axis = 'schedule', listedOnly = false } = opts
     if (roomIds && roomIds.length === 0) return 0
     const supabase = await createClient()
     let query = supabase
@@ -205,6 +209,8 @@ export async function fetchOpenRoomCount(
         .select('id', { count: 'exact', head: true })
         .eq('is_settled', false)
     if (axis === 'schedule') query = query.gte('played_at', todayIso)
+    // 목록과 같은 집합을 세야 한다(Week 45) — 목록이 비노출 방을 빼면 숫자도 뺀다
+    if (listedOnly) query = query.eq('is_listed', true)
     if (roomIds) query = query.in('id', roomIds)
     const { count, error } = await query
     return error ? 0 : (count ?? 0)

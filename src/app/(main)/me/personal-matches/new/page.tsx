@@ -13,7 +13,7 @@ type Props = { searchParams: Promise<{ room?: string }> }
 
 /**
  * 직접 기록 — 비회원(게스트)과 친 경기를 내 기록에만 남긴다(Week 39).
- * 회원이 끼는 경기는 매칭 룸을 거친다(direct-record.ts) — 폼이 그때 매칭 만들기로 안내한다.
+ * 회원이 끼는 경기는 매칭 룸을 거친다(direct-record.ts) — 0082부터 폼이 그 자리에서 비노출 방을 만들어 초대한다.
  */
 export default async function NewPersonalMatchPage({ searchParams }: Props) {
     const supabase = await createClient()
@@ -39,7 +39,7 @@ export default async function NewPersonalMatchPage({ searchParams }: Props) {
             <PageHeader
                 className="mx-auto w-full max-w-2xl lg:max-w-5xl"
                 title="직접 기록"
-                description="비회원과 친 경기를 내 기록에만 남깁니다. 회원과 친 경기는 매칭을 만들어 기록해주세요"
+                description="비회원과 친 경기는 내 기록에만 남습니다. 회원을 고르면 비공개 매칭이 만들어지고 초대가 갑니다"
             />
             <PersonalMatchForm
                 opponentCandidates={opponentCandidates}

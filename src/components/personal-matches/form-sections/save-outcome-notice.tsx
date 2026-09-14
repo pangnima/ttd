@@ -3,28 +3,27 @@ import type { SaveOutcome } from '@/lib/personal-matches/confirm-flow'
 
 type Props = {
     outcome: SaveOutcome
-    /** 로테이션 풀의 회원 수 — 참여 요청을 받을 사람 수 */
+    /** 비노출 방에 초대될 회원 수 · 등록될 비회원 수 (0082) */
     memberCount: number
+    guestCount: number
 }
 
 /**
- * "지금 저장하면 무슨 일이 일어나는가" 안내 (0057).
+ * "지금 저장하면 무슨 일이 일어나는가" 안내 (0057 → 0082).
  *
  * `ConfirmFlowNotice`는 상대 대표가 있을 때만 뜨므로, 대표가 없는 갈래
  * (로테이션 · 상대팀 전원 비회원 · 모집 중)에는 **부정 신호가 하나도 없었다**.
- * 특히 로테이션은 복식 신규 등록의 기본 모드라, 회원을 여럿 넣고도
- * 아무에게도 요청이 가지 않는 것을 알 방법이 없었다.
+ * 0082부터 회원이 끼면 저장이 곧 비노출 방 생성이라 그 갈래가 가장 먼저 온다 —
+ * 방 밖 로테이션은 이제 전원 비회원일 때만 남으므로 그쪽은 안내가 필요 없다(요청이 갈 사람이 없다).
  */
-export function SaveOutcomeNotice({ outcome, memberCount }: Props) {
-    if (outcome === 'rotationPlan') {
-        if (memberCount === 0) return null
+export function SaveOutcomeNotice({ outcome, memberCount, guestCount }: Props) {
+    if (outcome === 'unlistedRoom') {
         return (
             <Notice icon={<Users className="w-4 h-4 text-primary shrink-0 mt-0.5" />}>
-                저장하면 참가자로 넣은 <b className="text-foreground font-medium">회원 {memberCount}명</b>에게
-                참여 요청이 전송됩니다. 수락하면 이 일정이 그분들 화면에도 표시되고, 경기 후에는 누구든 결과를
-                입력할 수 있습니다. 게임을 입력할 때 다시 수락받지는 않습니다.
-                {' '}<b className="text-foreground font-medium">전원이 수락해야</b> 결과를 입력할 수 있습니다 —
-                응답이 없으면 참가자 편집에서 명단에서 빼고 게스트로 기록할 수 있습니다.
+                <span className="text-foreground font-medium">회원과 함께 친 경기는 매칭으로 기록합니다.</span>{' '}
+                저장하면 매칭 리스트에 뜨지 않는 <b className="text-foreground font-medium">비공개 매칭</b>이 만들어지고
+                회원 {memberCount}명에게 초대가 갑니다{guestCount > 0 && `. 비회원 ${guestCount}명은 명단에 바로 등록됩니다`}.
+                상대가 수락하면 매칭 룸에서 게임을 만들고 결과를 확인합니다.
             </Notice>
         )
     }

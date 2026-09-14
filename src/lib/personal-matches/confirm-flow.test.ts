@@ -58,3 +58,12 @@ describe('resolveSaveOutcome — 저장이 실제로 하는 일', () => {
         expect(resolveSaveOutcome({ ...base, allowEmptyPlayers: true, allFilled: true })).toBe('freeRecord')
     })
 })
+
+describe('resolveSaveOutcome — 비노출 방(0082)', () => {
+    const base = { isRotation: false, hasRep: false, allowEmptyPlayers: false, allFilled: true }
+
+    it('방 밖 신규 기록에 회원이 있으면 로테이션·대표보다 먼저 비노출 방이다', () => {
+        expect(resolveSaveOutcome({ ...base, roomAutoCreate: true })).toBe('unlistedRoom')
+        expect(resolveSaveOutcome({ ...base, roomAutoCreate: true, isRotation: true })).toBe('unlistedRoom')
+    })
+})

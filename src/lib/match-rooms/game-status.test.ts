@@ -54,7 +54,7 @@ describe('roomGamesEmptyMessage', () => {
     const detailWith = (source: MatchRoomSource): MatchRoomDetail => ({
         room: {
             id: 'r1', hostUserId: 'u1', sourceKind: source.kind, playedAt: '2026-09-12',
-            matchType: 'singles', courtCount: 1, isSettled: false, createdAt: '2026-09-01T00:00:00Z',
+            matchType: 'singles', courtCount: 1, isSettled: false, isListed: true, createdAt: '2026-09-01T00:00:00Z',
         },
         host: { id: 'u1', name: '방장', nickname: '', deleted: false },
         members: [],
@@ -118,7 +118,7 @@ describe('canCreateRoomLineup — create_room_lineup 가드의 거울', () => {
     const room = (over: Partial<MatchRoomDetail['room']> = {}): MatchRoomDetail => ({
         room: {
             id: 'r1', hostUserId: 'u1', sourceKind: 'rotation', playedAt: '2026-09-12',
-            matchType: 'men_doubles', courtCount: 1, isSettled: false, createdAt: '2026-09-01T00:00:00Z', ...over,
+            matchType: 'men_doubles', courtCount: 1, isSettled: false, isListed: true, createdAt: '2026-09-01T00:00:00Z', ...over,
         },
         host: { id: 'u1', name: '방장', nickname: '', deleted: false },
         members: [],
