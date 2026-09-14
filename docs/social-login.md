@@ -1,11 +1,17 @@
 # 소셜 로그인(구글·카카오) 도입 계획
 
-> 이 문서는 **아직 구현되지 않은** 기능의 실행 계획서다. 처음 붙이는 사람이 이 문서만 보고 끝까지 갈 수 있도록,
-> **콘솔에서 손으로 할 일**과 **코드로 할 일**을 갈라 적는다.
+> **진행 상태(Week 55 갱신)** — **구글은 코드가 전부 들어갔다**(마이그레이션 0084 적용 완료).
+> 남은 것은 **§4의 콘솔 설정뿐**이고, 그것이 끝나기 전에는 로그인이 동작하지 않는다
+> (`curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"`의 `external.google`이 아직 `false`다).
+> **카카오는 배선만 있고 버튼을 노출하지 않았다** — 켜려면 §4.2를 마친 뒤
+> `social-login-buttons.tsx`의 `PROVIDERS`에 한 줄을 더한다(액션은 이미 `kakao`를 받아들인다).
+> 실제 구현이 계획과 갈린 곳은 §5·§6·§7 각 절 머리의 **[구현됨]** 메모에 적었다.
+>
+> 이 문서는 **콘솔에서 손으로 할 일**과 **코드로 할 일**을 갈라 적는다.
 > 조사 시점(2026-09, Week 52) 기준이며 코드 근거는 `파일:줄`로, 문서 근거는 Supabase 공식 문서 URL로 표시했다.
 > ⚠ 구글·카카오 개발자 콘솔의 **메뉴 이름은 바뀔 수 있다**. 이름이 다르면 같은 뜻의 항목을 찾으면 된다.
 
-관련: `CLAUDE.md`의 「Week 52 잔여」, 1단계(가입 입력 규칙)는 마이그레이션 0079·0080으로 **완료됨**.
+관련: `CLAUDE.md`의 「Week 52 잔여」·「Week 55 잔여」, 1단계(가입 입력 규칙)는 마이그레이션 0079·0080으로 **완료됨**.
 
 ---
 
@@ -162,6 +168,14 @@ NTRP는 레이팅·티어·통계의 입력값이라 3.0이 박히는 건 **데�
 
 ## 5. 마이그레이션 `0081_handle_new_user_oauth.sql`
 
+> **[구현됨] 실제 번호는 `0084_handle_new_user_oauth.sql`이다** — 이 문서를 쓴 뒤 0081~0083이 먼저 들어갔다.
+> 계획과 갈린 점 둘: (1) `name`은 `name`→`full_name`→이메일 앞부분, `profile_image`는
+> `profile_image`(우리 가입 경로)→`avatar_url`→`picture` **사슬**로 받는다 — 어떤 키가 오는지 보장이 없어
+> 한 키에 걸지 않았다. (2) `v_email`은 `split_part`에도 쓰이므로 이메일이 없는 계정의 닉네임 폴백은
+> `<uuid앞자리>` 형태가 된다(임시값이라 완성 화면에서 다시 받는다).
+> 롤백 스모크 3건 통과: 구글 가입(ntrp null·avatar_url 매핑) · 이메일 없는 provider(폴백) · 기존 이메일 가입 회귀.
+> 적용 시점 `ntrp is null`은 0건이라 기존 54명은 게이트에 걸리지 않는다.
+
 `handle_new_user`를 한 번 더 고친다. 0079가 고친 본문을 **복사해서** 이어 쓴다(0079 이전 정의를 복사하면 `phone` 빈 문자열 문제가 되살아난다 — 0078 머리말이 같은 실수를 경고한다).
 
 ⚠ **먼저 실제 값을 확인하고 쓴다.** provider가 `raw_user_meta_data`에 어떤 키를 넣는지는 **공식 문서에 없다.** 추측으로 쓰지 말고, 구글·카카오로 한 번 로그인한 다음:
@@ -198,6 +212,12 @@ nullif(new.raw_user_meta_data->>'avatar_url', '')            -- profile_image
 ---
 
 ## 6. 코드
+
+> **[구현됨]** 계획과 갈린 점: (1) `?error=` 문구는 `mapAuthError`가 아니라 **`mapAuthQueryError`**로 따로 뒀고
+> 탈퇴 문구는 `DELETED_ACCOUNT_MESSAGE` 하나를 `loginAction`과 콜백이 함께 본다.
+> (2) 구글 브랜드 마크는 hex라 **`components/auth/provider-marks.tsx`**로 떼어 `colors.test.ts` ALLOWLIST에 넣었다 —
+> 버튼 본체는 컬러 가드 아래 남는다. (3) `/signup`의 버튼은 `SignupForm` **밖**에 둔다(폼 중첩 불가).
+> (4) `loginAction`의 next 검사도 `isSafeNext`로 바꿔 두 경로가 같은 술어를 본다.
 
 ### 6.1 `src/lib/actions/auth.ts` — `signInWithOAuthAction`
 
@@ -308,6 +328,12 @@ export async function GET(request: NextRequest) {
 
 ## 7. 프로필 완성 게이트
 
+> **[구현됨]** 술어와 경로는 `lib/profile/onboarding-gate.ts`가 단일 출처다(`needsProfileOnboarding`·`PROFILE_ONBOARDING_PATH`, vitest 6건).
+> 계획대로 `/onboarding`은 `(main)` **밖**이고, 추가로 **미들웨어의 보호 라우트에 넣었다** — 그러지 않으면 비로그인도 열 수 있다.
+> 저장은 `completeProfileAction`(`lib/actions/onboarding.ts`)이고 `ntrp`가 이미 있으면 거절한다.
+> 화면에는 **로그아웃 탈출구**를 뒀다(그 화면에는 헤더가 없어 다른 계정으로 들어온 사람이 갇힌다).
+> 아바타 입력은 두지 않았다 — provider 사진이 `profile_image`로 들어오고, 없으면 프로필 설정에서 바꾼다.
+
 ### 7.1 판정 — `src/app/(main)/layout.tsx`
 
 그 레이아웃은 **이미** `users`를 select한다(`:30-36`). 컬럼 하나만 더한다.
@@ -347,21 +373,32 @@ if (current?.ntrp != null) return { error: '이미 입력된 정보입니다.' }
 
 ## 8. 실행 순서 체크리스트
 
-순서대로 해야 중간에 깨진 상태가 생기지 않는다.
+**코드는 먼저 들어갔다**(Week 55). 순서를 뒤집을 수 있었던 이유는 0084를 **버튼보다 먼저** 적용해
+NTRP 3.0이 박히는 창을 아예 만들지 않았기 때문이다 — 원래 계획의 "4~5번은 자기 계정으로만,
+8번에서 지운다"는 경고는 그래서 해당 없음이 됐다.
 
-- [ ] **1** §4.1 Google 콘솔 설정 → Client ID/Secret 확보
-- [ ] **2** §4.2 Kakao 콘솔 설정 → REST API 키 + Client Secret 확보 (이메일 동의 가능 여부 결정)
-- [ ] **3** §4.3 Supabase Providers 활성화 + **Redirect URLs에 `http://localhost:3000/**` 추가**
-- [ ] **4** §6.1~6.3 코드 작성 — 단, **아직 버튼은 로그인 화면에만 두고 자기 계정으로만 시험**
-- [ ] **5** 한 번 로그인한 뒤 `select raw_user_meta_data from auth.users …`로 **실제 키 확인**
-- [ ] **6** §5 마이그레이션 0081 작성 → 롤백 스모크(`begin; … rollback;`) → `apply_migration`
-- [ ] **7** §7 완성 화면·게이트·전용 액션
-- [ ] **8** 5번에서 만든 테스트 계정을 **지운다**(`delete from public.users …; delete from auth.users …;`)
-- [ ] **9** §9 시나리오 전부 통과
-- [ ] **10** `/signup`에도 버튼 노출 → `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run`
-- [ ] **11** CLAUDE.md 이력표·백로그·스키마 표 갱신, conventional commit
+**끝난 것**
 
-> **6번 전에는 NTRP 3.0이 박힌다.** 그래서 4~5번은 **자기 계정으로만** 하고 8번에서 반드시 지운다.
+- [x] **코드** §6.1~6.3 (`signInWithOAuthAction` · `/auth/callback` · 버튼 연결 + `next` 전달 + `/signup` 노출)
+- [x] **마이그레이션** §5 → `0084_handle_new_user_oauth.sql` 롤백 스모크 3건 후 `apply_migration` 완료
+- [x] **완성 화면·게이트·전용 액션** §7 (`/onboarding/profile` · `(main)/layout.tsx` 게이트 · `completeProfileAction`)
+- [x] `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run`(882건) 통과, conventional commit
+- [x] CLAUDE.md 이력표·백로그·스키마 표·사이트맵 갱신
+
+**남은 것 — 전부 콘솔에서 손으로 하는 일이다**
+
+- [ ] **1** §4.1 Google Cloud Console → OAuth 동의 화면 + 웹 클라이언트 ID 발급
+      (⚠ 동의 화면이 **개인정보처리방침·이용약관 링크를 필수로 요구**한다. 아직 없으므로 이것이 선행 조건이다)
+- [ ] **2** §4.3 Supabase → Authentication › Providers › **Google 활성화** + Client ID/Secret 붙여넣기
+- [ ] **3** §4.3 Supabase → URL Configuration › **Redirect URLs에 `http://localhost:3000/**` 추가**
+      (지금은 `/auth/confirm`만 등록돼 있다)
+- [ ] **4** 켜졌는지 확인: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"` → `external.google: true`
+- [ ] **5** 자기 계정으로 한 번 로그인한 뒤 **§5가 경고한 실측**:
+      `select raw_user_meta_data from auth.users order by created_at desc limit 1;`
+      → 0084의 coalesce 사슬(`full_name`·`avatar_url`)이 실제 키와 맞는지 눈으로 본다
+- [ ] **6** §9 시나리오 통과 (**⑤ 카카오는 버튼이 없어 해당 없음**)
+- [ ] **7** 시험 계정 삭제 — `delete from auth.users where email = '…';` (public.users는 FK cascade)
+- [ ] **8** 배포 시: 배포 도메인을 §4.1의 JavaScript 원본과 §4.3의 Redirect URLs에 추가, `NEXT_PUBLIC_SITE_URL` 설정
 
 ---
 
@@ -373,7 +410,7 @@ if (current?.ntrp != null) return { error: '이미 입력된 정보입니다.' }
 | 2 | 구글 재로그인 | 완성 화면 건너뛰고 바로 `/profile/[id]?scope=personal` |
 | 3 | `/onboarding/profile`을 건너뛰고 URL로 `/me/match-rooms` 직접 진입 | 다시 완성 화면으로 튕김 |
 | 4 | **같은 이메일**로 비밀번호 가입한 계정이 있는 상태에서 구글 로그인 | **한 계정으로 합쳐진다**(Supabase 자동 identity linking). 계정이 둘로 갈라지면 설정 확인 |
-| 5 | 카카오 로그인(이메일 미동의) | 가입 성공, `users.email`에 폴백 값. **롤백되면 §5의 (a)가 빠진 것** |
+| 5 | 카카오 로그인(이메일 미동의) — **버튼 미노출이라 지금은 해당 없음** | 가입 성공, `users.email`에 폴백 값. **롤백되면 §5의 (a)가 빠진 것** |
 | 6 | 탈퇴한 계정의 구글 로그인 | `/login?error=deleted`, 세션 없음 |
 | 7 | 초대 링크(`/clubs/join/[token]`) → 로그인 화면 → 구글 | 로그인 후 **초대 링크로 복귀**(`next` 전달 확인) |
 | 8 | 기존 이메일 회원의 프로필 설정 | NTRP·성별 등이 **여전히 읽기 전용**(정책이 안 열렸는지) |
