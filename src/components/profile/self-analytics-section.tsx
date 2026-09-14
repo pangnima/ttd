@@ -8,7 +8,6 @@ import { SurfaceStatsCard } from '@/components/stats/surface-stats-card'
 import { NtrpDifferentialCard } from '@/components/stats/ntrp-differential-card'
 import { StrengthWeaknessCard } from '@/components/stats/strength-weakness-card'
 import { PersonalMatchesPreview } from '@/components/stats/personal-matches-preview'
-import { AICoachingCard } from '@/components/stats/ai-coaching-card'
 import { ClubRatingTrendCard } from '@/components/stats/club-rating-trend-card'
 import { PersonalRatingTrendCard } from '@/components/stats/personal-rating-trend-card'
 import { WinRateTrendCard } from '@/components/stats/win-rate-trend-card'
@@ -33,7 +32,6 @@ import { selectRivals } from '@/lib/analytics/rival'
 import { aggregatePartnerChemistry } from '@/lib/analytics/partner-chemistry'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
 import { effectiveNtrp } from '@/lib/rating/display'
-import { fetchCachedAICoaching } from '@/lib/actions/ai-coaching'
 import { TYPO } from '@/lib/dashboard/tokens'
 import type { RatingHistoryPoint } from '@/lib/queries/ratings'
 
@@ -48,11 +46,15 @@ type EmptyCta = { recordHref?: string; browseHref?: string; browseLabel?: string
 
 // 0경기 빈 상태 CTA — scope별 행동 유도. 클럽 통계는 개인 경기 기록으로 채울 수 없어
 // 기록 버튼 대신 해당 클럽 대진표 링크만 노출한다.
+//
+// 개인·통합 scope의 [클럽 찾아보기](browseHref: '/clubs')는 1차 오픈에서 내렸다(Week 54) —
+// 클럽이 동결 상태라 유도해 봐야 갈 곳이 없다. StatsEmpty의 browse 슬롯은 그대로이니
+// 되살리려면 아래 return에 `browseHref: '/clubs'`를 다시 넣으면 된다.
 function getEmptyCta(scope: AnalyticsScope): EmptyCta {
     if (scope.kind === 'club') {
         return { browseHref: `/clubs/${scope.clubId}/match-games`, browseLabel: '대진표 보기' }
     }
-    return { recordHref: '/me/personal-matches/new', browseHref: '/clubs' }
+    return { recordHref: '/me/personal-matches/new' }
 }
 
 /**
@@ -129,8 +131,6 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const personalRating = scope.kind === 'personal'
         ? replayPersonalRatings(bundle.personalGames, me.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
         : null
-
-    const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)
 
     const emptyCta = getEmptyCta(scope)
 
@@ -219,11 +219,13 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 />
             )}
 
-            {/* AI 코칭 (full) */}
-            <AICoachingCard
-                initialResult={aiResult}
-                initialGeneratedAt={aiGeneratedAt}
-            />
+            {/*
+              * AI 코칭 카드는 1차 오픈에서 내렸다(Week 54) — 카드도 서버 액션도 캐시 테이블도 그대로 있다.
+              * 되살리려면 이 자리에 <AICoachingCard initialResult={aiResult} initialGeneratedAt={aiGeneratedAt} />를 두고
+              * 위에서 `const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)`와
+              * import 둘(components/stats/ai-coaching-card · lib/actions/ai-coaching)을 복원한다.
+              * 내린 김에 얻은 것 하나 — 프로필을 열 때마다 돌던 ai_coaching_cache 조회가 사라졌다.
+              */}
         </div>
     )
 }

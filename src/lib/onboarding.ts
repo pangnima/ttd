@@ -6,7 +6,7 @@
  * 아이콘은 직렬화할 수 없으므로 여기서는 key만 두고, 클라이언트에서 key→icon으로 매핑한다.
  */
 
-export type OnboardingStepKey = 'personal-match' | 'profile' | 'club'
+export type OnboardingStepKey = 'personal-match' | 'profile'
 
 export type OnboardingStep = {
     key: OnboardingStepKey
@@ -24,8 +24,6 @@ export type OnboardingInput = {
     hasPersonalMatch: boolean
     /** 프로필 이미지 설정 여부 (기본값 미설정 시 false) */
     hasProfileImage: boolean
-    /** 승인된 가입 클럽 1개 이상 보유 여부 */
-    hasClub: boolean
 }
 
 /** 입력 신호를 체크리스트 단계 배열로 변환 (개인 경기가 항상 첫 단계). */
@@ -45,13 +43,20 @@ export function buildOnboardingSteps(input: OnboardingInput): OnboardingStep[] {
             href: '/profile/settings',
             done: input.hasProfileImage,
         },
-        {
-            key: 'club',
-            title: '클럽 둘러보기',
-            description: '클럽에 가입하면 대진표·클럽 랭킹·클럽 레이팅까지 함께 즐길 수 있어요.',
-            href: '/clubs',
-            done: input.hasClub,
-        },
+        /*
+         * 「클럽 둘러보기」 단계는 1차 오픈에서 내렸다(Week 54) — 클럽이 동결 상태라
+         * 눌러도 가입할 곳이 없고, 영영 done이 되지 않아 체크리스트가 끝나지 않는다.
+         * 되살리려면 아래를 이 자리에 두고 OnboardingStepKey에 'club'을,
+         * OnboardingInput에 `hasClub: boolean`을 되돌린다(STEP_ICONS와 호출부는 tsc가 잡아 준다).
+         *
+         *   {
+         *       key: 'club',
+         *       title: '클럽 둘러보기',
+         *       description: '클럽에 가입하면 대진표·클럽 랭킹·클럽 레이팅까지 함께 즐길 수 있어요.',
+         *       href: '/clubs',
+         *       done: input.hasClub,
+         *   },
+         */
     ]
 }
 

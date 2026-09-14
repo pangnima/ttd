@@ -52,16 +52,11 @@ export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: H
             </Link>
             <div className="flex-1" />
             <nav className="flex items-center gap-2">
-                <Link
-                    href="/clubs"
-                    className={cn(
-                        buttonVariants({ variant: 'ghost', size: 'sm' }),
-                        'hidden md:inline-flex text-muted-foreground hover:text-foreground'
-                    )}
-                >
-                    클럽 찾기
-                </Link>
-
+                {/*
+                  * [클럽 찾기]는 1차 오픈에서 내렸다(Week 54) — 클럽이 동결 상태라 갈 곳이 없다.
+                  * 되살리려면 여기에 ghost 링크(href="/clubs", hidden md:inline-flex)를 다시 둔다.
+                  * 로고 링크(위)와 사이드바 로고의 /clubs 착지는 그대로다 — '홈'의 정의는 별개 문제다.
+                  */}
                 {userDisplay ? (
                     <div className="flex items-center gap-2">
                         <Link href="/profile/settings" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">

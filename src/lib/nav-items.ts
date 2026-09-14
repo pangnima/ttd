@@ -51,5 +51,6 @@ export function isNavItemActive(item: NavItem, pathname: string, userId: string 
     return userId ? isPersonalNavActive(pathname, userId) : false
 }
 
-// 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). 진입은 헤더 '클럽 찾기'와 로고 링크로만 남는다 —
+// 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). Week 54에 헤더 [클럽 찾기]와
+// 프로필 빈 상태·온보딩의 클럽 유도까지 내려, 진입은 이제 **로고 링크로만** 남는다 —
 // 해동 시 clubNavItems + ClubNavTree(components/common/club-nav-tree.tsx)를 여기서 복원한다.

@@ -154,12 +154,11 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         }
 
         // 온보딩 체크리스트 — 기본 탭(개인)에서만, 미완료 단계가 남았을 때 노출.
-        // 완료 판정은 이미 로드한 데이터(개인 경기 수·프로필 이미지·가입 클럽)만 사용.
+        // 완료 판정은 이미 로드한 데이터(개인 경기 수·프로필 이미지)만 사용.
         const onboardingSteps = buildOnboardingSteps({
             userId,
             hasPersonalMatch: bundle.personalMatches.length > 0,
             hasProfileImage: Boolean(target.profileImage),
-            hasClub: myClubs.length > 0,
         })
         const showOnboarding = scope.kind === 'personal' && !isOnboardingComplete(onboardingSteps)
 
