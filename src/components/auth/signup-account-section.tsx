@@ -1,22 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { EmailField } from '@/components/auth/email-field'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 type Props = {
     /** 제출 버튼을 잠글 때 쓴다. 참조가 고정된 함수를 넘길 것(effect 의존성) */
     onMismatchChange?: (mismatch: boolean) => void
+    /** 이메일 중복 — EmailField가 판정해 그대로 올려 보낸다 */
+    onEmailTakenChange?: (taken: boolean) => void
 }
 
 /**
  * 계정 섹션 — 이메일 + 비밀번호 한 쌍.
  *
- * 세 필드 모두 controlled인 이유는 서버 에러로 돌아왔을 때 React 19의 form action이
+ * 비밀번호 두 칸이 controlled인 이유는 서버 에러로 돌아왔을 때 React 19의 form action이
  * 폼을 리셋하기 때문이다(같은 이유가 `signup-tennis-section.tsx` 주석에도 적혀 있다).
  * 검증이 늘수록 실패가 잦아지므로 다시 적게 하는 대가가 커진다.
  */
-export function SignupAccountSection({ onMismatchChange }: Props) {
-    const [email, setEmail] = useState('')
+export function SignupAccountSection({ onMismatchChange, onEmailTakenChange }: Props) {
     const [password, setPassword] = useState('')
     const [passwordConfirm, setPasswordConfirm] = useState('')
 
@@ -27,16 +29,7 @@ export function SignupAccountSection({ onMismatchChange }: Props) {
 
     return (
         <>
-            <div>
-                <label htmlFor="email" className={labelCls}>이메일 *</label>
-                <input
-                    id="email" name="email" type="email" placeholder="example@email.com"
-                    required autoComplete="email"
-                    value={email} onChange={(e) => setEmail(e.target.value)}
-                    className={inputCls}
-                />
-                <p className="mt-1 text-caption text-muted-foreground">로그인 시 사용할 아이디입니다.</p>
-            </div>
+            <EmailField onTakenChange={onEmailTakenChange} />
 
             <div className="grid grid-cols-2 gap-3">
                 <div>

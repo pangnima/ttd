@@ -3,19 +3,19 @@
 import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
+import { NameField } from '@/components/auth/name-field'
 import { NicknameField } from '@/components/auth/nickname-field'
 import { PhoneField } from '@/components/auth/phone-field'
 import { SignupAccountSection } from '@/components/auth/signup-account-section'
 import { SignupTennisSection } from '@/components/auth/signup-tennis-section'
 import { signupAction } from '@/lib/actions/auth'
-import { NAME_MAX_LEN } from '@/lib/profile/signup-fields'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function SignupForm() {
     const [state, formAction, isPending] = useActionState(signupAction, null)
-    // 이름은 controlled — 서버 에러로 돌아오면 React 19의 form action이 폼을 리셋한다.
-    const [name, setName] = useState('')
+    // 제출을 잠그는 조건은 **화면만 보고는 알 수 없는 것**뿐이다(중복·불일치).
+    // 형식 오류는 필드가 그 자리에서 말하고 서버가 최종 판정한다.
     const [pwMismatch, setPwMismatch] = useState(false)
+    const [emailTaken, setEmailTaken] = useState(false)
     const [nicknameTaken, setNicknameTaken] = useState(false)
 
     return (
@@ -26,21 +26,16 @@ export function SignupForm() {
             <div className="h-px bg-border" />
 
             {/* ── 계정 (이메일 = 로그인 아이디) ── */}
-            <SignupAccountSection onMismatchChange={setPwMismatch} />
+            <SignupAccountSection
+                onMismatchChange={setPwMismatch}
+                onEmailTakenChange={setEmailTaken}
+            />
 
             <div className="h-px bg-border" />
 
             {/* ── 프로필 ── */}
             <div className="grid grid-cols-2 gap-3 items-start">
-                <div>
-                    <label htmlFor="name" className={labelCls}>이름 *</label>
-                    <input
-                        id="name" name="name" placeholder="실명" required
-                        maxLength={NAME_MAX_LEN} autoComplete="name"
-                        value={name} onChange={(e) => setName(e.target.value)}
-                        className={inputCls}
-                    />
-                </div>
+                <NameField />
                 <NicknameField onTakenChange={setNicknameTaken} />
             </div>
 
@@ -65,7 +60,7 @@ export function SignupForm() {
 
             <Button
                 type="submit"
-                disabled={isPending || pwMismatch || nicknameTaken}
+                disabled={isPending || pwMismatch || emailTaken || nicknameTaken}
                 className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '가입 중...' : '회원가입'}

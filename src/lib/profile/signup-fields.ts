@@ -9,11 +9,19 @@
 /** users_name_check(0079)와 동일 — 앞뒤 공백을 뺀 길이 */
 export const NAME_MAX_LEN = 20
 
-/** 실명 검증. 문제가 있으면 화면 문구를, 없으면 null을 돌려준다(`validateNickname`과 같은 결). */
+/**
+ * 실명 검증. 문제가 있으면 화면 문구를, 없으면 null을 돌려준다(`validateNickname`과 같은 결).
+ *
+ * ⚠ 숫자 금지는 **앱에만 있다.** DB CHECK를 함께 걸려다 되돌렸다 — 0081 주석 참고:
+ *    `not valid`도 기존 행의 UPDATE는 검사하는데, 이름에 숫자가 든 개발·E2E 계정 52건이
+ *    프로필 설정에서 닉네임만 바꿔도 저장에 실패하게 된다.
+ *    이름을 쓰는 경로가 가입과 탈퇴 익명화 둘뿐이고 가입 후 변경 불가라 앱 가드로 실질 방어는 된다.
+ */
 export function validateName(value: string | null | undefined): string | null {
     const name = (value ?? '').trim()
     if (name.length === 0) return '이름을 입력해 주세요.'
     if (name.length > NAME_MAX_LEN) return `이름은 ${NAME_MAX_LEN}자 이하여야 합니다.`
+    if (/[0-9]/.test(name)) return '이름에는 숫자를 넣을 수 없습니다.'
     return null
 }
 

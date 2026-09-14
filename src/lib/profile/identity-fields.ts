@@ -7,7 +7,7 @@
  * 여기서 유일성은 보지 않는다 — 순수 함수라 DB를 모른다. 유일성의 권위는
  * 0079의 `users_nickname_unique_idx`이고, 화면·서버의 사전 확인은 0080의 `is_nickname_taken`이다.
  */
-import { isValidMobilePhone, normalizePhone, PHONE_INVALID_MESSAGE } from '@/lib/format/phone'
+import { isBlankPhone, isValidMobilePhone, normalizePhone, PHONE_INVALID_MESSAGE } from '@/lib/format/phone'
 import { normalizeNickname, validateNickname } from '@/lib/profile/nickname'
 import { validateName } from '@/lib/profile/signup-fields'
 
@@ -39,7 +39,9 @@ const asText = (v: FormDataEntryValue | string | null | undefined): string =>
 export function checkIdentityFields(input: IdentityInput): IdentityCheck {
     const name = asText(input.name).trim()
     const nickname = normalizeNickname(asText(input.nickname))
-    const phone = normalizePhone(asText(input.phone))
+    // 폼이 '010-'을 미리 채우므로 손대지 않은 칸에도 값이 있다 — 그건 미입력으로 본다.
+    const rawPhone = asText(input.phone)
+    const phone = isBlankPhone(rawPhone) ? '' : normalizePhone(rawPhone)
 
     if (input.name !== undefined) {
         const nameError = validateName(name)

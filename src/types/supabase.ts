@@ -1420,6 +1420,7 @@ export type Database = {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_email_taken: { Args: { p_email: string }; Returns: boolean }
       is_nickname_taken: {
         Args: { p_exclude_user_id?: string; p_nickname: string }
         Returns: boolean

@@ -10,6 +10,7 @@ import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 import { checkIdentityFields } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { EMAIL_TAKEN_MESSAGE, normalizeEmail } from '@/lib/auth/email'
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -98,15 +99,23 @@ export async function signupAction(
 
     // 닉네임 유일성의 권위는 users_nickname_unique_idx(0079)지만, 인덱스에서 걸리면 트리거 롤백이라
     // 메시지가 불투명하다. 그래서 여기서 한 번 더 묻는다 — 화면 검사와 같은 RPC(0080)를 본다.
-    const { data: taken } = await supabase.rpc('is_nickname_taken', {
+    const { data: nicknameTaken } = await supabase.rpc('is_nickname_taken', {
         p_nickname: identity.values.nickname,
     })
-    if (taken) return { error: NICKNAME_TAKEN_MESSAGE }
+    if (nicknameTaken) return { error: NICKNAME_TAKEN_MESSAGE }
+
+    // 이메일도 같은 방식으로 먼저 본다(0081). 지금은 signUp이 'User already registered'를 주지만,
+    // **이메일 확인을 켜는 순간 Supabase가 열거 방지로 성공을 가장해** 그 메시지가 사라진다.
+    // 화면 검사와 같은 RPC를 여기서도 보면 그 전환에 흔들리지 않는다.
+    const { data: emailTaken } = await supabase.rpc('is_email_taken', {
+        p_email: normalizeEmail(email),
+    })
+    if (emailTaken) return { error: EMAIL_TAKEN_MESSAGE }
 
     // options.data는 Supabase Auth metadata로 전달되며,
     // handle_new_user DB 트리거가 이 값을 읽어 public.users row를 자동 생성함.
     const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizeEmail(email),
         password,
         options: {
             data: {

@@ -31,6 +31,22 @@ export function formatPhoneNumber(value: string): string {
     return `${digits.slice(0, 3)}-${digits.slice(3, 3 + midLen)}-${digits.slice(3 + midLen)}`
 }
 
+/** 폼이 미리 채워 두는 접두어 — 휴대폰만 받으므로 첫 세 자리는 물을 것이 없다. */
+export const PHONE_PREFIX = '010-'
+
+/**
+ * 입력하지 않은 것으로 볼 값인가.
+ *
+ * 폼이 `010-`을 미리 채워 두므로 **손대지 않은 칸에도 숫자 세 자리가 들어 있다.**
+ * 그것을 "입력했다"로 보면 연락처를 적지 않은 사람이 형식 오류에 막힌다 —
+ * 선택 입력이라는 약속이 깨진다. 그래서 접두어만 남은 값도 빈 값으로 친다.
+ * (숫자 세 자리짜리 휴대폰 번호는 없으므로 진짜 입력을 잘못 삼킬 일은 없다.)
+ */
+export function isBlankPhone(value: string | null | undefined): boolean {
+    const digits = (value ?? '').replace(/\D/g, '')
+    return digits.length === 0 || digits === '010'
+}
+
 /** 저장·비교용 정규형. 빈 값·null은 빈 문자열(서버에서 null로 바꾸는 경계 값). */
 export function normalizePhone(value: string | null | undefined): string {
     if (!value) return ''

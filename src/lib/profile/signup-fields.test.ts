@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+    NAME_MAX_LEN,
+    validateName,
     resolveRacketBrand,
     splitRacketBrand,
     normalizeRacketModel,
@@ -92,5 +94,21 @@ describe('splitRacketBrand / normalizeRacketModel / formatRacket', () => {
         expect(formatRacket('윌슨', null)).toBe('윌슨')
         expect(formatRacket(null, '퓨어 에어로')).toBe('퓨어 에어로')
         expect(formatRacket(null, null)).toBe('미입력')
+    })
+})
+
+describe('validateName', () => {
+    it.each([['홍길동'], ['김 하나'], ['Lee Minsu'], ['가'.repeat(NAME_MAX_LEN)]])('%s 허용', (input) => {
+        expect(validateName(input)).toBeNull()
+    })
+
+    it.each([
+        ['', '빈 값'],
+        ['   ', '공백만'],
+        ['남자13', '숫자 포함'],
+        ['홍길동2', '끝에 숫자'],
+        ['가'.repeat(NAME_MAX_LEN + 1), '상한 초과'],
+    ])('%s 거부 (%s)', (input) => {
+        expect(validateName(input)).not.toBeNull()
     })
 })

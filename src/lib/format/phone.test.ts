@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPhoneNumber, normalizePhone, isValidMobilePhone } from './phone'
+import { formatPhoneNumber, normalizePhone, isValidMobilePhone, isBlankPhone, PHONE_PREFIX } from './phone'
 
 describe('formatPhoneNumber', () => {
     it.each([
@@ -58,5 +58,18 @@ describe('isValidMobilePhone', () => {
         ['', '빈 값'],
     ])('%s 거부 (%s)', (input) => {
         expect(isValidMobilePhone(input)).toBe(false)
+    })
+})
+
+describe('isBlankPhone', () => {
+    it.each([[''], [null], [undefined], [PHONE_PREFIX], ['010'], ['010-']])(
+        '접두어만 남은 값은 미입력으로 본다 (%s)',
+        (input) => {
+            expect(isBlankPhone(input)).toBe(true)
+        }
+    )
+
+    it.each([['010-1'], ['010-1234-5678'], ['011-123-4567']])('%s 는 입력된 값', (input) => {
+        expect(isBlankPhone(input)).toBe(false)
     })
 })
