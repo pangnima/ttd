@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { CARD_BASE } from '@/lib/dashboard/tokens'
 import { GUIDE_SCREEN_SECTIONS, guideAnchorHref, type GuideScreenId } from '@/lib/guide/sections'
 import { cn } from '@/lib/utils'
+import { GuideText } from '@/components/guide/guide-text'
 
 type Props = {
     id: GuideScreenId
@@ -24,11 +25,11 @@ export function PageGuide({ id, open = false }: Props) {
         <details open={open} className={cn(CARD_BASE, 'px-4 py-3')}>
             <summary className="cursor-pointer text-body2 font-medium text-foreground break-keep">
                 이 화면 사용법
-                <span className="font-normal text-muted-foreground"> — {section.summary}</span>
+                <span className="font-normal text-muted-foreground"> — <GuideText text={section.summary} /></span>
             </summary>
             <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-body2 text-muted-foreground break-keep">
                 {section.steps.map((step, i) => (
-                    <li key={i}>{step}</li>
+                    <li key={i}><GuideText text={step} /></li>
                 ))}
             </ol>
             <Link

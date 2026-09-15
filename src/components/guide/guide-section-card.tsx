@@ -6,6 +6,7 @@ import {
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import type { GuideSection, GuideSectionId } from '@/lib/guide/sections'
 import { cn } from '@/lib/utils'
+import { GuideText } from '@/components/guide/guide-text'
 
 /** 화면 셋은 사이드바 메뉴(nav-items)와 같은 아이콘 — 가이드가 말하는 화면이 곧 메뉴의 화면이다 */
 const GUIDE_ICONS: Record<GuideSectionId, LucideIcon> = {
@@ -32,14 +33,14 @@ export function GuideSectionCard({ section }: { section: GuideSection }) {
                 </span>
                 <h2 className={TYPO.h2}>{section.title}</h2>
             </div>
-            <p className={cn(TYPO.bodyMuted, 'break-keep')}>{section.summary}</p>
+            <p className={cn(TYPO.bodyMuted, 'break-keep')}><GuideText text={section.summary} /></p>
             <ol className="mt-4 space-y-2.5">
                 {section.steps.map((step, i) => (
                     <li key={i} className="flex gap-3 text-body text-foreground">
                         <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-caption font-medium text-muted-foreground tabular-nums">
                             {i + 1}
                         </span>
-                        <span className="break-keep">{step}</span>
+                        <span className="break-keep"><GuideText text={step} /></span>
                     </li>
                 ))}
             </ol>

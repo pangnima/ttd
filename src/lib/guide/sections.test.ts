@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GUIDE_SCREEN_SECTIONS, GUIDE_SECTIONS, guideAnchorHref, type GuideScreenId } from './sections'
 import { myMatchNavItems } from '@/lib/nav-items'
+import { stripEmphasis } from './emphasis'
 import { ROOM_STAGE_LABEL } from '@/lib/match-rooms/room-stage'
 
 /** 동결·철거된 경로 — 가이드가 여기로 보내면 「눌러도 갈 곳이 없는 링크」가 된다 */
@@ -37,10 +38,16 @@ describe('GUIDE_SECTIONS', () => {
         }
     })
 
+    it('괄호 표기(「」·[ ])를 쓰지 않는다 — 강조는 **…** 하나로, 그리는 쪽이 굵기·색으로 드러낸다', () => {
+        for (const s of GUIDE_SECTIONS) {
+            expect(allText(s)).not.toMatch(/[「」\[\]]/)
+        }
+    })
+
     it('단계 섹션이 룸 배너의 다섯 단계를 전부 말한다', () => {
         const stages = GUIDE_SECTIONS.find((s) => s.id === 'stages')!
         for (const label of Object.values(ROOM_STAGE_LABEL)) {
-            expect(stages.steps.some((step) => step.startsWith(`${label} — `))).toBe(true)
+            expect(stages.steps.map(stripEmphasis).some((step) => step.startsWith(`${label} — `))).toBe(true)
         }
     })
 
