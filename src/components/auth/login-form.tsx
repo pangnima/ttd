@@ -39,13 +39,11 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
                 <div>
                     <div className="flex items-center justify-between">
                         <label htmlFor="password" className={labelCls}>비밀번호</label>
-                        <Link
-                            href="/forgot-password"
-                            tabIndex={-1}
-                            className="mb-1.5 text-caption text-muted-foreground hover:text-foreground"
-                        >
-                            비밀번호 찾기
-                        </Link>
+                        <span className="mb-1.5 text-caption text-muted-foreground">
+                            <Link href="/find-id" tabIndex={-1} className="hover:text-foreground">아이디 찾기</Link>
+                            {' · '}
+                            <Link href="/forgot-password" tabIndex={-1} className="hover:text-foreground">비밀번호 찾기</Link>
+                        </span>
                     </div>
                     <div className="relative">
                         <input

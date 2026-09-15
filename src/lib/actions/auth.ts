@@ -14,6 +14,7 @@ import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 import { EMAIL_TAKEN_MESSAGE, looksLikeEmail, normalizeEmail } from '@/lib/auth/email'
 import { validatePassword, WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
 import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
+import { parseFindIdResult, type FindIdResult } from '@/lib/auth/find-id'
 
 /**
  * 로그인 칸의 값을 signInWithPassword가 받을 이메일로 바꾼다.
@@ -260,14 +261,42 @@ export async function deleteAccountAction(): Promise<{ error: string } | null> {
     redirect('/login')
 }
 
-// 비밀번호 재설정 메일 요청.
-// 이메일 존재 여부를 노출하지 않기 위해 성공/실패와 무관하게 동일한 안내 결과를 반환한다.
+export type FindIdActionState = { error?: string; result?: FindIdResult }
+
+/**
+ * 아이디 찾기(0086) — 이름 + 이메일이 맞으면 **마스킹된** 아이디나 계정 종류를 돌려준다.
+ * 마스킹은 RPC 안에서 끝나므로 서버에도 원문이 오지 않는다. 메일을 보내지 않는 이유는 0086 머리말.
+ * 이름은 `validateName`(숫자 금지)을 보지 않는다 — 이름에 숫자가 있는 기존 계정도 찾아야 한다.
+ */
+export async function findLoginIdAction(
+    _prevState: FindIdActionState | null,
+    formData: FormData
+): Promise<FindIdActionState> {
+    const name = ((formData.get('name') as string | null) ?? '').trim()
+    const email = normalizeEmail(formData.get('email') as string | null)
+    if (!name) return { error: '이름을 입력해 주세요.' }
+    if (!looksLikeEmail(email)) return { error: '이메일 형식이 올바르지 않습니다.' }
+
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('find_login_id', { p_name: name, p_email: email })
+    if (error) return { error: mapAuthError(null) }
+    return { result: parseFindIdResult(data) }
+}
+
+// 비밀번호 재설정 메일 요청 — 「아이디 또는 이메일」 한 칸(Week 61, 로그인 칸과 같은 해석).
+// 존재 여부를 노출하지 않기 위해 성공/실패·아이디 미존재와 무관하게 동일한 안내 결과를 반환한다.
+// ⚠ 메일이 실제로 가는지는 SMTP에 달려 있다 — Supabase 기본 SMTP는 조직 팀원 주소에만 보낸다(CLAUDE.md 백로그).
 export async function requestPasswordResetAction(
     _prevState: { error?: string; success?: boolean } | null,
     formData: FormData
 ): Promise<{ error?: string; success?: boolean }> {
-    const email = (formData.get('email') as string)?.trim()
-    if (!email) return { error: '이메일을 입력해 주세요.' }
+    const identifier = ((formData.get('identifier') as string | null) ?? '').trim()
+    if (!identifier) return { error: '아이디 또는 이메일을 입력해 주세요.' }
+
+    const supabase = await createClient()
+    const email = await resolveLoginEmail(supabase, identifier)
+    // 아이디가 없거나 형식이 틀려도 같은 화면 — "없는 아이디"를 말하면 열거가 된다
+    if (!email) return { success: true }
 
     // redirectTo 베이스 URL: 환경변수 우선, 없으면 요청 origin 헤더 사용
     const headerStore = await headers()
@@ -276,7 +305,6 @@ export async function requestPasswordResetAction(
         headerStore.get('origin') ||
         `https://${headerStore.get('host')}`
 
-    const supabase = await createClient()
     await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${origin}/auth/confirm?next=/reset-password`,
     })

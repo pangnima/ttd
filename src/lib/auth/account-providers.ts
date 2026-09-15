@@ -50,8 +50,13 @@ export function isSocialOnlyAccount(signals: ProviderSignals): boolean {
  */
 export function socialProviderLabel(signals: ProviderSignals): string | null {
     for (const provider of authProviders(signals)) {
-        const label = PROVIDER_LABELS[provider]
+        const label = providerLabel(provider)
         if (label) return label
     }
     return null
+}
+
+/** provider 식별자 하나의 표시명 — 아이디 찾기(0086)처럼 신호 없이 이름만 있을 때 */
+export function providerLabel(provider: string): string | null {
+    return PROVIDER_LABELS[provider] ?? null
 }
