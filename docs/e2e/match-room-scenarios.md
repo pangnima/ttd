@@ -9,14 +9,15 @@
 
 | 축 | 값 | 시나리오 |
 |---|---|---|
-| 방식 | 단식 / 남자 복식 / 혼합 복식 | S1·S2·S3 / S4·S5 / S4b |
+| 방식 | 단식 / 남자 복식 / 혼합 복식 / 단식 4명 2면 | S1·S2·S3 / S4·S5 / S4b / S11 |
 | 참가 경로 | 만들기 초대→수락 / 룸 안 초대 / 비밀번호 입장 / 게스트 등록 / 강퇴→재초대 / 나가기 | S1 / S6 / S7 / S3 / S6 / S6 |
 | 게임 생성 | 자동 대진표(프리셋·경기 수·면 수·편집·다시 뽑기) / 대진 편집 / 게임 추가(회원·비회원·모집 중) / 로테이션 빌더 / 게임 입력 종료 | S3·S4 / S3·S4 / S1·S10 / S5 / S5 |
-| 결과 협상 | 제안→확인 / 제안→이의→재제안→확인 / 제안자 수정 / 정정(reopen) / 자유 기록 즉시 확정 / 좌석 셋 만장일치 | S1 / S2 / S2 / S2 / S3·S9 / S4 |
-| 호스트 관리 | 비밀번호 변경 / 내보내기 / 재초대 / 게스트 제거 / 리스트에서 내리기 | S7 / S6 / S6 / S3 / S10 |
+| 결과 협상 | 제안→확인 / 제안→이의→재제안→확인 / 제안자 수정 / 정정(reopen) / 자유 기록 즉시 확정 / 좌석 셋 만장일치 / **상태 전이 전수·동시성·확인한 좌석의 이의·탈퇴자 분모** | S1 / S2 / S2 / S2 / S3·S9 / S4 / **S14** |
+| 호스트 관리 | 비밀번호 변경 / 내보내기 / 재초대 / 게스트 제거 / 리스트에서 내리기 / **닫기·다시 열기** | S7 / S6 / S6 / S3 / S10 / **S12** |
 | 목록·뱃지 | 진행 중·마무리됨 / 초대 섹션 / 내 차례 필 / 뱃지 항등식 / 날짜 축 / 레거시 URL | S8 |
-| 직접 기록 | 비회원 확정 / 회원 차단 / 수정·삭제 / 결과 입력 대기 | S9 |
-| 권한·경계 | 비참가자·강퇴자·정산 후·중복·길이·잠금 | S10 |
+| 직접 기록 | 비회원 확정 / **회원이 끼면 비노출 방(0082)** / 수정·삭제 / 결과 입력 대기 | S9 / **S13** / S9 / S9 (CRUD 전수는 `record-scenarios.md` R1) |
+| 권한·경계 | 비참가자·강퇴자·정산 후·중복·길이·잠금(SQL 축) / **화면 축 — 행위자별 버튼 부재 ↔ RPC 거절** | S10 / **S15** |
+| 비노출 방 | 리스트 제외·비밀번호 없음·`room_not_listed`·초대로만 진입·`비공개` 칩 | **S13** |
 
 ---
 
@@ -38,19 +39,19 @@
 | 1.1 | A | `/match-rooms/new` | 경기 방식 `단식` 기본, 경기 시간 `2시간`, 코트 면 수 `1면`, 요약 줄 `시각을 고르면 종료 시각이 계산됩니다` | `use-match-room-form-state` 기본값 | B |
 | 1.2 | A | 비밀번호에 `abc` 입력 | 실시간 문구 `비밀번호는 4~20자로 입력해주세요.`, [매칭 만들기] 비활성 | `validateRoomPassword` | B |
 | 1.3 | A | 비밀번호 `a b c d` | `비밀번호에는 공백을 넣을 수 없습니다.` | 동상 | B |
-| 1.4 | A | 날짜 오늘, 시각 `10:00`, 표면 아무거나, 코트명 `E2E-S1`, 비밀번호 `1234`, 상대 초대에서 `남자02` 선택, 메모 `S1` | 요약 줄 `10:00~12:00 (2시간) · 코트 1면 · 참가 예정 2명이면 1인당 N경기 권장`, 초대 칩 `남자02` | `recommendGames`(단식 2명·30분·2h·1면) | B |
+| 1.4 | A | 날짜 오늘, 시각 `10시`(셀렉트 라벨은 `10시` — base-ui Select, 키보드로 고른다), 표면 아무거나, 코트명 `E2E-S1`, 비밀번호 `1234`, 상대 초대에서 `남자02` 선택, 메모 `S1` | 요약 줄 `10:00~12:00 (2시간) · 코트 1면 · 참가 예정 2명이면 1인당 N경기 권장`, 초대 칩 `남자02` | `recommendGames`(단식 2명·30분·2h·1면) | B |
 | 1.5 | A | [매칭 만들기] | `/match-rooms/<id>`로 이동. 헤더 eyebrow `단식 · 하드`(방식 라벨 — 출처 어휘 아님, F-1), 제목에 `E2E-S1 · 단식`, 단계 칩 `모집 중`, 명단에 `남자01 호스트`·`남자02 초대 대기`, 게임 섹션 빈 상태 `게임이 없습니다. 함께 친 참가자로 게임을 추가하세요.` | SQL: `match_rooms.court_name='E2E-S1'`, `match_room_members` host/joined + player/invited, `match_room_secrets` 1행 | B+S |
 | 1.6 | A | 헤더 액션 | [비밀번호 변경]·[매칭 리스트에서 내리기] 있음, [게임 입력 종료] **없음**(단식) | `canCloseRotation=false` | B |
 | 1.7 | A | 게임 섹션 헤더 | [게임 추가] 있음(direct는 항상), [자동 대진표] 있음(회원 1명이라도 후보 >0) | `canViewerAddRoomGame`·`canCreateRoomLineup(…,2,1)` | B |
 | 1.8 | A | `/me/match-rooms` | `진행 중` 탭에 카드(`E2E-S1`, 칩 `호스트`), 뱃지 없음(내 차례 없음) | `viewerRoomTurn`=null | B |
 | 1.9 | B | 로그인 → 사이드바 | 뱃지 **1**(초대) | `roomBadgeTotal(turns, 1)` | B |
-| 1.10 | B | `/me/match-rooms` | 최상단 `나를 초대한 매칭` 카드 `나를 상대로 입력한 경기 · 9월 11일 10:00~12:00 · E2E-S1 · 단식`(상세·목록과 같은 구간 표기, F-3), 하단 `수락하면 매칭 참가자로 등록됩니다. 매칭 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다.`(F-2), [참가 수락]/[거절] | `roomQueue.invites` | B |
+| 1.10 | B | `/me/match-rooms` | 최상단 `나를 초대한 매칭` 카드 `나를 참가자로 입력한 경기 · 9월 15일 10:00~12:00 · E2E-S1 · 단식`(상세·목록과 같은 구간 표기, F-3), 하단 `수락하면 매칭 참가자로 등록됩니다. 매칭 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다.`(F-2), [참가 수락]/[거절] | `roomQueue.invites` | B |
 | 1.11 | B | 상세 URL 직접 접근 | 상세가 보인다(초대자는 게이트 없음) + `RoomInviteBanner` `이 경기에 초대되었습니다. 참가하시겠어요?` [참가 수락]/[거절]. 턴 배너·[게임 추가]·[회원 초대] **없음** | invited는 RPC 통과, `isMember=false` | B |
 | 1.12 | B | [참가 수락] | 배너 사라짐, 명단 `남자02 참가`, [게임 추가]·[회원 초대]·[비회원 등록] 등장, 하단 [매칭 나가기] 등장. 단계 칩 여전히 `모집 중`(게임 0) | `respond_room_invite` → joined; SQL `status='joined'` | B+S |
 | 1.13 | B | 뱃지 | 0 | — | B |
 | 1.14 | A | [게임 추가] → 상대 자동완성에 `남자02` 선택 → [게임 저장] | 게임 행 1개: 팀 줄 `나` / `남자02`, 배지 `결과 미입력`, 액션 [결과 입력]. 단계 칩 `진행 중`, 배너 `경기 결과를 입력해주세요` | `create_room_game` → `match_requests.status='accepted'`, `personal_matches` 관점 2행(`source_type='confirmation'`), `match_result_negotiations.result_status='none'` | B+S |
 | 1.15 | B | 상세 | 같은 게임 행이 `나` / `남자01`로 보임(당사자 전원 '나', Week 46), [결과 입력] 있음 | `buildRoomGameTeams` | B |
-| 1.16 | B | [결과 입력] → 스코어 `6:3` 한 게임 → [확인 요청] | 행 배지는 **하나**(`결과 확인 대기` — 액션 영역의 `참가자 확인 대기`는 룸 행에서 숨긴다, F-4), 진행도 `1/2명 확인`은 남는다, 배너 `상대의 응답을 기다리는 중입니다` | `propose_match_result` → `result_status='proposed'`, `confirmed_by=[B]` | B+S |
+| 1.16 | B | [결과 입력] → 스코어 `6:3` 한 게임 → [확인 요청] | 행 배지는 **하나**(`결과 확인 대기` — 액션 영역의 `참가자 확인 대기`는 룸 행에서 숨긴다, F-4), 단식은 진행 배지가 없다(`formatConfirmProgress`는 좌석 2면 빈 문자열), `결과를 입력한 사람: 나`·`확인 대기: 남자01`, 배너 `상대의 응답을 기다리는 중입니다` | `propose_match_result` → `result_status='proposed'`, `confirmed_by=[B]` | B+S |
 | 1.17 | A | 상세 | 배지 `결과 확인 대기`, 버튼 [결과 확인], 배너 `제안된 결과를 확인해주세요`, 스코어가 **A 관점으로 반전**(`3:6`) | `canRespondToProposal` true, `invert_set_scores` | B |
 | 1.18 | A | `/me/match-rooms` + 뱃지 | 카드 필 `결과 확인`, 뱃지 1 | `ROOM_TURN_PILL.confirmResult` | B |
 | 1.19 | A | [결과 확인] → 다이얼로그 `경기 결과 확인` → [결과 확인] | 행에 `패 3-6`(A) 결과 배지, 단계 칩 `종료`, `RoomSettledNotice`, **[게임 입력]·[게임 추가]·[자동 대진표]·[회원 초대]·[비회원 등록] 전부 사라짐**(0077 — 남는 것은 호스트의 [비밀번호 변경]·[매칭 리스트에서 내리기]와 [결과 정정]뿐, F-5) | `confirm_match_result` → `settle` → `result_status='confirmed'`, `is_settled=true`, 양쪽 `personal_matches.set_scores` 채워짐 | B+S |
@@ -109,7 +110,7 @@
 | 4.1 | A | 방 `E2E-S4` 복식·종목 `남자 복식`·`10:00`·2시간·**2면**, 초대 B·C·D | 힌트 요약 `… 코트 2면 · 참가 예정 4명이면 1인당 N경기 권장`(실효 면 수 1 → `1면 기준`) | `effectiveCourtCount(4, doubles, 2)=1` | B |
 | 4.2 | B·C·D | 각자 [참가 수락] | 명단 4명 참가. 단계 칩 `모집 중`, 게임 빈 상태 `게임이 아직 없습니다. 위 [게임 입력]에서 … 경기 전이라면 [자동 대진표]로 미리 짤 수도 있습니다.`(호스트) | `roomGamesEmptyMessage(detail, true)` | B(각 1회) |
 | 4.3 | D | 상세 헤더 | [게임 입력] 있음, [게임 추가] **없음**(미확정 로테이션), [자동 대진표] 없음(호스트 아님) | `canAddRoomGame` false, `lineupCandidates` 호스트만 | B |
-| 4.4 | A | [자동 대진표] 1인당 `2경기`, 밸런스 `균형` | 미리보기 2게임(4명·2경기 → 2게임), 경고 `참가자 4명으로는 한 번에 1면만 돌릴 수 있습니다.`, 라운드 헤더 `1라운드 · 10:00`·`2라운드 · 10:30`, 쉼 없음 | `buildRoomLineup courtCount=2`, `roundStartLabels` | B |
+| 4.4 | A | [자동 대진표] 1인당 `2경기`, 밸런스 `균형` | 미리보기 2게임(4명·2경기 → 2게임), 경고 `참가자 4명으로는 한 번에 1면만 돌릴 수 있습니다.`, **실효 1면이라 라운드 헤더 없이** `게임 1· 10:00`·`게임 2· 10:30`, 쉼 없음 | `buildRoomLineup courtCount=2`, `roundStartLabels` | B |
 | 4.5 | A | [2경기 저장] | 게임 행 2개, 각 배지 `결과 미입력`, 팀 줄에 `나` 포함(A가 뛰는 게임) | `match_requests` 2행 origin lineup accepted, 관점 행 회원 4×2, negotiations none | B+S |
 | 4.6 | A | 게임 1 [결과 입력] `6:4` → [확인 요청] | A 배지 `참가자 확인 대기` + `1/3명 확인` | `confirmed_by=[A]`, 좌석 회원 3 | B+S |
 | 4.7 | B | 상세 | 게임 1: [결과 확인]·[이의 제기] 다이얼로그, 스코어 관점(파트너면 같은 값, 상대팀이면 반전). 다이얼로그 첫 줄은 **제안자 이름**(`남자01님이 제안한 결과 (내 관점)` — 상대팀 이름이 아니다, F-9), 행의 좌석 명단에 뷰어 본인이 실명으로 다시 나오지 않는다(`확인 대기: 나 · …`, F-10) | `swap_partner`/`invert` | B |
@@ -119,8 +120,8 @@
 | 4.11 | D | [결과 확인] | 게임 1 확정, 게임 2 남아 단계 `진행 중` | `settle_match_result` true | B+S |
 | 4.12 | A | 명단 `남자02` 행 | [내보내기] **없음**(배정된 게임 있음). SQL로 `kick_room_member(B)` → `member_has_games` | `canKickRoomMember hasGames` ↔ RPC 가드 | B+S |
 | 4.13 | A | 게임 2 제안 → B·C·D 확인(SQL 보조) | 게임은 전부 확정되지만 **방은 아직 미정산**(미확정 로테이션 세션이 남아 있다) — 단계 `진행 중`. **호스트에게만** 배너 `모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다` · 카드 필 `게임 입력 종료` · 뱃지 1, 풀 회원은 필 없음 · 뱃지 0(0077, F-11) | `is_settled` = 대표 게임 확정 ∧ 미확정 세션 없음 | S |
-| 4.15 | A | [게임 입력 종료](confirm 수락) | 세션 삭제 → 정산 `종료`, 호스트 뱃지도 0(`closeRotation` 차례가 사라진다) | `close_rotation_room` → `recompute_match_room_settled` | B+S |
 | 4.14 | — | 각자 `/me/personal-matches` | 게임 2개 승·패 관점 맞음 | — | B(표본 2명) |
+| 4.15 | A | [게임 입력 종료](confirm 수락) | 세션 삭제 → 정산 `종료`, 호스트 뱃지도 0(`closeRotation` 차례가 사라진다) | `close_rotation_room` → `recompute_match_room_settled` | B+S |
 
 ### S4b 혼합 복식 성별 배치 (A·B 남 · E 여자01 · F 여자02)
 
@@ -141,7 +142,7 @@
 | 11.2 | A | [자동 대진표] | 초기값 `4경기 · 권장`, 총 8경기. 미리보기가 **라운드로 묶임**: `1라운드 · 10:00` 아래 `1번 코트`·`2번 코트`, 한 라운드에 같은 사람 없음, 충돌 경고 없음, 4라운드 | `buildRoomLineup courtCount=2`, `groupByRound`, `roundConflictNames` | B |
 | 11.3 | A | 1인당 `2경기` | 4경기·2라운드, 추천 블록(spot) + [권장값으로 맞추기] | — | B |
 | 11.4 | A | 게임 1 [수정] → 상대를 다른 회원으로 → [완료] | 라운드 내 중복이 생기면 라운드 헤더에 경고(`roundConflictNames`), 아니면 정상 | Week 44·0075 | B |
-| 11.5 | A | [4경기 저장] | 게임 목록이 **라운드 헤더**(`1라운드 · 10:00`, `2라운드 · 11:00`)로 묶여 그려지고 행마다 `N번 코트` | `RoomGameRounds` 2면 분기, `derivedSlotMinutes` | B+S |
+| 11.5 | A | [4경기 저장] | 게임 목록이 **라운드 헤더**(`1라운드 · 10:00`, `2라운드 · 10:30` — 30분 슬롯)로 묶여 그려지고 행마다 `N번 코트` | `RoomGameRounds` 2면 분기, `derivedSlotMinutes` | B+S |
 | 11.6 | A | [대진 편집] → 한 자리 교체 → 저장 | 라운드 묶음 유지, id 교체 | `replace_room_lineup` | B+S |
 | 11.7 | A | 게임 1 [결과 입력] 6:4 → 상대 확인 | 확정. 나머지 3게임은 SQL로 제안·확인 | — | B+S |
 | 11.8 | — | 정산 | `종료`(단식 방은 세션이 없어 곧바로) | `is_settled` | S |
@@ -213,8 +214,8 @@
 |---|---|---|---|---|---|
 | 9.1 | A | `/me/personal-matches` → [+ 직접 기록] | `/me/personal-matches/new`, 설명 `비회원과 친 경기를 내 기록에만 남깁니다…` | — | B |
 | 9.2 | A | 단식, 상대 이름 `E2E상대`(비회원 입력)·손잡이·NTRP, 시각·표면, 메모 `E2E-S9` → [경기 저장] | 폼에는 **스코어 칸이 없다**(안내: `게임 스코어·승패는 저장 후 카드의 결과 입력에서 등록합니다`). 저장 후 `/me/personal-matches` 상단 `결과 입력 대기` 섹션에 카드 + [결과 입력] | `personal_matches` direct `set_scores=[]` | B+S |
-| 9.3 | A | 새 기록: 상대 자동완성에서 `남자02` 선택 | `MemberNeedsRoomNotice` `회원과 함께 친 경기는 매칭으로 기록합니다…`, 저장 비활성 | `memberNeedsRoom` | B |
-| 9.4 | A | 서버 축은 브라우저로 닿을 수 없다(폼이 먼저 막는다) — `lib/actions/personal-matches.ts`의 `requiresRoom` 호출을 코드로 확인 | `DIRECT_RECORD_MEMBER_ERROR` 반환 경로 존재 | 코드 확인 | 코드 |
+| 9.3 | A | 새 기록: 상대 자동완성에서 `남자02` 선택 | **회원을 막지 않는다(0082)** — 안내 `회원과 함께 친 경기는 매칭으로 기록합니다. 저장하면 매칭 리스트에 뜨지 않는 비공개 매칭이 만들어지고 회원 1명에게 초대가 갑니다. …`, 폼에 `경기 시간 *`·`코트 면 수 *`가 나타나고 저장 버튼 라벨이 [매칭 만들고 초대]. 실제 저장·검증은 **S13** | `memberInDirect ∧ roomAutoCreate`, `createDirectRecordRoomAction` | B |
+| 9.4 | A | 서버 축 — **수정** 화면에서만 회원이 막힌다: 9.2 기록의 [수정]에서 상대를 `남자02`로 바꾸면 `MemberBlockedInEditNotice` + 저장 잠금. 서버 `updatePersonalMatchAction`의 `requiresRoom` → `DIRECT_RECORD_MEMBER_ERROR`는 코드로 확인 | `memberBlockedInEdit` / `lib/actions/personal-matches.ts` `DIRECT_RECORD_MEMBER_ERROR` | B+코드 |
 | 9.5 | A | (9.2와 같음 — 직접 기록은 언제나 스코어 없이 저장된다) | `PendingResultsSection` 필터 `!roomId ∧ enterResult` | — | B |
 | 9.6 | A | 9.2 카드 [결과 입력] `6:2` | 즉시 확정 → 확정 카드 `승 6-2`, [수정]·[삭제], 섹션 사라짐 | `updatePersonalMatchSetsAction` | B+S |
 | 9.7 | A | 로테이션 직접 기록: 복식·풀 비회원 4명 → 저장 | `결과 입력 대기`에 세션 카드 → 빌더로 게임 입력 → 즉시 확정 | 방 밖 세션, 좌석 없음 | B |
@@ -257,11 +258,72 @@
 | 12.11 | A | [다시 열기](confirm) | 칩 `종료`, [매칭 닫기] 복귀, B의 [결과 정정] 복귀 → B가 정정하면 방이 미정산으로 돌아가고 [매칭 닫기]가 사라진다 | `reopen_match_room` → recompute | B |
 | 12.12 | B | SQL `reopen_match_room` | `not_room_host` / 열린 방에 다시 호출 → `room_not_closed` | — | S |
 
+## S13 비노출 방 — 직접 기록에 회원이 끼면 (A 호스트 · B 회원 · C 비참가) — 0082
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 13.1 | A | `/me/personal-matches/new` 단식, 상대 자동완성 `남자02`, 코트명 `E2E-S13`, 시각 `10:00`, 표면 아무거나 | 안내 `회원과 함께 친 경기는 매칭으로 기록합니다. 저장하면 매칭 리스트에 뜨지 않는 비공개 매칭이 만들어지고 회원 1명에게 초대가 갑니다. …`, `경기 시간 *`(기본 2시간)·`코트 면 수 *`(1면) 등장, 버튼 [매칭 만들고 초대] | `roomAutoCreate`, `RoomScheduleFields` | B |
+| 13.2 | A | [매칭 만들고 초대] | `/match-rooms/<id>?notice=direct_room` 착지, 상단 `비공개 매칭을 만들고 초대를 보냈습니다.`, 헤더 배지에 `비공개`, 명단 `남자01 호스트`·`남자02 초대 대기`, 단계 칩 `모집 중` | `createDirectRecordRoomAction` → `create_match_room(p_listed=false)`; SQL `match_rooms.is_listed=false`, `court_name='E2E-S13'`, `match_room_secrets` **0행**, 단식 seed `personal_matches` 삭제됨(0행) | B+S |
+| 13.3 | A | 호스트 액션 | [비밀번호 변경] **없음**, [매칭 삭제](「매칭 리스트에서 내리기」 대신) 있음, [게임 추가]·[회원 초대]·[비회원 등록]·[자동 대진표] 있음 | `isListed=false` 분기 `room-host-actions.tsx:77` | B |
+| 13.4 | A·B | `/match-rooms` 두 탭 | 이 방 카드 **없음**, `진행 중인 경기` 탭 숫자에도 포함되지 않음 | `listedOnly:true`, `fetchOpenRoomCount(listedOnly)` | B |
+| 13.5 | B | 뱃지 1 → `/me/match-rooms` | `나를 초대한 매칭`에 `E2E-S13 · 단식` 카드. [참가 수락] → 명단 `참가`, `진행 중` 탭 카드에 칩 `비공개` | `respond_room_invite`, `match-room-card.tsx:55` | B+S |
+| 13.6 | C | 상세 URL 직접 접근 | `RoomUnlistedNotice` `초대받은 사람만 볼 수 있는 매칭입니다.` + `직접 기록에서 만든 비공개 매칭이라 매칭 리스트에 오르지 않고 비밀번호 입장도 없습니다.` — 비밀번호 입력창 **없음** | `RoomGateView` `!summary.isListed` | B |
+| 13.7 | C | SQL `enter_match_room(room, '1234')` | `room_not_listed`(뒷문 없음) | 0082 가드 | S |
+| 13.8 | A | SQL `update_match_room_password(room, 'abcd')` | `room_not_listed`(upsert 뒷문 차단) → `match_room_secrets` 여전히 0행 | 0082 | S |
+| 13.9 | A | [게임 추가] 상대 `남자02` → 결과 입력 → B 확인 | S1과 같은 협상 흐름이 비노출 방에서도 동작, 정산 `종료` | `is_settled` | B+S |
+| 13.10 | B | (변형) 새 비노출 방 `E2E-S13B`에서 초대 [거절] | 명단에서 사라짐(declined). `/match-rooms`에도 없고 비밀번호도 없어 재진입 경로가 **호스트 재초대뿐** — `inviteExcludedUserIds`가 declined를 항상 제외하면 호스트 [회원 초대]에서도 후보에 없어 **영구 차단**이다. 판정해 findings에 | `respond_room_invite(false)`, `members-view.ts:143` | B+S |
+| 13.11 | A | 복식 변형: 직접 기록 복식(로테이션) 풀에 회원 `남자02` + 비회원 `E2E게스트1`·`E2E게스트2` → [매칭 만들고 초대] | 비노출 로테이션 방, `rotation_sessions` seed 유지(players 빈 풀), 게스트 2명은 `match_room_guests`에 즉시 등록, B 초대 대기 | `add_room_guest` 경로, `?notice=direct_room` | B+S |
+| 13.12 | A | 13.11을 한 번 더 하되 저장 전에 SQL로 같은 이름 게스트를 그 방에… (방이 아직 없어 불가) → 대신 회원 초대 대상에 탈퇴자를 넣을 수 없으므로 **부분 실패는 코드 확인** — `direct-record-room.ts`의 `?notice=invite_failed` 분기와 배너 문구 `매칭은 만들어졌지만 초대에 실패했습니다.` | 부분 실패 경로 | 코드 |
+| 13.13 | — | 정리 SQL | `court_name like 'E2E-%'`가 비노출 방도 잡아 0건 | README | S |
+
+## S14 협상 상태 전이 전수 (단식 A·B / 복식 A·B·C·D · 방관자 E)
+
+> 상태 4(none·proposed·disputed·confirmed) × 동작 4(propose·confirm·dispute·reopen)를 단식·복식에서 전부 밟는다. 각 전이 뒤 **S8 스냅샷**(필·뱃지)을 함께 적는다. 방 `E2E-S14S`(단식, A–B 게임 4개)·`E2E-S14D`(남자 복식, 대진 A+B vs C+D 게임 3개 + E 참가만).
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 14.1 | A | 단식 게임 1: A 제안 6:1 → B 확인 | `none→proposed→confirmed`, 진행 배지 없음(좌석 2는 `formatConfirmProgress` 빈 문자열), 정산 아님(게임 남음) | `confirmed_by=[A]→[A,B]` | B+S |
+| 14.2 | A | 게임 2: A 제안 → A [제안 수정] 6:2 | 여전히 proposed, `confirmed_by=[A]`. B 화면 스코어 갱신 | `normalize_result_confirmations` | B+S |
+| 14.3 | B | 게임 2: B [이의 제기] **사유 없음** → A [다시 입력] 6:3 → B 확인 | `disputed(dispute_count=1, reason null)→proposed→confirmed`, 카드 `ReentryContextBadge`(이의 후 재입력) 표시, 사유 줄 없음 | `hasDisputeHistory` | B+S |
+| 14.4 | B | 게임 3: A 제안 → B 이의(사유 `한 번 더`) → A 재제안 → B 이의(사유 `두 번째`) → A 재제안 → B 확인 | `dispute_count=2`, 마지막 사유 줄 `남자02님 이의 사유: 두 번째`(이력 보존), 확정 | 0061·0062 | B+S |
+| 14.5 | A | 게임 3 확정 후 [결과 정정] 사유 `정정` → **B**가 [다시 입력](이의자가 아닌 좌석도 재입력 가능한지) | reopen → `disputed`, `dispute_count=3`, `set_scores=[]` 양쪽. B 제안 → A 확인 → 확정 | `reopen_match_result`, `isReentryTurn` | B+S |
+| 14.6 | B | 게임 4 **동시성**: A가 [결과 입력] 팝업을 열어 둔 사이 B가 SQL `propose_match_result` 6:4 → A [확인 요청] | 팝업이 닫히지 않고 **B의 제안을 검토하는 모드로 갱신**(`남자02님이 제안한 결과 (내 관점)` + [결과 확인]/[이의 제기]) — 오류 문구 없이 곧바로 확인 차례가 된다(stale → refresh) | `STALE_KEYS`, `use-result-dialog.ts:34` | B+S |
+| 14.7 | B | 게임 4에서 A가 확인한 뒤 B가 SQL `confirm_match_result` 재호출 | `result_not_proposed`(정산 뒤 상태가 confirmed라 proposed 검사에서 먼저 걸린다) | 멱등 가드 | S |
+| 14.8 | A | 단식 방 정산 → `종료` | 게임 4개 전부 confirmed, `is_settled=true` | — | S |
+| 14.9 | A | 복식 게임 1: A 제안 6:0 | A 배지 `참가자 확인 대기` + `1/3명 확인`; B(파트너) 스코어 같음, C·D(상대) 반전 0:6 | `swap_partner`/`invert` | B |
+| 14.10 | B | B 확인 → **B [이의 제기]**(확인한 좌석의 이의, 사유 `파트너 이의`) | 확인 후 `ConfirmedSeatActions`(`확인 완료` + [이의 제기])가 보이고, 이의하면 `disputed`, `disputed_by=[B]`, A 화면 배지 `남자02님 이의`, A에게 `다시 입력` 차례 | `canDisputeProposal`(확인해도 정산 전이면 가능) | B+S |
+| 14.11 | A | 재제안 6:1 → B·C·D 확인(C·D는 SQL) | `2/3→3/3`에서 게임 1 confirmed(방은 게임이 남아 미정산). **D가 확인하기 전 C가 다시 SQL confirm** → `result_already_confirmed_by_seat` | 좌석 만장일치 | B+S |
+| 14.12 | E | 게임 1~3 행(E는 참가자지만 좌석 아님) | 상태 배지만(`결과 미입력`·`결과 확인 대기`·`이의 제기`) — 룸 행은 액션 영역 배지를 그리지 않는다(F-4). 버튼 없음, E 뱃지 0 | `isRoomGameParty` false | B |
+| 14.13 | A | 게임 2: A 제안 → **탈퇴자 분모** — SQL 트랜잭션 안에서 D에 `deleted_at=now()`를 넣고 `request_result_seats`가 3→2로 주는지 확인 → rollback | 분모에서 탈퇴자 제외, `counterpart_deleted`는 상대 **전원** 탈퇴 시에만 | `begin; … rollback;` | S |
+| 14.14 | A | 게임 2·3 정상 확정 → 세션 남아 `진행 중` → A [게임 입력 종료] → `종료` | F-11 회귀 | `closeRotation` | B+S |
+| 14.15 | A | 정산된 복식 방에서 [결과 정정] → B·C·D 재확인 → 정산 복귀 | 복식 reopen 왕복 | — | B+S |
+| 14.16 | — | 각 전이의 S8 스냅샷 표(runs.md에 기록) | 제안 직후: 확인 차례 좌석 뱃지 1(방 1) · 이의 직후: 제안자 1 · 확정 직후: 0 · 방관자 E 항상 0 | `roomBadgeTotal` | B |
+
+## S15 권한 매트릭스 — 화면 축 (S10의 거울)
+
+> S10은 SQL 축(가드 키) 위주였다. 여기서는 **행위자별로 화면에 무엇이 없어야 하는지**를 보고, 없는 버튼마다 RPC 거절 키를 짝지어 「노출 = 가드」를 화면에서 확인한다. 방 `E2E-S15`(단식, A 호스트, B 참가, C 초대 대기, D 비참가).
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 15.1 | B | 참가자 화면의 호스트 액션 바 | [비밀번호 변경]·[매칭 닫기]·[매칭 리스트에서 내리기]·[자동 대진표]·[대진 편집]·[게임 입력 종료] **전부 없음**. 있는 것: [게임 추가]·[회원 초대]·[비회원 등록]·[매칭 나가기]. [+ 매칭 만들기]는 두 목록 화면 **탭 바 위** 테두리 칩(Week 54) | `isHost=false` | B |
+| 15.2 | B | SQL 6종: `update_match_room_password`·`close_match_room`·`create_room_lineup`·`replace_room_lineup`·`close_rotation_room`·`kick_room_member` | `not_host` / `not_room_host` / `not_room_host` / `not_room_host` / `not_room_host` / `not_room_host`; 방 삭제는 RLS 0행 | 노출 ↔ 가드 | S |
+| 15.3 | C | 초대 대기 상태로 상세 | 배너 [참가 수락]/[거절] + 하단 [매칭 나가기](U-7 — 거절과 같은 뜻). [게임 추가]·[회원 초대]·[비회원 등록]·명단 액션 **없음** | `isMember=false` | B |
+| 15.4 | C | SQL `create_room_game`·`invite_room_members`·`add_room_guest` | `not_room_member` ×3 | — | S |
+| 15.5 | D | 비참가 회원의 상세 | 게이트(비밀번호). SQL `create_room_game`·`leave_match_room` → `not_room_member` | — | B+S |
+| 15.6 | A | **정산됐지만 안 닫힌 방**의 호스트 자유 기록(S3 방식으로 게스트 상대 게임 1개를 확정): `/me/personal-matches` 카드 [수정] → 상대명 변경 저장 / [삭제] | 저장·삭제가 **된다** → 방이 미정산(`진행 중`)으로 되돌아가거나 마지막 행이면 방이 지워진다(cleanup 트리거). K-9 잔여 — 의도인지 판정해 F-pre-9 상태 결정 | `personal_matches_update/delete` 정책은 닫힌 방만 뺀다(0083) | B+S |
+| 15.7 | A | 마감 방의 그 카드 | [수정]·[삭제] 없음 + 배지 `마감`; `/edit` URL → 방으로 리다이렉트 | 12.7·12.8 회귀 | B |
+| 15.8 | A | 매칭 만들기에서 회원 검색 1자 / 21명 선택 시도 | 1자 → 후보 없음(2자부터). 20명에서 입력창 사라지고 `한 번에 20명까지 초대할 수 있습니다. 나머지는 룸에서 추가로 부를 수 있습니다.`(회원이 20명 안 되면 SKIP + 사유) | `MIN_QUERY_LENGTH`, `MATCH_ROOM_INVITE_MAX` | B |
+| 15.9 | A | 룸 안 [회원 초대] 검색에서 본인·게스트·이미 참가자 | 후보에 없음 | `inviteExcludedUserIds` | B |
+| 15.10 | 비로그인 | `/match-rooms/new`·`/me/match-rooms`·상세 URL | 전부 `/login?next=`(next 인코딩 보존) | middleware | B |
+
+
 ## 회귀 고정 행 (이력에서 E2E가 잡았던 것)
 
 | 근거 | 시나리오 행 |
 |---|---|
+| Week 53 · 0082 직접 기록에 회원이 끼면 비노출 방 | 9.3·13.1~13.13 |
 | Week 53 · 0083b cleanup 트리거가 닫힌 방을 먼저 지우던 것 | 12.8 |
+| Week 54 · 호스트·매칭 어휘, [+ 매칭 만들기] 탭 바 위 | 1.5·1.12·6.5·12.1·12.4·15.1 |
 | Week 44 · 0075 저장 순서(라운드 중복) | 4.4·4.5 |
 | Week 44 · 팝업 영문 Close 없음 | 3.8(자동 대진표)·3.15(대진 편집) 팝업 하단에 `Close` 없음 |
 | Week 45 · 뱃지 vs 탭 축 | 8.4·8.9 |
