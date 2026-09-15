@@ -486,6 +486,7 @@ delete from auth.users   where id = '<uuid>';
 | 6 | 탈퇴한 계정의 구글 로그인 | `/login?error=deleted`, 세션 없음 |
 | 7 | 초대 링크(`/clubs/join/[token]`) → 로그인 화면 → 구글 | 로그인 후 **초대 링크로 복귀**(`next` 전달 확인) |
 | 8 | 기존 이메일 회원의 프로필 설정 | NTRP·성별 등이 **여전히 읽기 전용**(정책이 안 열렸는지) |
+| 9 | 구글 계정의 프로필 설정 — **아이디(0085) 설정란** | 비밀번호 identity가 없으므로 아이디 입력란도 읽기 전용 표시도 **없다**(`canSetLoginId`가 `hasPasswordIdentity`를 본다). 소셜 계정에 비밀번호를 추가하는 경로가 생기면 함께 연다 |
 
 4번 근거 — 공식 문서:
 > "Supabase Auth automatically links identities with the same email address to a single user."
