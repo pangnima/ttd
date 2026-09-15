@@ -28,6 +28,8 @@
 | 0.2 | A | `/match-rooms`로 이동(비로그인) | `/login?next=%2Fmatch-rooms`로 리다이렉트 | `lib/supabase/middleware.ts` 보호 경로 | B |
 | 0.3 | A | 로그인 | `/match-rooms`로 복귀. 사이드바 「참여 중인 매칭」 뱃지 없음 | `roomBadgeTotal` = 0 | B |
 | 0.4 | A | `/me/match-rooms` | `참여 중인 매칭이 없습니다.` 또는 기존 방 없음, 「나를 초대한 매칭」 섹션 없음 | — | B |
+| 0.5 | — | 비로그인 `/guide` | 리다이렉트 없이 열리고 헤더([로그인])·사이드바(「사용 가이드」 한 줄, 활성) 유지. 6섹션(흐름·매칭 리스트·참여 중인 매칭·개인 경기 결과·다섯 단계·용어). 환영 팝업 없음 | Week 57 — 보호 라우트 아님 | B |
+| 0.6 | A | `/match-rooms` 상단 「이 화면 사용법」 | 참가 중인 매칭이 없으면 **펼침**, 있으면 접힘. 「전체 가이드 →」가 `/guide#match-rooms`로 착지해 그 섹션이 상단에 온다 | `PageGuide open` = `joinedRoomIds.length === 0` | B |
 
 ## S1 단식 기본 흐름 (A 호스트 · B 참가자)
 
