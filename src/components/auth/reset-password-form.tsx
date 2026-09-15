@@ -3,14 +3,18 @@
 import { useActionState, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
+import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
 import { Button } from '@/components/ui/button'
 import { resetPasswordAction } from '@/lib/actions/auth'
+import { PASSWORD_MIN_LEN } from '@/lib/auth/password-policy'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
 export function ResetPasswordForm() {
     const [state, formAction, isPending] = useActionState(resetPasswordAction, null)
     const [showPassword, setShowPassword] = useState(false)
+    // 체크리스트가 입력값을 읽어야 하므로 controlled — 서버 에러 뒤에도 값이 남는 덤이 있다
+    const [password, setPassword] = useState('')
 
     return (
         <form action={formAction} className="space-y-4">
@@ -20,8 +24,9 @@ export function ResetPasswordForm() {
                     <input
                         id="new_password" name="new_password"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="6자 이상 입력하세요"
-                        required minLength={6} autoComplete="new-password"
+                        placeholder="영문·숫자·특수문자"
+                        required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
+                        value={password} onChange={(e) => setPassword(e.target.value)}
                         className={cn(inputCls, 'pr-10')}
                     />
                     <button
@@ -34,6 +39,7 @@ export function ResetPasswordForm() {
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                 </div>
+                <PasswordRulesHint value={password} className="mt-1.5" />
             </div>
 
             <div>
@@ -42,7 +48,7 @@ export function ResetPasswordForm() {
                     id="confirm_password" name="confirm_password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="비밀번호를 다시 입력하세요"
-                    required minLength={6} autoComplete="new-password"
+                    required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
                     className={inputCls}
                 />
             </div>

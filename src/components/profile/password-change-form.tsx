@@ -1,20 +1,30 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
+import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
 import { Button } from '@/components/ui/button'
 import { updatePasswordAction } from '@/lib/actions/profile'
+import { PASSWORD_MIN_LEN } from '@/lib/auth/password-policy'
 import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 export function PasswordChangeForm() {
     const [state, formAction, isPending] = useActionState(updatePasswordAction, null)
     const formRef = useRef<HTMLFormElement>(null)
+    // 체크리스트가 입력값을 읽어야 하므로 새 비밀번호만 controlled
+    const [newPassword, setNewPassword] = useState('')
 
     useEffect(() => {
         if (state?.success) formRef.current?.reset()
     }, [state])
 
     return (
-        <form ref={formRef} action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-4`}>
+        <form
+            ref={formRef}
+            action={formAction}
+            // reset()이 reset 이벤트를 쏘므로 controlled 값도 여기서 비운다
+            onReset={() => setNewPassword('')}
+            className={`${CARD_BASE} p-5 sm:p-6 space-y-4`}
+        >
             <div>
                 <p className="text-body2 font-semibold text-foreground">비밀번호 변경</p>
                 <p className="text-body2 text-muted-foreground mt-0.5">현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.</p>
@@ -41,12 +51,15 @@ export function PasswordChangeForm() {
                     id="new_password"
                     name="new_password"
                     type="password"
-                    placeholder="6자 이상"
+                    placeholder="영문·숫자·특수문자"
                     required
-                    minLength={6}
+                    minLength={PASSWORD_MIN_LEN}
                     autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className={inputCls}
                 />
+                <PasswordRulesHint value={newPassword} className="mt-1.5" />
             </div>
 
             <div>
