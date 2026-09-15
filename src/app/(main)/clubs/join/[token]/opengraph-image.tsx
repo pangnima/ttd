@@ -1,12 +1,13 @@
 import { ImageResponse } from 'next/og'
 import { createClient } from '@/lib/supabase/server'
 import { OG, loadOgFont } from '@/lib/og/brand'
+import { DEFAULT_SITE_URL } from '@/lib/site-url'
 
 export const alt = '클럽 초대 — BASELINE'
 export const size = OG.size
 export const contentType = 'image/png'
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://ttd-kohl.vercel.app'
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL
 
 type ImageProps = { params: Promise<{ token: string }> }
 

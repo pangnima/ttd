@@ -117,7 +117,7 @@ NTRP는 레이팅·티어·통계의 입력값이라 3.0이 박히는 건 **데�
    - 외부(External) 사용자로 두면 테스트 단계에서는 **테스트 사용자로 등록한 계정만** 로그인된다. 본인 계정을 꼭 추가할 것
 3. **사용자 인증 정보 → OAuth 클라이언트 ID 만들기 → 애플리케이션 유형: 웹 애플리케이션**
 4. 두 칸을 채운다
-   - **승인된 JavaScript 원본**: `http://localhost:3000` (그리고 배포 도메인)
+   - **승인된 JavaScript 원본**: `http://localhost:3000`, `https://baselineplay.vercel.app`(2026-09-15 등록 — 서버 리다이렉트 흐름에서는 검사되지 않는 칸이라 이것만으로 배포 로그인이 고쳐지지는 않는다)
    - **승인된 리디렉션 URI**: `https://xiwwbgltkbvxdzxxxoba.supabase.co/auth/v1/callback`
      → ⚠ **Supabase 주소다.** 우리 앱 주소가 아니다(§1 표)
 5. 발급된 **클라이언트 ID / 클라이언트 보안 비밀번호**를 복사 → Supabase 대시보드에 붙여넣는다(§4.3)
@@ -159,11 +159,13 @@ NTRP는 레이팅·티어·통계의 입력값이라 3.0이 박히는 건 **데�
    - **Kakao**: Enable → REST API 키 / Client Secret 붙여넣기 → 필요하면 **Allow users without an email** 켜기
    - 이 화면에 표시되는 **Callback URL**이 §4.1-4·§4.2-5에 넣을 바로 그 값이다(복사 버튼이 있다)
 2. **Authentication → URL Configuration → Redirect URLs**에 **우리 앱 주소**를 추가
-   - `http://localhost:3000/**`
-   - `https://<배포도메인>/**`
+   - `http://localhost:3000/**`(등록됨 — 로컬 로그인이 통과하는 근거)
+   - `https://baselineplay.vercel.app/**`(현재 배포 도메인)
    - Vercel 프리뷰까지 쓰려면 `https://*-<팀슬러그>.vercel.app/**`
-   - ⚠ 지금은 `/auth/confirm`만 등록돼 있다(CLAUDE.md 배포 백로그)
-3. **Site URL**은 `redirectTo`를 지정하지 않았을 때의 기본 착지점이다. 배포 도메인으로 맞춰 둔다
+   - ⚠ **`ttd-dev.vercel.app`·`ttd-kohl.vercel.app`은 죽은 도메인**이다(Vercel `DEPLOYMENT_NOT_FOUND`) — 남아 있으면 지운다
+3. **Site URL**은 `redirectTo`가 **allowlist에서 거부됐을 때**의 폴백 착지점이다 — 거부는 에러가 아니라 **조용한 대체**라
+   Site URL이 죽은 도메인이면 증상이 로그인 화면이 아니라 Vercel 404로 엉뚱한 자리에서 난다(Week 59). 현재 배포 도메인
+   `https://baselineplay.vercel.app`으로 맞춰 둔다. 비밀번호 재설정 메일의 `{{ .SiteURL }}`도 이 값이다
 
 > 와일드카드 규칙: `*`는 구분자(`.` `/`)를 넘지 않고 `**`는 넘는다.
 > 출처: https://supabase.com/docs/guides/auth/redirect-urls
@@ -419,15 +421,16 @@ NTRP 3.0이 박히는 창을 아예 만들지 않았기 때문이다 — 원래 
        §4.1의 "필수"는 게시 기준의 이야기다. 우리 scope는 `openid`·`email`·`profile`뿐인 **비민감 scope**라
        2~6주짜리 구글 심사는 받지 않는다. 테스트 상태의 제약은 테스트 사용자 100명·"확인되지 않은 앱" 경고·동의 7일 만료)
 - [x] **2** §4.3 Supabase → Authentication › Providers › **Google 활성화** + Client ID/Secret 붙여넣기
-- [ ] **3** §4.3 Supabase → URL Configuration › **Redirect URLs에 `http://localhost:3000/**` 추가**
-      (지금은 `/auth/confirm`만 등록돼 있다)
+- [x] **3** §4.3 Supabase → URL Configuration › **Redirect URLs에 `http://localhost:3000/**` 추가** — auth_logs에서 통과 확인(Week 59)
 - [x] **4** 켜졌는지 확인: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON_KEY"` → **`external.google: true` 확인됨**
 - [x] **5** ~~자기 계정으로 한 번 로그인한 뒤 **§5가 경고한 실측**~~ — **완료(Week 55)**. §5의 [실측 완료] 블록 참고:
       `select raw_user_meta_data from auth.users order by created_at desc limit 1;`
       → 0084의 coalesce 사슬(`full_name`·`avatar_url`)이 실제 키와 맞는지 눈으로 본다
 - [ ] **6** §9 시나리오 통과 (**⑤ 카카오는 버튼이 없어 해당 없음**)
 - [ ] **7** 시험 계정 삭제 — `delete from auth.users where email = '…';` (public.users는 FK cascade)
-- [ ] **8** 배포 시: 배포 도메인을 §4.1의 JavaScript 원본과 §4.3의 Redirect URLs에 추가, `NEXT_PUBLIC_SITE_URL` 설정
+- [ ] **8** 배포 시(도메인 `https://baselineplay.vercel.app`): §4.3의 **Site URL**을 이 도메인으로, **Redirect URLs**에 `…/**` 추가,
+      Vercel Production 환경변수 `NEXT_PUBLIC_SITE_URL` 설정(Preview는 비워 두면 액션이 요청 origin을 쓴다).
+      §4.1의 JavaScript 원본은 2026-09-15에 등록했다. 코드 폴백은 `src/lib/site-url.ts`의 `DEFAULT_SITE_URL` 하나다
 
 ---
 
@@ -496,6 +499,7 @@ delete from auth.users   where id = '<uuid>';
 |---|---|
 | 구글: `redirect_uri_mismatch` | Google 콘솔의 **승인된 리디렉션 URI**가 Supabase 주소(`.../auth/v1/callback`)가 아니다. 우리 앱 주소를 넣은 경우 |
 | 로그인 후 Site URL(홈)으로만 감 | Supabase **Redirect URLs**에 우리 앱 주소가 없어 `redirectTo`가 무시됐다 |
+| 구글 동의 뒤 Vercel `404 DEPLOYMENT_NOT_FOUND` | 위와 같은 원인 + **Site URL이 죽은 옛 배포 도메인**이다. 로컬만 되는 이유는 allowlist에 `localhost`가 있어서. 판정은 auth_logs `/authorize`의 `referer`가 전체 경로(`…/auth/callback`)면 통과, 도메인만이면 Site URL 폴백(Week 59) |
 | 카카오: secret 관련 실패 | **카카오 로그인 > 보안**에서 Client Secret을 「사용함」으로 활성화하지 않았다 |
 | 카카오 로그인이 아예 안 됨 | 이메일 동의를 못 받는데 Supabase의 **Allow users without an email**이 꺼져 있다 |
 | `Database error saving new user` (불투명) | `handle_new_user`가 터졌다. 대개 NOT NULL(email) 또는 0079의 CHECK 위반. `auth.users`와 같은 트랜잭션이라 메시지가 뭉개진다 → `supabase` 로그를 보거나 트리거를 한 줄씩 좁혀서 확인 |
