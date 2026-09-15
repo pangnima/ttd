@@ -21,10 +21,10 @@ export function ForgotPasswordForm() {
     return (
         <form action={formAction} className="space-y-4">
             <div>
-                <label htmlFor="identifier" className={labelCls}>아이디 또는 이메일</label>
+                <label htmlFor="identifier" className={labelCls}>아이디</label>
                 {/* 로그인 칸과 같은 해석(Week 61) — 아이디면 서버가 가입 이메일로 풀어 그쪽으로 보낸다 */}
                 <input
-                    id="identifier" name="identifier" type="text" placeholder="아이디 또는 name@email.com"
+                    id="identifier" name="identifier" type="text" placeholder="아이디를 입력하세요"
                     required autoComplete="username" autoCapitalize="none" spellCheck={false}
                     className={inputCls}
                 />

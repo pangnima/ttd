@@ -8,7 +8,7 @@ import { PASSWORD_RESET_MAIL_ENABLED } from '@/lib/auth/password-reset-mode'
 const linkCls = 'text-foreground hover:text-foreground/80 underline underline-offset-2 transition-colors'
 
 /**
- * 비밀번호 찾기. 메일 재설정이 켜져 있으면 「아이디 또는 이메일」 폼, 꺼져 있으면(도메인·SMTP 준비 전)
+ * 비밀번호 찾기. 메일 재설정이 켜져 있으면 「아이디」 폼, 꺼져 있으면(도메인·SMTP 준비 전)
  * 운영자 문의 안내 — 스위치는 `password-reset-mode.ts` 하나다. 어느 쪽이든 만료 링크 배너는 그린다
  * (운영자가 대시보드에서 보낸 재설정 링크가 이 화면으로 돌아온다).
  */
@@ -27,7 +27,7 @@ export default async function ForgotPasswordPage({ searchParams }: { searchParam
                         <h1 className="text-h2 font-bold text-foreground">비밀번호 찾기</h1>
                         <p className="mt-1.5 text-body2 text-muted-foreground">
                             {PASSWORD_RESET_MAIL_ENABLED
-                                ? '아이디 또는 이메일을 입력하면 가입한 이메일로 재설정 링크를 보내드립니다.'
+                                ? '아이디를 입력하면 가입한 이메일로 재설정 링크를 보내드립니다.'
                                 : '비밀번호를 잊으셨나요? 아래 안내를 따라 주세요.'}
                         </p>
                     </div>

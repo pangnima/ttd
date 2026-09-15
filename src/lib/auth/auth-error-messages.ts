@@ -4,7 +4,7 @@
 import { PASSWORD_POLICY_MESSAGE } from '@/lib/auth/password-policy'
 
 /** 로그인 실패 문구 — 아이디·이메일이 없을 때도 같은 말을 해야 한다(0085, 존재 여부 비노출) */
-export const INVALID_CREDENTIALS_MESSAGE = '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.'
+export const INVALID_CREDENTIALS_MESSAGE = '아이디 또는 비밀번호가 올바르지 않습니다.'
 
 // 부분 일치(소문자 비교) 규칙 — Supabase 메시지가 버전에 따라 미세하게 달라질 수 있어
 // 정확 일치 대신 핵심 키워드 포함 여부로 매핑한다.

@@ -295,7 +295,7 @@ export async function requestPasswordResetAction(
     if (!PASSWORD_RESET_MAIL_ENABLED) return { error: '지금은 이메일 재설정을 제공하지 않습니다. 운영자에게 문의해 주세요.' }
 
     const identifier = ((formData.get('identifier') as string | null) ?? '').trim()
-    if (!identifier) return { error: '아이디 또는 이메일을 입력해 주세요.' }
+    if (!identifier) return { error: '아이디를 입력해 주세요.' }
 
     const supabase = await createClient()
     const email = await resolveLoginEmail(supabase, identifier)

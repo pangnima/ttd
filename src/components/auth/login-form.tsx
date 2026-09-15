@@ -26,11 +26,11 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
             <form action={formAction} className="space-y-4">
                 {next && <input type="hidden" name="next" value={next} />}
                 <div>
-                    <label htmlFor="identifier" className={labelCls}>아이디 또는 이메일</label>
-                    {/* 0085 — 아이디는 @가 들어갈 수 없어 서버 액션이 looksLikeEmail로 가른다 */}
+                    <label htmlFor="identifier" className={labelCls}>아이디</label>
+                    {/* 라벨은 아이디지만 서버는 이메일도 받는다(looksLikeEmail 분기) — 이메일 가입 계정은 전부 테스트 계정이라 화면에서는 말하지 않는다 */}
                     <input
                         id="identifier" name="identifier" type="text"
-                        placeholder="아이디 또는 name@email.com"
+                        placeholder="아이디를 입력하세요"
                         required autoComplete="username" autoCapitalize="none" spellCheck={false}
                         className={inputCls}
                     />

@@ -13,7 +13,7 @@
 export const PASSWORD_RESET_MAIL_ENABLED = false
 
 /**
- * 운영자 연락처 안내 문구 — 서비스 연락 채널이 정해지면 여기만 고친다(예: '카카오톡 채널 @baseline').
- * null이면 화면은 "가입한 클럽의 운영자나 관리자에게" 같은 일반 문구만 보인다.
+ * 운영자 문의 이메일(Week 61 결정 — 이메일 주소 표시). 로그인 전 화면에 그대로 노출되므로 전용 주소로
+ * 바꾸고 싶으면 여기만 고친다. null이면 안내 카드가 채널 없이 일반 문구만 보인다.
  */
-export const ADMIN_CONTACT_HINT: string | null = null
+export const ADMIN_CONTACT_EMAIL: string | null = 'pangnima@gmail.com'

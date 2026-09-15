@@ -24,7 +24,7 @@ export function FindIdResultCard({ result }: Props) {
                     <span className="font-semibold tracking-wider text-foreground">{result.masked}</span> 입니다.
                 </p>
                 <p className="text-body2 text-muted-foreground break-keep">
-                    가운데는 가려져 있습니다. 아이디가 떠오르지 않으면 가입한 이메일로도 로그인할 수 있습니다.
+                    가운데는 가려져 있습니다. 아이디가 떠오르지 않으면 운영자에게 문의해 주세요.
                 </p>
                 <div className="grid gap-2">
                     <Link href="/login" className={primaryCls}>로그인</Link>
