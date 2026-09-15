@@ -52,7 +52,7 @@ export function EmailField({ onTakenChange }: Props) {
                 </p>
             ) : (
                 <p className="mt-1 text-caption text-muted-foreground">
-                    {checking ? '확인 중...' : '로그인 시 사용할 아이디입니다.'}
+                    {checking ? '확인 중...' : '비밀번호 찾기에 사용됩니다. 이메일로도 로그인할 수 있습니다.'}
                 </p>
             )}
         </div>

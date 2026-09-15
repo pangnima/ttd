@@ -4,9 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
-import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
+import { checkIdentityFields, isLoginIdConflict, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 import { hasPasswordIdentity } from '@/lib/auth/account-providers'
+import { validatePassword } from '@/lib/auth/password-policy'
+import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
+import { mapAuthError } from '@/lib/auth/auth-error-messages'
 
 export type ProfileActionState = { error?: string; success?: boolean }
 
@@ -64,6 +67,22 @@ export async function updateProfileAction(
         tennisStartDate = toStartDateString(parsed)
     }
 
+    // 아이디(0085)도 같은 관용구 — **비어 있을 때 1회**. 0085 이전 회원과 소셜 가입자는 null이라
+    // 이메일로만 로그인하는데, 프로필에서 한 번 정할 수 있어야 한다. 값이 있으면 폼에 필드가 없고
+    // 서버도 받지 않는다(이름과 같은 "입력 후 변경 불가"). 비밀번호 없는 계정은 화면이 열지 않지만
+    // 서버는 그 조건을 따로 보지 않는다 — 아이디가 있어도 로그인할 방법이 없을 뿐 해롭지 않다.
+    const loginIdRaw = normalizeLoginId(formData.get('login_id') as string | null)
+    let loginId: string | null = null
+    if (loginIdRaw) {
+        const invalid = validateLoginId(loginIdRaw)
+        if (invalid) return { error: invalid }
+        const { data: current } = await supabase.from('users').select('login_id').eq('id', user.id).single()
+        if (current?.login_id != null) return { error: '아이디는 이미 설정되어 변경할 수 없습니다.' }
+        const { data: taken } = await supabase.rpc('is_login_id_taken', { p_login_id: loginIdRaw })
+        if (taken) return { error: LOGIN_ID_TAKEN_MESSAGE }
+        loginId = loginIdRaw
+    }
+
     // 이름·성별·주력손·NTRP는 가입 시 1회 입력, 변경 불가 정책 —
     // update 대상에서 제외해 서버에서 무시한다. (ntrp를 여기 남기면 폼에 필드가 없어 매 저장마다 NULL로 덮이므로 주의)
     // 시작일도 **값이 있을 때만** 조건부로 넣는다 — 같은 이유로 무조건 넣으면 매 저장마다 NULL이 된다.
@@ -78,11 +97,13 @@ export async function updateProfileAction(
         stats_hidden: formData.get('stats_hidden') === 'true',
         ...(profileImage ? { profile_image: profileImage } : {}),
         ...(tennisStartDate ? { tennis_start_date: tennisStartDate } : {}),
+        ...(loginId ? { login_id: loginId } : {}),
     }
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id)
     // 화면 검사를 통과한 뒤 남이 같은 닉네임을 먼저 저장한 경우 — 인덱스가 잡는다(0079).
     if (isNicknameConflict(error)) return { error: NICKNAME_TAKEN_MESSAGE }
+    if (isLoginIdConflict(error)) return { error: LOGIN_ID_TAKEN_MESSAGE }
     if (error) return { error: error.message }
 
     revalidatePath('/profile/settings')
@@ -124,7 +145,8 @@ export async function updatePasswordAction(
     const newPassword = formData.get('new_password') as string
     const confirmPassword = formData.get('confirm_password') as string
 
-    if (newPassword.length < 6) return { error: '새 비밀번호는 6자 이상이어야 합니다' }
+    const weak = validatePassword(newPassword)
+    if (weak) return { error: weak }
     if (newPassword !== confirmPassword) return { error: '새 비밀번호가 일치하지 않습니다' }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -134,7 +156,7 @@ export async function updatePasswordAction(
     if (signInError) return { error: '현재 비밀번호가 올바르지 않습니다' }
 
     const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) return { error: error.message }
+    if (error) return { error: mapAuthError(error.message) }
 
     return { error: '', success: true }
 }

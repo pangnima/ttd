@@ -67,3 +67,12 @@ export function isNicknameConflict(error: { code?: string; message?: string } | 
     if (!error) return false
     return error.code === '23505' && (error.message ?? '').includes(NICKNAME_UNIQUE_INDEX)
 }
+
+/** 0085 인덱스 이름 — 아이디 1회 설정(프로필)이 인덱스에서 걸린 경우를 가려낸다 */
+export const LOGIN_ID_UNIQUE_INDEX = 'users_login_id_unique_idx'
+
+/** DB가 돌려준 에러가 아이디 중복인가 */
+export function isLoginIdConflict(error: { code?: string; message?: string } | null): boolean {
+    if (!error) return false
+    return error.code === '23505' && (error.message ?? '').includes(LOGIN_ID_UNIQUE_INDEX)
+}

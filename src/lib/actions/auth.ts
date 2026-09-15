@@ -5,21 +5,46 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { randomAvatarPath } from '@/lib/default-images'
-import { DELETED_ACCOUNT_MESSAGE, mapAuthError, OAUTH_ERROR_PARAM } from '@/lib/auth/auth-error-messages'
+import { DELETED_ACCOUNT_MESSAGE, INVALID_CREDENTIALS_MESSAGE, mapAuthError, OAUTH_ERROR_PARAM } from '@/lib/auth/auth-error-messages'
 import { isSafeNext } from '@/lib/supabase/middleware'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 import { checkIdentityFields } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
-import { EMAIL_TAKEN_MESSAGE, normalizeEmail } from '@/lib/auth/email'
+import { EMAIL_TAKEN_MESSAGE, looksLikeEmail, normalizeEmail } from '@/lib/auth/email'
+import { validatePassword, WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
+import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
+
+/**
+ * 로그인 칸의 값을 signInWithPassword가 받을 이메일로 바꾼다.
+ * 이메일이면 정규화만, 아이디면 `resolve_login_email`(0085, anon RPC)로 해석 — 이 함수는 서버 액션
+ * 안에서만 불려 해석된 이메일이 브라우저에 실리지 않는다. 형식이 틀리거나 없는 아이디면 null.
+ */
+async function resolveLoginEmail(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    identifier: string | null
+): Promise<string | null> {
+    const raw = (identifier ?? '').trim()
+    if (looksLikeEmail(raw)) return normalizeEmail(raw)
+    const loginId = normalizeLoginId(raw)
+    if (validateLoginId(loginId)) return null
+    const { data } = await supabase.rpc('resolve_login_email', { p_login_id: loginId })
+    return data ?? null
+}
 
 export async function loginAction(
     _prevState: { error: string } | null,
     formData: FormData
 ): Promise<{ error: string } | null> {
     const supabase = await createClient()
+
+    // 「아이디 또는 이메일」 한 칸(0085). 아이디에는 @가 들어갈 수 없으므로 looksLikeEmail로 갈린다.
+    // 아이디가 없어도 비밀번호 오류와 **같은 문구**를 준다 — 존재 여부를 화면에서 구분하지 않는다.
+    const email = await resolveLoginEmail(supabase, formData.get('identifier') as string | null)
+    if (!email) return { error: INVALID_CREDENTIALS_MESSAGE }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.get('email') as string,
+        email,
         password: formData.get('password') as string,
     })
     if (error) return { error: mapAuthError(error.message) }
@@ -40,7 +65,10 @@ export async function loginAction(
     // 로그인 전 가려던 내부 경로가 있으면 그곳으로 복귀 (초대 링크 등). 오픈 리다이렉트 방지.
     // 그 외에는 내 전적 > 개인 탭을 기본 진입점으로 한다.
     const next = formData.get('next') as string | null
-    const fallback = data.user ? `/profile/${data.user.id}?scope=personal` : '/clubs'
+    // Supabase 최소 길이 설정을 넘지 못하는 옛 비밀번호는 로그인은 되지만 weakPassword가 실려 온다(Week 60).
+    // 강제하지 않고 착지 화면에서 한 줄 안내한다 — next가 있으면 가려던 곳이 우선이다(초대 링크 복귀).
+    const weakSuffix = data.weakPassword ? `&notice=${WEAK_PASSWORD_NOTICE}` : ''
+    const fallback = data.user ? `/profile/${data.user.id}?scope=personal${weakSuffix}` : '/clubs'
     const dest = isSafeNext(next) ? next : fallback
 
     revalidatePath('/', 'layout')
@@ -55,6 +83,11 @@ export async function signupAction(
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const passwordConfirm = formData.get('password_confirm') as string | null
+
+    // 비밀번호 규칙(Week 60) — 그전까지 가입에는 서버 검사가 없었다(클라 minLength와 Supabase 기본 6뿐).
+    // 최종 방어선은 Supabase의 최소 길이 설정이고 문자 종류는 앱이 쥔다(`password-policy.ts` 머리말).
+    const weak = validatePassword(password)
+    if (weak) return { error: weak }
 
     // 비밀번호 확인 일치 검증 (클라이언트 검증의 서버 측 방어선)
     if (passwordConfirm !== null && password !== passwordConfirm) {
@@ -104,6 +137,14 @@ export async function signupAction(
     })
     if (nicknameTaken) return { error: NICKNAME_TAKEN_MESSAGE }
 
+    // 아이디(0085) — 같은 3중 구조(화면 debounce / 여기 / 부분 유니크 인덱스). 트리거 안에서 CHECK·유니크에
+    // 걸리면 가입 전체가 'Database error saving new user'로 롤백되므로 signUp 전에 걸러야 한다.
+    const loginId = normalizeLoginId(formData.get('login_id') as string | null)
+    const loginIdError = validateLoginId(loginId)
+    if (loginIdError) return { error: loginIdError }
+    const { data: loginIdTaken } = await supabase.rpc('is_login_id_taken', { p_login_id: loginId })
+    if (loginIdTaken) return { error: LOGIN_ID_TAKEN_MESSAGE }
+
     // 이메일도 같은 방식으로 먼저 본다(0081). 지금은 signUp이 'User already registered'를 주지만,
     // **이메일 확인을 켜는 순간 Supabase가 열거 방지로 성공을 가장해** 그 메시지가 사라진다.
     // 화면 검사와 같은 RPC를 여기서도 보면 그 전환에 흔들리지 않는다.
@@ -119,6 +160,7 @@ export async function signupAction(
         password,
         options: {
             data: {
+                login_id: loginId,
                 name: identity.values.name,
                 nickname: identity.values.nickname,
                 phone: identity.values.phone,
@@ -198,6 +240,8 @@ export async function deleteAccountAction(): Promise<{ error: string } | null> {
             name: '탈퇴한 회원',
             nickname: '탈퇴한 회원',
             email: `deleted+${user.id}@deleted.local`,
+            // 부분 유니크 인덱스(0085)에서 빠져 떠난 사람의 아이디를 다음 사람이 쓸 수 있다
+            login_id: null,
             phone: null,
             profile_image: null,
             gender: null,
@@ -256,7 +300,8 @@ export async function resetPasswordAction(
     const newPassword = formData.get('new_password') as string
     const confirmPassword = formData.get('confirm_password') as string
 
-    if (newPassword.length < 6) return { error: '새 비밀번호는 6자 이상이어야 합니다' }
+    const weak = validatePassword(newPassword)
+    if (weak) return { error: weak }
     if (newPassword !== confirmPassword) return { error: '새 비밀번호가 일치하지 않습니다' }
 
     const { error } = await supabase.auth.updateUser({ password: newPassword })

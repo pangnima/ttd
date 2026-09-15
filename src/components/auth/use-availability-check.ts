@@ -3,12 +3,34 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+type AvailabilityRpc = 'is_nickname_taken' | 'is_email_taken' | 'is_login_id_taken'
+
+/** 셋은 모양이 같다(text 하나 → boolean) — 생성 타입의 Args 이름만 달라 분기가 남는다 */
+function queryAvailability(
+    supabase: ReturnType<typeof createClient>,
+    rpc: AvailabilityRpc,
+    value: string,
+    excludeUserId?: string
+) {
+    switch (rpc) {
+        case 'is_nickname_taken':
+            return supabase.rpc(rpc, {
+                p_nickname: value,
+                ...(excludeUserId ? { p_exclude_user_id: excludeUserId } : {}),
+            })
+        case 'is_email_taken':
+            return supabase.rpc(rpc, { p_email: value })
+        case 'is_login_id_taken':
+            return supabase.rpc(rpc, { p_login_id: value })
+    }
+}
+
 /** 조회가 끝난 값과 그 결과. 지금 입력값과 다르면 아직 확인 중이라는 뜻이다. */
 type Checked = { value: string; taken: boolean }
 
 type Options = {
-    /** 판정을 맡길 RPC — 0080 `is_nickname_taken` / 0081 `is_email_taken` */
-    rpc: 'is_nickname_taken' | 'is_email_taken'
+    /** 판정을 맡길 RPC — 0080 `is_nickname_taken` / 0081 `is_email_taken` / 0085 `is_login_id_taken` */
+    rpc: AvailabilityRpc
     /** 정규화된 입력값. 빈 문자열이면 묻지 않는다 */
     value: string
     /** 형식이 틀렸으면 묻지 않는다(문구는 호출부가 이미 들고 있다) */
@@ -29,7 +51,7 @@ export type Availability = {
 }
 
 /**
- * "이 값 써도 되나"를 묻는 debounce 조회 — 닉네임·이메일이 함께 쓴다.
+ * "이 값 써도 되나"를 묻는 debounce 조회 — 닉네임·이메일·아이디가 함께 쓴다.
  *
  * 화면 검사는 **편의일 뿐**이고 최종 방어선은 DB다(닉네임은 0079의 부분 유니크 인덱스,
  * 이메일은 `auth.users`). 동시 제출은 여기를 통과하고 서버가 다시 잡는다.
@@ -57,13 +79,7 @@ export function useAvailabilityCheck({
         let alive = true
         const timer = setTimeout(async () => {
             const supabase = createClient()
-            const { data, error } =
-                rpc === 'is_nickname_taken'
-                    ? await supabase.rpc('is_nickname_taken', {
-                          p_nickname: value,
-                          ...(excludeUserId ? { p_exclude_user_id: excludeUserId } : {}),
-                      })
-                    : await supabase.rpc('is_email_taken', { p_email: value })
+            const { data, error } = await queryAvailability(supabase, rpc, value, excludeUserId)
             // 조회가 실패하면 막지 않는다 — 판정은 서버가 다시 한다. 잘못 막는 쪽이 더 나쁘다.
             if (!alive || error) return
             setChecked({ value, taken: Boolean(data) })

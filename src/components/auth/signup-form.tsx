@@ -17,7 +17,10 @@ export function SignupForm() {
     // 예외는 테니스 정보 미선택 — 보이긴 하지만, 고르지 않으면 저장할 수 없는 값을 서버 왕복으로
     // 알릴 일은 아니다(섹션이 자기 자리에서 이유를 말한다).
     const [pwMismatch, setPwMismatch] = useState(false)
+    // 초기값 true — 비밀번호 규칙(Week 60)은 빈 값부터 미충족이다(테니스 정보와 같은 이유)
+    const [pwWeak, setPwWeak] = useState(true)
     const [emailTaken, setEmailTaken] = useState(false)
+    const [loginIdTaken, setLoginIdTaken] = useState(false)
     const [nicknameTaken, setNicknameTaken] = useState(false)
     // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
     const [tennisMissing, setTennisMissing] = useState(true)
@@ -29,10 +32,12 @@ export function SignupForm() {
 
             <div className="h-px bg-border" />
 
-            {/* ── 계정 (이메일 = 로그인 아이디) ── */}
+            {/* ── 계정 (아이디 = 로그인 ID · 이메일 = 복구 채널) ── */}
             <SignupAccountSection
                 onMismatchChange={setPwMismatch}
+                onWeakChange={setPwWeak}
                 onEmailTakenChange={setEmailTaken}
+                onLoginIdTakenChange={setLoginIdTaken}
             />
 
             <div className="h-px bg-border" />
@@ -64,7 +69,7 @@ export function SignupForm() {
 
             <Button
                 type="submit"
-                disabled={isPending || pwMismatch || emailTaken || nicknameTaken || tennisMissing}
+                disabled={isPending || pwMismatch || pwWeak || emailTaken || loginIdTaken || nicknameTaken || tennisMissing}
                 className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '가입 중...' : '회원가입'}

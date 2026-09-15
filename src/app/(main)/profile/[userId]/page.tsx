@@ -26,11 +26,13 @@ import { PlayerStatsSection } from '@/components/profile/player-stats-section'
 import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
 import { PageContainer } from '@/components/common/page-container'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
+import { WeakPasswordNotice } from '@/components/profile/weak-password-notice'
+import { WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
 import { buildOnboardingSteps, isOnboardingComplete } from '@/lib/onboarding'
 
 type Props = {
     params: Promise<{ userId: string }>
-    searchParams: Promise<{ clubId?: string; scope?: string }>
+    searchParams: Promise<{ clubId?: string; scope?: string; notice?: string }>
 }
 
 // 추세 이력 마지막 ratingAfter = 현재 클럽 레이팅, 길이 = 경기 수 → 헤더 뱃지 파생.
@@ -79,7 +81,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     if (!authUser) redirect('/login')
 
     const { userId } = await params
-    const { clubId, scope: scopeParam } = await searchParams
+    const { clubId, scope: scopeParam, notice } = await searchParams
 
     const [target, club] = await Promise.all([
         fetchUserById(userId),
@@ -184,6 +186,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 <ProfileScopeTabs scope={scope} personalHref={personalHref} />
                 {/* 0경기에서도 그린다(Week 57) — 헤더 빈 상태는 "왜 비었나"를, 체크리스트는 "무엇을 할지"를 말한다.
                     옛 0경기 가드는 「첫 경기」 단계를 미완료 상태로는 영영 못 보게 만들었다 */}
+                {notice === WEAK_PASSWORD_NOTICE && <WeakPasswordNotice />}
                 {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
