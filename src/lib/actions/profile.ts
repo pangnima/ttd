@@ -6,6 +6,7 @@ import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-f
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { hasPasswordIdentity } from '@/lib/auth/account-providers'
 
 export type ProfileActionState = { error?: string; success?: boolean }
 
@@ -112,6 +113,12 @@ export async function updatePasswordAction(
         data: { user },
     } = await supabase.auth.getUser()
     if (!user) return { error: '로그인이 필요합니다' }
+
+    // 노출 조건과 짝을 맞춘 가드 — 화면에서 폼을 뺐으면 액션도 거절해야 한다(0072).
+    // 덤으로 비밀번호 없는 계정에 대한 무의미한 signInWithPassword 시도가 사라진다(시도 제한 소모도).
+    if (!hasPasswordIdentity({ identities: user.identities, providers: user.app_metadata?.providers })) {
+        return { error: '소셜 계정으로 로그인 중이라 비밀번호를 변경할 수 없습니다.' }
+    }
 
     const currentPassword = formData.get('current_password') as string
     const newPassword = formData.get('new_password') as string
