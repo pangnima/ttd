@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { RacketField } from '@/components/common/racket-field'
-import { parseYearMonth } from '@/lib/format/year-month'
+import { YearMonthField } from '@/components/common/year-month-field'
 import {
     GENDER_OPTIONS,
     HAND_OPTIONS,
@@ -13,7 +13,7 @@ import {
     type HandValue,
     type SignupNtrp,
 } from '@/lib/profile/signup-fields'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 const GENDERS = GENDER_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
 const HANDS = HAND_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
@@ -28,12 +28,6 @@ export function SignupTennisSection() {
     const [gender, setGender] = useState<GenderValue>('male')
     const [hand, setHand] = useState<HandValue>('right')
     const [ntrp, setNtrp] = useState<SignupNtrp>(SIGNUP_NTRP_DEFAULT)
-    const [startInput, setStartInput] = useState('')
-    const [startTouched, setStartTouched] = useState(false)
-
-    const parsedStart = startInput.trim() ? parseYearMonth(startInput) : null
-    const startInvalid = startTouched && startInput.trim().length > 0 && parsedStart === null
-
     return (
         <div className="space-y-5">
             <input type="hidden" name="gender" value={gender} />
@@ -45,25 +39,7 @@ export function SignupTennisSection() {
                 <FieldToggle label="주력손" labelClassName={labelCls} options={HANDS} value={hand} onChange={setHand} />
             </div>
 
-            <div>
-                <label htmlFor="tennis_start_date" className={labelCls}>테니스 시작일</label>
-                <input
-                    id="tennis_start_date" name="tennis_start_date"
-                    inputMode="numeric" placeholder="예: 2022/07" maxLength={12}
-                    value={startInput}
-                    onChange={(e) => setStartInput(e.target.value)}
-                    onBlur={() => setStartTouched(true)}
-                    aria-invalid={startInvalid}
-                    className={inputCls}
-                />
-                {startInvalid ? (
-                    <p className="mt-1 text-caption text-destructive">년/월 형식으로 입력해 주세요 (예: 2022/07). 미래 월은 입력할 수 없습니다.</p>
-                ) : (
-                    <p className="mt-1 text-caption text-muted-foreground">
-                        {parsedStart ? `${parsedStart.year}년 ${parsedStart.month}월부터` : '년/월만 입력합니다 (선택)'}
-                    </p>
-                )}
-            </div>
+            <YearMonthField />
 
             <div>
                 <FieldToggle label="NTRP *" labelClassName={labelCls} options={NTRPS} value={ntrp} onChange={setNtrp} columns={7} />
