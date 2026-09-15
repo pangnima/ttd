@@ -1133,6 +1133,7 @@ export type Database = {
           gender: string | null
           id: string
           is_guest: boolean
+          login_id: string | null
           name: string
           nickname: string
           ntrp: number | null
@@ -1153,6 +1154,7 @@ export type Database = {
           gender?: string | null
           id: string
           is_guest?: boolean
+          login_id?: string | null
           name: string
           nickname: string
           ntrp?: number | null
@@ -1173,6 +1175,7 @@ export type Database = {
           gender?: string | null
           id?: string
           is_guest?: boolean
+          login_id?: string | null
           name?: string
           nickname?: string
           ntrp?: number | null
@@ -1429,6 +1432,7 @@ export type Database = {
         Returns: boolean
       }
       is_email_taken: { Args: { p_email: string }; Returns: boolean }
+      is_login_id_taken: { Args: { p_login_id: string }; Returns: boolean }
       is_nickname_taken: {
         Args: { p_exclude_user_id?: string; p_nickname: string }
         Returns: boolean
@@ -1515,6 +1519,7 @@ export type Database = {
         Args: { p_request_id: string; p_user_id: string }
         Returns: string
       }
+      resolve_login_email: { Args: { p_login_id: string }; Returns: string }
       resolve_room_player: {
         Args: { p: Json; p_room_id: string }
         Returns: Json
