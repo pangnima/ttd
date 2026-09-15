@@ -6,7 +6,6 @@ import { roomBadgeTotal } from '@/lib/match-rooms/room-turn'
 import { Header } from '@/components/common/header'
 import { Sidebar } from '@/components/common/sidebar'
 import { SidebarProvider } from '@/components/common/sidebar-context'
-import { WelcomeDialog } from '@/components/onboarding/welcome-dialog'
 
 export default async function MainLayout({
     children,
@@ -63,7 +62,8 @@ export default async function MainLayout({
                     </main>
                 </div>
             </div>
-            {user && <WelcomeDialog />}
+            {/* 환영 팝업(WelcomeDialog)은 Week 57에 지웠다 — 한 번만 보이는 안내는 내용이 낡아도 알 수 없다.
+                첫 안내는 /guide와 목록 화면의 인라인 설명(PageGuide), 프로필의 「시작하기」 체크리스트가 맡는다 */}
         </SidebarProvider>
     )
 }
