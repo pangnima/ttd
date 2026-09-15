@@ -1,23 +1,37 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Image from 'next/image'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ImagePlus, Shuffle } from 'lucide-react'
 
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
 
+type Props = {
+    /**
+     * 이미 배정된 사진 — 소셜 가입자의 **provider 사진**(구글 등)이 여기로 온다.
+     *
+     * 값이 있으면 그것을 미리보기로 쓰고 `default_avatar`를 **비워 보낸다**(= 변경 없음).
+     * 그러지 않으면 사용자가 손대지 않아도 기본 아바타가 provider 사진을 덮어쓴다.
+     * 가입 폼(이메일)은 배정된 사진이 없으므로 이 prop 없이 종전대로 동작한다.
+     */
+    initialImage?: string | null
+}
+
 /**
- * 회원가입 프로필 사진 필드.
+ * 프로필 사진 필드 — 회원가입 폼과 소셜 가입자의 완성 화면이 함께 쓴다.
  * - 기본 제공 아바타를 미리보기에 노출하고 "다른 기본 이미지"로 셔플한다.
  * - 사용자가 파일을 업로드하면 업로드본을 우선 노출한다.
  * - 선택된 기본 아바타 경로는 hidden input(default_avatar)로 전달되어
  *   파일 미업로드 시 서버가 그대로 저장한다(미리보기 == 저장값).
  */
-export function AvatarUploadField() {
+export function AvatarUploadField({ initialImage }: Props = {}) {
     const fileRef = useRef<HTMLInputElement>(null)
     const [uploadedPreview, setUploadedPreview] = useState<string | null>(null)
-    // 첫 렌더는 결정적 값(0번)으로 두어 hydration mismatch를 피하고, 셔플로 변경한다.
-    const [defaultAvatar, setDefaultAvatar] = useState(DEFAULT_AVATAR_PATHS[0])
+    // 배정된 사진이 있으면 그것을 지키고(null = 변경 없음), 없으면 종전대로 0번으로 시작한다.
+    // 첫 렌더를 결정적 값으로 두는 것은 hydration mismatch를 피하기 위해서다.
+    const [defaultAvatar, setDefaultAvatar] = useState<string | null>(
+        initialImage ? null : DEFAULT_AVATAR_PATHS[0],
+    )
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
@@ -32,21 +46,27 @@ export function AvatarUploadField() {
         })
     }
 
+    // provider 사진을 지키는 동안에는 셔플이 그것을 대체한다 — 되돌리려면 화면을 다시 연다
+    const previewBase = defaultAvatar ?? initialImage ?? DEFAULT_AVATAR_PATHS[0]
+
     function useDefaultInstead() {
         setUploadedPreview(null)
         if (fileRef.current) fileRef.current.value = ''
     }
 
-    const shownSrc = uploadedPreview ?? defaultAvatar
+    const shownSrc = uploadedPreview ?? previewBase
 
     return (
         <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-muted border border-border overflow-hidden shrink-0">
-                <Image src={shownSrc} alt="프로필 미리보기" width={64} height={64} className="w-full h-full object-cover" />
-            </div>
+            {/* ⚠ next/image가 아니다 — initialImage에 provider 외부 URL이 올 수 있고,
+                등록되지 않은 호스트는 렌더 중 throw다(next.config.ts 주석 참고) */}
+            <Avatar className="w-16 h-16 shrink-0">
+                <AvatarImage src={shownSrc} alt="프로필 미리보기" />
+                <AvatarFallback className="bg-muted text-h3 font-medium text-muted-foreground">?</AvatarFallback>
+            </Avatar>
 
-            {/* 선택된 기본 아바타 경로 — 파일 미업로드 시 서버가 저장 */}
-            <input type="hidden" name="default_avatar" value={defaultAvatar} />
+            {/* 선택된 기본 아바타 경로 — 파일 미업로드 시 서버가 저장. 빈 값이면 "변경 없음" */}
+            <input type="hidden" name="default_avatar" value={defaultAvatar ?? ''} />
             <input
                 ref={fileRef}
                 id="avatar"

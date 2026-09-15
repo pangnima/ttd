@@ -42,6 +42,12 @@ export async function completeProfileAction(
         .single()
     if (current?.ntrp != null) return { error: '이미 입력된 정보입니다.' }
 
+    // 개인정보 수집·이용 동의 — 폼의 required는 브라우저가 지키는 것이라 서버에서 한 번 더 본다.
+    // `signupAction`의 거울이다: 소셜 경로만 이 절차를 건너뛰고 있었는데 수집하는 정보는 같다.
+    if (formData.get('agree_privacy') !== 'true') {
+        return { error: '개인정보 수집·이용에 동의해 주세요.' }
+    }
+
     const gender = formData.get('gender')
     const dominantHand = formData.get('dominant_hand')
     const ntrp = formData.get('ntrp')
@@ -60,17 +66,38 @@ export async function completeProfileAction(
     if (!parsedStart) return { error: '테니스 시작일은 2022/07 형식(년/월)으로 입력해 주세요.' }
     const tennisStartDate = toStartDateString(parsedStart)
 
-    // 닉네임도 함께 받는다 — 소셜 가입자의 닉네임은 트리거가 이메일 앞부분으로 만든 임시값이다(0084).
+    // 이름·닉네임도 함께 받는다 — 둘 다 트리거가 provider 값에서 만든 임시값이다(0084).
+    // `name`을 넘기면 `validateName`(1~20자·숫자 금지)이 따라온다 — 가입 폼과 같은 검증이다.
     const identity = checkIdentityFields({
+        name: formData.get('name'),
         nickname: formData.get('nickname'),
         phone: formData.get('phone'),
     })
     if (!identity.ok) return { error: identity.error }
 
+    // 프로필 사진 — 손대지 않았으면 provider 사진을 그대로 둔다(updateProfileAction과 같은 순서).
+    let profileImage: string | undefined
+    const avatar = formData.get('avatar') as File | null
+    const defaultAvatar = (formData.get('default_avatar') as string) || null
+    if (avatar && avatar.size > 0) {
+        const ext = avatar.name.split('.').pop()
+        const path = `${user.id}/avatar.${ext}`
+        const { error: upErr } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true })
+        if (!upErr) {
+            const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+            profileImage = urlData.publicUrl
+        }
+        // 업로드 실패 시 기존 사진 유지
+    } else if (defaultAvatar) {
+        profileImage = defaultAvatar
+    }
+
     const { error } = await supabase
         .from('users')
         .update({
+            name: identity.values.name,
             nickname: identity.values.nickname,
+            ...(profileImage ? { profile_image: profileImage } : {}),
             phone: identity.values.phone || null,
             gender,
             dominant_hand: dominantHand,
