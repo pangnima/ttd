@@ -15,6 +15,7 @@ import { EMAIL_TAKEN_MESSAGE, looksLikeEmail, normalizeEmail } from '@/lib/auth/
 import { validatePassword, WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
 import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
 import { parseFindIdResult, type FindIdResult } from '@/lib/auth/find-id'
+import { PASSWORD_RESET_MAIL_ENABLED } from '@/lib/auth/password-reset-mode'
 
 /**
  * 로그인 칸의 값을 signInWithPassword가 받을 이메일로 바꾼다.
@@ -290,6 +291,9 @@ export async function requestPasswordResetAction(
     _prevState: { error?: string; success?: boolean } | null,
     formData: FormData
 ): Promise<{ error?: string; success?: boolean }> {
+    // 노출 조건과 짝을 맞춘 가드(0072) — 화면이 폼을 감춘 동안 액션도 거절한다
+    if (!PASSWORD_RESET_MAIL_ENABLED) return { error: '지금은 이메일 재설정을 제공하지 않습니다. 운영자에게 문의해 주세요.' }
+
     const identifier = ((formData.get('identifier') as string | null) ?? '').trim()
     if (!identifier) return { error: '아이디 또는 이메일을 입력해 주세요.' }
 
