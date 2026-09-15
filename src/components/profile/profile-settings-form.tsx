@@ -2,16 +2,14 @@
 
 import { useState, useEffect, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { ImagePlus, Shuffle } from 'lucide-react'
+import { ProfileAvatarField } from '@/components/profile/profile-avatar-field'
 import { ProfileReadonlyFields } from '@/components/profile/profile-readonly-fields'
 import { RacketField } from '@/components/common/racket-field'
 import { NicknameField } from '@/components/auth/nickname-field'
 import { PhoneField } from '@/components/auth/phone-field'
 import { updateProfileAction } from '@/lib/actions/profile'
-import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
 import { CARD_BASE, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 // 변경 불가 필드 표시용 (입력 불가, 회색 톤)
@@ -20,7 +18,6 @@ const readonlyFieldCls = [
     'bg-muted/50 border border-input',
 ].join(' ')
 
-const pillBtnCls = 'inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer'
 
 type ProfileData = {
     name: string
@@ -44,9 +41,6 @@ type Props = {
 
 export function ProfileSettingsForm({ initialProfile, userId }: Props) {
     const router = useRouter()
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-    // "기본 이미지로 변경"으로 선택한 기본 아바타 경로 (null이면 미선택)
-    const [defaultAvatar, setDefaultAvatar] = useState<string | null>(null)
     const [statsHidden, setStatsHidden] = useState(initialProfile.stats_hidden ?? false)
     const [state, formAction, isPending] = useActionState(updateProfileAction, null)
 
@@ -55,62 +49,10 @@ export function ProfileSettingsForm({ initialProfile, userId }: Props) {
         if (state?.success) router.refresh()
     }, [state, router])
 
-    function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
-        // 파일 업로드는 기본 이미지 선택보다 우선
-        setDefaultAvatar(null)
-        setAvatarPreview(URL.createObjectURL(file))
-    }
-
-    // 클릭마다 직전과 다른 기본 아바타로 셔플
-    function handleShuffleDefault() {
-        const candidates = DEFAULT_AVATAR_PATHS.filter((p) => p !== defaultAvatar)
-        const next = candidates[Math.floor(Math.random() * candidates.length)]
-        setDefaultAvatar(next)
-        setAvatarPreview(next)
-    }
-
-    const avatarSrc = avatarPreview ?? initialProfile.profile_image
 
     return (
         <form action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-5`}>
-            {/* 프로필 사진 */}
-            <div className="space-y-1.5">
-                <label className={labelCls}>프로필 사진</label>
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full border border-border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
-                        {avatarSrc ? (
-                            <Image src={avatarSrc} alt="프로필 사진" width={64} height={64} className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="text-h3 text-muted-foreground font-medium">
-                                {initialProfile.nickname?.[0] ?? '?'}
-                            </span>
-                        )}
-                    </div>
-                    <div className="space-y-1.5">
-                        {/* 업로드 없이 기본 이미지로 변경한 경우 그 경로를 서버로 전달 */}
-                        <input type="hidden" name="default_avatar" value={defaultAvatar ?? ''} />
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            <label htmlFor="avatar" className={pillBtnCls}>
-                                <ImagePlus className="w-3.5 h-3.5" />
-                                이미지 변경
-                            </label>
-                            <button type="button" onClick={handleShuffleDefault} className={pillBtnCls}>
-                                <Shuffle className="w-3.5 h-3.5" />
-                                기본 이미지로 변경
-                            </button>
-                        </div>
-                        <p className="text-caption text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
-                        <input
-                            id="avatar" name="avatar" type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            className="hidden"
-                            onChange={handleAvatarChange}
-                        />
-                    </div>
-                </div>
-            </div>
+            <ProfileAvatarField currentImage={initialProfile.profile_image} nickname={initialProfile.nickname} />
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
