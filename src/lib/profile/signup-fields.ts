@@ -49,7 +49,6 @@ export function isHandValue(v: unknown): v is HandValue {
 /** 가입 시 선택 가능한 자가선언 NTRP — 1.0~4.0, 0.5 단위 (DB CHECK 1~7보다 좁음, 기존 4.5+ 회원 값은 보존) */
 export const SIGNUP_NTRP_OPTIONS = ['1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0'] as const
 export type SignupNtrp = (typeof SIGNUP_NTRP_OPTIONS)[number]
-export const SIGNUP_NTRP_DEFAULT: SignupNtrp = '3.0'
 
 export function isSignupNtrp(v: unknown): v is SignupNtrp {
     return SIGNUP_NTRP_OPTIONS.some((o) => o === v)

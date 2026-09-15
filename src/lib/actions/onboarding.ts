@@ -52,13 +52,13 @@ export async function completeProfileAction(
         return { error: 'NTRP를 1.0~4.0 사이에서 선택해 주세요.' }
     }
 
+    // 시작일은 Week 56부터 필수다 — 한 번 비우면 어느 화면에서도 채울 수 없었기 때문이다.
+    // 문구는 signupAction과 한 글자도 다르지 않아야 한다(두 경로가 같은 말을 해야 한다).
     const startRaw = ((formData.get('tennis_start_date') as string | null) ?? '').trim()
-    let tennisStartDate: string | null = null
-    if (startRaw) {
-        const parsed = parseYearMonth(startRaw)
-        if (!parsed) return { error: '테니스 시작일은 2022/07 형식(년/월)으로 입력해 주세요.' }
-        tennisStartDate = toStartDateString(parsed)
-    }
+    if (!startRaw) return { error: '테니스 시작일을 입력해 주세요.' }
+    const parsedStart = parseYearMonth(startRaw)
+    if (!parsedStart) return { error: '테니스 시작일은 2022/07 형식(년/월)으로 입력해 주세요.' }
+    const tennisStartDate = toStartDateString(parsedStart)
 
     // 닉네임도 함께 받는다 — 소셜 가입자의 닉네임은 트리거가 이메일 앞부분으로 만든 임시값이다(0084).
     const identity = checkIdentityFields({

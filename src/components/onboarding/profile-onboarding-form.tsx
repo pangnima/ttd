@@ -30,6 +30,8 @@ type Props = {
 export function ProfileOnboardingForm({ next, defaultNickname, userId }: Props) {
     const [state, formAction, isPending] = useActionState(completeProfileAction, null)
     const [nicknameTaken, setNicknameTaken] = useState(false)
+    // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
+    const [tennisMissing, setTennisMissing] = useState(true)
 
     return (
         <form action={formAction} className="space-y-5">
@@ -42,7 +44,7 @@ export function ProfileOnboardingForm({ next, defaultNickname, userId }: Props) 
             />
             <PhoneField />
 
-            <SignupTennisSection />
+            <SignupTennisSection onMissingChange={setTennisMissing} />
 
             {state?.error && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
@@ -52,7 +54,7 @@ export function ProfileOnboardingForm({ next, defaultNickname, userId }: Props) 
 
             <Button
                 type="submit"
-                disabled={isPending || nicknameTaken}
+                disabled={isPending || nicknameTaken || tennisMissing}
                 className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '저장 중...' : '시작하기'}
