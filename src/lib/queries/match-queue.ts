@@ -44,11 +44,18 @@ export type MatchQueue = {
      * 카드 배지·빌더의 '등록된 게임'이 이걸 읽어 같은 게임을 두 번 넣는 것을 막는다.
      */
     enteredGamesBySession: Map<string, EnteredRotationGame[]>
+    /**
+     * 지금 참가(joined) 중인 방 id (Week 57). 온보딩 「첫 매칭 참여하기」 done 판정과
+     * 매칭 리스트 안내의 "한 번도 참가한 적 없음" 신호가 읽는다 — 조회는 memberships가 이미 하고
+     * 있었고 여기서는 노출만 하므로 쿼리가 늘지 않는다.
+     */
+    joinedRoomIds: string[]
 }
 
 const EMPTY_QUEUE: MatchQueue = {
     roomInvites: [], awaitingSeatSessions: [],
     pendingMatches: [], rotationSessions: [], enteredGamesBySession: new Map(),
+    joinedRoomIds: [],
 }
 
 /**
@@ -90,6 +97,7 @@ export const fetchMatchQueue = cache(async (userId: string): Promise<MatchQueue>
         awaitingSeatSessions,
         pendingMatches, rotationSessions,
         enteredGamesBySession,
+        joinedRoomIds: memberships.joinedRoomIds,
     }
 })
 

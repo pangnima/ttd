@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-    myMatchNavItems, buildPersonalNavItem, isNavItemActive,
+    myMatchNavItems, buildPersonalNavItem, guideNavItem, isNavItemActive,
 } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
 import { useSidebar } from '@/components/common/sidebar-context'
+import { SidebarNavRow } from '@/components/common/sidebar-nav-row'
 
 type SidebarProps = {
     currentPath?: string
@@ -26,17 +27,7 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
     // 개인 섹션: '개인'(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 개인 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
 
-    // 단순 메뉴 항목 — rail/펼침 단일 마크업, 클래스만 토글해 폭과 함께 부드럽게 전환
-    const rowClass = (active: boolean) =>
-        cn(
-            'flex items-center h-10 rounded-lg text-body2 font-medium transition-colors',
-            collapsed ? 'gap-0 justify-center px-0 w-10 mx-auto' : 'gap-3 px-3',
-            active
-                ? 'bg-muted text-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-        )
-
-    // 라벨 — rail에서 max-width/opacity로 페이드(width:auto는 트랜지션 불가하므로 max-width 사용)
+    // 라벨은 rail에서 max-width/opacity로 페이드(width:auto는 트랜지션 불가하므로 max-width 사용)
     const labelClass = cn(
         'overflow-hidden whitespace-nowrap transition-all duration-200',
         collapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
@@ -67,32 +58,25 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
                 {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 매칭 리스트 + 개인 경기 결과 (로그인 시) */}
                 {myNavItems.length > 0 && (
                     <div className="space-y-0.5">
-                        {myNavItems.map((item) => {
-                            const { href, label, icon: Icon } = item
-                            const active = isNavItemActive(item, activePath, userId ?? null)
-                            const showBadge = !!item.badge && myTurnCount > 0
-                            return (
-                                <Link
-                                    key={href}
-                                    href={href}
-                                    className={cn(rowClass(active), 'relative')}
-                                    aria-label={collapsed ? label : undefined}
-                                >
-                                    <Icon className="w-4 h-4 shrink-0" />
-                                    <span className={labelClass}>{label}</span>
-                                    {showBadge && !collapsed && (
-                                        <span className="ml-auto text-micro font-semibold px-1.5 py-0.5 rounded-full bg-spot/15 text-spot tabular-nums">
-                                            {myTurnCount}
-                                        </span>
-                                    )}
-                                    {showBadge && collapsed && (
-                                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-spot-solid" aria-hidden />
-                                    )}
-                                </Link>
-                            )
-                        })}
+                        {myNavItems.map((item) => (
+                            <SidebarNavRow
+                                key={item.href}
+                                item={item}
+                                active={isNavItemActive(item, activePath, userId ?? null)}
+                                collapsed={collapsed}
+                                badgeCount={item.badge ? myTurnCount : 0}
+                            />
+                        ))}
                     </div>
                 )}
+                {/* 사용 가이드 — 로그인 무관. 개인 섹션이 있으면 구분선 뒤, 없으면(비로그인) 이 한 줄뿐 */}
+                <div className={cn(myNavItems.length > 0 && 'mt-2 border-t border-foreground/5 dark:border-foreground/10 pt-2')}>
+                    <SidebarNavRow
+                        item={guideNavItem}
+                        active={isNavItemActive(guideNavItem, activePath, userId ?? null)}
+                        collapsed={collapsed}
+                    />
+                </div>
             </nav>
 
             {/* 테마 토글 — 하단 고정 */}

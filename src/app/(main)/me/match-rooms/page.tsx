@@ -13,6 +13,7 @@ import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
+import { PageGuide } from '@/components/guide/page-guide'
 
 export const metadata = { title: '참여 중인 매칭' }
 
@@ -56,6 +57,9 @@ export default async function MyMatchRoomsPage({ searchParams }: Props) {
                 title="참여 중인 매칭"
                 description="내가 참가한 매칭입니다. 결과 입력·확인은 각 매칭 안에서 합니다"
             />
+
+            {/* 참가한 방도 초대도 없을 때만 펼친다 — 그 외에는 한 줄로 접혀 카드를 가리지 않는다 */}
+            <PageGuide id="my-match-rooms" open={myRoomIds.length === 0 && roomQueue.invites.length === 0} />
 
             {/* 만들기는 아래 목록에 딸린 행동이라 탭 바와 한 묶음으로 둔다(헤더 actions 아님) */}
             <div className="space-y-3">

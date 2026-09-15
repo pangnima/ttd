@@ -13,6 +13,7 @@ import { RoomListSection } from '@/components/match-rooms/room-list-section'
 import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
+import { PageGuide } from '@/components/guide/page-guide'
 
 export const metadata = { title: '매칭 리스트' }
 
@@ -60,6 +61,9 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 title="매칭 리스트"
                 description="리스트에 노출된 경기입니다. 비밀번호를 입력하면 참가자·결과를 볼 수 있습니다"
             />
+
+            {/* 남의 방이 있어 목록은 거의 비지 않으므로 "한 번도 참가한 적 없음"을 펼침 신호로 쓴다 */}
+            <PageGuide id="match-rooms" open={roomQueue.joinedRoomIds.length === 0} />
 
             {/* 만들기는 아래 목록에 딸린 행동이라 탭 바와 한 묶음으로 둔다(헤더 actions 아님) */}
             <div className="space-y-3">

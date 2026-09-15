@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, ClipboardList, ListChecks } from 'lucide-react'
+import { BarChart3, BookOpen, CalendarDays, ClipboardList, ListChecks } from 'lucide-react'
 
 export type NavItem = {
     href: string
@@ -50,6 +50,13 @@ export function isNavItemActive(item: NavItem, pathname: string, userId: string 
     if (item.matchPrefix) return pathname.startsWith(item.matchPrefix)
     return userId ? isPersonalNavActive(pathname, userId) : false
 }
+
+/**
+ * 사용 가이드 — **로그인 무관** 메뉴(Week 57). 개인 섹션 배열 밖에서 그린다: 그 배열은 userId가
+ * 없으면 비어 사이드바가 텅 비고, 가이드는 비로그인에게도 열려야 한다(미들웨어 보호 목록에 없다).
+ * Week 39가 `topNavItems`(사용 가이드)를 사이드 메뉴 축소로 지웠는데, 안내 요구가 생겨 단일 항목으로 되살렸다.
+ */
+export const guideNavItem: NavItem = { href: '/guide', label: '사용 가이드', icon: BookOpen, matchPrefix: '/guide' }
 
 // 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). Week 54에 헤더 [클럽 찾기]와
 // 프로필 빈 상태·온보딩의 클럽 유도까지 내려, 진입은 이제 **로고 링크로만** 남는다 —

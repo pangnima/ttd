@@ -24,9 +24,11 @@ export type RoomQueue = {
     turns: Map<string, RoomTurnSummary>
     /** 아직 응답하지 않은 방 초대 — 목록 최상단 「나를 초대한 매칭」 */
     invites: MatchRoomInvite[]
+    /** 참가 중인 방 id — MatchQueue 패스스루(Week 57). 매칭 리스트 안내가 "첫 참가 전"을 판정한다 */
+    joinedRoomIds: string[]
 }
 
-export const EMPTY_ROOM_QUEUE: RoomQueue = { turns: new Map(), invites: [] }
+export const EMPTY_ROOM_QUEUE: RoomQueue = { turns: new Map(), invites: [], joinedRoomIds: [] }
 
 export const fetchRoomQueue = cache(async (userId: string): Promise<RoomQueue> => {
     const queue = await fetchMatchQueue(userId)
@@ -46,7 +48,7 @@ export const fetchRoomQueue = cache(async (userId: string): Promise<RoomQueue> =
         ...closing.map((roomId) => ({ roomId, turn: 'closeRotation' as const })),
     ])
 
-    return { turns, invites: queue.roomInvites }
+    return { turns, invites: queue.roomInvites, joinedRoomIds: queue.joinedRoomIds }
 })
 
 /** 방별 대표 게임의 총수·확정 수 — 호스트 종료 차례의 재료. 관점 행은 세지 않는다 */

@@ -9,6 +9,7 @@ import { PendingResultsSection } from '@/components/personal-matches/pending-res
 import { EMPTY_BLOCK, HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
+import { PageGuide } from '@/components/guide/page-guide'
 
 export const metadata = { title: '개인 경기 결과' }
 
@@ -40,6 +41,8 @@ export default async function PersonalMatchesPage() {
                     </Link>
                 }
             />
+
+            <PageGuide id="personal-matches" open={matches.length === 0} />
 
             <PendingResultsSection queue={queue} viewerId={user.id} builder={builder} />
 
