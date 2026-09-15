@@ -431,6 +431,46 @@ NTRP 3.0이 박히는 창을 아예 만들지 않았기 때문이다 — 원래 
 
 ---
 
+---
+
+## 9-bis. 실행 후 발견한 결함 (Week 56) — 카카오를 켤 때 같은 자리를 본다
+
+계획서(§1~§8)가 예상하지 못한 것들이다. **전부 "provider가 준 값이 기존 가정을 깬다"는 한 뿌리**다.
+
+| # | 결함 | 자리 | 교훈 |
+|---|---|---|---|
+| 1 | **`/profile/settings`가 통째로 죽었다** | `profile-settings-form`이 DB 원본 `profile_image`를 `next/image`에 넣었는데 `remotePatterns`에 `lh3.googleusercontent.com`이 없었다 | **사용자 데이터에 좌우되는 값에 허용목록을 쓰면 안 된다.** 집합이 닫혀 있지 않은데 누락의 대가가 404가 아니라 **렌더 throw**다. 아바타는 `next/image`로 그리지 않는다(next.config 주석) |
+| 2 | 그 화면에 `error.tsx`가 없어 **global-error가 루트 레이아웃째 대체**했다 | `(main)` 안에서 경계가 있는 곳은 셋뿐이었다 | `(main)/error.tsx`를 뒀다. 사용자가 본 화면의 **생김새**(헤더 유무)가 곧 어느 경계가 잡았는지를 말한다 — 진단의 첫 단서 |
+| 3 | 완성 화면이 **개인정보 수집·이용 동의를 건너뛰었다** | 가입 폼에만 체크박스가 있었다 | 소셜 경로는 가입 폼을 통째로 우회한다. **가입 폼이 받는 것을 하나씩 대조**할 것 |
+| 4 | **이름이 provider 표시명으로 영구 고정** | 완성 화면에도 설정에도 이름 칸이 없었다 | 〃 (`J Pi` 같은 값이 그대로 남는다) |
+| 5 | 완성 화면에 사진 선택이 없었고, `AvatarUploadField`를 그냥 넣었다면 **기본 아바타가 provider 사진을 덮었다** | `default_avatar` hidden이 늘 값을 보낸다 | 공용 필드를 재사용할 때 **"손대지 않으면 아무 일도 없어야 한다"**를 확인할 것 |
+| 6 | **0084가 DB에서 없앤 기본값 3.0을 UI가 되살려 두고 있었다** | `signup-tennis-section`의 `useState(SIGNUP_NTRP_DEFAULT)` | 마이그레이션으로 기본값을 없앨 때 **그 컬럼에 값을 넣는 화면도 함께 본다**(0072의 "가드와 노출 조건" 규칙의 UI판) |
+| 7 | 비밀번호 없는 계정에 **비밀번호 변경 폼**이 보였다 | `settings/page.tsx`가 조건 없이 렌더 | 소셜 계정에만 뜻이 없어지는 UI가 있는지 훑을 것. 판정은 `lib/auth/account-providers.ts` |
+| 8 | 시작일을 비우면 **어디서도 채울 수 없었다** | 설정은 읽기 전용, 완성 화면은 재진입 차단 | 선택 입력 + 불변 정책 + 재진입 차단이 겹치면 **입력 창구가 0이 된다** |
+
+**카카오를 켜기 전 확인할 것**
+- `raw_user_meta_data` 실측(§5) — 특히 이메일 미동의 계정에 `email` 키가 **아예 없는지**(0084의 폴백이 도는지).
+- 사진 호스트가 `k.kakaocdn.net`이어도 아바타는 `<img>`라 **config 변경이 필요 없다**(위 1번).
+- `socialProviderLabel`이 `kakao → '카카오'`를 이미 안다.
+- `social-login-buttons.tsx`의 `PROVIDERS`에 한 줄만 더하면 된다(액션은 이미 `kakao`를 받아들인다).
+
+### ⚠ 탈퇴로는 재가입 테스트를 할 수 없다
+
+`deleteAccountAction`은 물리 삭제가 아니라 **익명화 + `deleted_at`**이고 `auth.users` 행을 남긴다.
+그래서 같은 계정으로 다시 로그인하면 identity가 살아 있어 세션까지는 만들어지지만
+`/auth/callback`이 `deleted_at`을 보고 `/login?error=deleted`로 되돌린다(**의도된 동작**).
+
+신규 가입을 다시 시험하려면 **두 행을 SQL로 지운다** — `public.users`에는 `auth.users`로 가는
+**외래키가 없어**(CHECK 9개 + PK뿐) 한쪽만 지우면 **고아 행이 남는다**.
+
+```sql
+select * from public.users where id = '<uuid>';   -- 되돌릴 수 있게 먼저 떠 둔다
+delete from public.users where id = '<uuid>';
+delete from auth.users   where id = '<uuid>';
+```
+
+경기·클럽·방이 있는 계정에는 쓸 수 없다(`clubs.owner_id` 등 RESTRICT FK 셋).
+
 ## 9. 테스트 시나리오
 
 | # | 시나리오 | 기대 |
