@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 import type { MatchType } from '@/types'
 import { getMatchTypeStyle, MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
 import { CARD_BASE, PILL_BASE } from '@/lib/dashboard/tokens'
@@ -12,7 +12,7 @@ type Props = {
 /**
  * 특정 매치타입만 0경기일 때의 카드 빈 상태 (레벨2).
  * 상단 pill은 일반 카드(StatsQuadCard)와 동일 위치로 유지해 그리드 정렬을 맞춘다.
- * 기록하기 CTA는 헤더 우측(일반 카드의 승률 위치)에 두어 빈 카드가 세로로 늘어나지 않게 한다.
+ * 매칭 참여 CTA(recordHref — Week 57부터 매칭 리스트)는 헤더 우측(일반 카드의 승률 위치)에 두어 빈 카드가 세로로 늘어나지 않게 한다.
  */
 export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
     const style = getMatchTypeStyle(matchType)
@@ -30,8 +30,8 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                         href={recordHref}
                         className="inline-flex items-center gap-1 text-caption font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
-                        <Plus className="w-3 h-3" />
-                        기록하기
+                        <CalendarDays className="w-3 h-3" />
+                        매칭 참여
                     </Link>
                 )}
             </div>

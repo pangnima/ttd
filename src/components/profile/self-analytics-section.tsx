@@ -42,7 +42,7 @@ type Props = {
     ratingHistory?: RatingHistoryPoint[]
 }
 
-type EmptyCta = { recordHref?: string; browseHref?: string; browseLabel?: string }
+type EmptyCta = { recordHref?: string; recordLabel?: string; browseHref?: string; browseLabel?: string }
 
 // 0경기 빈 상태 CTA — scope별 행동 유도. 클럽 통계는 개인 경기 기록으로 채울 수 없어
 // 기록 버튼 대신 해당 클럽 대진표 링크만 노출한다.
@@ -50,11 +50,13 @@ type EmptyCta = { recordHref?: string; browseHref?: string; browseLabel?: string
 // 개인·통합 scope의 [클럽 찾아보기](browseHref: '/clubs')는 1차 오픈에서 내렸다(Week 54) —
 // 클럽이 동결 상태라 유도해 봐야 갈 곳이 없다. StatsEmpty의 browse 슬롯은 그대로이니
 // 되살리려면 아래 return에 `browseHref: '/clubs'`를 다시 넣으면 된다.
+// 기록 CTA는 매칭 리스트로 간다(Week 57) — 회원이 끼는 경기는 매칭을 거치고 직접 기록은 비회원 전용이라,
+// 신규 회원을 `/me/personal-matches/new`로 보내면 첫 행동이 어긋난다(헤더 빈 상태·체크리스트와 같은 목적지).
 function getEmptyCta(scope: AnalyticsScope): EmptyCta {
     if (scope.kind === 'club') {
         return { browseHref: `/clubs/${scope.clubId}/match-games`, browseLabel: '대진표 보기' }
     }
-    return { recordHref: '/me/personal-matches/new' }
+    return { recordHref: '/match-rooms', recordLabel: '매칭 참여하기' }
 }
 
 /**

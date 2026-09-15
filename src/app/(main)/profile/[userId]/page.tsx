@@ -4,6 +4,7 @@ import { fetchUserById } from '@/lib/queries/users'
 import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
 import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
 import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
+import { fetchRoomQueue } from '@/lib/queries/room-queue'
 import {
     fetchClubRatingHistory,
     fetchClubRatingRanking,
@@ -103,10 +104,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         const personalHref = personalNavHref(userId)
 
         // 통계 번들 + 클럽 레이팅 추세/순위(클럽 scope에서만 — 헤더 뱃지·순위에 쓴다)
-        const [bundle, ratingHistory, ranking] = await Promise.all([
+        // 방 큐는 React cache라 레이아웃(뱃지)과 같은 한 벌 — 온보딩의 「매칭 참여」 판정에만 쓴다
+        const [bundle, ratingHistory, ranking, roomQueue] = await Promise.all([
             fetchAnalyticsBundle(userId, { scope }),
             scope.kind === 'club' ? fetchClubRatingHistory(scope.clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
             scope.kind === 'club' ? fetchClubRatingRanking(scope.clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
+            fetchRoomQueue(userId),
         ])
         const { clubRating, provisional } = deriveHeaderRating(ratingHistory)
         const clubRank = scope.kind === 'club' ? rankOf(ranking, userId) : undefined
@@ -154,9 +157,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         }
 
         // 온보딩 체크리스트 — 기본 탭(개인)에서만, 미완료 단계가 남았을 때 노출.
-        // 완료 판정은 이미 로드한 데이터(개인 경기 수·프로필 이미지)만 사용.
+        // 완료 판정은 이미 로드한 데이터(참가 중인 방·개인 경기 수·프로필 이미지)만 사용.
         const onboardingSteps = buildOnboardingSteps({
             userId,
+            hasJoinedRoom: roomQueue.joinedRoomIds.length > 0,
             hasPersonalMatch: bundle.personalMatches.length > 0,
             hasProfileImage: Boolean(target.profileImage),
         })
@@ -178,10 +182,9 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 />
                 {/* 통계 범위 탭 스캐폴드 — 개인만 동작, 클럽/통합은 준비 중 */}
                 <ProfileScopeTabs scope={scope} personalHref={personalHref} />
-                {/* 0경기(비클럽 scope)는 헤더 카드가 빈 상태 안내를 담당 → 체크리스트 숨김(중복 방지) */}
-                {!(headerStats.games === 0 && scope.kind !== 'club') && showOnboarding && (
-                    <OnboardingChecklist steps={onboardingSteps} />
-                )}
+                {/* 0경기에서도 그린다(Week 57) — 헤더 빈 상태는 "왜 비었나"를, 체크리스트는 "무엇을 할지"를 말한다.
+                    옛 0경기 가드는 「첫 경기」 단계를 미완료 상태로는 영영 못 보게 만들었다 */}
+                {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
         )

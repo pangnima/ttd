@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CheckCircle2, ChevronRight, PlusCircle, UserRound, X, type LucideIcon } from 'lucide-react'
+import { CalendarDays, CheckCircle2, ChevronRight, UserRound, X, type LucideIcon } from 'lucide-react'
 
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
 import { Progress } from '@/components/ui/progress'
@@ -13,7 +13,7 @@ import { countCompletedSteps, type OnboardingStep, type OnboardingStepKey } from
 const DISMISS_KEY = 'onboarding:checklist-dismissed'
 
 const STEP_ICONS: Record<OnboardingStepKey, LucideIcon> = {
-    'personal-match': PlusCircle,
+    'join-match': CalendarDays,
     profile: UserRound,
 }
 

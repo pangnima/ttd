@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, Users } from 'lucide-react'
+import { CalendarDays, Users } from 'lucide-react'
 import { EMPTY_BLOCK, PILL_BASE } from '@/lib/dashboard/tokens'
 
 type Props = {
@@ -24,7 +24,7 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
             <img src="/empty/empty-stats.svg" alt="" aria-hidden width={132} height={96} draggable={false} />
             <div className="space-y-1">
                 <p className="text-body font-medium text-foreground">전적 데이터가 아직 없어요</p>
-                <p className="text-body2 text-muted-foreground">단식·복식 경기를 기록하면 유형별 승-패-무 통계가 여기에 표시됩니다.</p>
+                <p className="text-body2 text-muted-foreground">매칭에서 확정된 단식·복식 경기가 유형별 승-패-무 통계로 여기에 표시됩니다.</p>
             </div>
 
             {/* 4분기 미리보기 칩 (비활성 장식) */}
@@ -43,8 +43,8 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
                             href={recordHref}
                             className="inline-flex items-center gap-1.5 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                         >
-                            <Plus className="w-3.5 h-3.5" />
-                            {recordLabel ?? '첫 경기 기록하기'}
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            {recordLabel ?? '매칭 참여하기'}
                         </Link>
                     )}
                     {browseHref && (

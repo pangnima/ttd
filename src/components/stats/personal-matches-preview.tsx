@@ -22,7 +22,7 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                     href="/me/personal-matches/new"
                     className="inline-flex items-center gap-1 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
                 >
-                    + 경기 추가
+                    + 직접 기록
                 </Link>
             </div>
             {groups.length === 0 ? (
@@ -31,9 +31,9 @@ export function PersonalMatchesPreview({ personalMatches }: Props) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
                     <span>
-                        기록된 개인 경기가 없습니다.{' '}
-                        <Link href="/me/personal-matches/new" className="text-primary hover:underline">
-                            첫 경기 입력하기
+                        아직 확정된 경기가 없습니다.{' '}
+                        <Link href="/match-rooms" className="text-primary hover:underline">
+                            매칭이 끝나면 전적이 여기로 옵니다
                         </Link>
                     </span>
                 </div>
