@@ -58,3 +58,19 @@ export function mapAuthQueryError(code: string | null | undefined): string | nul
     if (!code) return null
     return QUERY_ERROR_MESSAGES[code] ?? null
 }
+
+// ── 비밀번호 찾기 화면이 쿼리로 받는 신호 (`/forgot-password?error=…`) ────────
+// `/auth/confirm`이 만료·재사용된 재설정 링크를 이곳으로 돌려보낸다(Week 61). 위 QUERY_ERROR_MESSAGES는
+// 로그인 화면 전용이라 섞지 않는다 — 착지 화면이 다르면 상수도 따로 둔다.
+
+export const RESET_EXPIRED_ERROR_PARAM = 'expired'
+
+const RESET_QUERY_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+    [RESET_EXPIRED_ERROR_PARAM]: '재설정 링크가 만료되었거나 이미 사용되었습니다. 다시 요청해 주세요.',
+}
+
+/** `/forgot-password?error=` 값 → 화면 문구. 모르는 값이면 null. */
+export function mapResetQueryError(code: string | null | undefined): string | null {
+    if (!code) return null
+    return RESET_QUERY_ERROR_MESSAGES[code] ?? null
+}

@@ -1,7 +1,6 @@
 'use client'
 
 import { useActionState } from 'react'
-
 import { Button } from '@/components/ui/button'
 import { requestPasswordResetAction } from '@/lib/actions/auth'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
@@ -9,11 +8,11 @@ import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/
 export function ForgotPasswordForm() {
     const [state, formAction, isPending] = useActionState(requestPasswordResetAction, null)
 
-    // 전송 성공 시 폼 대신 안내 문구만 노출 (이메일 존재 여부는 노출하지 않음)
+    // 전송 성공 시 폼 대신 안내 문구만 노출 (계정 존재 여부는 노출하지 않음)
     if (state?.success) {
         return (
             <div className="rounded-md border border-border bg-muted/40 px-4 py-5 text-body text-foreground/80">
-                입력하신 이메일이 가입되어 있다면 비밀번호 재설정 링크를 보냈습니다.
+                입력한 정보가 가입되어 있다면 가입한 이메일로 비밀번호 재설정 링크를 보냈습니다.
                 메일함을 확인해 주세요.
             </div>
         )
@@ -22,11 +21,11 @@ export function ForgotPasswordForm() {
     return (
         <form action={formAction} className="space-y-4">
             <div>
-                <label htmlFor="email" className={labelCls}>이메일</label>
+                <label htmlFor="identifier" className={labelCls}>아이디 또는 이메일</label>
+                {/* 로그인 칸과 같은 해석(Week 61) — 아이디면 서버가 가입 이메일로 풀어 그쪽으로 보낸다 */}
                 <input
-                    id="email" name="email" type="email"
-                    placeholder="name@email.com"
-                    required autoComplete="email"
+                    id="identifier" name="identifier" type="text" placeholder="아이디 또는 name@email.com"
+                    required autoComplete="username" autoCapitalize="none" spellCheck={false}
                     className={inputCls}
                 />
             </div>
