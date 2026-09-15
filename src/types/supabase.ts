@@ -1332,6 +1332,10 @@ export type Database = {
         Args: { p_expected_seq?: number; p_games: Json; p_session_id: string }
         Returns: undefined
       }
+      find_login_id: {
+        Args: { p_email: string; p_name: string }
+        Returns: Json
+      }
       get_club_activity_ranking: {
         Args: { p_club_id: string; p_since?: string }
         Returns: {
