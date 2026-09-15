@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import {
     ArrowRight, BookOpen, CalendarDays, ClipboardList, ListChecks, Milestone, Route, type LucideIcon,
 } from 'lucide-react'
@@ -9,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { GuideText } from '@/components/guide/guide-text'
 
 /** 화면 셋은 사이드바 메뉴(nav-items)와 같은 아이콘 — 가이드가 말하는 화면이 곧 메뉴의 화면이다 */
-const GUIDE_ICONS: Record<GuideSectionId, LucideIcon> = {
+export const GUIDE_ICONS: Record<GuideSectionId, LucideIcon> = {
     flow: Route,
     'match-rooms': CalendarDays,
     'my-match-rooms': ListChecks,
@@ -23,7 +24,13 @@ const GUIDE_ICONS: Record<GuideSectionId, LucideIcon> = {
  * `id`가 앵커라 인라인 설명의 「전체 가이드 →」가 여기로 착지한다. 스크롤 컨테이너가 `<main>`이라
  * `scroll-mt`로 상단 여백만 준다.
  */
-export function GuideSectionCard({ section }: { section: GuideSection }) {
+type Props = {
+    section: GuideSection
+    /** 글 아래에 적층되는 예시 그림·스테퍼 — 2열로 두면 lg에서 글이 300px대로 좁아진다 */
+    example?: ReactNode
+}
+
+export function GuideSectionCard({ section, example }: Props) {
     const Icon = GUIDE_ICONS[section.id]
     return (
         <section id={section.id} className={cn(CARD_BASE, 'p-6 scroll-mt-4')}>
@@ -44,6 +51,7 @@ export function GuideSectionCard({ section }: { section: GuideSection }) {
                     </li>
                 ))}
             </ol>
+            {example}
             {section.href && section.cta && (
                 <Link
                     href={section.href}

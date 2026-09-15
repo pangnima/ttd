@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GUIDE_SCREEN_SECTIONS, GUIDE_SECTIONS, guideAnchorHref, type GuideScreenId } from './sections'
+import { GUIDE_FLOW_STEPS, GUIDE_SCREEN_SECTIONS, GUIDE_SECTIONS, guideAnchorHref, type GuideScreenId } from './sections'
 import { myMatchNavItems } from '@/lib/nav-items'
 import { stripEmphasis } from './emphasis'
 import { ROOM_STAGE_LABEL } from '@/lib/match-rooms/room-stage'
@@ -61,5 +61,21 @@ describe('GUIDE_SECTIONS', () => {
 
     it('앵커 href는 /guide#<id>', () => {
         expect(guideAnchorHref('my-match-rooms')).toBe('/guide#my-match-rooms')
+    })
+})
+
+describe('GUIDE_FLOW_STEPS', () => {
+    it('흐름 문구의 단계 수와 같다 — 스테퍼 칸과 글이 하나씩 짝이다', () => {
+        const flow = GUIDE_SECTIONS.find((s) => s.id === 'flow')!
+        expect(GUIDE_FLOW_STEPS).toHaveLength(flow.steps.length)
+    })
+
+    it('앵커가 실제 섹션 id다', () => {
+        const ids = new Set(GUIDE_SECTIONS.map((s) => s.id))
+        for (const step of GUIDE_FLOW_STEPS) expect(ids.has(step.anchor)).toBe(true)
+    })
+
+    it('라벨·화면 이름에 괄호 표기가 없다', () => {
+        for (const step of GUIDE_FLOW_STEPS) expect(`${step.label}${step.screen}`).not.toMatch(/[「」\[\]]/)
     })
 })

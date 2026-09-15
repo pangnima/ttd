@@ -40,7 +40,8 @@ export function guideAnchorHref(id: GuideSectionId): string {
 
 const [LIST_OPEN, LIST_PAST] = ROOM_LIST_TABS
 const [MINE_OPEN, MINE_PAST] = MY_ROOM_TABS
-const STAGE_FLOW: RoomStage[] = ['recruiting', 'playing', 'reviewing', 'settled', 'closed']
+/** 단계 순서 — 「매칭의 다섯 단계」 문구와 단계 스테퍼가 같은 배열을 본다 */
+export const STAGE_FLOW: RoomStage[] = ['recruiting', 'playing', 'reviewing', 'settled', 'closed']
 const OUTCOMES = `${OUTCOME_LABEL.win}·${OUTCOME_LABEL.loss}·${OUTCOME_LABEL.draw}`
 /** 강조 표기 — 버튼·탭·상태 이름처럼 화면에서 찾아야 하는 것에만 쓴다(`emphasis.ts`) */
 const em = (s: string) => `**${s}**`
@@ -121,6 +122,19 @@ const TERMS: GuideSection = {
         `${em(OUTCOMES)} — 게임(세트) 단위의 결과.`,
     ],
 }
+
+export type GuideFlowStep = { label: string; screen: string; anchor: GuideSectionId }
+
+/**
+ * 흐름 스테퍼의 칸(Week 58) — FLOW.steps와 같은 순서·같은 수. 각 칸은 그 일이 벌어지는 화면 이름과
+ * 자세히 볼 섹션 앵커를 든다(페이지 안 목차 역할). 노출 어휘라 문구는 여기(단일 출처)에 둔다.
+ */
+export const GUIDE_FLOW_STEPS: GuideFlowStep[] = [
+    { label: '모이기', screen: MATCH_ROOMS.title, anchor: 'match-rooms' },
+    { label: '게임 올리기', screen: '매칭 상세', anchor: 'stages' },
+    { label: '결과 입력·확인', screen: MY_MATCH_ROOMS.title, anchor: 'my-match-rooms' },
+    { label: '전적으로', screen: PERSONAL_MATCHES.title, anchor: 'personal-matches' },
+]
 
 /** 가이드 페이지 순서 — 흐름 → 화면 셋(사이드바 순서) → 단계 → 용어 */
 export const GUIDE_SECTIONS: GuideSection[] = [FLOW, MATCH_ROOMS, MY_MATCH_ROOMS, PERSONAL_MATCHES, STAGES, TERMS]
