@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
+import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 
@@ -41,8 +42,30 @@ export async function updateProfileAction(
         profileImage = defaultAvatar
     }
 
-    // 이름·성별·주력손·테니스 시작일·NTRP는 가입 시 1회 입력, 변경 불가 정책 —
+    // 테니스 시작일만 예외 — **비어 있을 때 1회** 받는다(Week 56).
+    // 필수로 올리기 전에 가입한 회원은 null로 남아 있는데, 설정은 읽기 전용이고 완성 화면은
+    // 재진입이 막혀 어느 화면에서도 채울 수 없었다. `completeProfileAction`의 `ntrp != null`
+    // 가드와 같은 모양이고, 정책이 「변경 불가」에서 「입력 후 변경 불가」로 좁혀질 뿐이다.
+    // 문구는 signupAction·completeProfileAction과 한 글자도 다르지 않아야 한다.
+    const startRaw = ((formData.get('tennis_start_date') as string | null) ?? '').trim()
+    let tennisStartDate: string | null = null
+    if (startRaw) {
+        const parsed = parseYearMonth(startRaw)
+        if (!parsed) return { error: '테니스 시작일은 2022/07 형식(년/월)으로 입력해 주세요.' }
+        const { data: current } = await supabase
+            .from('users')
+            .select('tennis_start_date')
+            .eq('id', user.id)
+            .single()
+        if (current?.tennis_start_date != null) {
+            return { error: '테니스 시작일은 이미 입력되어 변경할 수 없습니다.' }
+        }
+        tennisStartDate = toStartDateString(parsed)
+    }
+
+    // 이름·성별·주력손·NTRP는 가입 시 1회 입력, 변경 불가 정책 —
     // update 대상에서 제외해 서버에서 무시한다. (ntrp를 여기 남기면 폼에 필드가 없어 매 저장마다 NULL로 덮이므로 주의)
+    // 시작일도 **값이 있을 때만** 조건부로 넣는다 — 같은 이유로 무조건 넣으면 매 저장마다 NULL이 된다.
     const updates = {
         nickname: identity.values.nickname,
         phone: identity.values.phone || null,
@@ -53,6 +76,7 @@ export async function updateProfileAction(
         racket_model: normalizeRacketModel(formData.get('racket_model') as string | null),
         stats_hidden: formData.get('stats_hidden') === 'true',
         ...(profileImage ? { profile_image: profileImage } : {}),
+        ...(tennisStartDate ? { tennis_start_date: tennisStartDate } : {}),
     }
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id)
