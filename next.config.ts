@@ -36,17 +36,21 @@ const nextConfig: NextConfig = {
      *
      * 최적화가 정말 필요해지면 호스트를 늘리지 말고 가입 시 provider 사진을 우리 `avatars`
      * 버킷으로 복사해 URL을 우리 것으로 닫는다(백로그).
+     *
+     * 호스트가 `*.supabase.co`인 이유(Week 68): dev·prod 프로젝트가 둘이라 ref를 박으면 환경마다
+     * 설정이 갈린다. 위 원칙("열린 집합에 허용목록 금지")과 어긋나지 않는다 — 경로가 **우리 버킷 두 개**로
+     * 닫혀 있고, 호스트는 우리 프로젝트 둘 중 하나다(사용자 데이터가 고르는 값이 아니다).
      */
     images: {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'xiwwbgltkbvxdzxxxoba.supabase.co',
+                hostname: '*.supabase.co',
                 pathname: '/storage/v1/object/public/avatars/**',
             },
             {
                 protocol: 'https',
-                hostname: 'xiwwbgltkbvxdzxxxoba.supabase.co',
+                hostname: '*.supabase.co',
                 pathname: '/storage/v1/object/public/club-logos/**',
             },
         ],

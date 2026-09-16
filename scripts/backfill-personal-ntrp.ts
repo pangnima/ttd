@@ -5,6 +5,7 @@
  *
  * 실행: npm run db:backfill-personal-ntrp
  * 필요 env(.env.local): NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ * ⚠ 어느 프로젝트에 붙는지는 NEXT_PUBLIC_SUPABASE_URL이 정한다 — 로컬 .env.local은 dev다. prod에 돌릴 일이 있으면 URL·키를 바꿔 넣고 끝나면 되돌린다(Week 68).
  */
 import { config } from 'dotenv'
 config({ path: '.env.local' })

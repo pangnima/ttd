@@ -15,7 +15,7 @@
 
 ## 환경
 
-- 원격 Supabase(프로젝트 `xiwwbgltkbvxdzxxxoba`)를 그대로 쓴다. 로컬 스택 없음.
+- 원격 Supabase **dev**(프로젝트 `xiwwbgltkbvxdzxxxoba`)를 그대로 쓴다. 로컬 스택 없음. **prod(`rjuhydxaoizgfiatyfpo`)에서는 절대 돌리지 않는다**(Week 68 — 테스트 계정·`E2E-%` 태그·정리 SQL은 전부 dev의 것이다).
 - 앱은 `npm run dev`(http://localhost:3000). 뷰포트 **1280×900** 고정 — 헤더 [로그아웃] 텍스트가 `sm` 미만에서 숨는다.
 - 브라우저는 **Playwright MCP**(`browser_navigate` / `browser_snapshot` / `browser_click` / `browser_type` / `browser_handle_dialog`). Chrome 확장은 이 앱에서 스크린샷·스크립트 주입 타임아웃이 잦아 보조로만. **MCP가 둘 다 안 닿으면**(Week 63) npx 캐시의 `playwright` 패키지를 node 스크립트에서 `chromium.launch({ channel: 'chrome', headless: true })`로 띄운다 — 로그인은 `/login` 폼 제출, 파일 업로드는 `setInputFiles`, 배치마다 `browser.newContext()`. 스토리지 객체는 SQL로 지울 수 없다(`storage.protect_delete`) — supabase-js로 그 계정에 로그인해 `storage.from('avatars').remove()`.
 - DB 확인·보조 액션은 Supabase MCP `execute_sql`. 사용자 컨텍스트는

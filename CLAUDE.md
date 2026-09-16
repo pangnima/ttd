@@ -5,10 +5,20 @@
 ## 프로젝트 개요
 테니스 클럽 운영자와 회원 모두를 위한 클럽 관리 + 경기 통계 플랫폼. 여러 클럽이 독립적으로 운영되는 커뮤니티 중심 플랫폼.
 
+## 환경 (Week 68 — dev / prod 두 프로젝트)
+| | dev (테스트 전용) | prod (실사용자 전용) |
+|---|---|---|
+| Supabase ref | `xiwwbgltkbvxdzxxxoba` (TennisClubs, 서울) | `rjuhydxaoizgfiatyfpo` (baselineplay-prod, 서울) |
+| 누가 붙나 | 로컬 `npm run dev`(`.env.local`) · E2E · Vercel **Preview/Development** | Vercel **Production**(baselineplay.vercel.app)만 |
+| 계정 | 남자01~·관리자 등 테스트 계정 56명(비밀번호 123123, `docs/e2e/README.md`) | 실사용자만. 관리자 = 본인 구글 계정 `role='admin'` |
+| MCP | `apply_migration`·`execute_sql` 쓰기 자유 | **읽기 조회 + 마이그레이션 적용만** — `execute_sql`로 데이터를 만들거나 고치지 않는다, E2E·시드 금지 |
+
+규칙: **마이그레이션은 dev 롤백 스모크 → dev 적용 → prod 적용** 순으로 둘 다. 스키마 재현 정본은 `supabase/history/`(원격 `schema_migrations` 히스토리 사본, `scripts/db-history.ts`로 export/replay/snapshot) — 새 마이그레이션을 둘 다 적용한 뒤 `export`로 갱신하고, 정의가 갈렸는지 의심되면 두 환경 `snapshot`을 diff한다(Week 68에 그 diff가 히스토리 밖 EXECUTE 회수 4건을 잡아 0091로 편입했다). 히스토리 밖에서 `execute_sql`로만 DDL·권한을 바꾸면 prod에 재현되지 않는다. Auth 설정(Google provider·Site URL·Redirect URLs·Confirm email off·최소 비밀번호 8)은 SQL 밖이라 두 대시보드에서 각각 맞춘다. 로컬 `.env.local`은 언제나 dev — prod 값은 Vercel Production env에만 둔다.
+
 ## 기술 스택
 - Next.js 16.2.6 (App Router) · React 19.2.4 · TypeScript strict
 - shadcn/ui (@base-ui/react) + Tailwind CSS v4
-- Supabase (Auth + PostgreSQL + Storage) · 배포 Vercel(예정)
+- Supabase (Auth + PostgreSQL + Storage, dev·prod 두 프로젝트 — 위 「환경」) · 배포 Vercel(baselineplay.vercel.app)
 - 테스트 vitest(순수 함수만)
 
 ## 폴더 구조
@@ -165,7 +175,10 @@ src/
 
 | 67 | — | **사이드 메뉴 IA·명칭 재정비 — 1depth 유지 · [+ 매칭 만들기] CTA · 「개인 통계」·「내 경기 결과」** — 사용자 고민 넷(「개인」이 무엇인지 말하지 않는다 / 매칭 만들기가 목록 화면 안에만 있다 — 2depth로 풀까 / 「참여 중인 매칭」이 종료 히스토리까지 담는다 / 「개인 경기 결과」가 종료 히스토리 + 비회원 직접 기록을 겸한다)을 한 묶음으로 봤다. **조사에서 드러난 뿌리**: 「개인」은 프로필 scope 탭(`profile-scope-tabs.tsx` '개인/클럽/통합')의 **하위 탭 이름을 그대로 메뉴명으로 쓴 것**이라 뜻이 비었고, 착지 화면에 PageHeader가 없어(h1 = 사용자 이름) 라벨↔제목이 끊겨 있었다(Week 54 잔여). 「개인 경기 결과」의 '개인'은 그 메뉴와 부딪히고 **'비공개'로 읽힌다**(사용자가 "비공개로 직접 기록"이라 표현한 것이 증거 — 실제 직접 기록도 확정되면 통계·공개 토글을 따른다). 「참여 중인 매칭」(방 단위·정산 축)과 「개인 경기 결과」(게임 단위·확정 전적 원장)는 **같은 데이터의 다른 그레인**이지 중복이 아니다. **2depth는 기각** — 항목 4개뿐이고 화면 안 `LinkTabs`가 이미 하위 구분을 맡는다. 부모에 뱃지를 합산하면 「뱃지 = 착지 화면 카드 수」 항등식이 깨지고, 모바일 시트에 아코디언(신규 패턴)이 필요하며, '만들기'는 **장소가 아니라 액션**이라 메뉴 항목으로 두면 활성 표시가 어색하다(dead code `club-nav-tree.tsx`는 클럽 해동용 예약이라 살리지 않았다). 대신 ① **`NavCreateLink`** — 사이드바·모바일 시트 최상단의 옐로우 채움 [+ 매칭 만들기](`CTA_LINK`, Week 66 규칙 — Gmail 「편지쓰기」 자리. rail이면 + 아이콘 + aria-label, 비로그인 없음). 목록 화면 안 `RoomCreateLink`는 그대로(진입점은 하나만 두지 않는다 — Week 57). ② **재명명 둘** — 「개인」→「개인 통계」, 「개인 경기 결과」→「내 경기 결과」. 「매칭 리스트」는 "리스트에 올린다·내린다·노출"처럼 **25곳 이상에서 개념어**로 쓰여 유지했고(바꾸면 "전체 매칭에서 내리기"처럼 문장이 망가진다), 「참여 중인 매칭」도 유지·순서도 현행(사용자 결정). '개인 경기'(클럽 경기 대비 도메인 어휘)는 남는다. ③ **라벨 단일 출처 `NAV_LABEL`**(`nav-items.ts`) — 페이지 제목·metadata·탭 aria-label·가이드 화면 섹션 title/cta·FLOW step 4·탭 빈 상태·`ROOM_STAGE_HINT.settled`·정산/내려간 방 안내·프로필 미리보기 h2·랜딩 기능 문구·온보딩 설명이 전부 보간한다(`member-labels.ts` 관용구 — 라벨 문자열을 다시 리터럴로 적어도 tsc는 모르므로 `nav-items.test.ts`가 src 스캔으로 옛 라벨 재유입을 막고, `sections.test.ts` RETIRED_WORDS에도 '개인 경기 결과'를 넣었다). ④ 본인 프로필 `MemberProfileHeader` 위에 eyebrow 「개인 통계」 — 메뉴 라벨과 화면이 이어진다(타인 프로필은 없다). ⑤ `/me/personal-matches`의 [+ 직접 기록]을 `PageHeader.actions`에서 **목록 위 별도 행**으로 — 두 매칭 목록의 `RoomCreateLink`와 같은 자리(Week 54 규칙에서 혼자 벗어나 있었다). **DB·URL 변경 없음**(공유 링크·E2E 경로 보존, K-11 그대로 known). 범위 밖으로 남긴 것: `ROOM_LIST_TABS` 라벨 '진행 중인 경기/종료된 경기'의 '경기'→'매칭' 어휘 통일, 로고 '홈' 결정, 모바일 헤더 아이콘 CTA(헤더 106줄) |
 
+| 68 | 0091 | **환경 분리 — dev / prod Supabase 프로젝트 둘** — "회원용과 테스트용 아이디를 분리해야 한다"에서 시작했다. 조사: 원격 프로젝트가 **하나**뿐이라 개발·E2E·배포가 같은 DB를 썼고, 회원 56명이 전부 개발자 본인의 테스트 계정(외부 실사용자 0), 회원 검색·RPC·RLS에 테스트 계정을 거르는 훅이 없어 오픈하면 실사용자가 남자01을 검색·초대하고 통계에 섞인다. 네 방식 중 **프로젝트 분리**를 택했다 — 같은 DB 안 `is_test` 플래그는 검색·통계·랭킹·타인 프로필·OG·RPC·RLS 전부에 필터가 필요해 한 곳만 빠져도 누수, Branching은 Pro 플랜, 로컬 스택은 Docker + MCP 롤백 스모크 워크플로 단절. 방향은 **현재 프로젝트 = dev 유지, prod 신설**(`rjuhydxaoizgfiatyfpo`, 비용 0): 옮길 실데이터가 없고, 문서·메모리·E2E·MCP 습관이 전부 현재 ref를 가리켜 그것이 dev가 되면 prod 오기입 사고를 구조적으로 막는다. **재현의 열쇠는 원격 `supabase_migrations.schema_migrations`였다** — 레포 `migrations/`는 0016부터라 파일만으로는 빈 프로젝트를 만들 수 없는데(0001~0015 부재, CLI·Docker·pg_dump 전무), MCP `apply_migration`이 남긴 statements 전문이 0001부터 전부 거기 있었다. `scripts/db-history.ts`(pg devDep)가 그것을 `supabase/history/`로 내려받고(119건·673KB — 0001~0015 공백 해소), prod에 순서대로 재생하며 `schema_migrations`에 같은 version·name으로 기록했다(Direct URI는 무료 플랜 IPv6 전용이라 스크립트가 pooler로 바꿔 붙는다 — 클러스터가 프로젝트마다 달라 dev aws-1·prod aws-0). 재생 직후 `0003_seed_admin`이 만든 `admin@tennis-club.com`을 지웠다(알려진 비밀번호). **드리프트 검증이 이 작업의 요점**: 두 환경의 정의 스냅샷(함수 md5·정책·컬럼·제약·트리거·인덱스·권한·RLS·뷰·버킷·확장)을 diff하니 routine_grants만 달랐다 — 트리거 함수 3개의 PUBLIC/anon/authenticated EXECUTE와 `update_match_room_password`의 anon EXECUTE가 dev에서만 회수돼 있었다. "새 RPC는 anon 회수, 트리거 함수는 PUBLIC도 회수"를 마이그레이션이 아니라 `execute_sql`로만 적용한 자리라 **히스토리 밖 정의는 재현되지 않는다**는 사실이 그대로 드러났다. 0091로 편입해 둘 다 적용 → diff 0, `generate_typescript_types`(prod)와 `types/supabase.ts` diff 0. 앱 코드 변경은 `next.config.ts` remotePatterns 호스트 `*.supabase.co` 한 곳(경로가 우리 버킷 둘로 닫혀 있어 열린 집합이 아니다). 대시보드(Auth·Google provider·URL)·Google Console 리디렉션 URI·Vercel env는 사용자 수동 후 검증 |
+
 ### 남은 일 (백로그)
+- **Week 68 잔여**: ① prod **대시보드 설정은 사용자 수동**(Confirm email off·최소 비밀번호 8·Google provider 같은 Client ID/Secret·Site URL `https://baselineplay.vercel.app`·Redirect URLs `https://baselineplay.vercel.app/**`) + Google Cloud Console 리디렉션 URI `https://rjuhydxaoizgfiatyfpo.supabase.co/auth/v1/callback` 추가 + Vercel Production env(URL·anon key) → prod, Preview·Development → dev. 확인은 `curl "$URL/auth/v1/settings" -H "apikey: $ANON"`의 `external.google`·`mailer_autoconfirm`과 auth_logs referer(Week 59). ② prod 스모크(구글 로그인 → 매칭 1건 → 내리기) + `update public.users set role='admin'` 승격. ③ prod DB 비밀번호는 채팅에 붙었던 적이 있어 작업 후 Reset. ④ 무료 플랜은 7일 무활동 시 일시정지 — prod 오픈 전까지 주 1회 접속하거나 Pro. ⑤ 프리뷰 배포에서 구글 로그인까지 원하면 dev Redirect URLs에 `https://*-<팀슬러그>.vercel.app/**`. ⑥ dev 테스트 계정 비밀번호 123123은 그대로(weak_password 배너) — 정책 준수값으로 일괄 교체는 별도. ⑦ `supabase/history/`는 `schema_migrations`의 사본이라 `apply_migration`을 dev에만 하고 prod를 빠뜨리면 두 환경이 갈린다 — 의심되면 `snapshot` diff. CLI `link`·`config.toml`·`seed.sql`·타임스탬프 파일명 전환은 미도입.
 - **Week 67 잔여**: 사이드바 CTA와 목록 화면 안 `RoomCreateLink`가 같은 화면에 함께 보인다(진입점 복수 원칙 — 혼동 보고가 오면 목록 안 버튼을 먼저 뺀다). 모바일은 시트를 열어야 CTA가 보인다(헤더 아이콘 버튼은 `header.tsx` 106줄 분리가 선행). `ROOM_LIST_TABS` 라벨의 '경기'(진행 중인 경기/종료된 경기)는 카드가 방 단위라 '매칭'이 맞지만 Week 54 잔여가 "의도된 구분"이라 적어 두어 이번엔 손대지 않았다. `nav-items.test.ts`의 옛 라벨 가드는 주석을 벗기고 보므로 주석의 옛 이름은 잡지 않는다(이번에 주석도 함께 바꿨다). 브라우저 확인은 `runs.md` Week 67.
 - **Week 66 잔여**: 채움 버튼 = 옐로우 규칙에 **테스트 가드가 없다** — `colors.test.ts`는 hex·팔레트만 잡고, variant 미지정 `<Button>`이나 인라인 `bg-primary text-primary-foreground`가 새로 들어와도 시끄럽지 않다(잡으려면 `rg -n "<Button" src | rg -v variant`와 `bg-primary text-primary-foreground` 부재를 vitest 파일 스캔으로 굳히면 된다 — colors.test의 scan 관용구 재사용). `common/chip.tsx`의 `ink` 톤은 여전히 `bg-primary` 채움이지만 import처가 없다(살릴 때 spot-solid로). `member-result-row`의 선택 체크 원은 primary(선택 표시라 버튼이 아니다). 옐로우 채움과 spot 주의 필이 한 화면에 서는 자리(참여 중인 매칭 초대 카드·룸 배너)는 형태로만 갈린다 — 혼동 보고가 오면 필을 `muted` 톤으로 옮기는 것이 첫 후보.
 - **Week 65 잔여**: 콜라주 카드 안 `Link`의 뷰포트 프리페치가 비로그인에서 미들웨어 307을 받는다(카드 3장 — `/guide`와 같은 선례라 수용. 거슬리면 `MatchRoomCard`에 `prefetch` 옵션 한 줄). 콜라주의 절대 좌표(`PILLS[].position`·확정 카드 `lg:-right-2 lg:-top-6`)는 lg 고정값이라 카드 높이가 바뀌면 다시 맞춘다. 랜딩은 `dark` 스코프 고정이라 **라이트 팔레트를 보는 화면이 아니다**(colors.test의 라이트 대비 검증은 그대로 돌지만 랜딩에는 닿지 않는다). 흐름 칸을 링크로 만들려면 랜딩 안에 상세 섹션이 먼저 있어야 한다. 파트너·수치 섹션은 실데이터가 생기면(공개 통계 RPC) 그때 넣는다.
@@ -204,7 +217,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 ```
 
 ## DB 스키마 현황
-> 2026-09 재설계(`docs/redesign/`): 다형성 컬럼을 참가자 테이블로 정규화. 마이그레이션 0001~0090(0016부터 `supabase/migrations/*.sql`이 정본, 원격 적용은 MCP `apply_migration`). 원격 DB의 정의가 레포에 없으면 `execute_sql`로 읽어 마이그레이션에 편입한다.
+> 2026-09 재설계(`docs/redesign/`): 다형성 컬럼을 참가자 테이블로 정규화. 마이그레이션 0001~0091(0016부터 `supabase/migrations/*.sql`, 전체 재현 정본은 **`supabase/history/`** — 원격 히스토리 120건 사본, Week 68. 원격 적용은 MCP `apply_migration`을 dev → prod 순으로 둘 다). 원격 DB의 정의가 레포에 없으면 `execute_sql`로 읽어 마이그레이션에 편입한다 — 히스토리 밖 정의는 prod에 재현되지 않는다.
 
 | 테이블 | 핵심 규칙 |
 |---|---|
@@ -272,7 +285,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 ### Supabase
 - 읽기: Server Component에서 `lib/supabase/server.ts`. 쓰기: `lib/actions/*` Server Action으로만. Client Component는 `lib/supabase/client.ts` read-only
 - 권한 판단은 `club_members.role = 'owner'` 기준(`clubs.owner_id` 직접 비교 금지). 환경변수는 `.env.local`만
-- 마이그레이션은 `supabase/migrations/00NN_slug.sql`이 정본. 새 RPC는 anon EXECUTE 회수, pgcrypto는 `set search_path = public, extensions`. RLS/RPC 검증은 `execute_sql`에 `begin; … rollback;` 롤백 스모크(사용자 컨텍스트는 `set_config('request.jwt.claims', …)`)
+- 마이그레이션은 `supabase/migrations/00NN_slug.sql`이 정본(dev 롤백 스모크 → dev 적용 → **prod 적용** → `db-history.ts export`). 새 RPC는 anon EXECUTE 회수(**마이그레이션 안에서** — execute_sql로만 하면 prod에 안 간다), pgcrypto는 `set search_path = public, extensions`. RLS/RPC 검증은 `execute_sql`에 `begin; … rollback;` 롤백 스모크(사용자 컨텍스트는 `set_config('request.jwt.claims', …)`)
 
 ## 타입 정의 요약 (src/types/index.ts)
 ```ts
@@ -294,13 +307,14 @@ npm run dev · npm run build · npm run lint · npx tsc --noEmit · npx vitest r
 ```
 
 ## 관리자 계정
-admin@admin.com / 123123
+**dev 전용**: admin@admin.com / 123123 (prod에는 없다 — prod 관리자는 본인 구글 계정을 `role='admin'`으로 승격, Week 68)
 
 ## 절대 하지 말 것
 - `any` 타입, default export, `console.log` 커밋
 - `components/ui/` 직접 수정, 환경변수 하드코딩
 - 시맨틱 타이포·컬러 토큰 외 클래스(`text-sm`·`bg-sky-500`·`bg-[#hex]`), `globals.css` 밖 hex(예외: components/ui·`lib/rating/tier.ts`·`lib/og/brand.ts`·`app/layout.tsx` 미러)
 - `match_requests`·`match_result_negotiations`·`rotation_session_participants`·`match_room_secrets` 직접 INSERT/UPDATE(RPC·트리거 전용)
+- **prod**(`rjuhydxaoizgfiatyfpo`)에 `execute_sql`로 데이터 쓰기·E2E·시드·테스트 계정 생성. 히스토리 밖 DDL·권한 변경(`execute_sql`로만 한 revoke 등 — prod에 재현되지 않는다, 반드시 마이그레이션으로)
 
 ## 작업 완료 후 체크리스트
 - [ ] `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npx vitest run`
