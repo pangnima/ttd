@@ -5,7 +5,8 @@ import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
 import { Button } from '@/components/ui/button'
 import { updatePasswordAction } from '@/lib/actions/profile'
 import { PASSWORD_MIN_LEN } from '@/lib/auth/password-policy'
-import { CARD_BASE, FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 
 export function PasswordChangeForm() {
     const [state, formAction, isPending] = useActionState(updatePasswordAction, null)
@@ -32,48 +33,24 @@ export function PasswordChangeForm() {
 
             <div className="h-px bg-border" />
 
-            <div>
-                <label htmlFor="current_password" className={labelCls}>현재 비밀번호</label>
-                <input
-                    id="current_password"
-                    name="current_password"
-                    type="password"
-                    placeholder="현재 비밀번호 입력"
-                    required
-                    autoComplete="current-password"
-                    className={inputCls}
-                />
-            </div>
+            <TextField
+                id="current_password" name="current_password" type="password" label="현재 비밀번호"
+                placeholder="현재 비밀번호 입력" required autoComplete="current-password"
+            />
 
             <div>
-                <label htmlFor="new_password" className={labelCls}>새 비밀번호</label>
-                <input
-                    id="new_password"
-                    name="new_password"
-                    type="password"
-                    placeholder="영문·숫자·특수문자"
-                    required
-                    minLength={PASSWORD_MIN_LEN}
-                    autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className={inputCls}
+                <TextField
+                    id="new_password" name="new_password" type="password" label="새 비밀번호"
+                    placeholder="영문·숫자·특수문자" required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
+                    value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
                 />
                 <PasswordRulesHint value={newPassword} className="mt-1.5" />
             </div>
 
-            <div>
-                <label htmlFor="confirm_password" className={labelCls}>새 비밀번호 확인</label>
-                <input
-                    id="confirm_password"
-                    name="confirm_password"
-                    type="password"
-                    placeholder="새 비밀번호 재입력"
-                    required
-                    autoComplete="new-password"
-                    className={inputCls}
-                />
-            </div>
+            <TextField
+                id="confirm_password" name="confirm_password" type="password" label="새 비밀번호 확인"
+                placeholder="새 비밀번호 재입력" required autoComplete="new-password"
+            />
 
             {state?.error && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">

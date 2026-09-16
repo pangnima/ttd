@@ -4,7 +4,7 @@ import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { FindIdResultCard } from '@/components/auth/find-id-result'
 import { findLoginIdAction } from '@/lib/actions/auth'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 
 /**
  * 아이디 찾기 폼(0086) — 이름 + 이메일. 맞으면 폼 대신 결과 카드를 보인다.
@@ -23,22 +23,8 @@ export function FindIdForm() {
 
     return (
         <form action={formAction} className="space-y-4">
-            <div>
-                <label htmlFor="name" className={labelCls}>이름</label>
-                <input
-                    id="name" name="name" type="text" placeholder="가입할 때 적은 이름"
-                    required autoComplete="name" maxLength={20}
-                    className={inputCls}
-                />
-            </div>
-            <div>
-                <label htmlFor="email" className={labelCls}>이메일</label>
-                <input
-                    id="email" name="email" type="email" placeholder="name@email.com"
-                    required autoComplete="email"
-                    className={inputCls}
-                />
-            </div>
+            <TextField id="name" name="name" type="text" label="이름" placeholder="가입할 때 적은 이름" required autoComplete="name" maxLength={20} />
+            <TextField id="email" name="email" type="email" label="이메일" placeholder="name@email.com" required autoComplete="email" />
 
             {(state?.error || notFound) && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">

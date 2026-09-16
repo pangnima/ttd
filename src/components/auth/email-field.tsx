@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { TextField } from '@/components/common/text-field'
 import { useAvailabilityCheck } from '@/components/auth/use-availability-check'
 import { EMAIL_TAKEN_MESSAGE, looksLikeEmail, normalizeEmail } from '@/lib/auth/email'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 type Props = {
     /** 제출 버튼을 잠글 때 쓴다. 참조가 고정된 함수를 넘길 것(effect 의존성) */
@@ -33,28 +33,23 @@ export function EmailField({ onTakenChange }: Props) {
         onTakenChange?.(taken)
     }, [taken, onTakenChange])
 
+    const message = taken ? (
+        <>
+            {EMAIL_TAKEN_MESSAGE}{' '}
+            <Link href="/login" className="underline underline-offset-2">로그인</Link>
+            {' · '}
+            <Link href="/forgot-password" className="underline underline-offset-2">비밀번호 찾기</Link>
+        </>
+    ) : checking ? '확인 중...' : '비밀번호 찾기와 안내에 사용됩니다.'
+
     return (
-        <div>
-            <label htmlFor="email" className={labelCls}>이메일 *</label>
-            <input
-                id="email" name="email" type="email" placeholder="example@email.com"
-                required autoComplete="email"
-                value={value} onChange={(e) => setValue(e.target.value)}
-                aria-invalid={taken}
-                className={inputCls}
-            />
-            {taken ? (
-                <p className="mt-1 text-caption text-destructive">
-                    {EMAIL_TAKEN_MESSAGE}{' '}
-                    <Link href="/login" className="underline underline-offset-2">로그인</Link>
-                    {' · '}
-                    <Link href="/forgot-password" className="underline underline-offset-2">비밀번호 찾기</Link>
-                </p>
-            ) : (
-                <p className="mt-1 text-caption text-muted-foreground">
-                    {checking ? '확인 중...' : '비밀번호 찾기와 안내에 사용됩니다.'}
-                </p>
-            )}
-        </div>
+        <TextField
+            id="email" name="email" type="email" placeholder="example@email.com" label="이메일 *"
+            required autoComplete="email"
+            value={value} onChange={(e) => setValue(e.target.value)}
+            aria-invalid={taken}
+            message={message}
+            messageTone={taken ? 'destructive' : 'muted'}
+        />
     )
 }

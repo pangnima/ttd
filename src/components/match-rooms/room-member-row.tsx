@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/common/user-avatar'
 import { ProfileLink } from '@/components/common/profile-link'
 import { NTRP_BADGE, memberStatusChipClass } from '@/lib/dashboard/member-badges'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
@@ -35,10 +35,7 @@ export function RoomMemberRow({ row, roomId, isSettled, viewerId, hasGames = fal
 
     return (
         <div className="flex items-center gap-3 px-4 py-2.5">
-            <Avatar className="w-8 h-8 shrink-0">
-                {row.profileImage && <AvatarImage src={row.profileImage} alt={row.name} />}
-                <AvatarFallback className="bg-muted text-muted-foreground text-caption font-bold">{row.name[0]}</AvatarFallback>
-            </Avatar>
+            <UserAvatar name={row.name} image={row.profileImage} userId={row.userId} />
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 min-w-0">
                     {row.userId && !row.deleted ? (

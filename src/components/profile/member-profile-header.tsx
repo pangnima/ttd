@@ -1,5 +1,5 @@
 import { GENDER_SHORT_LABEL, HAND_LABEL } from '@/lib/profile/signup-fields'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/common/user-avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
 import { DeletedBadge } from '@/components/common/deleted-badge'
@@ -88,12 +88,7 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                 <div className="w-full flex-1 min-w-0 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0">
-                            <Avatar className="w-12 h-12 shrink-0">
-                                {user.profileImage && <AvatarImage src={user.profileImage} alt={user.nickname} />}
-                                <AvatarFallback className="bg-primary/20 text-primary text-h4 font-bold">
-                                    {user.nickname[0] ?? user.name[0] ?? '?'}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar size="lg" name={user.name} nickname={user.nickname} image={user.profileImage} userId={user.id} />
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <h1 className="text-h1 font-bold">{user.name}</h1>

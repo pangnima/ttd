@@ -5,7 +5,7 @@ import { EmailField } from '@/components/auth/email-field'
 import { LoginIdField } from '@/components/auth/login-id-field'
 import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
 import { PASSWORD_MIN_LEN, unmetPasswordRules } from '@/lib/auth/password-policy'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 
 type Props = {
     /** 제출 버튼을 잠글 때 쓴다. 참조가 고정된 함수를 넘길 것(effect 의존성) */
@@ -46,25 +46,17 @@ export function SignupAccountSection({ onMismatchChange, onWeakChange, onEmailTa
             <EmailField onTakenChange={onEmailTakenChange} />
 
             <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <label htmlFor="password" className={labelCls}>비밀번호 *</label>
-                    <input
-                        id="password" name="password" type="password"
-                        placeholder="영문·숫자·특수문자" required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
-                        value={password} onChange={(e) => setPassword(e.target.value)}
-                        className={inputCls}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="password_confirm" className={labelCls}>비밀번호 확인 *</label>
-                    <input
-                        id="password_confirm" name="password_confirm" type="password"
-                        placeholder="다시 입력" required autoComplete="new-password"
-                        value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
-                        aria-invalid={mismatch}
-                        className={inputCls}
-                    />
-                </div>
+                <TextField
+                    id="password" name="password" type="password" label="비밀번호 *"
+                    placeholder="영문·숫자·특수문자" required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
+                    value={password} onChange={(e) => setPassword(e.target.value)}
+                />
+                <TextField
+                    id="password_confirm" name="password_confirm" type="password" label="비밀번호 확인 *"
+                    placeholder="다시 입력" required autoComplete="new-password"
+                    value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
+                    aria-invalid={mismatch}
+                />
             </div>
             <PasswordRulesHint value={password} className="-mt-3" />
             {mismatch && (

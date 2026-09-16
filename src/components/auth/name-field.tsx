@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 import { NAME_MAX_LEN, validateName } from '@/lib/profile/signup-fields'
 
 type Props = {
@@ -24,17 +24,14 @@ export function NameField({ defaultValue = '' }: Props = {}) {
     const message = touched && value.trim().length > 0 ? validateName(value) : null
 
     return (
-        <div>
-            <label htmlFor="name" className={labelCls}>이름 *</label>
-            <input
-                id="name" name="name" placeholder="실명" required
-                maxLength={NAME_MAX_LEN} autoComplete="name"
-                value={value} onChange={(e) => setValue(e.target.value)}
-                onBlur={() => setTouched(true)}
-                aria-invalid={Boolean(message)}
-                className={inputCls}
-            />
-            {message && <p className="mt-1 text-caption text-destructive">{message}</p>}
-        </div>
+        <TextField
+            id="name" name="name" placeholder="실명" label="이름 *" required
+            maxLength={NAME_MAX_LEN} autoComplete="name"
+            value={value} onChange={(e) => setValue(e.target.value)}
+            onBlur={() => setTouched(true)}
+            aria-invalid={Boolean(message)}
+            message={message}
+            messageTone="destructive"
+        />
     )
 }

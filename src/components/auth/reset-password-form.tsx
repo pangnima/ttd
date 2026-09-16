@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { resetPasswordAction } from '@/lib/actions/auth'
 import { PASSWORD_MIN_LEN } from '@/lib/auth/password-policy'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 import { cn } from '@/lib/utils'
 
 export function ResetPasswordForm() {
@@ -42,16 +43,12 @@ export function ResetPasswordForm() {
                 <PasswordRulesHint value={password} className="mt-1.5" />
             </div>
 
-            <div>
-                <label htmlFor="confirm_password" className={labelCls}>새 비밀번호 확인</label>
-                <input
-                    id="confirm_password" name="confirm_password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="비밀번호를 다시 입력하세요"
-                    required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
-                    className={inputCls}
-                />
-            </div>
+            <TextField
+                id="confirm_password" name="confirm_password" label="새 비밀번호 확인"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="비밀번호를 다시 입력하세요"
+                required minLength={PASSWORD_MIN_LEN} autoComplete="new-password"
+            />
 
             {state?.error && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">

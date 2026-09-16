@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { TextField } from '@/components/common/text-field'
 import { useAvailabilityCheck } from '@/components/auth/use-availability-check'
 import {
     LOGIN_ID_MAX_LEN,
@@ -8,7 +9,6 @@ import {
     normalizeLoginId,
     validateLoginId,
 } from '@/lib/auth/login-id'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 type Props = {
     /** 가입은 필수, 프로필 설정의 1회 입력은 선택 */
@@ -40,35 +40,20 @@ export function LoginIdField({ required = true, onTakenChange }: Props) {
     }, [taken, onTakenChange])
 
     const bad = taken || Boolean(invalidMessage)
-    const message =
-        invalidMessage ??
-        (settled ? (taken ? LOGIN_ID_TAKEN_MESSAGE : '사용 가능한 아이디입니다.') : null)
+    const result = invalidMessage ?? (settled ? (taken ? LOGIN_ID_TAKEN_MESSAGE : '사용 가능한 아이디입니다.') : null)
+    // 확인 중 → 검사 결과 → 도움말 순. 셋 중 하나만 보인다
+    const message = checking ? '확인 중...' : result ?? '로그인에 쓰는 아이디입니다. 가입 후에는 바꿀 수 없습니다.'
 
     return (
-        <div>
-            <label htmlFor="login_id" className={labelCls}>
-                아이디{required ? ' *' : ''}
-            </label>
-            <input
-                id="login_id" name="login_id" placeholder="영문 소문자·숫자·_ 4~20자"
-                required={required} maxLength={LOGIN_ID_MAX_LEN}
-                autoComplete="username" autoCapitalize="none" spellCheck={false}
-                value={value} onChange={(e) => setValue(e.target.value.toLowerCase())}
-                aria-invalid={bad}
-                className={inputCls}
-            />
-            {checking && <p className="mt-1 text-caption text-muted-foreground">확인 중...</p>}
-            {message ? (
-                <p className={`mt-1 text-caption ${bad ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {message}
-                </p>
-            ) : (
-                !checking && (
-                    <p className="mt-1 text-caption text-muted-foreground">
-                        로그인에 쓰는 아이디입니다. 가입 후에는 바꿀 수 없습니다.
-                    </p>
-                )
-            )}
-        </div>
+        <TextField
+            id="login_id" name="login_id" placeholder="영문 소문자·숫자·_ 4~20자"
+            label={`아이디${required ? ' *' : ''}`}
+            required={required} maxLength={LOGIN_ID_MAX_LEN}
+            autoComplete="username" autoCapitalize="none" spellCheck={false}
+            value={value} onChange={(e) => setValue(e.target.value.toLowerCase())}
+            aria-invalid={bad}
+            message={message}
+            messageTone={bad && !checking ? 'destructive' : 'muted'}
+        />
     )
 }

@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Shuffle } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/common/user-avatar'
 import { useAvatarFile } from '@/components/auth/use-avatar-file'
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
 import { AVATAR_ACCEPT, AVATAR_HINT } from '@/lib/profile/avatar-limits'
@@ -57,12 +57,7 @@ export function ProfileAvatarField({ currentImage, nickname, onErrorChange }: Pr
         <div className="space-y-1.5">
             <label className={labelCls}>프로필 사진</label>
             <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16 shrink-0">
-                    {shownSrc && <AvatarImage src={shownSrc} alt="프로필 사진" />}
-                    <AvatarFallback className="bg-muted/50 text-h3 font-medium text-muted-foreground">
-                        {nickname[0] ?? '?'}
-                    </AvatarFallback>
-                </Avatar>
+                <UserAvatar size="xl" name={nickname} nickname={nickname} image={shownSrc} alt="프로필 사진" />
                 <div className="space-y-1.5">
                     {/* 업로드 없이 기본 이미지로 변경한 경우 그 경로를 서버로 전달 */}
                     <input type="hidden" name="default_avatar" value={defaultAvatar ?? ''} />

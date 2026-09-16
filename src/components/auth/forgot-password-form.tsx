@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { requestPasswordResetAction } from '@/lib/actions/auth'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 
 export function ForgotPasswordForm() {
     const [state, formAction, isPending] = useActionState(requestPasswordResetAction, null)
@@ -20,15 +20,11 @@ export function ForgotPasswordForm() {
 
     return (
         <form action={formAction} className="space-y-4">
-            <div>
-                <label htmlFor="identifier" className={labelCls}>아이디</label>
-                {/* 로그인 칸과 같은 해석(Week 61) — 아이디면 서버가 가입 이메일로 풀어 그쪽으로 보낸다 */}
-                <input
-                    id="identifier" name="identifier" type="text" placeholder="아이디를 입력하세요"
-                    required autoComplete="username" autoCapitalize="none" spellCheck={false}
-                    className={inputCls}
-                />
-            </div>
+            {/* 로그인 칸과 같은 해석(Week 61) — 아이디면 서버가 가입 이메일로 풀어 그쪽으로 보낸다 */}
+            <TextField
+                id="identifier" name="identifier" type="text" label="아이디" placeholder="아이디를 입력하세요"
+                required autoComplete="username" autoCapitalize="none" spellCheck={false}
+            />
 
             {state?.error && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">

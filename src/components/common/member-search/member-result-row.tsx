@@ -1,7 +1,7 @@
 'use client'
 
 import { Check } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/common/user-avatar'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import { derivePublicNtrp } from '@/lib/personal-matches/ntrp'
 import { formatDominantHand } from '@/lib/profile/signup-fields'
@@ -38,10 +38,7 @@ export function MemberResultRow({ candidate, selected, selectable = true, label,
                     ${selected ? 'bg-primary/5' : 'hover:bg-muted/50'}
                     disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent`}
             >
-                <Avatar className="w-8 h-8 shrink-0">
-                    {candidate.profileImage && <AvatarImage src={candidate.profileImage} alt={candidate.name} />}
-                    <AvatarFallback className="bg-muted text-muted-foreground text-caption font-bold">{candidate.name[0]}</AvatarFallback>
-                </Avatar>
+                <UserAvatar name={candidate.name} image={candidate.profileImage} userId={candidate.id} />
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-body2 font-medium text-foreground truncate">{candidate.name}</span>

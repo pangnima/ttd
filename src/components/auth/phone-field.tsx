@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
+import { TextField } from '@/components/common/text-field'
 import {
     formatPhoneNumber,
     isBlankPhone,
@@ -37,20 +37,15 @@ export function PhoneField({ defaultValue = '', onInvalidChange }: Props) {
     }, [invalid, onInvalidChange])
 
     return (
-        <div>
-            <label htmlFor="phone" className={labelCls}>휴대폰 번호</label>
-            <input
-                id="phone" name="phone" type="tel" inputMode="numeric"
-                placeholder="010-0000-0000" maxLength={13} autoComplete="tel"
-                value={phone}
-                onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
-                onBlur={() => setTouched(true)}
-                aria-invalid={invalid}
-                className={inputCls}
-            />
-            <p className={`mt-1 text-caption ${invalid ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {invalid ? PHONE_INVALID_MESSAGE : '선택 입력입니다. 클럽 운영자가 연락할 때 씁니다.'}
-            </p>
-        </div>
+        <TextField
+            id="phone" name="phone" type="tel" inputMode="numeric" label="휴대폰 번호"
+            placeholder="010-0000-0000" maxLength={13} autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+            onBlur={() => setTouched(true)}
+            aria-invalid={invalid}
+            message={invalid ? PHONE_INVALID_MESSAGE : '선택 입력입니다. 클럽 운영자가 연락할 때 씁니다.'}
+            messageTone={invalid ? 'destructive' : 'muted'}
+        />
     )
 }

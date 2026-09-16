@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { personalNavHref } from '@/lib/nav-items'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/common/user-avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { MobileNav } from '@/components/common/mobile-nav'
@@ -61,17 +61,7 @@ export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: H
                 {userDisplay ? (
                     <div className="flex items-center gap-2">
                         <Link href="/profile/settings" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <Avatar className="w-7 h-7">
-                                {userDisplay.profileImage && (
-                                    <AvatarImage
-                                        src={userDisplay.profileImage}
-                                        alt={userDisplay.nickname}
-                                    />
-                                )}
-                                <AvatarFallback className="bg-primary/20 text-primary text-caption font-bold">
-                                    {userDisplay.nickname[0]}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar size="sm" name={userDisplay.name} nickname={userDisplay.nickname} image={userDisplay.profileImage} userId={userId} />
                             <span className="text-body2 font-medium">{userDisplay.name}</span>
                             {userDisplay.role === 'admin' && (
                                 <Badge

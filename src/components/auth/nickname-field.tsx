@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { TextField } from '@/components/common/text-field'
 import { useAvailabilityCheck } from '@/components/auth/use-availability-check'
-import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import {
     NICKNAME_MAX_LEN,
     NICKNAME_TAKEN_MESSAGE,
@@ -49,27 +49,20 @@ export function NicknameField({ defaultValue = '', excludeUserId, onTakenChange,
     const bad = taken || Boolean(invalidMessage) || showServerError
     // 처음 값 그대로면 아무 말도 하지 않는다 — 묻지 않았으니 답할 것도 없다.
     const untouched = nickname === initialNickname
-    const message = showServerError
+    const result = showServerError
         ? serverError
         : invalidMessage ??
           (settled && !untouched ? (taken ? NICKNAME_TAKEN_MESSAGE : '사용 가능한 닉네임입니다.') : null)
+    const message = checking ? '확인 중...' : result
 
     return (
-        <div>
-            <label htmlFor="nickname" className={labelCls}>닉네임 *</label>
-            <input
-                id="nickname" name="nickname" placeholder="닉네임" required
-                maxLength={NICKNAME_MAX_LEN} autoComplete="nickname"
-                value={value} onChange={(e) => { setValue(e.target.value); setDismissedServerError(serverError) }}
-                aria-invalid={bad}
-                className={inputCls}
-            />
-            {checking && <p className="mt-1 text-caption text-muted-foreground">확인 중...</p>}
-            {message && (
-                <p className={`mt-1 text-caption ${bad ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {message}
-                </p>
-            )}
-        </div>
+        <TextField
+            id="nickname" name="nickname" placeholder="닉네임" label="닉네임 *" required
+            maxLength={NICKNAME_MAX_LEN} autoComplete="nickname"
+            value={value} onChange={(e) => { setValue(e.target.value); setDismissedServerError(serverError) }}
+            aria-invalid={bad}
+            message={message}
+            messageTone={bad && !checking ? 'destructive' : 'muted'}
+        />
     )
 }
