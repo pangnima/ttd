@@ -53,11 +53,10 @@ export async function updateSession(request: NextRequest) {
     if (request.method === 'POST') return supabaseResponse
 
     // 보호 라우트: 비로그인 시 /login 리다이렉트.
-    // /clubs/join(초대 미리보기)은 공유 링크라 비로그인·크롤러에 공개한다(OG 미리보기).
     // /onboarding은 (main) 밖이지만 로그인한 사람만 쓰는 화면이라 같은 가드를 받는다
     // (그 레이아웃 안에 두면 게이트가 스스로를 리다이렉트해 루프가 된다 — lib/profile/onboarding-gate.ts)
+    // /clubs는 Week 69에 UI를 삭제해 라우트가 없다(next.config가 루트로 보낸다).
     const isMainRoute =
-        (path.startsWith('/clubs') && !path.startsWith('/clubs/join')) ||
         path.startsWith('/profile') ||
         path.startsWith('/me') ||
         path.startsWith('/match-rooms') ||

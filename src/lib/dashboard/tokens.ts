@@ -108,14 +108,6 @@ export const HEADER_ACTION_LINK =
 export const CTA_LINK =
     'inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-body2 font-medium bg-spot-solid text-spot-foreground hover:bg-spot-solid/90 transition-colors'
 
-/** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
-export const AI_COACHING_STYLE = {
-    strength: 'text-win', // 강점 → 민트
-    weakness: 'text-loss', // 개선 → 코랄
-    tip: 'text-info', // 팁 → 블루
-    error: 'text-destructive', // 에러 → 위험(코랄)
-} as const
-
 /** 승률 계산 (무승부 제외 분모). 경기 없으면 null. */
 export function calcWinRate(wins: number, losses: number): number | null {
     const decisive = wins + losses

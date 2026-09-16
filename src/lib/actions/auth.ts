@@ -73,7 +73,7 @@ export async function loginAction(
     // Supabase 최소 길이 설정을 넘지 못하는 옛 비밀번호는 로그인은 되지만 weakPassword가 실려 온다(Week 60).
     // 강제하지 않고 착지 화면에서 한 줄 안내한다 — next가 있으면 가려던 곳이 우선이다(초대 링크 복귀).
     const weakSuffix = data.weakPassword ? `&notice=${WEAK_PASSWORD_NOTICE}` : ''
-    const fallback = data.user ? `/profile/${data.user.id}?scope=personal${weakSuffix}` : '/clubs'
+    const fallback = data.user ? `/profile/${data.user.id}?scope=personal${weakSuffix}` : '/login'
     const dest = isSafeNext(next) ? next : fallback
 
     revalidatePath('/', 'layout')

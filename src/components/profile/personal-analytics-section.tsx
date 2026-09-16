@@ -230,13 +230,6 @@ export async function PersonalAnalyticsSection({ bundle, me, scope, ratingHistor
                 />
             )}
 
-            {/*
-              * AI 코칭 카드는 1차 오픈에서 내렸다(Week 54) — 카드도 서버 액션도 캐시 테이블도 그대로 있다.
-              * 되살리려면 이 자리에 <AICoachingCard initialResult={aiResult} initialGeneratedAt={aiGeneratedAt} />를 두고
-              * 위에서 `const { result: aiResult, generatedAt: aiGeneratedAt } = await fetchCachedAICoaching(me.id)`와
-              * import 둘(components/stats/ai-coaching-card · lib/actions/ai-coaching)을 복원한다.
-              * 내린 김에 얻은 것 하나 — 프로필을 열 때마다 돌던 ai_coaching_cache 조회가 사라졌다.
-              */}
         </div>
     )
 }

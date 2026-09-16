@@ -11,7 +11,6 @@
     "db:backfill-personal-ntrp": "tsx scripts/backfill-personal-ntrp.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.99.0",
     "@base-ui/react": "^1.4.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",

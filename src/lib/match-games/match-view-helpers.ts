@@ -1,5 +1,5 @@
 import type { MatchGame, Match } from '@/types'
-import type { SetScore } from '@/components/match-games/match-game-cell-components'
+import type { SetScore } from '@/lib/match-games/set-score'
 import type { RatingChange, ClubRating } from '@/lib/queries/ratings'
 
 // ── 공유 타입 ────────────────────────────────

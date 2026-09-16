@@ -2,7 +2,7 @@
 //  - 명승부(close): 한 경기 스코어만으로 박빙 여부 판정 (클라이언트 계산).
 //  - 라이벌(rival): 클럽 확정 경기 누적 cross-pair 전적으로 박빙 라이벌 관계 판정 (서버 집계).
 import type { Match } from '@/types'
-import type { SetScore } from '@/components/match-games/match-game-cell-components'
+import type { SetScore } from '@/lib/match-games/set-score'
 import type { WinnerSide } from '@/lib/match-games/match-view-helpers'
 
 // ── 명승부(접전) ────────────────────────────────

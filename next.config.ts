@@ -13,12 +13,13 @@ const nextConfig: NextConfig = {
     // OG 이미지 라우트가 런타임에 읽는 정적 폰트를 배포 번들에 포함시킨다.
     outputFileTracingIncludes: {
         '/opengraph-image': ['./src/lib/og/Pretendard-SemiBold.otf'],
-        '/clubs/join/[token]/opengraph-image': ['./src/lib/og/Pretendard-SemiBold.otf'],
     },
     async redirects() {
         return [
-            // 죽은 라우트 처리: /dashboard는 /clubs로 리다이렉트
-            { source: '/dashboard', destination: '/clubs', permanent: true },
+            // 옛 라우트 — /dashboard·/clubs(Week 69에 UI 삭제, 태그 frozen-clubs-ui-2026-09-16)는 루트로.
+            // 미들웨어가 로그인 상태면 프로필로 보낸다. /clubs는 해동 가능성이 있어 permanent가 아니다.
+            { source: '/dashboard', destination: '/', permanent: true },
+            { source: '/clubs/:path*', destination: '/', permanent: false },
         ]
     },
     /**
