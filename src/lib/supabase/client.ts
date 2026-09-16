@@ -3,10 +3,9 @@
 // (anon key 노출은 의도된 동작이며, RLS가 실제 접근 제어를 담당)
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/supabase'
+import { supabaseEnv } from '@/lib/supabase/env'
 
 export function createClient() {
-    return createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const { url, anonKey } = supabaseEnv()
+    return createBrowserClient<Database>(url, anonKey)
 }

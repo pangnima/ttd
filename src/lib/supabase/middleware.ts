@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/supabase'
 import { personalNavHref } from '@/lib/nav-items'
+import { supabaseEnv } from '@/lib/supabase/env'
 
 // 오픈 리다이렉트 방지: 같은 사이트 내부 경로(/ 로 시작, // 프로토콜상대 제외)만 허용.
 export function isSafeNext(next: string | null | undefined): next is string {
@@ -16,9 +17,10 @@ export async function updateSession(request: NextRequest) {
     // @supabase/ssr이 갱신된 쿠키를 응답에 실을 수 있도록 NextResponse 인스턴스를 교체해야 함.
     let supabaseResponse = NextResponse.next({ request })
 
+    const { url, anonKey } = supabaseEnv()
     const supabase = createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        anonKey,
         {
             cookies: {
                 getAll() {

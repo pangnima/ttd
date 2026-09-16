@@ -1,3 +1,5 @@
+> **보관본(재설계 Step 스냅샷, Week 20~21·마이그레이션 0039~0042 시점)** — 이후 매칭 룸(`match_rooms`·0046~)·참가 동의·마감 등이 더해져 **현재 스키마와 다르다**. 현행은 `CLAUDE.md` 「DB 스키마 현황」과 `supabase/history/`.
+
 # 신규 ERD 확정 (재설계 Step 3)
 
 > `docs/redesign/domain-model.md`(Step1)와 4개 `ui-notes-*.md`(Step2)를 종합한 신규 스키마안. 범위는 승인된 계획대로 **users(계정/인증) 제외 전체** — `clubs`/`club_members`/`club_invites`/`match_games` 계열/`personal_matches`/`match_requests`/`rotation_sessions`/`ai_coaching_cache`/`club_player_ratings`/`club_rating_history`. 이 문서가 Step4 마이그레이션 작성의 직접 입력이다.

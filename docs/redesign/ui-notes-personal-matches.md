@@ -1,3 +1,5 @@
+> **보관본(재설계 Step 스냅샷, Week 20~21·마이그레이션 0039~0042 시점)** — 이후 매칭 룸(`match_rooms`·0046~)·참가 동의·마감 등이 더해져 **현재 스키마와 다르다**. 현행은 `CLAUDE.md` 「DB 스키마 현황」과 `supabase/history/`.
+
 # Step2c UI 노트 — 개인경기/확인요청/로테이션
 
 정적 UI 구현 범위: `src/app/(main)/me/personal-matches/**`, `src/app/(main)/me/match-requests/**`. Supabase 연동을 제거하고 `src/lib/redesign-fixtures/{personal-matches,match-requests}.ts` 더미 데이터로 교체했다. 컴포넌트(`personal-match-list.tsx`, `received-request-card.tsx` 등)와 서버 액션 wiring은 그대로 두었다(클릭 시 실제 DB 호출은 실패하지만, 이 단계 목적은 "데이터 요구사항 확정"이지 인터랙션 검증이 아님).

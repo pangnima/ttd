@@ -1,3 +1,5 @@
+> **보관본(재설계 Step 스냅샷, Week 20~21·마이그레이션 0039~0042 시점)** — 이후 매칭 룸(`match_rooms`·0046~)·참가 동의·마감 등이 더해져 **현재 스키마와 다르다**. 현행은 `CLAUDE.md` 「DB 스키마 현황」과 `supabase/history/`.
+
 # UI 데이터 요구사항 — 클럽/멤버/초대 (Step 2a)
 
 > `src/app/(main)/clubs/**`를 더미데이터(`src/lib/redesign-fixtures/clubs.ts`)로 재구현하며 확인한 화면별 데이터 요구사항. Step3 ERD 입력 자료.

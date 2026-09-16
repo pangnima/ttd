@@ -1,3 +1,5 @@
+> **보관본(재설계 Step 스냅샷, Week 20~21·마이그레이션 0039~0042 시점)** — 이후 매칭 룸(`match_rooms`·0046~)·참가 동의·마감 등이 더해져 **현재 스키마와 다르다**. 현행은 `CLAUDE.md` 「DB 스키마 현황」과 `supabase/history/`.
+
 # Step2b — 대진표(match-games) 정적 UI 노트
 
 `src/app/(main)/clubs/[clubId]/match-games/**`를 Supabase 연동 없이 `src/lib/redesign-fixtures/match-games.ts` 더미 데이터로 재구현. 컴포넌트 트리(`MatchGamesPageContent`/`MatchGameDetailContent`/`MatchGameCreateForm`)는 변경 없음 — 상위 page.tsx의 데이터 소스만 교체.
