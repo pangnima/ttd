@@ -1,13 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PersonalMatch } from '@/types'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { TriggerDialog } from '@/components/common/trigger-dialog'
 import { PersonalMatchForm } from '@/components/personal-matches/personal-match-form'
 
 type Props = {
@@ -27,33 +25,24 @@ type Props = {
 export function RoomGameDialog({
     ctx, opponentCandidates, pastOpponents, selfUserId, initialData, triggerLabel = '게임 추가',
 }: Props) {
-    const [open, setOpen] = useState(false)
     const router = useRouter()
 
     return (
-        <>
-            <Button size="sm" variant="outline" className="h-7 text-caption gap-1" onClick={() => setOpen(true)}>
-                {triggerLabel}
-            </Button>
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto" showCloseButton={false}>
-                    <DialogHeader>
-                        <DialogTitle>{initialData ? '참가자 채우기' : '게임 추가'}</DialogTitle>
-                    </DialogHeader>
-                    <PersonalMatchForm
-                        variant="dialog"
-                        initialData={initialData}
-                        opponentCandidates={opponentCandidates}
-                        pastOpponents={pastOpponents}
-                        selfUserId={selfUserId}
-                        roomContext={ctx}
-                        nav={{
-                            onDone: () => { setOpen(false); router.refresh() },
-                            onCancel: () => setOpen(false),
-                        }}
-                    />
-                </DialogContent>
-            </Dialog>
-        </>
+        <TriggerDialog trigger={triggerLabel} title={initialData ? '참가자 채우기' : '게임 추가'} width="2xl">
+            {(close) => (
+                <PersonalMatchForm
+                    variant="dialog"
+                    initialData={initialData}
+                    opponentCandidates={opponentCandidates}
+                    pastOpponents={pastOpponents}
+                    selfUserId={selfUserId}
+                    roomContext={ctx}
+                    nav={{
+                        onDone: () => { close(); router.refresh() },
+                        onCancel: close,
+                    }}
+                />
+            )}
+        </TriggerDialog>
     )
 }

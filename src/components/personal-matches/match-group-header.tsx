@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { MatchGroup } from '@/lib/personal-matches/match-groups'
 import { formatGameSummary } from '@/lib/dashboard/outcome'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
-import { formatHourLabel } from '@/lib/format'
+import { formatHourLabel, formatMonthDay } from '@/lib/format'
 
 type Props = {
     group: MatchGroup
@@ -16,8 +16,7 @@ type Props = {
  * 일시가 앞에 오는 날짜 줄 형태라 별도 여백 없이도 그룹 경계가 읽힌다(대진표 리스트 뷰의 라운드 헤더 관용구).
  */
 export function MatchGroupHeader({ group: g, actions }: Props) {
-    const [, mm, dd] = g.playedAt.split('-')
-    const when = [`${mm}.${dd}`, g.playedTime && formatHourLabel(g.playedTime)].filter(Boolean).join(' ')
+    const when = [formatMonthDay(g.playedAt), g.playedTime && formatHourLabel(g.playedTime)].filter(Boolean).join(' ')
     const kindLabel = g.kind === 'rotation' ? '로테이션' : MATCH_TYPE_LABELS[g.matchType]
     const tail = [kindLabel, g.courtName].filter(Boolean).join(' · ')
 

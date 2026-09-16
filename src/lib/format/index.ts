@@ -1,5 +1,5 @@
 /**
- * 날짜·시간 포맷 공용 헬퍼.
+ * 날짜·시간 포맷 공용 헬퍼 (`lib/format/index.ts` — 전화번호·연월은 같은 디렉터리의 phone.ts·year-month.ts, Week 69에 파일과 동명 디렉터리 공존을 정리).
  * 여러 컴포넌트에서 중복 정의되던 포맷 함수를 단일화.
  */
 
@@ -19,9 +19,15 @@ export function formatShortDate(dateStr: string): string {
     return new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric' }).format(new Date(dateStr))
 }
 
-/** "2026년 6월" 형식 (연/월) */
-export function formatYearMonth(dateStr: string): string {
-    return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' }).format(new Date(dateStr))
+/** 'YYYY-MM-DD' → 'YYYY.MM.DD' — 로테이션 팝업 머리말 등 점 표기 자리 */
+export function formatDotDate(dateStr: string): string {
+    return dateStr.replaceAll('-', '.')
+}
+
+/** 'YYYY-MM-DD' → 'MM.DD' — 목록 그룹 헤더의 짧은 날짜 */
+export function formatMonthDay(dateStr: string): string {
+    const [, mm, dd] = dateStr.split('-')
+    return `${mm}.${dd}`
 }
 
 // ── 경기 시각(시 단위) ──

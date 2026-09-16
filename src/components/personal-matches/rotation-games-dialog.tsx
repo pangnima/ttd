@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { RotationGamesPanel } from '@/components/personal-matches/rotation-games-panel'
 import type { PoolAdmin, PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
-import { formatHourLabel } from '@/lib/format'
+import { formatDotDate, formatHourLabel } from '@/lib/format'
 import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
 type Props = {
@@ -40,7 +40,7 @@ export function RotationGamesDialog({ open, onOpenChange, session, pool, isRoomS
                 <DialogHeader>
                     <DialogTitle>로테이션 게임 입력</DialogTitle>
                     <DialogDescription>
-                        {session.playedAt.replaceAll('-', '.')} {formatHourLabel(session.playedTime)} · 게임마다 파트너·상대를 고르고 스코어를 입력하면 게임별 경기로 저장됩니다.
+                        {formatDotDate(session.playedAt)} {formatHourLabel(session.playedTime)} · 게임마다 파트너·상대를 고르고 스코어를 입력하면 게임별 경기로 저장됩니다.
                     </DialogDescription>
                 </DialogHeader>
                 <RotationGamesPanel onCancel={() => onOpenChange(false)} pool={pool} isRoomSession={isRoomSession} picker={picker} onSubmit={onSubmit} isPending={isPending} error={error} poolAdmin={poolAdmin} enteredGames={enteredGames} blockedReason={blockedReason} />

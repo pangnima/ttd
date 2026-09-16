@@ -1,11 +1,10 @@
-import Link from 'next/link'
 import type { MatchRoomSummary } from '@/types'
-import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
+import { MatchRow } from '@/components/common/match-row'
 import { formatHeadcount, viewerStatusLabel } from '@/lib/match-rooms/headcount'
 import { ROOM_TURN_PILL, isMyRoomTurn, type RoomTurnSummary } from '@/lib/match-rooms/room-turn'
 import { formatRoomWhen } from '@/lib/match-rooms/schedule'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
-import { ATTENTION_PILL, CARD_HOVER, PILL_BASE, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, PILL_BASE, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
 import { HOST_LABEL } from '@/lib/match-rooms/member-labels'
 
 type Props = {
@@ -25,9 +24,7 @@ export function MatchRoomCard({ room, turn }: Props) {
     const myTurn = turn && isMyRoomTurn(turn.turn) ? turn : undefined
 
     return (
-        <Link href={`/match-rooms/${room.id}`} className={`flex items-stretch gap-3 px-3 py-3 ${CARD_HOVER}`}>
-            <MatchDateColumn playedAt={room.playedAt} matchType={room.matchType} surface={room.surface} />
-            <div className="flex-1 min-w-0">
+        <MatchRow href={`/match-rooms/${room.id}`} playedAt={room.playedAt} matchType={room.matchType} surface={room.surface}>
                 <div className="flex items-start justify-between gap-2">
                     <p className="text-body2 font-medium text-foreground truncate">{title}</p>
                     <span className="text-caption tabular-nums text-muted-foreground shrink-0">
@@ -57,7 +54,6 @@ export function MatchRoomCard({ room, turn }: Props) {
                         ? <span className={`${PILL_BASE} border-border bg-muted text-muted-foreground`}>마감</span>
                         : room.isSettled && <span className={`${NEUTRAL_PILL}`}>결과 확정</span>}
                 </div>
-            </div>
-        </Link>
+        </MatchRow>
     )
 }

@@ -9,7 +9,7 @@ import { RotationGamesDialog } from '@/components/personal-matches/rotation-game
 import { buildBuilderPool, type RoomParticipant } from '@/lib/personal-matches/rotation-pool'
 import type { PoolPickerProps } from '@/components/personal-matches/rotation/pool-editor-block'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
-import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
+import { MatchRow } from '@/components/common/match-row'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
 import { ProgressBadge } from '@/components/common/progress-badge'
@@ -72,11 +72,7 @@ export function RotationSessionCard({
     }
 
     return (
-        <div className="flex items-stretch gap-3 px-3 py-3">
-            <span className={`w-1 self-stretch rounded-full ${PENDING_RESULT_BAR}`} aria-hidden />
-            <MatchDateColumn playedAt={s.playedAt} matchType={s.matchType} surface={s.surface} />
-
-            <div className="flex-1 min-w-0">
+        <MatchRow playedAt={s.playedAt} matchType={s.matchType} surface={s.surface} barClass={PENDING_RESULT_BAR}>
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                         <p className="text-body2 font-medium text-foreground truncate">
@@ -115,7 +111,6 @@ export function RotationSessionCard({
                         </button>
                     )}
                 </div>
-            </div>
 
             <RotationGamesDialog
                 open={d.open}
@@ -131,7 +126,7 @@ export function RotationSessionCard({
                 isPending={d.isPending}
                 error={d.error}
             />
-        </div>
+        </MatchRow>
     )
 }
 

@@ -4,7 +4,7 @@ import type { PersonalMatch } from '@/types'
 import { PENDING_BADGE, resolveResultBadge } from '@/lib/personal-matches/result-badge'
 import { formatOpponents } from '@/lib/personal-matches/labels'
 import { isRecruiting } from '@/lib/personal-matches/lineup'
-import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
+import { MatchRow } from '@/components/common/match-row'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { GameScoreChips } from '@/components/personal-matches/set-score-chips'
 import { RoomLink } from '@/components/match-rooms/room-link'
@@ -30,11 +30,7 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false, gameLab
     const result = isRecruiting(m) ? RECRUITING_BADGE : resolveResultBadge(m.setScores)
 
     return (
-        <div className="flex items-stretch gap-3 px-3 py-3">
-            <span className={`w-1 self-stretch rounded-full ${result.barClass}`} aria-hidden />
-            <MatchDateColumn playedAt={m.playedAt} matchType={m.matchType} surface={m.surface} />
-
-            <div className="flex-1 min-w-0">
+        <MatchRow playedAt={m.playedAt} matchType={m.matchType} surface={m.surface} barClass={result.barClass}>
                 {/* 선수: 복식은 내 팀(나·파트너) / vs 상대팀 두 줄, 단식은 vs 상대 한 줄. 결과 배지는 우측. */}
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -78,7 +74,6 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false, gameLab
                         {actions && <div className="shrink-0 self-center">{actions}</div>}
                     </div>
                 )}
-            </div>
-        </div>
+        </MatchRow>
     )
 }

@@ -3,6 +3,7 @@ import { teamDiff, type LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupGame } from '@/lib/match-rooms/lineup'
 import { lineupBalance } from '@/lib/match-rooms/lineup-balance'
 import { ATTENTION_PILL, TYPO } from '@/lib/dashboard/tokens'
+import { LineupRow } from '@/components/match-rooms/lineup-row'
 
 type Props = {
     game: LineupGame
@@ -57,32 +58,26 @@ export function RoomLineupGameCard({ game, restingNames, slotLabel, actions }: P
     const balance = lineupBalance(diff, game.team1.length)
 
     return (
-        <li className="px-3 py-2.5 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-                <span className={TYPO.eyebrow}>
-                    게임 {game.seq}
-                    {slotLabel && <span className="ml-1.5 normal-case">· {slotLabel}</span>}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
+        <LineupRow
+            seq={game.seq}
+            slotLabel={slotLabel}
+            headerRight={(
+                <>
                     <span className={`${balance.pillClass} tabular-nums`}>
                         {balance.label} {diff.toFixed(1)}
                     </span>
                     {actions}
-                </div>
-            </div>
-
-            <div className="space-y-1.5">
-                <TeamLine team={game.team1} barClass={TEAM1_BAR} />
-                <div className="border-t border-border/60" />
-                <TeamLine team={game.team2} barClass={TEAM2_BAR} />
-            </div>
-
+                </>
+            )}
+            team1={<TeamLine team={game.team1} barClass={TEAM1_BAR} />}
+            team2={<TeamLine team={game.team2} barClass={TEAM2_BAR} />}
+        >
             {restingNames.length > 0 && (
                 <p className={`${TYPO.caption} break-keep`}>
                     <span className={`${ATTENTION_PILL} mr-1.5`}>쉼</span>
                     {restingNames.join(', ')}
                 </p>
             )}
-        </li>
+        </LineupRow>
     )
 }

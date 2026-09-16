@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HOUR_OPTIONS, formatHourLabel, toHourValue } from './format'
+import { HOUR_OPTIONS, formatHourLabel, toHourValue } from './index'
 
 describe('HOUR_OPTIONS', () => {
     it('00시~23시 24개, 값은 HH:00', () => {

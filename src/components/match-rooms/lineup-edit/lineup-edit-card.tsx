@@ -6,6 +6,7 @@ import type { LineupSlot } from '@/lib/match-rooms/lineup'
 import { toLineupGame, type DraftGame, type DraftSide } from '@/lib/match-rooms/lineup-draft'
 import { TYPO, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { RoomLineupGameCard } from '@/components/match-rooms/room-lineup-game-card'
+import { LineupRow } from '@/components/match-rooms/lineup-row'
 import { LineupSlotSelect } from '@/components/match-rooms/lineup-edit/lineup-slot-select'
 
 type Props = {
@@ -67,25 +68,19 @@ export function LineupEditCard({ game, index, players, restingNames, slotLabel, 
     )
 
     return (
-        <li className="px-3 py-2.5 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-                <span className={TYPO.eyebrow}>
-                    게임 {index + 1}
-                    {slotLabel && <span className="ml-1.5 normal-case">· {slotLabel}</span>}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
+        <LineupRow
+            seq={index + 1}
+            slotLabel={slotLabel}
+            headerRight={(
+                <>
                     {readable && (
                         <button type="button" className={LINK} onClick={() => setEditing(false)}>완료</button>
                     )}
                     <button type="button" className={REMOVE} onClick={onRemove}>삭제</button>
-                </div>
-            </div>
-
-            <div className="space-y-1.5">
-                {teamSlots('team1')}
-                <div className="border-t border-border/60" />
-                {teamSlots('team2')}
-            </div>
-        </li>
+                </>
+            )}
+            team1={teamSlots('team1')}
+            team2={teamSlots('team2')}
+        />
     )
 }
