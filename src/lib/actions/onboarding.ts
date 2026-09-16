@@ -12,6 +12,7 @@ import {
 } from '@/lib/profile/signup-fields'
 import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { AVATAR_UPLOAD_FAILED, avatarExtension, avatarFileError } from '@/lib/profile/avatar-limits'
 
 export type OnboardingActionState = { error: string } | null
 
@@ -80,14 +81,13 @@ export async function completeProfileAction(
     const avatar = formData.get('avatar') as File | null
     const defaultAvatar = (formData.get('default_avatar') as string) || null
     if (avatar && avatar.size > 0) {
-        const ext = avatar.name.split('.').pop()
-        const path = `${user.id}/avatar.${ext}`
+        const avatarError = avatarFileError(avatar, 'upload')
+        if (avatarError) return { error: avatarError }
+        const path = `${user.id}/avatar.${avatarExtension(avatar.type)}`
         const { error: upErr } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true })
-        if (!upErr) {
-            const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
-            profileImage = urlData.publicUrl
-        }
-        // 업로드 실패 시 기존 사진 유지
+        if (upErr) return { error: AVATAR_UPLOAD_FAILED }
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+        profileImage = urlData.publicUrl
     } else if (defaultAvatar) {
         profileImage = defaultAvatar
     }

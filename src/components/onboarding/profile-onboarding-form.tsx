@@ -38,13 +38,14 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
     const [nicknameTaken, setNicknameTaken] = useState(false)
     // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
     const [tennisMissing, setTennisMissing] = useState(true)
+    const [avatarError, setAvatarError] = useState(false)
 
     return (
         <form action={formAction} className="space-y-5">
             {next && <input type="hidden" name="next" value={next} />}
 
             {/* ── 프로필 사진 ── provider 사진을 지키되 바꿀 수도 있게 */}
-            <AvatarUploadField initialImage={defaultProfileImage} />
+            <AvatarUploadField initialImage={defaultProfileImage} onErrorChange={setAvatarError} />
 
             <div className="h-px bg-border" />
 
@@ -78,7 +79,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
 
             <Button
                 type="submit"
-                disabled={isPending || nicknameTaken || tennisMissing}
+                disabled={isPending || nicknameTaken || tennisMissing || avatarError}
                 className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '저장 중...' : '시작하기'}

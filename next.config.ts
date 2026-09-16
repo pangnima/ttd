@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    /**
+     * 서버 액션 본문 한계(기본 1MB). 프로필 사진은 필드가 **브라우저에서 512px로 줄여** 보내므로(F-15)
+     * 정상 경로는 100KB 안팎이다. 2MB는 축소를 우회한 제출이 액션 안의 사람 말 검사
+     * (`avatarFileError`, 1MB)에 닿게 두는 여유일 뿐이다. 더 올리지 않는다 — Vercel 함수의 요청 본문
+     * 상한이 4.5MB라 "큰 파일을 그대로 받는" 해법은 배포에서 성립하지 않는다.
+     */
+    experimental: {
+        serverActions: { bodySizeLimit: '2mb' },
+    },
     // OG 이미지 라우트가 런타임에 읽는 정적 폰트를 배포 번들에 포함시킨다.
     outputFileTracingIncludes: {
         '/opengraph-image': ['./src/lib/og/Pretendard-SemiBold.otf'],

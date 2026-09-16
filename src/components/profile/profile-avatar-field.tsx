@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ImagePlus, Shuffle } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useAvatarFile } from '@/components/auth/use-avatar-file'
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
+import { AVATAR_ACCEPT, AVATAR_HINT } from '@/lib/profile/avatar-limits'
 import { FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 
 const pillBtnCls = 'inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer'
@@ -14,6 +16,8 @@ type Props = {
     currentImage: string | null
     /** 사진이 없을 때 그릴 이니셜의 출처 */
     nickname: string
+    /** 파일이 한계를 넘어 거절된 동안 부모가 제출을 잠근다 */
+    onErrorChange?: (hasError: boolean) => void
 }
 
 /**
@@ -27,28 +31,27 @@ type Props = {
  *
  * 덤으로 URL이 죽어도 `AvatarFallback`이 이니셜로 받아 준다.
  */
-export function ProfileAvatarField({ currentImage, nickname }: Props) {
-    const [preview, setPreview] = useState<string | null>(null)
+export function ProfileAvatarField({ currentImage, nickname, onErrorChange }: Props) {
+    const fileRef = useRef<HTMLInputElement>(null)
+    // 고르는 즉시 검사·축소·input 교체까지 훅이 맡는다(F-15) — 서버는 작은 파일만 받는다
+    const { preview: filePreview, error, busy, handleFileChange, clear } = useAvatarFile({ inputRef: fileRef, onErrorChange })
     // "기본 이미지로 변경"으로 고른 경로 (null이면 미선택 = 지금 사진 유지)
     const [defaultAvatar, setDefaultAvatar] = useState<string | null>(null)
 
-    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
+    async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
         // 파일 업로드는 기본 이미지 선택보다 우선
-        setDefaultAvatar(null)
-        setPreview(URL.createObjectURL(file))
+        if (await handleFileChange(e)) setDefaultAvatar(null)
     }
 
-    // 클릭마다 직전과 다른 기본 아바타로 셔플
+    // 클릭마다 직전과 다른 기본 아바타로 셔플 — 고른 파일이 있었다면 버린다
     function handleShuffleDefault() {
         const candidates = DEFAULT_AVATAR_PATHS.filter((p) => p !== defaultAvatar)
         const next = candidates[Math.floor(Math.random() * candidates.length)]
+        clear()
         setDefaultAvatar(next)
-        setPreview(next)
     }
 
-    const shownSrc = preview ?? currentImage
+    const shownSrc = filePreview ?? defaultAvatar ?? currentImage
 
     return (
         <div className="space-y-1.5">
@@ -66,19 +69,21 @@ export function ProfileAvatarField({ currentImage, nickname }: Props) {
                     <div className="flex flex-wrap items-center gap-1.5">
                         <label htmlFor="avatar" className={pillBtnCls}>
                             <ImagePlus className="w-3.5 h-3.5" />
-                            이미지 변경
+                            {busy ? '줄이는 중…' : '이미지 변경'}
                         </label>
                         <button type="button" onClick={handleShuffleDefault} className={pillBtnCls}>
                             <Shuffle className="w-3.5 h-3.5" />
                             기본 이미지로 변경
                         </button>
                     </div>
-                    <p className="text-caption text-muted-foreground">JPG, PNG, WEBP · 최대 5MB</p>
+                    <p className="text-caption text-muted-foreground">{AVATAR_HINT}</p>
+                    {error && <p className="text-caption text-destructive">{error}</p>}
                     <input
+                        ref={fileRef}
                         id="avatar" name="avatar" type="file"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept={AVATAR_ACCEPT.join(',')}
                         className="hidden"
-                        onChange={handleFileChange}
+                        onChange={handleFile}
                     />
                 </div>
             </div>

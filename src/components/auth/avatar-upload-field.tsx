@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ImagePlus, Shuffle } from 'lucide-react'
 
 import { DEFAULT_AVATAR_PATHS } from '@/lib/default-images'
+import { AVATAR_ACCEPT, AVATAR_HINT } from '@/lib/profile/avatar-limits'
+import { useAvatarFile } from '@/components/auth/use-avatar-file'
 
 type Props = {
     /**
@@ -15,6 +17,8 @@ type Props = {
      * 가입 폼(이메일)은 배정된 사진이 없으므로 이 prop 없이 종전대로 동작한다.
      */
     initialImage?: string | null
+    /** 파일이 한계를 넘어 거절된 동안 부모가 제출을 잠근다(`onTakenChange` 관용구) */
+    onErrorChange?: (hasError: boolean) => void
 }
 
 /**
@@ -24,20 +28,15 @@ type Props = {
  * - 선택된 기본 아바타 경로는 hidden input(default_avatar)로 전달되어
  *   파일 미업로드 시 서버가 그대로 저장한다(미리보기 == 저장값).
  */
-export function AvatarUploadField({ initialImage }: Props = {}) {
+export function AvatarUploadField({ initialImage, onErrorChange }: Props = {}) {
     const fileRef = useRef<HTMLInputElement>(null)
-    const [uploadedPreview, setUploadedPreview] = useState<string | null>(null)
+    // 고르는 즉시 검사·축소·input 교체까지 훅이 맡는다(F-15) — 서버는 작은 파일만 받는다
+    const { preview: uploadedPreview, error, busy, handleFileChange, clear } = useAvatarFile({ inputRef: fileRef, onErrorChange })
     // 배정된 사진이 있으면 그것을 지키고(null = 변경 없음), 없으면 종전대로 0번으로 시작한다.
     // 첫 렌더를 결정적 값으로 두는 것은 hydration mismatch를 피하기 위해서다.
     const [defaultAvatar, setDefaultAvatar] = useState<string | null>(
         initialImage ? null : DEFAULT_AVATAR_PATHS[0],
     )
-
-    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
-        setUploadedPreview(URL.createObjectURL(file))
-    }
 
     function shuffleDefault() {
         setDefaultAvatar((current) => {
@@ -50,8 +49,7 @@ export function AvatarUploadField({ initialImage }: Props = {}) {
     const previewBase = defaultAvatar ?? initialImage ?? DEFAULT_AVATAR_PATHS[0]
 
     function useDefaultInstead() {
-        setUploadedPreview(null)
-        if (fileRef.current) fileRef.current.value = ''
+        clear()
     }
 
     const shownSrc = uploadedPreview ?? previewBase
@@ -72,21 +70,21 @@ export function AvatarUploadField({ initialImage }: Props = {}) {
                 id="avatar"
                 name="avatar"
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept={AVATAR_ACCEPT.join(',')}
                 className="hidden"
                 onChange={handleFileChange}
             />
 
             <div className="min-w-0">
                 <p className="text-body font-medium text-foreground">프로필 사진</p>
-                <p className="text-caption text-muted-foreground mb-2">기본 이미지를 사용하거나 직접 올릴 수 있어요.</p>
+                <p className="text-caption text-muted-foreground mb-2">기본 이미지를 사용하거나 직접 올릴 수 있어요. {AVATAR_HINT}</p>
                 <div className="flex flex-wrap gap-1.5">
                     <label
                         htmlFor="avatar"
                         className="inline-flex items-center gap-1.5 text-caption border border-border rounded-full px-3 py-1.5 text-foreground hover:bg-muted hover:border-input transition-colors cursor-pointer"
                     >
                         <ImagePlus className="w-3.5 h-3.5" />
-                        내 사진 업로드
+                        {busy ? '줄이는 중…' : '내 사진 업로드'}
                     </label>
                     {uploadedPreview ? (
                         <button
@@ -107,6 +105,7 @@ export function AvatarUploadField({ initialImage }: Props = {}) {
                         </button>
                     )}
                 </div>
+                {error && <p className="text-caption text-destructive mt-1.5">{error}</p>}
             </div>
         </div>
     )

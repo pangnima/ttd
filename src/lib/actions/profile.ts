@@ -6,6 +6,7 @@ import { resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-f
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { checkIdentityFields, isLoginIdConflict, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { AVATAR_UPLOAD_FAILED, avatarExtension, avatarFileError } from '@/lib/profile/avatar-limits'
 import { hasPasswordIdentity } from '@/lib/auth/account-providers'
 import { validatePassword } from '@/lib/auth/password-policy'
 import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
@@ -35,10 +36,13 @@ export async function updateProfileAction(
     const avatar = formData.get('avatar') as File | null
     const defaultAvatar = (formData.get('default_avatar') as string) || null
     if (avatar && avatar.size > 0) {
-        // 파일 업로드가 있으면 Storage에 저장 (업로드 우선)
-        const ext = avatar.name.split('.').pop()
-        const path = `${user.id}/avatar.${ext}`
-        await supabase.storage.from('avatars').upload(path, avatar, { upsert: true })
+        // 파일 업로드가 있으면 Storage에 저장 (업로드 우선). 크기·MIME은 필드와 같은 상수로 한 번 더 본다(F-15).
+        const avatarError = avatarFileError(avatar, 'upload')
+        if (avatarError) return { error: avatarError }
+        const path = `${user.id}/avatar.${avatarExtension(avatar.type)}`
+        const { error: upErr } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true })
+        // 실패를 삼키면 깨진 URL이 저장된다(E2E 조사) — 사람 말로 거절한다
+        if (upErr) return { error: AVATAR_UPLOAD_FAILED }
         const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
         profileImage = urlData.publicUrl
     } else if (defaultAvatar) {

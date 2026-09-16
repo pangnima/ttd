@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useActionState } from 'react'
+import { useEffect, useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ProfileAvatarField } from '@/components/profile/profile-avatar-field'
@@ -39,6 +39,8 @@ type Props = {
 export function ProfileSettingsForm({ initialProfile, userId, canSetLoginId }: Props) {
     const router = useRouter()
     const [state, formAction, isPending] = useActionState(updateProfileAction, null)
+    // 사진이 한계를 넘어 거절된 동안(F-15) — 필드가 input을 비우고 사유를 말한다
+    const [avatarError, setAvatarError] = useState(false)
 
     // 저장 성공 시 서버 컴포넌트(레이아웃 헤더 포함) 재렌더 → 닉네임·아바타 즉시 반영
     useEffect(() => {
@@ -47,7 +49,7 @@ export function ProfileSettingsForm({ initialProfile, userId, canSetLoginId }: P
 
     return (
         <form action={formAction} className={`${CARD_BASE} p-5 sm:p-6 space-y-5`}>
-            <ProfileAvatarField currentImage={initialProfile.profile_image} nickname={initialProfile.nickname} />
+            <ProfileAvatarField currentImage={initialProfile.profile_image} nickname={initialProfile.nickname} onErrorChange={setAvatarError} />
 
             <ProfileIdentityFields
                 name={initialProfile.name}
@@ -79,7 +81,7 @@ export function ProfileSettingsForm({ initialProfile, userId, canSetLoginId }: P
                 </p>
             )}
 
-            <Button type="submit" disabled={isPending} className="w-full rounded-full font-semibold h-11">
+            <Button type="submit" disabled={isPending || avatarError} className="w-full rounded-full font-semibold h-11">
                 {isPending ? '저장 중...' : '저장하기'}
             </Button>
         </form>

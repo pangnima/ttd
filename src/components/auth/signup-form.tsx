@@ -24,11 +24,13 @@ export function SignupForm() {
     const [nicknameTaken, setNicknameTaken] = useState(false)
     // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
     const [tennisMissing, setTennisMissing] = useState(true)
+    // 사진이 한계를 넘어 거절된 동안(F-15) — 필드가 input을 비우고 사유를 말한다
+    const [avatarError, setAvatarError] = useState(false)
 
     return (
         <form action={formAction} className="space-y-5">
             {/* ── 프로필 사진 ── */}
-            <AvatarUploadField />
+            <AvatarUploadField onErrorChange={setAvatarError} />
 
             <div className="h-px bg-border" />
 
@@ -69,7 +71,7 @@ export function SignupForm() {
 
             <Button
                 type="submit"
-                disabled={isPending || pwMismatch || pwWeak || emailTaken || loginIdTaken || nicknameTaken || tennisMissing}
+                disabled={isPending || pwMismatch || pwWeak || emailTaken || loginIdTaken || nicknameTaken || tennisMissing || avatarError}
                 className="w-full h-11 font-semibold mt-2"
             >
                 {isPending ? '가입 중...' : '회원가입'}

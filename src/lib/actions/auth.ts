@@ -11,6 +11,7 @@ import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
 import { checkIdentityFields } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { avatarExtension, avatarFileError } from '@/lib/profile/avatar-limits'
 import { EMAIL_TAKEN_MESSAGE, looksLikeEmail, normalizeEmail } from '@/lib/auth/email'
 import { validatePassword, WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
 import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
@@ -132,6 +133,14 @@ export async function signupAction(
     })
     if (!identity.ok) return { error: identity.error }
 
+    // 프로필 사진 크기·MIME(F-15) — 필드가 브라우저에서 줄여 보내므로 정상 경로는 여기 걸리지 않는다.
+    // signUp 전에 보는 이유는 계정이 만들어진 뒤 사진만 거절하면 "가입은 됐는데 실패"가 되기 때문이다.
+    const avatar = formData.get('avatar') as File | null
+    if (avatar && avatar.size > 0) {
+        const avatarError = avatarFileError(avatar, 'upload')
+        if (avatarError) return { error: avatarError }
+    }
+
     // 닉네임 유일성의 권위는 users_nickname_unique_idx(0079)지만, 인덱스에서 걸리면 트리거 롤백이라
     // 메시지가 불투명하다. 그래서 여기서 한 번 더 묻는다 — 화면 검사와 같은 RPC(0080)를 본다.
     const { data: nicknameTaken } = await supabase.rpc('is_nickname_taken', {
@@ -178,13 +187,11 @@ export async function signupAction(
     if (error) return { error: mapAuthError(error.message) }
 
     // 프로필 사진 (선택) — 업로드가 없으면 폼에서 선택한 기본 아바타(없으면 랜덤)를 배정
-    const avatar = formData.get('avatar') as File | null
     const defaultAvatar = formData.get('default_avatar') as string | null
     if (data.user) {
         let profileImage = defaultAvatar || randomAvatarPath()
         if (avatar && avatar.size > 0) {
-            const ext = avatar.name.split('.').pop()
-            const path = `${data.user.id}/avatar.${ext}`
+            const path = `${data.user.id}/avatar.${avatarExtension(avatar.type)}`
             const { error: upErr } = await supabase.storage
                 .from('avatars')
                 .upload(path, avatar, { upsert: true })
