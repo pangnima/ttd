@@ -136,6 +136,9 @@ export const GUIDE_FLOW_STEPS: GuideFlowStep[] = [
     { label: '전적으로', screen: PERSONAL_MATCHES.title, anchor: 'personal-matches' },
 ]
 
+/** 흐름 섹션 단독 export — 랜딩(`FlowSection`)이 제목·요약·네 단계를 같은 출처에서 읽는다(Week 65) */
+export const GUIDE_FLOW: GuideSection = FLOW
+
 /** 가이드 페이지 순서 — 흐름 → 화면 셋(사이드바 순서) → 단계 → 용어 */
 export const GUIDE_SECTIONS: GuideSection[] = [FLOW, MATCH_ROOMS, MY_MATCH_ROOMS, PERSONAL_MATCHES, STAGES, TERMS]
 

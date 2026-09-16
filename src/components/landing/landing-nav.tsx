@@ -1,86 +1,48 @@
 import Link from 'next/link'
-import { LogOut } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
 import { BrandLogo } from '@/components/common/brand-logo'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { logoutAction } from '@/lib/actions/auth'
-import { createClient } from '@/lib/supabase/server'
+import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-export async function LandingNav() {
-    // 로그인 상태에 따라 우측 액션을 분기 — 로그인 시 로그인/가입 버튼 대신 프로필 메뉴 노출
-    const supabase = await createClient()
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+/** 같은 페이지 앵커 둘 + 사용 가이드 — 랜딩은 body 스크롤이라 브라우저 해시 이동이 그대로 된다 */
+const NAV_LINKS = [
+    { href: '#flow', label: '흐름' },
+    { href: '#features', label: '기능' },
+    { href: '/guide', label: '사용 가이드' },
+] as const
 
-    let profile: { name: string; nickname: string; profileImage: string | null } | null = null
-    if (user) {
-        const { data } = await supabase
-            .from('users')
-            .select('name, nickname, profile_image')
-            .eq('id', user.id)
-            .single()
-        if (data) {
-            profile = { name: data.name, nickname: data.nickname, profileImage: data.profile_image }
-        }
-    }
-
+/**
+ * 랜딩 상단 — 정적(Week 65). 옛 버전은 `getUser()`로 로그인 분기 UI를 그렸지만 미들웨어가 로그인 상태의
+ * `/`를 프로필로 리다이렉트하므로 그 분기는 도달할 수 없었다 — 매 요청 DB를 두 번 치던 사문 코드.
+ * 로그인은 히어로 아래 텍스트 링크가 맡고, 나브는 [회원가입] 하나로 유도한다.
+ */
+export function LandingNav() {
     return (
-        <header className="w-full border-b border-border bg-background">
+        <header className="w-full bg-background">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                 <Link href="/" aria-label="홈">
                     <BrandLogo />
                 </Link>
-
-                {profile ? (
-                    <div className="flex items-center gap-2">
+                <nav className="flex items-center gap-6">
+                    {NAV_LINKS.map((link) => (
                         <Link
-                            href="/clubs"
-                            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground hover:text-foreground')}
+                            key={link.href}
+                            href={link.href}
+                            className="hidden text-body2 text-muted-foreground transition-colors hover:text-foreground sm:inline"
                         >
-                            내 클럽
+                            {link.label}
                         </Link>
-                        <Link
-                            href="/profile/settings"
-                            className="hidden items-center gap-2 transition-opacity hover:opacity-80 sm:flex"
-                        >
-                            <Avatar className="size-7">
-                                {profile.profileImage && (
-                                    <AvatarImage src={profile.profileImage} alt={profile.nickname} />
-                                )}
-                                <AvatarFallback className="bg-primary/20 text-caption font-bold text-primary">
-                                    {profile.nickname[0]}
-                                </AvatarFallback>
-                            </Avatar>
-                            <span className="text-body2 font-medium">{profile.name}</span>
-                        </Link>
-                        <form action={logoutAction}>
-                            <Button
-                                type="submit"
-                                variant="ghost"
-                                size="sm"
-                                className="gap-1.5 text-muted-foreground hover:text-foreground"
-                            >
-                                <LogOut className="size-3.5" />
-                                <span className="hidden sm:inline">로그아웃</span>
-                            </Button>
-                        </form>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href="/login"
-                            className="hidden text-body2 text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-                        >
-                            로그인
-                        </Link>
-                        <Link href="/signup" className={cn(buttonVariants({ size: 'lg' }))}>
-                            무료로 시작
-                        </Link>
-                    </div>
-                )}
+                    ))}
+                    {/* buttonVariants base가 text-sm이라 text-body2로 덮어쓴다 */}
+                    <Link
+                        href="/signup"
+                        className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'h-10 px-4 text-body2')}
+                    >
+                        회원가입
+                        <ArrowUpRight className="size-4" />
+                    </Link>
+                </nav>
             </div>
         </header>
     )
