@@ -1374,6 +1374,10 @@ export type Database = {
         }[]
       }
       get_match_room_detail: { Args: { p_room_id: string }; Returns: Json }
+      get_public_personal_matches: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_room_lineup_requests: {
         Args: { p_room_id: string }
         Returns: {

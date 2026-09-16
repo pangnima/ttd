@@ -40,6 +40,11 @@ type Props = {
     me: User
     scope: AnalyticsScope
     ratingHistory?: RatingHistoryPoint[]
+    /**
+     * `self`는 본인 프로필(공개 토글·빈 상태 CTA·[+ 직접 기록]), `public`은 타인이 보는 공개 전적(F-24) —
+     * 카드는 같은 한 벌이고 손댈 수 있는 것만 뺀다. 통계 비공개는 페이지가 이 섹션 대신 잠긴 4카드를 그린다.
+     */
+    viewer?: 'self' | 'public'
 }
 
 type EmptyCta = { recordHref?: string; recordLabel?: string; browseHref?: string; browseLabel?: string }
@@ -60,9 +65,10 @@ function getEmptyCta(scope: AnalyticsScope): EmptyCta {
 }
 
 /**
- * 본인 프로필에서만 보이는 개인 분석 풀버전 섹션.
+ * 개인 분석 풀버전 섹션 — 본인 프로필과 타인의 공개 전적(F-24)이 같은 카드 한 벌을 쓴다.
  */
-export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }: Props) {
+export async function PersonalAnalyticsSection({ bundle, me, scope, ratingHistory, viewer = 'self' }: Props) {
+    const isSelf = viewer === 'self'
     // 시간순/날짜 집계가 공유하는 번들 부분(클럽 매치 날짜는 gameMetaById에서 해석).
     // 개인 경기는 통계용 분해본(세트 1개 = 게임 1개)을 사용한다.
     const timeBundle = {
@@ -134,7 +140,8 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
         ? replayPersonalRatings(bundle.personalGames, me.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
         : null
 
-    const emptyCta = getEmptyCta(scope)
+    // 타인에게는 행동 유도가 없다 — 남의 프로필에서 「매칭 참여하기」를 눌러도 내 일이 아니다
+    const emptyCta = isSelf ? getEmptyCta(scope) : {}
 
     // 1:1 맞대결 카드 — 개인 경기 기록과 50/50 배치 또는 단독(클럽 scope) 렌더에 재사용
     const headToHead = (
@@ -159,9 +166,11 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
             <section className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
                     <h2 className={`${TYPO.h3} shrink-0`}>전적 통계</h2>
-                    <div className="ml-auto">
-                        <StatsPrivacyToggle hidden={me.statsHidden} />
-                    </div>
+                    {isSelf && (
+                        <div className="ml-auto">
+                            <StatsPrivacyToggle hidden={me.statsHidden} />
+                        </div>
+                    )}
                 </div>
                 <StatsQuadGrid
                     gender={me.gender}
@@ -169,7 +178,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                     menDoubles={bundle.stats.menDoubles}
                     womenDoubles={bundle.stats.womenDoubles}
                     mixedDoubles={bundle.stats.mixedDoubles}
-                    privacy={me.statsHidden ? 'self' : 'public'}
+                    privacy={isSelf && me.statsHidden ? 'self' : 'public'}
                     showSets={false}
                     emptyRecordHref={emptyCta.recordHref}
                     emptyBrowseHref={emptyCta.browseHref}
@@ -208,7 +217,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
                 headToHead
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <PersonalMatchesPreview personalMatches={bundle.personalMatches} />
+                    <PersonalMatchesPreview personalMatches={bundle.personalMatches} readOnly={!isSelf} />
                     {headToHead}
                 </div>
             )}

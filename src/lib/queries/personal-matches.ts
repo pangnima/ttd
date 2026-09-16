@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import type { PersonalMatch } from '@/types'
+import type { Database } from '@/types/supabase'
 import { mapPersonalMatchRow } from '@/lib/personal-matches/map'
 import { buildConfirmation } from '@/lib/personal-matches/confirmation'
 
@@ -20,6 +21,21 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
         .order('group_seq', { ascending: true, nullsFirst: false })
     if (error || !data) return []
     return data.map((row) => mapPersonalMatchRow(row, row.participants))
+}
+
+type PublicPersonalMatchRow = Database['public']['Tables']['personal_matches']['Row'] & {
+    participants: Database['public']['Tables']['personal_match_participants']['Row'][]
+}
+
+/**
+ * 타인의 **확정된** 개인 경기(F-24) — `get_public_personal_matches`(0090, definer)가 통계 공개 회원의 행만 돌려준다
+ * (비공개·탈퇴는 빈 배열). 행 모양이 위 select 임베드와 같아 매퍼를 그대로 쓴다. 탈퇴 배지용 users 임베드는 없다.
+ */
+export async function fetchPublicPersonalMatchesByUser(userId: string): Promise<PersonalMatch[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_public_personal_matches', { p_user_id: userId })
+    if (error || !Array.isArray(data)) return []
+    return (data as unknown as PublicPersonalMatchRow[]).map((row) => mapPersonalMatchRow(row, row.participants))
 }
 
 /**

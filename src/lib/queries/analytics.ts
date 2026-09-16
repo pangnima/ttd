@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { fetchMatchesByUser } from '@/lib/queries/match-games'
-import { fetchPersonalMatchesByUser } from '@/lib/queries/personal-matches'
+import { fetchPersonalMatchesByUser, fetchPublicPersonalMatchesByUser } from '@/lib/queries/personal-matches'
 import { explodePersonalMatchSets } from '@/lib/personal-matches/explode'
 import { buildUserMap, extractUnifiedH2hIds } from '@/lib/queries/_shared'
 import { aggregateByMatchType, toQuadStats, type QuadStats } from '@/lib/analytics/match-type'
@@ -19,6 +19,12 @@ export type AnalyticsScope =
 
 export type AnalyticsOptions = {
     scope: AnalyticsScope
+    /**
+     * 누구의 눈으로 읽는가(F-24). `self`(기본)는 본인 행을 RLS로, `public`은 타인의 **확정된** 개인 경기를
+     * `get_public_personal_matches`(0090 — 통계 비공개·탈퇴면 빈 배열)로 읽는다. 클럽 매치는 public에서 읽지 않는다
+     * (클럽은 동결이고, 타인의 클럽 대진표는 같은 클럽 승인 회원에게만 열린다).
+     */
+    source?: 'self' | 'public'
 }
 
 // ── 번들 타입 ─────────────────────────────────────────────────────────────
@@ -41,12 +47,14 @@ export type AnalyticsBundle = {
 // ── 번들 fetch ────────────────────────────────────────────────────────────
 
 export async function fetchAnalyticsBundle(userId: string, options: AnalyticsOptions): Promise<AnalyticsBundle> {
-    const { scope } = options
+    const { scope, source = 'self' } = options
 
     // 전체 매치를 한 번 fetch 후 JS로 scope 필터
     const [{ matches: allMatches, gameMetaById, courtSurfaceByMatchId, matchTimeById }, personalMatches] = await Promise.all([
-        fetchMatchesByUser(userId),
-        fetchPersonalMatchesByUser(userId),
+        source === 'public'
+            ? Promise.resolve({ matches: [] as Match[], gameMetaById: {}, courtSurfaceByMatchId: {}, matchTimeById: {} } as Awaited<ReturnType<typeof fetchMatchesByUser>>)
+            : fetchMatchesByUser(userId),
+        source === 'public' ? fetchPublicPersonalMatchesByUser(userId) : fetchPersonalMatchesByUser(userId),
     ])
 
     // scope 분기: club → 해당 클럽 매치만, personal → 개인 매치만, total → 모두

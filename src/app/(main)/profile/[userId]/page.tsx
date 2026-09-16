@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchUserById } from '@/lib/queries/users'
 import { fetchClubById, fetchMyClubs } from '@/lib/queries/clubs'
 import { fetchAnalyticsBundle, type AnalyticsScope } from '@/lib/queries/analytics'
-import { fetchPlayerStatsBundle } from '@/lib/queries/player-profile'
 import { fetchRoomQueue } from '@/lib/queries/room-queue'
 import {
     fetchClubRatingHistory,
@@ -22,8 +21,9 @@ import { combinePlayerStats, type PlayerStats } from '@/lib/stats'
 import type { ProfileSummary } from '@/components/profile/profile-summary-row'
 import type { MatchType } from '@/types'
 import { MemberProfileHeader } from '@/components/profile/member-profile-header'
-import { PlayerStatsSection } from '@/components/profile/player-stats-section'
-import { SelfAnalyticsSection } from '@/components/profile/self-analytics-section'
+import { PersonalAnalyticsSection } from '@/components/profile/personal-analytics-section'
+import { StatsQuadGrid } from '@/components/stats/stats-quad-grid'
+import { EMPTY_PLAYER_STATS } from '@/lib/stats'
 import { PageContainer } from '@/components/common/page-container'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
 import { WeakPasswordNotice } from '@/components/profile/weak-password-notice'
@@ -191,7 +191,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 {notice === WELCOME_NOTICE && <WelcomeNotice />}
                 {notice === WEAK_PASSWORD_NOTICE && <WeakPasswordNotice />}
                 {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
-                <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
+                <PersonalAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />
             </PageContainer>
         )
     }
@@ -206,47 +206,46 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )
     }
 
-    // 타인 프로필: 공개 요약 통계
-    const privacy = target.statsHidden ? 'locked' : 'public'
-    const showStats = !target.statsHidden
-    const [bundle, ratingHistory, ranking] = await Promise.all([
-        fetchPlayerStatsBundle(userId, clubId),
-        clubId ? fetchClubRatingHistory(clubId, userId) : Promise.resolve([] as RatingHistoryPoint[]),
-        clubId && showStats ? fetchClubRatingRanking(clubId) : Promise.resolve([] as ClubRatingRankingEntry[]),
-    ])
-    // 통계 비공개(statsHidden) 프로필에서는 클럽 레이팅·스탯·순위를 노출하지 않는다(헤더·추세 모두).
-    const { clubRating, provisional } = showStats
-        ? deriveHeaderRating(ratingHistory)
-        : { clubRating: undefined, provisional: false }
-    const clubRank = clubId && showStats ? rankOf(ranking, userId) : undefined
-    // 타인 번들에는 personalMatches가 없으므로 [] 보강(클럽 scope라 개인 경기 무관).
-    const headerStats = showStats
-        ? deriveHeaderStats(
-              bundle.stats,
-              aggregateRecentForm({ matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: [] }, userId),
-          )
-        : undefined
+    // 타인 프로필 — 통계 공개면 본인 개인 탭과 같은 카드 한 벌(F-24), 비공개면 잠긴 4카드만.
+    // 개인 경기는 RLS가 본인 행뿐이라 `get_public_personal_matches`(0090)로 읽는다(비공개·탈퇴는 빈 배열).
+    // 클럽 대진표는 동결이라 읽지 않는다 — 그동안 타인 요약이 그것만 세어 누구를 열어도 「0 경기」였다.
+    if (target.statsHidden) {
+        return (
+            <PageContainer>
+                <MemberProfileHeader user={target} clubName={club?.name} />
+                <StatsQuadGrid
+                    gender={target.gender}
+                    singles={EMPTY_PLAYER_STATS}
+                    menDoubles={EMPTY_PLAYER_STATS}
+                    womenDoubles={EMPTY_PLAYER_STATS}
+                    mixedDoubles={EMPTY_PLAYER_STATS}
+                    privacy="locked"
+                    showSets={false}
+                />
+            </PageContainer>
+        )
+    }
+
+    const scope: AnalyticsScope = { kind: 'personal' }
+    const bundle = await fetchAnalyticsBundle(userId, { scope, source: 'public' })
+    const form = aggregateRecentForm(
+        { matches: bundle.matches, gameMetaById: bundle.gameMetaById, personalMatches: bundle.personalGames },
+        userId,
+    )
+    const publicRating = replayPersonalRatings(bundle.personalGames, target.ntrp ?? null, (id) => bundle.userMap.get(id)?.ntrp)
 
     return (
         <PageContainer>
             <MemberProfileHeader
                 user={target}
                 clubName={club?.name}
-                clubRating={clubRating}
-                provisional={provisional}
-                clubRank={clubRank}
-                stats={headerStats}
+                stats={deriveHeaderStats(bundle.stats, form)}
+                summary={deriveSummary(bundle.stats)}
+                personalRating={publicRating.matchesPlayed > 0
+                    ? { rating: publicRating.rating, provisional: publicRating.provisional }
+                    : undefined}
             />
-            <PlayerStatsSection
-                bundle={bundle}
-                gender={target.gender}
-                userId={target.id}
-                privacy={privacy}
-                editable={false}
-                statsHidden={target.statsHidden}
-                ratingHistory={ratingHistory}
-                clubName={club?.name}
-            />
+            <PersonalAnalyticsSection bundle={bundle} me={target} scope={scope} viewer="public" />
         </PageContainer>
     )
 }

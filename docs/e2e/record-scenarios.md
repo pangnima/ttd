@@ -51,7 +51,7 @@
 | 3.0 | — | (정리 뒤라면) 최소 데이터: A–B 단식 2게임(A 1승 1패), 복식 1게임 | S1·S4 절차로 | — | B+S |
 | 3.1 | A | `/profile/<A>?scope=personal` 헤더 | 승률 링 `승률 N% (승 x 패 y)`·`N 경기`·`주력 단식`·NTRP 배지 | `MemberProfileHeader` | B |
 | 3.2 | A | 4카드(전체·단식·남복·혼복) 승·패·무 | **SQL 대조**: `select … from personal_matches where user_id=A and has_result` + `resolveSetWinner`(게임 단위 승패 → 행 단위 승·패·무는 `tallySets` 규칙)로 계산한 값과 일치. `get_user_match_stats_v2(A)`와도 일치 | `toQuadStats`, V `winner.test` | B+S |
-| 3.3 | A | 라이벌 분석 / 파트너 케미 / 코트 표면별 / 상대 손잡이별 / 복식 코트 성향 | Phase 2 상대(B·C·D)·표면·좌석이 카드 표본 수치에 반영(표본 1~2개를 SQL로 확인) | `analytics/*` V | B+S |
+| 3.3 | A | 라이벌 분석 / 파트너 케미 / 코트 표면별 / 상대 손잡이별(캡션 `복식은 상대별로 셉니다`) / 복식 코트 성향 / **NTRP 대비 성적**(회원 상대 스냅샷으로 상위·동급·하위 — Week 63 F-23) | Phase 2 상대(B·C·D)·표면·좌석이 카드 표본 수치에 반영(표본 1~2개를 SQL로 확인) | `analytics/*` V | B+S |
 | 3.4 | A | 개인 레이팅 추세 · NTRP 대비 성적 | `personal_ntrp`가 갱신됐는지 SQL(`users.personal_ntrp`) — 갱신 안 되면 백로그 「확정 시 lazy 갱신」 확인으로 기록 | `lib/rating/personal-rating` | B+S |
 | 3.5 | A | 승률 추이 / 경기 활동 히트맵 | 오늘 날짜에 활동 표시 | `hour-heatmap` V | B |
 | 3.6 | A | 통계 공개 스위치 `비공개` | 즉시 반영, R4.3에서 타인 확인 | `StatsPrivacyToggle` | B |
@@ -66,7 +66,7 @@
 | 4.3 | 신규 계정 | 매칭 참가(S 방 하나 비밀번호 입장) 후 프로필 | 두 단계가 모두 done이 되어 **카드 자체가 사라진다**(`모든 준비를 마쳤어요!`·닫기 버튼은 마지막 단계를 프로필 화면 안에서 끝낼 때만 보인다) | `isOnboardingComplete` | B |
 | 4.4 | B | A의 프로필(비공개 상태) | 4카드 블러 + `승률을 공개하지 않은 유저입니다`, 편집 불가, `최근 경기`·`라이벌 · 파트너` | `PlayerStatsSection locked` | B |
 | 4.5 | A | 본인 화면에서 비공개 카드 `클릭해서 보기` | **공개로 전환**되는지(`toggleStatsHiddenAction(false)`) — 보기와 공개 전환이 한 클릭이면 U 후보 | `stats-quad-grid.tsx` | B+S |
-| 4.6 | B | A 공개 상태 프로필 | 4카드 수치, `참여한 경기가 없습니다` 아님 | — | B |
+| 4.6 | B | A 공개 상태 프로필 | **본인 개인 탭과 같은 카드 한 벌**(헤더 승률 링·주력·개인 레이팅, 4카드 수치 = A 본인 값, 추이·라이벌·파트너·NTRP 대비·표면·손잡이·코트·최근 개인 경기 목록) — 공개 토글·빈 상태 CTA·[+ 직접 기록] 없음. A가 비공개면 잠긴 4카드 + `승률을 공개하지 않은 유저입니다`만 | `get_public_personal_matches`(0090), `fetchAnalyticsBundle(source:'public')`, `PersonalAnalyticsSection viewer="public"`(Week 63 F-24) | B+S |
 | 4.7 | B | `/profile/00000000-0000-4000-8000-000000000000` | 404(`not-found`) | `notFound()` | B |
 
 ## R5 가이드 · 내비 · 뱃지 최종 스냅샷
