@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupSlot } from '@/lib/match-rooms/lineup'
 import { toLineupGame, type DraftGame, type DraftSide } from '@/lib/match-rooms/lineup-draft'
-import { TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { RoomLineupGameCard } from '@/components/match-rooms/room-lineup-game-card'
 import { LineupSlotSelect } from '@/components/match-rooms/lineup-edit/lineup-slot-select'
 
@@ -20,7 +20,7 @@ type Props = {
 }
 
 const TEAM_BAR: Record<DraftSide, string> = { team1: 'bg-cat-1', team2: 'bg-cat-5' }
-const LINK = `${TYPO.caption} text-primary hover:underline shrink-0`
+const LINK = `${TYPO.caption} ${TEXT_LINK} shrink-0`
 const REMOVE = `${TYPO.caption} text-destructive/80 hover:text-destructive shrink-0`
 
 /**

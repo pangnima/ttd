@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { MemberLookupStatus } from '@/components/common/member-search/use-member-lookup'
 import { USER_SEARCH_LIMIT } from '@/lib/profile/user-search'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 
 type Props = {
     status: MemberLookupStatus
@@ -30,7 +30,7 @@ export function MemberSearchResults({ status, query, results, hasMore, error, re
 
     return (
         <div className="space-y-1.5">
-            <ul className={`${CARD_BASE} divide-y divide-border max-h-64 overflow-y-auto`} aria-label="검색 결과">
+            <ul className={`${LIST_CARD} max-h-64 overflow-y-auto`} aria-label="검색 결과">
                 {results.map(renderRow)}
             </ul>
             {hasMore && (

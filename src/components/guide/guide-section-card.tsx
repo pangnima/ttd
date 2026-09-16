@@ -4,7 +4,7 @@ import {
     ArrowRight, BookOpen, CalendarDays, ClipboardList, ListChecks, Milestone, Route, type LucideIcon,
 } from 'lucide-react'
 
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, TEXT_LINK } from '@/lib/dashboard/tokens'
 import type { GuideSection, GuideSectionId } from '@/lib/guide/sections'
 import { cn } from '@/lib/utils'
 import { GuideText } from '@/components/guide/guide-text'
@@ -55,7 +55,7 @@ export function GuideSectionCard({ section, example }: Props) {
             {section.href && section.cta && (
                 <Link
                     href={section.href}
-                    className="mt-5 inline-flex w-fit items-center gap-1 text-body2 font-medium text-primary hover:underline"
+                    className={`mt-5 inline-flex w-fit items-center gap-1 text-body2 font-medium ${TEXT_LINK}`}
                 >
                     {section.cta}
                     <ArrowRight className="size-4" />

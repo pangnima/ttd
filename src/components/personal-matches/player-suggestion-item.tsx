@@ -1,6 +1,6 @@
+import { HAND_LABEL } from '@/lib/profile/signup-fields'
 import type { PlayerSuggestion } from '@/lib/personal-matches/player-suggestions'
 
-const HAND_LABEL: Record<'right' | 'left', string> = { right: '오른손', left: '왼손' }
 
 /** 자동완성 항목 1줄 — 이름 · NTRP · 손잡이 · (게스트) · 우측 보조 정보(클럽명/닉네임) */
 export function PlayerSuggestionItem({ item }: { item: PlayerSuggestion }) {

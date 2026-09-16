@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
-import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { GUIDE_SCREEN_SECTIONS, guideAnchorHref, type GuideScreenId } from '@/lib/guide/sections'
 import { cn } from '@/lib/utils'
 import { GuideText } from '@/components/guide/guide-text'
@@ -34,7 +34,7 @@ export function PageGuide({ id, open = false }: Props) {
             </ol>
             <Link
                 href={guideAnchorHref(id)}
-                className="mt-3 inline-flex items-center gap-1 text-body2 font-medium text-primary hover:underline"
+                className={`mt-3 inline-flex items-center gap-1 text-body2 font-medium ${TEXT_LINK}`}
             >
                 전체 가이드
                 <ArrowRight className="size-4" />

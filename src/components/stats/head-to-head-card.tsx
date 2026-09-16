@@ -1,5 +1,6 @@
 'use client'
 
+import { HAND_LABEL } from '@/lib/profile/signup-fields'
 import { useState, useMemo } from 'react'
 import {
     aggregateHeadToHeadUnified,
@@ -10,7 +11,7 @@ import {
 import type { UnifiedHeadToHead } from '@/lib/queries/stats'
 import type { CourtSurface, Match, User } from '@/types'
 import type { SettledPersonalMatch } from '@/lib/personal-matches/winner'
-import { CARD_BASE, PILL_BASE, TYPO, calcWinRate } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, calcWinRate, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
 import { H2H_OUTCOME_STYLE, H2H_OUTCOME_LABEL, formatRecord } from '@/lib/dashboard/outcome'
 import { MATCH_TYPE_LABELS, getMatchTypeStyle } from '@/lib/dashboard/match-type-style'
 import { SURFACE_LABELS } from '@/lib/dashboard/surface'
@@ -37,7 +38,6 @@ type Props = {
 }
 
 const SOURCE_LABEL: Record<string, string> = { club: '클럽', personal: '개인' }
-const HAND_LABEL: Record<'right' | 'left', string> = { right: '오른손', left: '왼손' }
 
 function StatBlock({ label, value }: { label: string; value: string | number }) {
     return (
@@ -61,8 +61,8 @@ function H2HOpponentHeader({
     return (
         <div className="flex items-center flex-wrap gap-2 border-b border-border pb-3">
             <span className="text-body font-semibold text-foreground truncate">{name}</span>
-            {hand && <span className={`${PILL_BASE} border-border text-muted-foreground`}>{HAND_LABEL[hand]}</span>}
-            {ntrp != null && <span className={`${PILL_BASE} border-border text-muted-foreground`}>NTRP {ntrp.toFixed(1)}</span>}
+            {hand && <span className={`${NEUTRAL_PILL}`}>{HAND_LABEL[hand]}</span>}
+            {ntrp != null && <span className={`${NEUTRAL_PILL}`}>NTRP {ntrp.toFixed(1)}</span>}
         </div>
     )
 }

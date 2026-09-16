@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CalendarDays, Users } from 'lucide-react'
-import { EMPTY_BLOCK, PILL_BASE, CTA_LINK } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, CTA_LINK, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
 
 type Props = {
     recordHref?: string
@@ -31,7 +31,7 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
             {/* 4분기 미리보기 칩 (비활성 장식) */}
             <div className="flex items-center gap-1.5">
                 {DECO_CHIPS.map((chip) => (
-                    <span key={chip} className={`${PILL_BASE} border-border text-muted-foreground`}>
+                    <span key={chip} className={`${NEUTRAL_PILL}`}>
                         {chip}
                     </span>
                 ))}

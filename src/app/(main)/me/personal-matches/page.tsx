@@ -6,7 +6,7 @@ import { fetchMatchQueue } from '@/lib/queries/match-queue'
 import { fetchRotationBuilderContext } from '@/lib/queries/rotation-builder-context'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { PendingResultsSection } from '@/components/personal-matches/pending-results-section'
-import { EMPTY_BLOCK, HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, HEADER_ACTION_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { PageGuide } from '@/components/guide/page-guide'
@@ -58,7 +58,7 @@ export default async function PersonalMatchesPage() {
                     <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
                     <span>
                         아직 확정된 경기가 없습니다.{' '}
-                        <Link href="/match-rooms" className="text-primary hover:underline">
+                        <Link href="/match-rooms" className={TEXT_LINK}>
                             매칭이 끝나면 전적이 여기로 옵니다
                         </Link>
                     </span>

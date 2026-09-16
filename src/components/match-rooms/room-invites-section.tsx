@@ -1,5 +1,5 @@
 import type { MatchRoomInvite } from '@/types'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { RoomInviteCard } from '@/components/match-rooms/room-invite-card'
 
 type Props = { invites: MatchRoomInvite[] }
@@ -20,7 +20,7 @@ export function RoomInvitesSection({ invites }: Props) {
                 <h2 className={TYPO.h3}>나를 초대한 매칭</h2>
                 <span className="text-caption text-muted-foreground tabular-nums">{invites.length}</span>
             </div>
-            <div className={`${CARD_BASE} divide-y divide-border border-spot/40`}>
+            <div className={`${LIST_CARD} border-spot/40`}>
                 {invites.map((invite) => <RoomInviteCard key={invite.roomId} invite={invite} />)}
             </div>
         </section>

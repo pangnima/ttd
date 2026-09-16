@@ -2,7 +2,7 @@ import type { MatchRoomDetail } from '@/types'
 import { buildMemberRows } from '@/lib/match-rooms/members-view'
 import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { countJoined, formatHeadcount } from '@/lib/match-rooms/headcount'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { RoomMemberRow } from '@/components/match-rooms/room-member-row'
 import { RoomInviteMembers } from '@/components/match-rooms/room-invite-members'
 
@@ -37,7 +37,7 @@ export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
                     />
                 )}
             </div>
-            <div className={`${CARD_BASE} divide-y divide-border`}>
+            <div className={`${LIST_CARD}`}>
                 {rows.map((row) => (
                     <RoomMemberRow
                         key={row.key}

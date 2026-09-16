@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ATTENTION_PILL, CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 
 type Props = {
     /** '1라운드 · 10:00' — 시각은 알 때만 붙는다 */
@@ -34,7 +34,7 @@ export function LineupRoundGroup({ title, restingNames, conflictNames = [], chil
                     {conflictNames.join(', ')} — 같은 라운드에 두 번 배정되어 있습니다. 동시에 두 코트에 설 수 없습니다.
                 </p>
             )}
-            <ol className={`${CARD_BASE} divide-y divide-border`}>{children}</ol>
+            <ol className={`${LIST_CARD}`}>{children}</ol>
         </div>
     )
 }

@@ -8,7 +8,8 @@ import { NegotiationDialog } from '@/components/personal-matches/negotiation-dia
 import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
 import { SeatConfirmStatusLine } from '@/components/personal-matches/seat-confirm-status-line'
-import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
+import { ProgressBadge } from '@/components/common/progress-badge'
+import { formatConfirmProgress } from '@/lib/personal-matches/confirmation'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
 type Props = {
@@ -43,7 +44,7 @@ export function ConfirmedSeatActions({
             <span className="flex items-center gap-2">
                 <ReentryContextBadge confirmation={c} disputerName={disputerName} badgeClassName={badgeClassName} />
                 <span className={badgeClassName} title={REMAINING_TITLE}>확인 완료</span>
-                <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                <ProgressBadge label={formatConfirmProgress(c)} title={REMAINING_TITLE} />
                 <Button size="sm" variant="outline" className="h-7 text-caption" onClick={d.openDialog}>
                     이의 제기
                 </Button>

@@ -2,7 +2,7 @@
 
 import type { RotationPoolPlayer, RotationSessionSeat } from '@/types'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
-import { PILL_BASE } from '@/lib/dashboard/tokens'
+import { PILL_BASE, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { RequestStatusBadge } from '@/components/personal-matches/request-status-badge'
 
 /** 좌석 조작에 필요한 것만 — PoolAdmin에서 좁혀 받는다(순환 import 회피) */
@@ -54,7 +54,7 @@ export function PoolRowSeatAction({ row, admin, isPending, onInvite, onRemove, o
                         type="button"
                         disabled={isPending}
                         onClick={() => onSwapToGuest(seat, row)}
-                        className="text-caption text-primary hover:underline disabled:opacity-40"
+                        className={`text-caption ${TEXT_LINK} disabled:opacity-40`}
                     >
                         게스트로 대체
                     </button>
@@ -79,7 +79,7 @@ export function PoolRowSeatAction({ row, admin, isPending, onInvite, onRemove, o
             type="button"
             disabled={isPending}
             onClick={() => onInvite(userId)}
-            className="text-caption text-primary hover:underline disabled:opacity-40"
+            className={`text-caption ${TEXT_LINK} disabled:opacity-40`}
         >
             초대
         </button>
@@ -116,7 +116,7 @@ export function ReinvitableSeatsRow({ seats, canInvite, isPending, onReinvite, o
                                 type="button"
                                 disabled={isPending}
                                 onClick={() => onReinvite(seat)}
-                                className="text-caption text-primary hover:underline disabled:opacity-40"
+                                className={`text-caption ${TEXT_LINK} disabled:opacity-40`}
                             >
                                 다시 초대
                             </button>

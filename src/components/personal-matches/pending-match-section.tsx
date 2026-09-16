@@ -2,7 +2,7 @@ import { Children, type ReactNode } from 'react'
 import type { PendingMatchEntry } from '@/lib/queries/match-queue'
 import type { MatchQueueBucket } from '@/lib/match-requests/queue'
 import { buildMatchGroups } from '@/lib/personal-matches/match-groups'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { LIST_CARD } from '@/lib/dashboard/tokens'
 import { MatchGroupList } from '@/components/personal-matches/match-group-list'
 import { QueueSection } from '@/components/personal-matches/queue-section'
 import { PendingMatchActions } from '@/components/personal-matches/pending-match-actions'
@@ -41,7 +41,7 @@ export function PendingMatchSection({ title, hint, count, entries, attention, ch
                     }}
                 />
             )}
-            {hasChildren && <div className={`${CARD_BASE} divide-y divide-border`}>{children}</div>}
+            {hasChildren && <div className={`${LIST_CARD}`}>{children}</div>}
         </QueueSection>
     )
 }

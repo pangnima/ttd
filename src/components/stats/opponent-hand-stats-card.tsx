@@ -1,3 +1,4 @@
+import { HAND_LABEL } from '@/lib/profile/signup-fields'
 import type { OpponentHandStats } from '@/lib/analytics/opponent-hand'
 import { SectionCard } from '@/components/common/section-card'
 import { StatBarRow } from '@/components/stats/stat-bar-row'
@@ -7,8 +8,8 @@ type Props = {
 }
 
 const HAND_LABELS: Record<keyof OpponentHandStats, string> = {
-    right: '오른손 상대',
-    left: '왼손 상대',
+    right: `${HAND_LABEL.right} 상대`,
+    left: `${HAND_LABEL.left} 상대`,
 }
 
 // 손잡이별 막대 색상 (오른손=블루, 왼손=바이올렛)

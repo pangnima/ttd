@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { buttonVariants } from '@/components/ui/button'
+import { authButtonClass } from '@/components/auth/auth-button-class'
 import { ADMIN_CONTACT_EMAIL } from '@/lib/auth/password-reset-mode'
-import { cn } from '@/lib/utils'
 
 /**
  * 메일 재설정이 꺼져 있는 동안(`PASSWORD_RESET_MAIL_ENABLED = false`) `/forgot-password`가 보이는 안내.
@@ -21,12 +20,12 @@ export function PasswordResetContactNotice() {
             {ADMIN_CONTACT_EMAIL && (
                 <a
                     href={`mailto:${ADMIN_CONTACT_EMAIL}?subject=${encodeURIComponent('[BASELINE] 비밀번호 초기화 요청')}`}
-                    className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'w-full h-11 font-semibold')}
+                    className={authButtonClass('accent')}
                 >
                     {ADMIN_CONTACT_EMAIL}로 문의하기
                 </a>
             )}
-            <Link href="/find-id" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full h-11 font-semibold')}>
+            <Link href="/find-id" className={authButtonClass('outline')}>
                 아이디가 기억나지 않으면 아이디 찾기
             </Link>
         </div>

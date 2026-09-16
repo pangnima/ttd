@@ -1,3 +1,4 @@
+import { GENDER_SHORT_LABEL, HAND_LABEL } from '@/lib/profile/signup-fields'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
@@ -36,8 +37,8 @@ type Props = {
     ratingSummary?: RatingSummary
 }
 
-const genderLabel: Record<User['gender'], string> = { male: '남', female: '여' }
-const handLabel: Record<User['dominantHand'], string> = { right: '오른손잡이', left: '왼손잡이' }
+const genderLabel = GENDER_SHORT_LABEL
+const handLabel: Record<User['dominantHand'], string> = { right: `${HAND_LABEL.right}잡이`, left: `${HAND_LABEL.left}잡이` }
 
 export function MemberProfileHeader({ user, clubName, clubRating, provisional, clubRank, stats, summary, recentForm, personalRating, ratingSummary }: Props) {
     const hasTier = clubRating !== undefined

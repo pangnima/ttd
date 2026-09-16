@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CheckCircle2, Lock } from 'lucide-react'
-import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { NAV_LABEL } from '@/lib/nav-items'
 
 type Props = {
@@ -27,7 +27,7 @@ export function RoomSettledNotice({ closed = false, isHost = false }: Props) {
                         결과 정정을 포함한 모든 수정이 잠겼습니다.{' '}
                         {isHost ? '고칠 것이 있으면 [다시 열기]로 잠금을 풉니다.' : '고칠 것이 있으면 호스트에게 다시 열기를 요청하세요.'}{' '}
                         확정된 전적은{' '}
-                        <Link href="/me/personal-matches" className="text-primary hover:underline">{NAV_LABEL.myRecords}</Link>
+                        <Link href="/me/personal-matches" className={TEXT_LINK}>{NAV_LABEL.myRecords}</Link>
                         에서 볼 수 있습니다.
                     </span>
                 </p>
@@ -41,7 +41,7 @@ export function RoomSettledNotice({ closed = false, isHost = false }: Props) {
                 <span className="font-medium">매칭이 종료되었습니다.</span>{' '}
                 <span className="text-muted-foreground">
                     확정된 전적은{' '}
-                    <Link href="/me/personal-matches" className="text-primary hover:underline">{NAV_LABEL.myRecords}</Link>
+                    <Link href="/me/personal-matches" className={TEXT_LINK}>{NAV_LABEL.myRecords}</Link>
                     에서 볼 수 있습니다.
                     {isHost && ' 더 고칠 것이 없으면 [매칭 닫기]로 마감할 수 있습니다.'}
                 </span>

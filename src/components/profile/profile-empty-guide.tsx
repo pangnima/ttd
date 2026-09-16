@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { CTA_LINK } from '@/lib/dashboard/tokens'
+import { CTA_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { CalendarDays } from 'lucide-react'
 
 /**
@@ -25,7 +25,7 @@ export function ProfileEmptyGuide() {
                     <CalendarDays className="size-3.5" />
                     매칭 참여하기
                 </Link>
-                <Link href="/guide" className="text-body2 font-medium text-primary hover:underline">
+                <Link href="/guide" className={`text-body2 font-medium ${TEXT_LINK}`}>
                     사용 가이드
                 </Link>
             </div>

@@ -1,4 +1,4 @@
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { GUIDE_INVITE, GUIDE_MY_ROOM, GUIDE_ROOM_TURN } from '@/lib/guide/fixtures'
 import { GuideExample } from '@/components/guide/guide-example'
 import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
@@ -14,13 +14,13 @@ export function RoomInviteExample() {
             <div className="space-y-4">
                 <section className="space-y-2">
                     <p className={TYPO.eyebrow}>나를 초대한 매칭</p>
-                    <div className={`${CARD_BASE} divide-y divide-border border-spot/40`}>
+                    <div className={`${LIST_CARD} border-spot/40`}>
                         <RoomInviteCard invite={GUIDE_INVITE} />
                     </div>
                 </section>
                 <section className="space-y-2">
                     <p className={TYPO.eyebrow}>진행 중</p>
-                    <div className={`${CARD_BASE} divide-y divide-border`}>
+                    <div className={`${LIST_CARD}`}>
                         <MatchRoomCard room={GUIDE_MY_ROOM} turn={GUIDE_ROOM_TURN ?? undefined} />
                     </div>
                 </section>

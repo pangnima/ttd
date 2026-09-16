@@ -1,13 +1,12 @@
 import Link from 'next/link'
 import { SocialLoginButtons } from '@/components/auth/social-login-buttons'
-import { buttonVariants } from '@/components/ui/button'
+import { authButtonClass } from '@/components/auth/auth-button-class'
 import { providerLabel } from '@/lib/auth/account-providers'
 import type { FindIdResult } from '@/lib/auth/find-id'
-import { cn } from '@/lib/utils'
 
 const cardCls = 'rounded-md border border-border bg-muted/40 px-4 py-5 text-body text-foreground/80 space-y-4'
-const primaryCls = cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'w-full h-11 font-semibold')
-const outlineCls = cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full h-11 font-semibold')
+const primaryCls = authButtonClass('accent')
+const outlineCls = authButtonClass('outline')
 
 type Props = { result: Exclude<FindIdResult, { kind: 'none' }> }
 

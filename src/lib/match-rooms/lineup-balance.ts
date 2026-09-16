@@ -1,4 +1,4 @@
-import { ATTENTION_PILL, PILL_BASE } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, PILL_BASE, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
 
 /**
  * 대진 미리보기의 전력 균형 등급 — 팀 NTRP 합 차이를 눈으로 읽히는 한 마디로 바꾼다.
@@ -26,7 +26,7 @@ export const FAIR_MAX_PER_PLAYER = 0.4
 const BALANCE: Record<LineupBalanceTone, LineupBalance> = {
     // 보조 정보 = info
     even: { tone: 'even', label: '접전', pillClass: `${PILL_BASE} border-info/40 text-info` },
-    fair: { tone: 'fair', label: '무난', pillClass: `${PILL_BASE} border-border text-muted-foreground` },
+    fair: { tone: 'fair', label: '무난', pillClass: `${NEUTRAL_PILL}` },
     // 주의 = spot (기존 토큰 재사용)
     skewed: { tone: 'skewed', label: '차이 큼', pillClass: ATTENTION_PILL },
 }

@@ -10,7 +10,7 @@ import {
 import {
     addGame, removeGame, setSlot, validateDraft, type DraftGame, type DraftSide,
 } from '@/lib/match-rooms/lineup-draft'
-import { CARD_BASE, EMPTY_BLOCK, PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, PILL_BASE, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { Button } from '@/components/ui/button'
 import { LineupEditCard } from '@/components/match-rooms/lineup-edit/lineup-edit-card'
 import { LineupRoundGroup } from '@/components/match-rooms/lineup-edit/lineup-round-group'
@@ -96,7 +96,7 @@ export function LineupEditList({
                     ))}
                 </div>
             ) : (
-                <ol className={`${CARD_BASE} divide-y divide-border`}>{games.map(card)}</ol>
+                <ol className={`${LIST_CARD}`}>{games.map(card)}</ol>
             )}
 
             <Button

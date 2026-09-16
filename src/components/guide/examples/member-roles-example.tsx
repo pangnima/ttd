@@ -1,4 +1,4 @@
-import { ATTENTION_PILL, CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { GUIDE_MEMBERS_DETAIL, GUIDE_VIEWER_ID } from '@/lib/guide/fixtures'
 import { buildMemberRows } from '@/lib/match-rooms/members-view'
 import { ROOM_TURN_PILL } from '@/lib/match-rooms/room-turn'
@@ -20,7 +20,7 @@ export function MemberRolesExample() {
     return (
         <GuideExample caption="명단의 상태 칩 네 가지와, 카드에 붙는 결과 배지·내 차례 표시입니다.">
             <div className="space-y-4">
-                <div className={`${CARD_BASE} divide-y divide-border`}>
+                <div className={`${LIST_CARD}`}>
                     {rows.map((row) => (
                         <RoomMemberRow
                             key={row.key}

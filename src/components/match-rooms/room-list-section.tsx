@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { MatchRoomSummary } from '@/types'
-import { CARD_BASE, EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, TYPO, LIST_CARD, TEXT_LINK } from '@/lib/dashboard/tokens'
 import type { RoomTurnSummary } from '@/lib/match-rooms/room-turn'
 import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
 
@@ -35,13 +35,13 @@ export function RoomListSection({ rooms, title, emptyTitle, emptyHint, emptyHref
                         <>
                             {' '}
                             {emptyHref
-                                ? <Link href={emptyHref} className="text-primary hover:underline">{emptyHint}</Link>
+                                ? <Link href={emptyHref} className={TEXT_LINK}>{emptyHint}</Link>
                                 : <span className="text-muted-foreground">{emptyHint}</span>}
                         </>
                     )}
                 </div>
             ) : (
-                <div className={`${CARD_BASE} divide-y divide-border`}>
+                <div className={`${LIST_CARD}`}>
                     {rooms.map((room) => <MatchRoomCard key={room.id} room={room} turn={turns?.get(room.id)} />)}
                 </div>
             )}

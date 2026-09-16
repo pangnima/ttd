@@ -9,7 +9,8 @@ import { NegotiationDialog } from '@/components/personal-matches/negotiation-dia
 import { DisputeReasonLine } from '@/components/personal-matches/dispute-reason-line'
 import { ReentryContextBadge } from '@/components/personal-matches/reentry-context-badge'
 import { SeatConfirmStatusLine } from '@/components/personal-matches/seat-confirm-status-line'
-import { ResultConfirmProgressBadge } from '@/components/personal-matches/result-confirm-progress-badge'
+import { ProgressBadge } from '@/components/common/progress-badge'
+import { formatConfirmProgress } from '@/lib/personal-matches/confirmation'
 import { useResultDialog } from '@/components/personal-matches/use-result-dialog'
 
 type Props = {
@@ -49,7 +50,7 @@ export function NegotiationTurnActions({
                 {editingOwn && (
                     <>
                         {!hideStatusBadge && <span className={badgeClassName} title={REMAINING_TITLE}>참가자 확인 대기</span>}
-                        <ResultConfirmProgressBadge confirmation={c} title={REMAINING_TITLE} />
+                        <ProgressBadge label={formatConfirmProgress(c)} title={REMAINING_TITLE} />
                     </>
                 )}
                 <Button

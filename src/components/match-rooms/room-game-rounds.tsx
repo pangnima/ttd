@@ -1,5 +1,5 @@
 import type { MatchRoomDetail, MatchRoomGame, PersonalMatchConfirmation } from '@/types'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { countJoined } from '@/lib/match-rooms/headcount'
 import {
     courtSlotOf, effectiveCourtCount, groupByRound, roomSlotMinutes, roundConflictNames, roundStartLabels,
@@ -56,7 +56,7 @@ export function RoomGameRounds({ detail, viewerId, confirmations }: Props) {
 
     if (courts <= 1) {
         return (
-            <div className={`${CARD_BASE} divide-y divide-border`}>
+            <div className={`${LIST_CARD}`}>
                 {planned.map(row)}
                 {recorded.map((g, i) => row(g, planned.length + i))}
             </div>
@@ -73,7 +73,7 @@ export function RoomGameRounds({ detail, viewerId, confirmations }: Props) {
                             {conflicts[r].join(', ')} — 같은 라운드에 두 번 배정되어 있습니다. [대진 편집]에서 고쳐주세요.
                         </p>
                     )}
-                    <div className={`${CARD_BASE} divide-y divide-border`}>
+                    <div className={`${LIST_CARD}`}>
                         {round.map((g, i) => row(g, r * courts + i))}
                     </div>
                 </div>
@@ -81,7 +81,7 @@ export function RoomGameRounds({ detail, viewerId, confirmations }: Props) {
             {recorded.length > 0 && (
                 <div className="space-y-1.5">
                     <p className={TYPO.eyebrow}>따로 기록한 게임</p>
-                    <div className={`${CARD_BASE} divide-y divide-border`}>
+                    <div className={`${LIST_CARD}`}>
                         {recorded.map((g, i) => (
                             <RoomGameRow
                                 key={g.id}

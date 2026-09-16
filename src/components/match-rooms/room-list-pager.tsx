@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { TEXT_LINK } from '@/lib/dashboard/tokens'
 import { roomTabHref, type RoomListTab } from '@/lib/match-rooms/tabs'
 
 type Props = {
@@ -25,7 +26,7 @@ export function RoomListPager({ base, tab, cursor, nextCursor }: Props) {
                 </Link>
             ) : <span />}
             {nextCursor && (
-                <Link href={roomTabHref(base, tab, nextCursor)} className="text-body2 font-medium text-primary hover:underline">
+                <Link href={roomTabHref(base, tab, nextCursor)} className={`text-body2 font-medium ${TEXT_LINK}`}>
                     다음 →
                 </Link>
             )}

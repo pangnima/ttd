@@ -40,6 +40,12 @@ export const PILL_BASE = 'inline-flex items-center text-caption px-2 py-0.5 roun
 // '승인 필요' 같은 주의 필 — 대기·주의는 spot(docs/color-system.md §4). 테두리형 필이라 클릭 대상에는 쓰지 않는다
 // (채움 CTA는 Button `accent` / CTA_LINK — 같은 옐로우지만 형태(테두리 vs 채움)로 갈린다)
 export const ATTENTION_PILL = `${PILL_BASE} border-spot/50 text-spot`
+// 중립 필 — 상태를 말하지 않는 메타 칩(방식·비노출·진행도·손잡이). 열 곳이 같은 조합을 손으로 적고 있었다(Week 69)
+export const NEUTRAL_PILL = `${PILL_BASE} border-border text-muted-foreground`
+// 목록 컨테이너 — 카드 안에서 행을 구분선으로 가른다(목록 화면·명단·라운드 묶음)
+export const LIST_CARD = `${CARD_BASE} divide-y divide-border`
+// 본문 안 텍스트 링크 — 색·밑줄만 든다. 크기는 자리마다 TYPO를 앞에 붙인다(채움 CTA는 CTA_LINK)
+export const TEXT_LINK = 'text-primary hover:underline'
 // 빈 상태도 데이터 카드(CARD_BASE)와 동일한 채워진 surface로 표시 — 라이트 모드 시인성.
 // break-keep: 한글이 글자 단위가 아닌 어절(띄어쓰기) 단위로 줄바꿈되도록.
 export const EMPTY_BLOCK =

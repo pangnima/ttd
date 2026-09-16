@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { TEXT_LINK } from '@/lib/dashboard/tokens'
 import type { MatchRoomGame } from '@/types'
 import { Button } from '@/components/ui/button'
 import { updatePersonalMatchSetsAction } from '@/lib/actions/personal-matches'
@@ -28,7 +29,7 @@ export function RoomFreeGameActions({ game, viewerId }: Props) {
     const lineupReady = isLineupCompleteByRoles(game.matchType, game.participants.map((p) => p.role))
     if (!lineupReady) {
         return (
-            <Link href={`/me/personal-matches/${game.id}/edit`} className="text-caption text-primary hover:underline">
+            <Link href={`/me/personal-matches/${game.id}/edit`} className={`text-caption ${TEXT_LINK}`}>
                 참가자 채우기
             </Link>
         )

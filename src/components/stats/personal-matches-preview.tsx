@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { PersonalMatch } from '@/types'
-import { TYPO, EMPTY_BLOCK, CTA_LINK } from '@/lib/dashboard/tokens'
+import { TYPO, EMPTY_BLOCK, CTA_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
 import { NAV_LABEL } from '@/lib/nav-items'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
 import { hasResult } from '@/lib/personal-matches/winner'
@@ -41,7 +41,7 @@ export function PersonalMatchesPreview({ personalMatches, readOnly = false }: Pr
                         {!readOnly && (
                             <>
                                 {' '}
-                                <Link href="/match-rooms" className="text-primary hover:underline">
+                                <Link href="/match-rooms" className={TEXT_LINK}>
                                     매칭이 끝나면 전적이 여기로 옵니다
                                 </Link>
                             </>

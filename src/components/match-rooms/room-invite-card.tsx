@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { TEXT_LINK } from '@/lib/dashboard/tokens'
 import Link from 'next/link'
 import type { MatchRoomInvite } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -38,7 +39,7 @@ export function RoomInviteCard({ invite }: Props) {
                     {invite.hostNickname && <p className="text-caption text-muted-foreground truncate">{invite.hostNickname}</p>}
                     <p className="text-caption text-muted-foreground break-keep">
                         나를 {role} 입력한 경기 ·{' '}
-                        <Link href={`/match-rooms/${invite.roomId}`} className="text-primary hover:underline">{buildRoomTitle(invite)}</Link>
+                        <Link href={`/match-rooms/${invite.roomId}`} className={TEXT_LINK}>{buildRoomTitle(invite)}</Link>
                     </p>
                 </div>
                 <div className="flex gap-1.5 shrink-0">

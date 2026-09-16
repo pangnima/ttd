@@ -116,3 +116,9 @@ export function formatRacket(brand: string | null | undefined, model: string | n
 export function formatDominantHand(v: string | null | undefined): string | undefined {
     return HAND_OPTIONS.find((o) => o.value === v)?.label
 }
+
+/** 값 → 라벨 조회표. 옵션 배열에서 파생하므로 출처는 하나다(Week 69 — 네 파일이 같은 리터럴을 갖고 있었다). */
+export const GENDER_LABEL = Object.fromEntries(GENDER_OPTIONS.map((o) => [o.value, o.label])) as Record<GenderValue, string>
+export const HAND_LABEL = Object.fromEntries(HAND_OPTIONS.map((o) => [o.value, o.label])) as Record<HandValue, string>
+/** 좁은 자리용 한 글자 표기 — 프로필 헤더 '남 · 오른손잡이' */
+export const GENDER_SHORT_LABEL: Record<GenderValue, string> = { male: '남', female: '여' }

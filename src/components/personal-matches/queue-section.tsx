@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ATTENTION_PILL, CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 
 type Props = {
     title: string
@@ -41,7 +41,7 @@ export function QueueSection({ title, hint, count, unboxed = false, attention = 
             </div>
             {unboxed
                 ? <div className="space-y-2">{children}</div>
-                : <div className={`${CARD_BASE} divide-y divide-border`}>{children}</div>}
+                : <div className={`${LIST_CARD}`}>{children}</div>}
         </section>
     )
 }

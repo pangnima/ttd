@@ -5,7 +5,8 @@ import { useActionState, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
 import { SocialLoginButtons } from '@/components/auth/social-login-buttons'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
+import { authButtonClass } from '@/components/auth/auth-button-class'
 import { loginAction } from '@/lib/actions/auth'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
@@ -81,7 +82,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
                 <p className="text-center text-caption text-muted-foreground">계정이 없으신가요?</p>
                 <Link
                     href="/signup"
-                    className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full h-11 font-semibold')}
+                    className={authButtonClass('outline')}
                 >
                     회원가입
                 </Link>

@@ -1,4 +1,4 @@
-import { CARD_BASE } from '@/lib/dashboard/tokens'
+import { LIST_CARD } from '@/lib/dashboard/tokens'
 import { GUIDE_LIST_ROOMS, GUIDE_LIST_TURNS } from '@/lib/guide/fixtures'
 import { GuideExample } from '@/components/guide/guide-example'
 import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
@@ -7,7 +7,7 @@ import { MatchRoomCard } from '@/components/match-rooms/match-room-card'
 export function MatchRoomCardExample() {
     return (
         <GuideExample caption="위는 아직 들어가지 않은 매칭(**비밀번호 입장**), 아래는 내가 참가해 **결과 입력** 차례가 온 매칭입니다.">
-            <div className={`${CARD_BASE} divide-y divide-border`}>
+            <div className={`${LIST_CARD}`}>
                 {GUIDE_LIST_ROOMS.map((room) => (
                     <MatchRoomCard key={room.id} room={room} turn={GUIDE_LIST_TURNS.get(room.id)} />
                 ))}

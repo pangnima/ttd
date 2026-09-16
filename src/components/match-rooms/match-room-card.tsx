@@ -5,7 +5,7 @@ import { formatHeadcount, viewerStatusLabel } from '@/lib/match-rooms/headcount'
 import { ROOM_TURN_PILL, isMyRoomTurn, type RoomTurnSummary } from '@/lib/match-rooms/room-turn'
 import { formatRoomWhen } from '@/lib/match-rooms/schedule'
 import { MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
-import { ATTENTION_PILL, CARD_HOVER, PILL_BASE } from '@/lib/dashboard/tokens'
+import { ATTENTION_PILL, CARD_HOVER, PILL_BASE, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
 import { HOST_LABEL } from '@/lib/match-rooms/member-labels'
 
 type Props = {
@@ -49,13 +49,13 @@ export function MatchRoomCard({ room, turn }: Props) {
                     {status ? (
                         <span className={`${PILL_BASE} border-primary/40 text-primary`}>{status}</span>
                     ) : room.isListed ? (
-                        <span className={`${PILL_BASE} border-border text-muted-foreground`}>비밀번호 입장</span>
+                        <span className={`${NEUTRAL_PILL}`}>비밀번호 입장</span>
                     ) : null}
                     {/* 비노출 방(0082)은 참여 중인 매칭에서만 그려진다 — 리스트에 없는 방임을 칩으로 말한다 */}
-                    {!room.isListed && <span className={`${PILL_BASE} border-border text-muted-foreground`}>비공개</span>}
+                    {!room.isListed && <span className={`${NEUTRAL_PILL}`}>비공개</span>}
                     {room.closedAt
                         ? <span className={`${PILL_BASE} border-border bg-muted text-muted-foreground`}>마감</span>
-                        : room.isSettled && <span className={`${PILL_BASE} border-border text-muted-foreground`}>결과 확정</span>}
+                        : room.isSettled && <span className={`${NEUTRAL_PILL}`}>결과 확정</span>}
                 </div>
             </div>
         </Link>

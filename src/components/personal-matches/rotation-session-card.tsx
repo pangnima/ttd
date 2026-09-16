@@ -12,7 +12,8 @@ import { useResultDialog } from '@/components/personal-matches/use-result-dialog
 import { MatchDateColumn } from '@/components/personal-matches/match-date-column'
 import { MatchMetaLine } from '@/components/personal-matches/match-meta-line'
 import { RoomLink } from '@/components/match-rooms/room-link'
-import { SeatProgressBadge } from '@/components/personal-matches/seat-progress-badge'
+import { ProgressBadge } from '@/components/common/progress-badge'
+import { formatAcceptanceProgress } from '@/lib/match-requests/participants'
 import { canManageRotationPool, pendingSeats, poolMemberIds, rejectedSeats } from '@/lib/personal-matches/rotation-participation'
 import {
     awaitingConsentNote, enteredBadgeLabel, nextGroupSeq, type EnteredRotationGame,
@@ -87,7 +88,7 @@ export function RotationSessionCard({
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                         {/* 참여 진행도(0057) — 주최자가 "누가 아직 답을 안 했는지"를 여기서 본다 */}
-                        <SeatProgressBadge seats={s.seats} />
+                        <ProgressBadge label={formatAcceptanceProgress(s.seats)} />
                         <span className={`px-2 py-1 rounded-[4px] text-caption font-bold ${PENDING_RESULT_BADGE}`}>
                             {enteredBadgeLabel(enteredGames)}
                         </span>
