@@ -2,6 +2,49 @@
 
 > append-only. 실행마다 아래 블록을 하나 더한다. 결과 코드: PASS / FAIL(→ findings ID) / SKIP(사유).
 
+## 시나리오별 최근 통과 (실행 후 이 표만 갱신)
+
+> 아래 블록들은 append-only 기록이고, 이 표가 "무엇을 언제 마지막으로 통과했나"의 정본이다. 코드가 그 흐름을 건드렸으면 **마지막 PASS 이전 커밋**이므로 다시 돌린다. 날짜·Week는 아래 블록 제목과 같다.
+
+| 권 | 시나리오 | 마지막 PASS | 근거 블록 | 비고 |
+|---|---|---|---|---|
+| account | A0 미들웨어 경계 | 2026-09-16 Week 63 | ② A0.6 | |
+| account | A1 이메일 가입 | 2026-09-16 Week 63 | ① A1 · ⑤ A1.12 · ⑥ A1.2 | |
+| account | A2 로그인 | 2026-09-15 Week 62 | Phase 1 | SKIP 1 |
+| account | A3 아이디 찾기 | 2026-09-15 Week 62 | Phase 1 | |
+| account | A4 비밀번호 찾기 | 2026-09-15 Week 62 | Phase 1 | 운영자 문의 안내 |
+| account | A5 온보딩 게이트 | 2026-09-15 Week 62 | Phase 1 | |
+| account | A6 프로필 설정 | 2026-09-16 Week 63 | ① A6.6 · ⑥ A6.2·A6.3 | |
+| account | A7 비밀번호 변경 | 2026-09-16 Week 63 | ⑤ A7.2 | |
+| account | A8 구글 로그인 | 2026-09-16 Week 63 | ② A8.5 · M 행(구글 실측) | A8.6(같은 이메일 병합) 미실행 |
+| account | A9 회원 탈퇴 | 2026-09-16 Week 63 | ⑤ A9.8 · A9.10 | |
+| match-room | S0 준비 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S1 단식 기본 | 2026-09-16 Week 64 | S1.4·1.12a | |
+| match-room | S2 이의·정정 | 2026-09-16 Week 63 | ⑤ S2.4·S2.6 | |
+| match-room | S3 호스트 + 게스트 4 | 2026-09-16 Week 64 | S3.2(선수 입력) | |
+| match-room | S4 복식 회원 4 | 2026-09-16 Week 63 | ③ S4.13 · ⑥ S4.2 | |
+| match-room | S4b 혼합 복식 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S5 로테이션 빌더 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S6 강퇴·재초대·나가기 | 2026-09-16 Week 64 | S6.6·6.7 | |
+| match-room | S7 비밀번호 입장·변경 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S8 목록·뱃지 항등식 | 2026-09-15 Week 62 | Phase 2 | S8.10(내 차례 우선 정렬) 미실행 |
+| match-room | S9 직접 기록 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S10 권한·경계 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S11 단식 4명 자동 대진표 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S12 매칭 닫기·다시 열기 | 2026-09-15 Week 62 | Phase 2 | 첫 브라우저 실행 |
+| match-room | S13 비노출 방 | 2026-09-16 Week 64 | S13.10 | |
+| match-room | S14 협상 전이 전수 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S15 권한 매트릭스 | 2026-09-16 Week 64 | S15.8·15.9 | 15.8 21명 선택은 미실행 |
+| record | R1 직접 기록 | 2026-09-16 Week 63 | ⑤ R1.2 | |
+| record | R2 목록 그룹 | 2026-09-15 Week 62 | Phase 3 | |
+| record | R3 통계 대조 | 2026-09-15 Week 62 | Phase 3 | |
+| record | R4 프로필 | 2026-09-16 Week 63 | ④ R4.6 | |
+| record | R5 셸·내비 | 2026-09-16 Week 67 | 사이드바 5항목 + CTA | |
+| journey | J1 신규 회원 첫 확정 | 2026-09-15 Week 62 | Phase 4 | 관찰(클릭 카운트) |
+| journey | J2 복식 정산까지 | 2026-09-15 Week 62 | Phase 4 | 관찰 |
+| journey | J3 390px | 2026-09-15 Week 62 | Phase 4 | |
+| 셸 | 랜딩 · 채움 버튼 · 환경 분리 | 2026-09-16 Week 65~68 | 각 블록 | 시나리오 밖 확인 |
+
 ## 2026-09-11 · Week 49 첫 전수 실행
 
 - 커밋: `a21fd7e`

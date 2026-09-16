@@ -90,10 +90,10 @@ P1(저장 실패·크래시·교착)은 **0건**. 흐름 자체는 전부 통과
 
 | ID | P | 근거 | 증상 | 수정 계획 | 상태 |
 |---|---|---|---|---|---|
-| F-pre-4 | P2 후보 | `lib/actions/auth.ts:206` `signupAction` | 가입 성공 착지가 `redirect('/clubs')` — **동결된 더미 클럽 목록**(redesign-fixtures, 박서준 등 가공 데이터)이 신규 회원의 첫 화면이다. 로그인·온보딩·소셜 착지는 전부 `/profile/<uid>?scope=personal` | 착지를 `/profile/<uid>?scope=personal`로(체크리스트 「첫 매칭 참여하기」가 다음 행동을 말한다). A1.13에서 판정 | open |
+| F-pre-4 | P2 후보 | `lib/actions/auth.ts:206` `signupAction` | 가입 성공 착지가 `redirect('/clubs')` — **동결된 더미 클럽 목록**(redesign-fixtures, 박서준 등 가공 데이터)이 신규 회원의 첫 화면이다. 로그인·온보딩·소셜 착지는 전부 `/profile/<uid>?scope=personal` | 착지를 `/profile/<uid>?scope=personal`로(체크리스트 「첫 매칭 참여하기」가 다음 행동을 말한다). A1.13에서 판정 | fixed(e9d682e) — Week 63 ②, 착지를 프로필 + 환영 배너로 |
 | F-pre-5 | P3 | `lib/actions/match-results.ts` `RESULT_ERROR_MESSAGES` | `room_closed` 키가 없어 닫힌 방의 `reopen_match_result` 거절이 `결과 정정에 실패했습니다.` 폴백으로 떨어진다(화면은 버튼을 감추므로 우회 호출에서만) | 맵에 `room_closed` → `호스트가 마감한 매칭입니다…`(룸 맵과 같은 문구) | fixed(6167f7e) |
 | F-pre-6 | P3 | `lib/actions/match-rooms.ts` `ROOM_ERROR_MESSAGES` | `invalid_slot_minutes`(create_room_lineup 10~180)·`not_member`(상세 RPC)·`invalid_duration`·`invalid_court_count`(create_match_room)가 맵에 없어 폴백 문구 | 네 키 추가. 화면 선검증이 있어 실사용 노출은 드물다 | fixed(6167f7e) |
-| F-pre-7 | P3 | `components/profile/profile-avatar-field.tsx:76` | 「JPG, PNG, WEBP · 최대 5MB」 문구만 있고 클라이언트·서버 어느 쪽에도 크기 검증이 없다 | A6.6에서 6MB 업로드 결과로 판정(스토리지 거절이면 문구 번역, 통과하면 검증 추가) | open |
+| F-pre-7 | P3 | `components/profile/profile-avatar-field.tsx:76` | 「JPG, PNG, WEBP · 최대 5MB」 문구만 있고 클라이언트·서버 어느 쪽에도 크기 검증이 없다 | A6.6에서 6MB 업로드 결과로 판정(스토리지 거절이면 문구 번역, 통과하면 검증 추가) | fixed(ea33447) — Week 63 ①, 브라우저 축소 + 한계 3중 |
 | F-pre-8 → P3 confirmed | P3 | `components/profile/member-profile-header.tsx:102` | 탈퇴 익명화가 `gender`·`dominant_hand`를 null로 두는데 헤더가 `genderLabel[user.gender] · handLabel[…]`를 단언 → 타인이 탈퇴자 프로필 URL을 열면 ` · `만 남는다(크래시 아님, 타입은 non-null) | A9.8 판정: 공백이 아니라 **거짓 값** — `탈퇴한 회원 · 남 · 오른손잡이 · NTRP 2.5`(null 성별·주력손이 기본값으로, 익명화되지 않은 `ntrp`가 그대로). 탈퇴자 프로필은 헤더 메타 줄을 숨기고 `ntrp`도 익명화 대상에 | fixed(6167f7e) |
 | F-pre-9 → known | P3 (K-9 잔여) | `personal_matches_update/delete` 정책(0083) | 정산됐지만 **닫지 않은** 방의 direct 행은 소유자가 `/edit`에서 고치거나 지울 수 있고, 그러면 방이 미정산으로 되돌아가거나(마지막 행이면) 방이 지워진다 | S15.6 판정: 소유자가 스코어를 비우면 방이 미정산으로 돌아간다(롤백 확인). 확인자가 없는 자유 기록의 수정은 곧 정정이라 **의도로 본다** — 개인 카드의 [수정]·[삭제]가 그 신호. 다만 정산 방 상세에는 그 경로가 안 보인다 | known(K-9) |
 
@@ -120,5 +120,5 @@ P1(저장 실패·크래시·교착)은 **0건**. 흐름 자체는 전부 통과
 | K-9 | Week 48 잔여 | 자유 기록 라인업 행은 소유자가 `/me/personal-matches/[id]/edit`에서 고치거나 지울 수 있고, 방장 소유 행의 메타 편집은 방 메타를 덮어쓴다 | known — S3.20. **부분 해소(0083)**: 방장이 닫은 방에서는 정책·트리거·recompute가 소유자의 수정·삭제를 `room_closed`로 막고 수정 페이지는 방으로 돌려보낸다(S12.8). 정산됐지만 닫지 않은 방은 종전대로 |
 | K-10 | 백로그 | 이의 왕복 상한 없음(`dispute_count`만 셈), 알림·리마인더·만료 없음 | known |
 | K-11 | Week 45 잔여 | 방 상세 URL에서는 사이드바 「매칭 리스트」가 활성(참여 중인 매칭에서 들어가도) | known — S8 |
-| K-13 | Week 56 잔여 | 이름·성별·주력손·NTRP·시작일·아이디의 「1회 입력 후 불변」은 앱 가드뿐 — `users_update` 정책이 `id = auth.uid()` 하나라 본인 컨텍스트 SQL로 `login_id·ntrp·name` 직접 UPDATE가 통과한다(A6.8 롤백 스모크) | **confirmed** — A6.8 |
 | K-12 | Week 40 잔여 | 미확정 로테이션 방에 [자동 대진표]와 [게임 입력]이 공존 — 유지하기로 결정. 정산하려면 방장이 [게임 입력 종료]를 눌러야 한다 | **fixed(f4d1d3b)** — 공존은 그대로 두고, 게임이 전부 확정되면 방장에게 `closeRotation` 차례를 준다(배너·필 「입력 종료」). 풀 회원의 유령 차례는 사라졌다 |
+| K-13 | Week 56 잔여 | 이름·성별·주력손·NTRP·시작일·아이디의 「1회 입력 후 불변」은 앱 가드뿐 — `users_update` 정책이 `id = auth.uid()` 하나라 본인 컨텍스트 SQL로 `login_id·ntrp·name` 직접 UPDATE가 통과한다(A6.8 롤백 스모크) | **confirmed** — A6.8 |

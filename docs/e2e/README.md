@@ -53,21 +53,7 @@
 
 온보딩 게이트(A5)는 이메일 가입자가 항상 `ntrp`를 갖고 있어 자연히 밟을 수 없다 — 신규 계정에 SQL로 `update public.users set ntrp = null, gender = null, dominant_hand = null, tennis_start_date = null where email = 'e2e<n>@e2e.test';`를 넣어 만든다.
 
-**회원 정리 SQL** — 탈퇴는 `public.users.email`을 `deleted+<uid>@deleted.local`로 바꾸므로 `public`만 보면 못 찾는다. `auth.users.email`로 id를 잡아 **두 테이블을 함께** 지운다(둘 사이에 FK가 없어 한쪽만 지우면 고아가 남는다). 그 계정이 만든 방·기록은 태그 정리 SQL을 **먼저** 돌린다.
-
-```sql
-begin;
-create temp table e2e_users on commit drop as
-  select id from auth.users where email like '%@e2e.test';
-delete from match_room_members where user_id in (select id from e2e_users);
-delete from personal_matches   where user_id in (select id from e2e_users);
-delete from rotation_sessions  where user_id in (select id from e2e_users);
-delete from public.users where id in (select id from e2e_users);
-delete from auth.users   where id in (select id from e2e_users);
-select (select count(*) from auth.users where email like '%@e2e.test') as auth_rows,
-       (select count(*) from public.users where email like '%@e2e.test' or id in (select id from e2e_users)) as public_rows;
-commit;
-```
+**회원 정리** — 탈퇴는 `public.users.email`을 `deleted+<uid>@deleted.local`로 바꾸므로 `public`만 보면 못 찾는다. `scripts/e2e-cleanup.sql`이 `auth.users.email like '%@e2e.test'`로 id를 잡아 **두 테이블을 함께** 지운다(둘 사이에 FK가 없어 한쪽만 지우면 고아가 남는다). 그 계정이 만든 방·기록은 같은 스크립트가 태그로 먼저 지운다.
 
 ## 태그 규약
 
@@ -78,41 +64,9 @@ commit;
 
 ## 정리 SQL
 
-방을 [매칭 리스트에서 내리기]로 지우면 출처 행(`personal_matches`·`match_requests`·`rotation_sessions`)은 `room_id`만 null이 되어 **개인 기록으로 남는다**. 그래서 정리는 버튼이 아니라 이 스크립트로 한다. 한 트랜잭션으로 실행하고 마지막 SELECT가 전부 0이어야 한다.
+**`scripts/e2e-cleanup.sql`** 하나다 — 태그(코트명·메모 `E2E-%`)로 잡은 방·요청·세션·기록과 `@e2e.test` 계정을 한 트랜잭션으로 지우고 마지막 SELECT가 전부 0이어야 한다. **dev(테스트 서버)에서만** 돌린다: Supabase MCP `execute_sql`에 파일 전체를 그대로 보낸다.
 
-```sql
-begin;
--- 0083: 닫힌 방은 트리거가 미정산 전환을 `room_closed`로 막아 삭제도 막힌다 — 먼저 잠금을 푼다
-update match_rooms set closed_at = null where court_name like 'E2E-%' and closed_at is not null;
-create temp table e2e_rooms on commit drop as
-  select id from match_rooms where court_name like 'E2E-%';
-create temp table e2e_reqs on commit drop as
-  select id from match_requests where room_id in (select id from e2e_rooms);
-
--- 관점 행이 먼저 (source_request_id가 on delete set null이라 요청부터 지우면 고아가 남는다)
-delete from personal_matches
- where room_id in (select id from e2e_rooms)
-    or source_request_id in (select id from e2e_reqs)
-    or notes like 'E2E-%';
-delete from match_requests where id in (select id from e2e_reqs);   -- participants·negotiations cascade
-delete from personal_matches where rotation_session_id in (select id from rotation_sessions where notes like 'E2E-%');
-delete from rotation_sessions where room_id in (select id from e2e_rooms) or notes like 'E2E-%' or court_name like 'E2E-%';  -- 내려진 방의 세션은 room_id가 풀리지만 court_name은 남는다
-delete from match_room_guests  where room_id in (select id from e2e_rooms);
-delete from match_room_members where room_id in (select id from e2e_rooms);
-delete from match_room_secrets where room_id in (select id from e2e_rooms);
-delete from match_rooms where id in (select id from e2e_rooms);
-
-select
-  (select count(*) from match_rooms where court_name like 'E2E-%') as rooms,
-  (select count(*) from personal_matches where court_name like 'E2E-%' or notes like 'E2E-%') as matches,
-  (select count(*) from match_requests where court_name like 'E2E-%') as requests;
-commit;
-```
-
-주의: 트리거(`cleanup_match_room_*`)가 중간에 방을 먼저 지울 수 있지만 최종 결과는 같다. 확인 SELECT가 0이 아니면 `court_name` 없이 만들어진 방(태그 누락)을 손으로 찾는다.
-
-**[매칭 리스트에서 내리기]를 테스트한 방(S10.12)은 예외다** — 방이 지워지면 그 방의 `rotation_sessions`·`personal_matches`는 `room_id`가 null로 풀려 태그로 찾을 수 없다. 내리기 전에 세션 id를 적어 두고 정리 때 `delete from rotation_sessions where id = '<id>'`를 따로 돌린다(그 세션은 `notes`도 없다). 잔재를 찾는 보조 쿼리:
-`select id from rotation_sessions where room_id is null and notes is null and user_id in (<테스트 계정 uuid>) and created_at > <실행 시작 시각>;`
+방을 [매칭 리스트에서 내리기]로 지우면 출처 행은 `room_id`만 null이 되어 개인 기록으로 남기 때문에 버튼이 아니라 이 스크립트로 정리한다. 내리기를 테스트한 방(S10.12)의 세션은 태그로 못 찾는다 — 예외 처리는 스크립트 하단 주석.
 
 ## 도구 메모 (runs.md에서 승격)
 
@@ -125,11 +79,11 @@ commit;
 ## 실행 방법
 
 1. `runs.md`에 새 실행 블록(날짜·커밋 해시·실행자)을 연다.
-2. 정리 SQL을 먼저 돌려 잔재 0을 확인한다(S0).
+2. `scripts/e2e-cleanup.sql`을 먼저 돌려 잔재 0을 확인한다(S0).
 3. 절차서의 시나리오를 번호 순서로 따른다. 각 단계는 **조작 → 기대 결과 → 검증** 순으로, 검증 열의 SQL이 있으면 실행해 값을 적는다.
 4. 결과는 절차서가 아니라 `runs.md`에 적는다(절차서는 안정적으로 유지). 라벨·URL이 코드와 어긋나면 **절차서를 그 자리에서 고친다**.
 5. 결함은 `findings.md`에 즉시 등록(ID·재현·기대·실제). 뒤 시나리오를 막는 P1만 그 자리에서 판단을 묻는다.
-6. 끝나면 정리 SQL → 잔재 0 → `runs.md` 마감.
+6. 끝나면 `scripts/e2e-cleanup.sql` → 잔재 0 → `runs.md` 마감 + 상단 **「시나리오별 최근 통과」 매트릭스**의 해당 행을 갱신한다.
 
 ## 문서 갱신 규칙
 
@@ -138,7 +92,7 @@ commit;
 | `README.md` | 계정·태그·정리·도구 규약이 바뀔 때 |
 | 절차서 4권 | 흐름·라벨·가드가 바뀔 때 그 행만. 회귀 근거(Week·마이그레이션)는 비고에 남긴다 |
 | `improvements.md` | UX 관찰 등록·상태 변경 시. 결함(P1~P3)과 섞지 않는다 |
-| `runs.md` | 실행마다 append. 지우지 않는다 |
+| `runs.md` | 실행마다 append. 지우지 않는다. **상단 매트릭스만** 최신 상태로 고친다(무엇을 언제 마지막으로 통과했나) |
 | `findings.md` | 결함 등록·상태 변경 시. 해결되면 상태만 `fixed(<커밋>)`로 |
 
 룸·협상·직접 기록 코드를 건드린 커밋은 해당 시나리오 번호를 다시 돌리고 `runs.md`에 한 줄 남긴다(CLAUDE.md 완료 체크리스트).
