@@ -83,7 +83,7 @@ export async function SelfAnalyticsSection({ bundle, me, scope, ratingHistory }:
     const ntrpUserMap = new Map([...bundle.userMap.entries()].map(([id, u]) => [id, { ntrp: effectiveNtrp(u) }]))
     const myEffectiveNtrp = effectiveNtrp(me) || null
     const ntrpStats = aggregateByNtrpDiff(
-        { matches: bundle.matches, userMap: ntrpUserMap },
+        { matches: bundle.matches, personalMatches: bundle.personalGames, userMap: ntrpUserMap },
         me.id,
         myEffectiveNtrp,
     )

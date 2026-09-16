@@ -42,6 +42,8 @@ export function OpponentHandStatsCard({ handStats }: Props) {
                     barClass={HAND_BAR_CLASS[hand]}
                 />
             ))}
+            {/* 복식은 상대 둘을 각각 세므로 합계가 경기 수를 넘는다 — 뜻을 말하지 않으면 숫자가 틀려 보인다(U-11) */}
+            <p className="text-caption text-muted-foreground">복식은 상대별로 셉니다 — 합계가 경기 수보다 클 수 있어요.</p>
         </SectionCard>
     )
 }
