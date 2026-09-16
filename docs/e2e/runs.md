@@ -288,3 +288,17 @@
 | 구글 로그인(M, 사용자) | PASS | 첫 시도는 localhost로 착지 — prod URL Configuration이 기본값(Site URL localhost, Redirect URLs 비어 있음)이라 allowlist 폴백(Week 59 재현). Site URL·Redirect URLs 등록 후 auth_logs `/authorize` referer `…/auth/callback` 전체 경로 → `/token pkce 200`. 프로필 완성(NTRP 3.0) → `role='admin'` 승격 |
 | prod 데이터 | PASS | auth.users 1 · public.users 1 · rooms/pm/sessions/requests 0. 테스트 계정 0 |
 | 미실행 | — | 매칭 만들기 → 내리기 · 회원 검색 "남자" 0명(사용자 수동 — 핵심 검증과 무관해 생략 가능). Google Cloud는 **새 프로젝트**의 OAuth 클라이언트라 동의 화면이 테스트 상태 — 오픈 전 게시 필요 |
+
+## 2026-09-16 · Week 69 총정리 확인 (문서·삭제·공통 컴포넌트)
+
+계정 A(남자01). 코드 회귀 0이 목표라 정적 검사 + 공통화가 닿는 화면만 스모크. 상단 매트릭스는 갱신하지 않는다(시나리오 재실행이 아니다).
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 정적 검사 | PASS | 각 단계(S1~S5)마다 tsc · lint(0 error) · build · vitest. 테스트 1031 → 1021(허브 잔재 `classifyPendingRequest` 10건 삭제) |
+| 삭제 후 경로 | PASS | `/clubs` → 307 `/`, `/dashboard` → 308 `/`, 보호 경로 5개 → `/login?next=`. 태그 `frozen-clubs-ui-2026-09-16` push |
+| S4-a 토큰·라벨 | PASS | 참여 중인 매칭(LIST_CARD·TEXT_LINK 빈 상태 링크), 프로필 「남 · 오른손잡이」(HAND/GENDER 단일 출처) |
+| S4-b Notice·EmptyState | PASS | 내 경기 결과 빈 상태(그림+문구+링크), 프로필 `?notice=welcome` 배너, 전적 통계 빈 상태(md, 칩·CTA) |
+| S4-c TextField·UserAvatar | PASS | `/signup` 필드 5종(라벨·도움말·비밀번호 규칙 체크리스트), 헤더·프로필 아바타(이니셜·userId 색) |
+| S4-d MatchRow·TriggerDialog | PASS | `/guide` 카드 3연작·매칭 카드(MatchRow), 룸 [회원 초대] 팝업(제목·검색·닫기 영문 없음). A를 dev SQL로 방 908e5f3c에 잠시 넣었다 뺌 |
+| 미실행 | — | LineupRow(자동 대진표 카드)·TriggerDialog [게임 추가]·[비회원 등록]·h2h 카드 실데이터·390px — 구조 치환이라 tsc로 갈음. 다음 S3·S4·S11·R3 재실행 때 확인 |

@@ -43,7 +43,7 @@ src/
 │   ├── common/                  셸(Header·Sidebar·MobileNav·NavCreateLink)·PageHeader·FormActions·LinkTabs·필드·배지·member-search/
 │   ├── guide/                   PageGuide(인라인 설명)·가이드 페이지 섹션·examples/(실제 카드를 더미 데이터로)
 │   ├── auth/ onboarding/ landing/ theme/
-│   ├── profile/ stats/          프로필 헤더·scope 탭·통계 카드 한 벌
+│   ├── profile/ stats/          프로필 헤더·scope 탭·통계 카드 한 벌(head-to-head/ = 1:1 맞대결 표시 분리)
 │   ├── personal-matches/        개인 경기 폼·카드·협상 액션·결과 다이얼로그·rotation/(빌더)·form-sections/
 │   └── match-rooms/             룸 카드·상세(헤더·명단·게임·대진표·초대·호스트 액션)·form-sections/·lineup-edit/
 ├── lib/
