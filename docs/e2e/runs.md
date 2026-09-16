@@ -234,3 +234,14 @@
 | `/guide` | PASS | h2 「매칭 리스트」·「참여 중인 매칭」·「내 경기 결과」 + 「… 열기」 CTA, FLOW 4단계 "내 경기 결과와 개인 통계에 반영", 스테퍼 4칸 「전적으로 내 경기 결과」, 다섯 단계 종료 힌트 "전적은 내 경기 결과에서" — 전부 `NAV_LABEL` 보간 |
 | 비로그인 `/guide` | PASS | 사이드바에 CTA 없음, 「사용 가이드」 한 줄 + 헤더 [로그인] |
 | 미실행 | — | 타인 프로필(eyebrow 없음 — 코드 분기 `isSelf`만 확인), 정산 방 안내의 「내 경기 결과」 링크(정산 방 픽스처 없음 — 문자열 보간은 가이드 STAGES로 대신 확인) |
+
+## 2026-09-16 · Week 68 환경 분리 확인 (dev / prod)
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 스키마 재현 | PASS | `supabase/history/` 119건 → prod `rjuhydxaoizgfiatyfpo` replay(schema_migrations에 원본 version·name), seed `admin@tennis-club.com` 삭제. 정의 스냅샷 diff — routine_grants 4건(트리거 함수 3 PUBLIC/anon/authenticated · `update_match_room_password` anon)만 달라 `0091_revoke_execute_drift`로 dev·prod 적용 → **diff 0**. `generate_typescript_types`(prod) = `types/supabase.ts` diff 0 |
+| prod Auth 설정 | PASS | `/auth/v1/settings`: `external.email=true`·`external.google=true`·`mailer_autoconfirm=true`·`disable_signup=false`. 중간에 Email provider 자체가 꺼졌던 것(`external.email=false`)과 Confirm email이 남아 있던 것을 두 번 되돌렸다 |
+| Vercel Production env | PASS | `baselineplay.vercel.app/signup` 닉네임 중복 확인 RPC가 `rjuhydxaoizgfiatyfpo.supabase.co`로 나간다(재배포 전에는 dev로 나갔다) |
+| 구글 로그인(M, 사용자) | PASS | 첫 시도는 localhost로 착지 — prod URL Configuration이 기본값(Site URL localhost, Redirect URLs 비어 있음)이라 allowlist 폴백(Week 59 재현). Site URL·Redirect URLs 등록 후 auth_logs `/authorize` referer `…/auth/callback` 전체 경로 → `/token pkce 200`. 프로필 완성(NTRP 3.0) → `role='admin'` 승격 |
+| prod 데이터 | PASS | auth.users 1 · public.users 1 · rooms/pm/sessions/requests 0. 테스트 계정 0 |
+| 미실행 | — | 매칭 만들기 → 내리기 · 회원 검색 "남자" 0명(사용자 수동 — 핵심 검증과 무관해 생략 가능). Google Cloud는 **새 프로젝트**의 OAuth 클라이언트라 동의 화면이 테스트 상태 — 오픈 전 게시 필요 |
