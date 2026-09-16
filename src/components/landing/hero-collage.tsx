@@ -21,11 +21,11 @@ const PILLS = [
  */
 export function HeroCollage() {
     return (
-        <div className="relative isolate lg:px-10 lg:py-8">
+        <div className="relative isolate text-left lg:px-10 lg:py-8">
             <p className="sr-only">매칭 리스트 카드와 확정된 경기 카드 미리보기</p>
             <div
                 aria-hidden
-                className="pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-spot-solid/30 blur-3xl"
+                className="pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-full max-w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-spot-solid/30 blur-3xl"
             />
             <div inert aria-hidden className="pointer-events-none select-none">
                 <div className={cn(CARD_BASE, 'mx-auto max-w-md divide-y divide-border')}>
@@ -38,7 +38,7 @@ export function HeroCollage() {
                     <PersonalMatchCard match={GUIDE_PERSONAL_MATCH} />
                 </div>
 
-                <ul className="mx-auto mt-4 flex max-w-md flex-wrap gap-2 lg:contents">
+                <ul className="mx-auto mt-4 flex max-w-md flex-wrap justify-center gap-2 lg:contents">
                     {PILLS.map((pill) => (
                         <li
                             key={pill.label}

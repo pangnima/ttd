@@ -12,7 +12,7 @@ import { LandingNav } from '@/components/landing/landing-nav'
  */
 export default function LandingPage() {
     return (
-        <div className="dark min-h-screen bg-background text-foreground">
+        <div className="dark min-h-screen overflow-x-clip bg-background text-foreground">
             <LandingNav />
             <main>
                 <HeroSection />
