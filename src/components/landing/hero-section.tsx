@@ -7,7 +7,7 @@ import { TYPO } from '@/lib/dashboard/tokens'
 import { cn } from '@/lib/utils'
 
 /**
- * 히어로 — 좌 카피 / 우 실제 카드 콜라주(Week 65). CTA는 [회원가입] 하나이고 [사용 가이드]가 보조다 —
+ * 히어로 — 좌 카피 / 우 실제 카드 콜라주(Week 65). CTA는 [회원가입] 하나이고 [사용 가이드]가 보조, 로그인은 나브가 맡는다 —
  * 옛 「데모 보기」는 `href="#"` 죽은 링크였다. 소셜 프루프·수치는 전부 가짜라 뺐다.
  */
 export function HeroSection() {
@@ -40,12 +40,6 @@ export function HeroSection() {
                         사용 가이드
                     </Link>
                 </div>
-                <p className={cn(TYPO.body2Muted, 'mt-4')}>
-                    이미 계정이 있나요?{' '}
-                    <Link href="/login" className="font-medium text-foreground hover:underline">
-                        로그인
-                    </Link>
-                </p>
             </div>
 
             <HeroCollage />

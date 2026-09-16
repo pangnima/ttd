@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
 
 import { BrandLogo } from '@/components/common/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
@@ -15,7 +14,7 @@ const NAV_LINKS = [
 /**
  * 랜딩 상단 — 정적(Week 65). 옛 버전은 `getUser()`로 로그인 분기 UI를 그렸지만 미들웨어가 로그인 상태의
  * `/`를 프로필로 리다이렉트하므로 그 분기는 도달할 수 없었다 — 매 요청 DB를 두 번 치던 사문 코드.
- * 로그인은 히어로 아래 텍스트 링크가 맡고, 나브는 [회원가입] 하나로 유도한다.
+ * 나브는 [로그인], 히어로는 [회원가입] — 둘 다 회원가입이면 버튼이 겹치고 기존 회원의 입구가 없다.
  */
 export function LandingNav() {
     return (
@@ -36,11 +35,10 @@ export function LandingNav() {
                     ))}
                     {/* buttonVariants base가 text-sm이라 text-body2로 덮어쓴다 */}
                     <Link
-                        href="/signup"
-                        className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'h-10 px-4 text-body2')}
+                        href="/login"
+                        className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-10 px-4 text-body2')}
                     >
-                        회원가입
-                        <ArrowUpRight className="size-4" />
+                        로그인
                     </Link>
                 </nav>
             </div>
