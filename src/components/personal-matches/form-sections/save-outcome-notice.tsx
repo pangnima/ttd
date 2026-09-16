@@ -1,4 +1,5 @@
 import { UserCheck, Users, Info } from 'lucide-react'
+import { Notice } from '@/components/common/notice'
 import type { SaveOutcome } from '@/lib/personal-matches/confirm-flow'
 
 type Props = {
@@ -19,7 +20,7 @@ type Props = {
 export function SaveOutcomeNotice({ outcome, memberCount, guestCount }: Props) {
     if (outcome === 'unlistedRoom') {
         return (
-            <Notice icon={<Users className="w-4 h-4 text-primary shrink-0 mt-0.5" />}>
+            <Notice variant="inline" tone="muted" icon={<Users className="w-4 h-4 text-primary shrink-0 mt-0.5" />}>
                 <span className="text-foreground font-medium">회원과 함께 친 경기는 매칭으로 기록합니다.</span>{' '}
                 저장하면 매칭 리스트에 뜨지 않는 <b className="text-foreground font-medium">비공개 매칭</b>이 만들어지고
                 회원 {memberCount}명에게 초대가 갑니다{guestCount > 0 && `. 비회원 ${guestCount}명은 명단에 바로 등록됩니다`}.
@@ -30,7 +31,7 @@ export function SaveOutcomeNotice({ outcome, memberCount, guestCount }: Props) {
 
     if (outcome === 'recruiting') {
         return (
-            <Notice icon={<Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}>
+            <Notice variant="inline" tone="muted" icon={<Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}>
                 참가자를 비운 채 <b className="text-foreground font-medium">모집 중</b>으로 저장됩니다.
                 나중에 회원으로 채우면 그때 확인 요청이 전송됩니다.
             </Notice>
@@ -39,7 +40,7 @@ export function SaveOutcomeNotice({ outcome, memberCount, guestCount }: Props) {
 
     if (outcome === 'freeRecord') {
         return (
-            <Notice icon={<UserCheck className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}>
+            <Notice variant="inline" tone="muted" icon={<UserCheck className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}>
                 상대팀에 플랫폼 회원이 없어 <b className="text-foreground font-medium">내 기록에만</b> 남습니다.
                 확인 요청은 전송되지 않습니다.
             </Notice>
@@ -47,13 +48,4 @@ export function SaveOutcomeNotice({ outcome, memberCount, guestCount }: Props) {
     }
 
     return null
-}
-
-function Notice({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-    return (
-        <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-            {icon}
-            <p className="text-caption text-muted-foreground break-keep">{children}</p>
-        </div>
-    )
 }

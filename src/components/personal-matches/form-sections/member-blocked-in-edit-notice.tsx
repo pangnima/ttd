@@ -1,4 +1,5 @@
 import { Users } from 'lucide-react'
+import { Notice } from '@/components/common/notice'
 
 /**
  * 방 밖 기록을 **수정**하다 회원을 골랐을 때의 안내 (N-2, Week 53).
@@ -9,13 +10,10 @@ import { Users } from 'lucide-react'
  */
 export function MemberBlockedInEditNotice() {
     return (
-        <div className="flex items-start gap-2.5 rounded-lg border border-spot/40 bg-spot/10 px-3 py-2.5">
-            <Users className="w-4 h-4 text-spot shrink-0 mt-0.5" />
-            <p className="text-caption text-muted-foreground break-keep">
+        <Notice variant="inline" tone="spot" icon={<Users className="w-4 h-4 text-spot shrink-0 mt-0.5" />}>
                 <span className="text-foreground font-medium">저장된 기록에는 회원을 넣을 수 없습니다.</span>{' '}
                 상대에게도 남는 기록이라 참여 동의와 결과 확인이 필요합니다 — 이 기록은 비회원으로 두고,
                 회원과 친 경기는 새 직접 기록에서 회원을 고르면 매칭이 만들어집니다.
-            </p>
-        </div>
+        </Notice>
     )
 }

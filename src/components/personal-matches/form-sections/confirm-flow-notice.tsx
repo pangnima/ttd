@@ -1,4 +1,5 @@
 import { UserCheck } from 'lucide-react'
+import { Notice } from '@/components/common/notice'
 
 type Props = {
     opponentName: string  // 대표 확인자
@@ -26,9 +27,7 @@ export function ConfirmFlowNotice({
     opponentName, isDoubles = false, isRoomGame = false, memberCount,
 }: Props) {
     return (
-        <div className="flex items-start gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-            <UserCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <p className="text-caption text-muted-foreground break-keep">
+        <Notice variant="inline" tone="primary" icon={<UserCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />}>
                 <span className="text-foreground font-medium">{opponentName}</span>
                 {isRoomGame ? (
                     <>
@@ -46,7 +45,6 @@ export function ConfirmFlowNotice({
                     </>
                 )}
                 {' '}회원의 NTRP는 각자의 레이팅에서 자동 반영됩니다.
-            </p>
-        </div>
+        </Notice>
     )
 }

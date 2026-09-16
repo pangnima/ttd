@@ -6,7 +6,8 @@ import { fetchMatchQueue } from '@/lib/queries/match-queue'
 import { fetchRotationBuilderContext } from '@/lib/queries/rotation-builder-context'
 import { PersonalMatchList } from '@/components/personal-matches/personal-match-list'
 import { PendingResultsSection } from '@/components/personal-matches/pending-results-section'
-import { EMPTY_BLOCK, HEADER_ACTION_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
+import { HEADER_ACTION_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
+import { EmptyState } from '@/components/common/empty-state'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { PageGuide } from '@/components/guide/page-guide'
@@ -52,17 +53,10 @@ export default async function PersonalMatchesPage() {
             {matches.length > 0 ? (
                 <PersonalMatchList matches={matches} />
             ) : (
-                <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>
-                    {/* 정적 SVG 장식 (내 전적 > 개인 빈 상태와 통일) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
-                    <span>
-                        아직 확정된 경기가 없습니다.{' '}
-                        <Link href="/match-rooms" className={TEXT_LINK}>
-                            매칭이 끝나면 전적이 여기로 옵니다
-                        </Link>
-                    </span>
-                </div>
+                <EmptyState
+                    image="/empty/record-empty.svg"
+                    title={<>아직 확정된 경기가 없습니다.{' '}<Link href="/match-rooms" className={TEXT_LINK}>매칭이 끝나면 전적이 여기로 옵니다</Link></>}
+                />
             )}
         </PageContainer>
     )

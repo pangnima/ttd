@@ -1,4 +1,4 @@
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { Notice } from '@/components/common/notice'
 
 /**
  * 내보내진 사람이 방을 열었을 때의 안내 (0068 → 0070).
@@ -9,12 +9,9 @@ import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
  */
 export function RoomRemovedNotice() {
     return (
-        <div className={`${CARD_BASE} px-4 py-3 border-spot/40`}>
-            <p className={`${TYPO.body2} font-medium break-keep`}>호스트가 이 매칭에서 회원님을 내보냈습니다.</p>
-            <p className={`${TYPO.caption} mt-1 break-keep`}>
-                매칭 내용은 더 이상 보이지 않고, 비밀번호를 알아도 입장할 수 없습니다.
-                다시 참가하려면 호스트의 초대가 필요합니다.
-            </p>
-        </div>
+        <Notice title="호스트가 이 매칭에서 회원님을 내보냈습니다.">
+            매칭 내용은 더 이상 보이지 않고, 비밀번호를 알아도 입장할 수 없습니다.
+            다시 참가하려면 호스트의 초대가 필요합니다.
+        </Notice>
     )
 }

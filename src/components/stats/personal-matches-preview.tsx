@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { PersonalMatch } from '@/types'
-import { TYPO, EMPTY_BLOCK, CTA_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
+import { TYPO, CTA_LINK, TEXT_LINK } from '@/lib/dashboard/tokens'
+import { EmptyState } from '@/components/common/empty-state'
 import { NAV_LABEL } from '@/lib/nav-items'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
 import { hasResult } from '@/lib/personal-matches/winner'
@@ -32,22 +33,15 @@ export function PersonalMatchesPreview({ personalMatches, readOnly = false }: Pr
                 )}
             </div>
             {groups.length === 0 ? (
-                <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-3`}>
-                    {/* 정적 SVG 장식 (tier-icon 관례) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/empty/record-empty.svg" alt="" aria-hidden width={96} height={64} draggable={false} />
-                    <span>
-                        아직 확정된 경기가 없습니다.
-                        {!readOnly && (
-                            <>
-                                {' '}
-                                <Link href="/match-rooms" className={TEXT_LINK}>
-                                    매칭이 끝나면 전적이 여기로 옵니다
-                                </Link>
-                            </>
-                        )}
-                    </span>
-                </div>
+                <EmptyState
+                    image="/empty/record-empty.svg"
+                    title={
+                        <>
+                            아직 확정된 경기가 없습니다.
+                            {!readOnly && <>{' '}<Link href="/match-rooms" className={TEXT_LINK}>매칭이 끝나면 전적이 여기로 옵니다</Link></>}
+                        </>
+                    }
+                />
             ) : (
                 <PersonalMatchMonthBrowser groups={groups} />
             )}

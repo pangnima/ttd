@@ -1,4 +1,4 @@
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { Notice } from '@/components/common/notice'
 
 /**
  * 매칭은 만들어졌지만 초대만 실패한 채 룸에 착지했을 때(?notice=invite_failed, E2E F-pre-1).
@@ -7,9 +7,8 @@ import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
  */
 export function RoomInviteFailedNotice() {
     return (
-        <div className={`${CARD_BASE} px-4 py-3 border-spot/40`}>
-            <p className={`${TYPO.body2} font-medium break-keep`}>매칭은 만들어졌지만 초대에 실패했습니다.</p>
-            <p className={`${TYPO.caption} mt-1 break-keep`}>참가자 섹션의 [회원 초대]에서 다시 불러주세요.</p>
-        </div>
+        <Notice title="매칭은 만들어졌지만 초대에 실패했습니다.">
+            참가자 섹션의 [회원 초대]에서 다시 불러주세요.
+        </Notice>
     )
 }

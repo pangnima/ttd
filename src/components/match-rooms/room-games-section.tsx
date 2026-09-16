@@ -2,7 +2,8 @@ import type { MatchRoomDetail, PersonalMatchConfirmation, RotationSession } from
 import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import type { EditableLineupGame } from '@/lib/queries/match-rooms'
-import { EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { TYPO } from '@/lib/dashboard/tokens'
+import { EmptyState } from '@/components/common/empty-state'
 import type { RoomGameContext } from '@/lib/match-rooms/room-context'
 import { canCreateRoomLineup, roomGamesEmptyMessage } from '@/lib/match-rooms/game-status'
 import { RoomGameRounds } from '@/components/match-rooms/room-game-rounds'
@@ -84,7 +85,7 @@ export function RoomGamesSection({
                 </div>
             </div>
             {detail.games.length === 0 ? (
-                <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail, { canLineup, canAdd: !!gameCtx })}</div>
+                <EmptyState title={roomGamesEmptyMessage(detail, { canLineup, canAdd: !!gameCtx })} />
             ) : (
                 <RoomGameRounds detail={detail} viewerId={viewerId} confirmations={confirmations} />
             )}

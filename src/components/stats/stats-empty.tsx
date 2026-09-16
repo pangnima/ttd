@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CalendarDays, Users } from 'lucide-react'
-import { EMPTY_BLOCK, CTA_LINK, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
+import { CTA_LINK, NEUTRAL_PILL } from '@/lib/dashboard/tokens'
+import { EmptyState } from '@/components/common/empty-state'
 
 type Props = {
     recordHref?: string
@@ -19,31 +20,15 @@ const DECO_CHIPS = ['전체', '단식', '남복', '혼복']
  */
 export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }: Props) {
     return (
-        <div className={`${EMPTY_BLOCK} flex flex-col items-center justify-center gap-4 py-12`}>
-            {/* 정적 SVG 장식 (빈 상태 일러스트 관례) */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/empty/empty-stats.svg" alt="" aria-hidden width={132} height={96} draggable={false} />
-            <div className="space-y-1">
-                <p className="text-body font-medium text-foreground">전적 데이터가 아직 없어요</p>
-                <p className="text-body2 text-muted-foreground">매칭에서 확정된 단식·복식 경기가 유형별 승-패-무 통계로 여기에 표시됩니다.</p>
-            </div>
-
-            {/* 4분기 미리보기 칩 (비활성 장식) */}
-            <div className="flex items-center gap-1.5">
-                {DECO_CHIPS.map((chip) => (
-                    <span key={chip} className={`${NEUTRAL_PILL}`}>
-                        {chip}
-                    </span>
-                ))}
-            </div>
-
-            {(recordHref || browseHref) && (
-                <div className="flex items-center gap-2">
+        <EmptyState
+            size="md"
+            image="/empty/empty-stats.svg"
+            title="전적 데이터가 아직 없어요"
+            description="매칭에서 확정된 단식·복식 경기가 유형별 승-패-무 통계로 여기에 표시됩니다."
+            actions={(recordHref || browseHref) && (
+                <>
                     {recordHref && (
-                        <Link
-                            href={recordHref}
-                            className={cn(CTA_LINK, 'px-3 py-1.5')}
-                        >
+                        <Link href={recordHref} className={cn(CTA_LINK, 'px-3 py-1.5')}>
                             <CalendarDays className="w-3.5 h-3.5" />
                             {recordLabel ?? '매칭 참여하기'}
                         </Link>
@@ -57,8 +42,18 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
                             {browseLabel ?? '클럽 찾아보기'}
                         </Link>
                     )}
-                </div>
+                </>
             )}
-        </div>
+        >
+
+            {/* 4분기 미리보기 칩 (비활성 장식) */}
+            <div className="flex items-center gap-1.5">
+                {DECO_CHIPS.map((chip) => (
+                    <span key={chip} className={`${NEUTRAL_PILL}`}>
+                        {chip}
+                    </span>
+                ))}
+            </div>
+        </EmptyState>
     )
 }

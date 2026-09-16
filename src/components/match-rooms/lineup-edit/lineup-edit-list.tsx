@@ -1,6 +1,7 @@
 'use client'
 
 import type { MatchType } from '@/types'
+import { EmptyState } from '@/components/common/empty-state'
 import type { LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupSlot } from '@/lib/match-rooms/lineup'
 import { summarizeLineup } from '@/lib/match-rooms/lineup'
@@ -10,7 +11,7 @@ import {
 import {
     addGame, removeGame, setSlot, validateDraft, type DraftGame, type DraftSide,
 } from '@/lib/match-rooms/lineup-draft'
-import { EMPTY_BLOCK, PILL_BASE, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
+import { PILL_BASE, TYPO, LIST_CARD } from '@/lib/dashboard/tokens'
 import { Button } from '@/components/ui/button'
 import { LineupEditCard } from '@/components/match-rooms/lineup-edit/lineup-edit-card'
 import { LineupRoundGroup } from '@/components/match-rooms/lineup-edit/lineup-round-group'
@@ -81,7 +82,7 @@ export function LineupEditList({
             )}
 
             {games.length === 0 ? (
-                <div className={EMPTY_BLOCK}>아직 경기가 없습니다. 아래에서 하나 추가해 주세요.</div>
+                <EmptyState title="아직 경기가 없습니다. 아래에서 하나 추가해 주세요." />
             ) : grouped ? (
                 <div className="space-y-3">
                     {rounds.map((round, r) => (

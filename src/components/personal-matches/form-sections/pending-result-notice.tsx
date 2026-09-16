@@ -1,4 +1,5 @@
 import { Hourglass } from 'lucide-react'
+import { Notice } from '@/components/common/notice'
 import type { PersonalMatchSetScore } from '@/types'
 
 type Props = {
@@ -15,9 +16,7 @@ type Props = {
 export function PendingResultNotice({ existingSets = [], variant = 'default' }: Props) {
     const hasSets = existingSets.length > 0
     return (
-        <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-            <Hourglass className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-caption text-muted-foreground break-keep">
+        <Notice variant="inline" tone="muted" icon={<Hourglass className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}>
                 {hasSets ? (
                     <>
                         등록된 게임 스코어는 그대로 유지됩니다:{' '}
@@ -42,7 +41,6 @@ export function PendingResultNotice({ existingSets = [], variant = 'default' }: 
                         지금 저장하면 <span className="text-foreground font-medium">결과 미확정</span>으로 기록되며 통계에는 반영되지 않습니다.
                     </>
                 )}
-            </p>
-        </div>
+        </Notice>
     )
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { Notice } from '@/components/common/notice'
 import { PASSWORD_POLICY_MESSAGE } from '@/lib/auth/password-policy'
 
 /**
@@ -8,13 +8,10 @@ import { PASSWORD_POLICY_MESSAGE } from '@/lib/auth/password-policy'
  */
 export function WeakPasswordNotice() {
     return (
-        <div className={`${CARD_BASE} px-4 py-3 border-spot/40`}>
-            <p className={`${TYPO.body2} font-medium break-keep`}>비밀번호 규칙이 강화되었습니다.</p>
-            <p className={`${TYPO.caption} mt-1 break-keep`}>
-                {PASSWORD_POLICY_MESSAGE} 지금 비밀번호는 그대로 쓸 수 있지만,{' '}
-                <Link href="/profile/settings" className="underline underline-offset-2">내 정보 수정</Link>에서
-                바꿔 두는 것이 안전합니다.
-            </p>
-        </div>
+        <Notice title="비밀번호 규칙이 강화되었습니다.">
+            {PASSWORD_POLICY_MESSAGE} 지금 비밀번호는 그대로 쓸 수 있지만,{' '}
+            <Link href="/profile/settings" className="underline underline-offset-2">내 정보 수정</Link>에서
+            바꿔 두는 것이 안전합니다.
+        </Notice>
     )
 }
