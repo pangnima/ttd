@@ -25,7 +25,7 @@
 | 0.3 | 비로그인 | `/find-id` · `/forgot-password` · `/guide` · `/tiers` · `/` | 리다이렉트 없이 열린다 | 공개 경로 | B |
 | 0.4 | 비로그인 | `/login?next=//evil.example` → 로그인 | `//`는 거부 → `/profile/<uid>?scope=personal` | `isSafeNext` | B |
 | 0.5 | A | 로그인 상태로 `/login` · `/signup` · `/` | 전부 `/profile/<uid>?scope=personal` | `isAuthRoute` 정확 일치 | B |
-| 0.6 | A | 로그인 상태로 `/find-id` · `/forgot-password` | 열린다(auth 라우트가 아니다) — U 관찰: 로그인한 사람에게 필요한 화면인가 | — | B |
+| 0.6 | A | 로그인 상태로 `/find-id` · `/forgot-password` | `/profile/<A>?scope=personal`로 리다이렉트(auth 라우트 — Week 63 U-4) | `middleware.ts` `isAuthRoute` | B |
 | 0.7 | A | 로그아웃 | `/login`. 뒤로가기로 보호 페이지 → 다시 `/login?next=` | `logoutAction` | B |
 
 ## A1 이메일 가입 — 필드 전수 · 실시간 중복 · 제출 잠금
@@ -44,7 +44,7 @@
 | 1.10 | — | 동의 체크 안 하고 제출 | 브라우저 required 툴팁, 서버 미호출 | `agree_privacy` | B |
 | 1.11 | — | 동의 체크 → 모든 필드 유효 → 비밀번호 확인만 틀리게 → [회원가입] | 버튼 비활성 그대로(`pwMismatch`). 고치면 활성 | disabled 조건 7종 | B |
 | 1.12 | — | **실패 후 보존**: 닉네임을 `남자01`로 바꿔 서버가 거절하도록 클라 검사를 우회할 수 없으므로, 대신 SQL로 `e2e_signup1` 닉네임을 다른 행에 잠깐 심고(롤백 불가 — 테스트 계정 D의 닉네임을 일시 변경 후 복원) 제출 | 서버 `이미 사용 중인 닉네임입니다.` + **입력값 유지**(Week 52 uncontrolled reset 수정) | `signupAction` 순서 8 | B+S |
-| 1.13 | — | [회원가입] 성공 | 착지 URL 기록 — 코드상 `redirect('/clubs')`(**F-pre-4** — 동결 더미 클럽 목록). 헤더에 닉네임·아바타 | `auth.ts:206` | B |
+| 1.13 | — | [회원가입] 성공 | `/profile/<uid>?scope=personal&notice=welcome` 착지 + 배너 `가입이 완료됐습니다.` 1회 + 체크리스트. 헤더에 닉네임·아바타(사진을 올렸다면 스토리지 URL, 512px webp) | `auth.ts` `WELCOME_NOTICE`(Week 63 F-pre-4·U-6) | B |
 | 1.14 | — | SQL | `public.users`: `login_id='e2esignup1'`, `email`, `nickname`, `name='테스트가입자'`, `phone='010-1234-5601'`, `gender·dominant_hand·ntrp·tennis_start_date='2022-07-01'`, `profile_image`=기본 아바타 경로, `racket_brand='기타'/model`, `deleted_at null`. `auth.users` 1행, `raw_user_meta_data`에 같은 값 | `handle_new_user` | S |
 | 1.15 | — | anon 컨텍스트 SQL `is_login_id_taken('e2esignup1')`·`is_nickname_taken('E2E_SIGNUP1')`·`is_email_taken('E2E1@e2e.test')` | 전부 true(정규화·anon EXECUTE) | 0080·0081·0085 | S |
 | 1.16 | — | 같은 이메일로 다시 가입(다른 아이디·닉네임) | 실시간 `이미 가입된 이메일입니다.` + 제출 잠금 | `emailTaken` | B |
@@ -92,9 +92,9 @@
 | 5.1 | — | SQL `update public.users set ntrp=null, gender=null, dominant_hand=null, tennis_start_date=null where email='e2e1@e2e.test'` | 1행 | 게이트 조건 `ntrp is null` | S |
 | 5.2 | e2e1 | 로그인 → 착지 / `/match-rooms` / `/profile/settings` | 전부 `/onboarding/profile`로. 헤더·사이드바 **없음**, eyebrow `ALMOST THERE`, h1 `프로필을 완성해 주세요`, 하단 [다른 계정으로 로그인]만 | `(main)/layout.tsx:41` `needsProfileOnboarding` | B |
 | 5.3 | e2e1 | `/onboarding/profile?next=%2Fmatch-rooms` 직접 | 열림(보호 라우트라 로그인 필요) | — | B |
-| 5.4 | e2e1 | 폼 | 사진(기존 아바타 유지) · 이름 프리필 `테스트가입자` · 닉네임 프리필 · 휴대폰 · 성별·주력손·시작일·NTRP **미선택** · 라켓 · 동의. [시작하기] 비활성 | `ProfileOnboardingForm` disabled = `nicknameTaken ‖ tennisMissing` | B |
+| 5.4 | e2e1 | 폼 | 사진(기존 아바타 유지) · 이름 프리필 `테스트가입자` · 닉네임 프리필 · 휴대폰 · 성별·주력손·시작일·NTRP **미선택** · 라켓 · 동의. [회원가입] 비활성 | `ProfileOnboardingForm` disabled = `nicknameTaken ‖ tennisMissing` | B |
 | 5.5 | e2e1 | 닉네임을 `남자닉네임02`로 | `이미 사용 중인 닉네임입니다.` + 잠금(본인 닉네임은 `excludeUserId`로 통과) | `is_nickname_taken(p_exclude_user_id)` | B |
-| 5.6 | e2e1 | 성별 여성·왼손·`2021/03`·NTRP 2.5·동의 → [시작하기] | `/match-rooms`(next) 착지, 헤더·사이드바 복귀. SQL: 넷이 채워짐 | `completeProfileAction` → `next` | B+S |
+| 5.6 | e2e1 | 성별 여성·왼손·`2021/03`·NTRP 2.5·동의 → [회원가입] | `/match-rooms`(next) 착지, 헤더·사이드바 복귀(next가 없으면 프로필 + `notice=welcome` 배너). SQL: 넷이 채워짐 | `completeProfileAction` → `next` | B+S |
 | 5.7 | e2e1 | 다시 `/onboarding/profile` | `/profile/<uid>?scope=personal`로 되돌림 | `page.tsx:38` | B |
 | 5.8 | e2e1 | `/profile/settings` | 성별 `여성`·주력손 `왼손`·시작일 `2021년 3월`·NTRP `2.5` **읽기 전용** | 입력 후 불변 | B |
 | 5.9 | — | `completeProfileAction` 재호출 경로 | 코드: `ntrp != null` → `이미 입력된 정보입니다.` | `onboarding.ts` | 코드 |
@@ -109,7 +109,7 @@
 | 6.3 | A | 휴대폰 `010-1` 저장 시도 / 비움 저장 | 형식 문구 / 저장되고 SQL `phone null`(빈 문자열 아님 — 0079) | `isBlankPhone` | B+S |
 | 6.4 | A | 라켓 `바볼랏` + 모델 `퓨어 드라이브` 저장 → 원복 | SQL 반영 | — | B+S |
 | 6.5 | A | 통계 공개 `비공개` 저장 | SQL `stats_hidden=true`; R4에서 타인 화면 확인 후 원복 | `toggleStatsHiddenAction` | B+S |
-| 6.6 | A | 사진 [다른 기본 이미지]/[기본 이미지로 변경] 저장 / [이미지 변경] 200KB png / **6MB** png | 기본 아바타 경로 변경 / 스토리지 업로드 후 `profile_image`가 버킷 URL / 6MB: 문구만 `최대 5MB`이고 검증 없음 → 실제 결과(스토리지 거절 문구 또는 통과)를 기록 → **F-pre-7 판정** | `profile-avatar-field.tsx` | B+S |
+| 6.6 | A | 사진 [기본 이미지로 변경] 저장 / [이미지 변경] **6MB** png / **11MB** png | 기본 아바타 경로 변경(고른 파일은 버려진다) / 6MB: 고르는 즉시 `줄이는 중…` → input의 파일이 512px webp(≈170KB)로 바뀌고 저장 후 `profile_image`가 버킷 URL, `storage.objects` size < 300KB / 11MB: 필드 문구 `사진이 너무 큽니다. 10MB 이하로 골라 주세요.` + [저장하기] 비활성 + input 비움 | `use-avatar-file.ts`·`avatar-limits.ts`·0087 버킷(Week 63 F-15·F-27) | B+S |
 | 6.7 | C | 아이디 칸 | `login_id null` + 비밀번호 identity → **입력란 1회**(안내 `한 번만…`류). `namja01` → `이미 사용 중인 아이디입니다.`; `Namja03` 저장 → 읽기 전용 `namja03` → 그 아이디로 로그인 | `canSetLoginId`, `updateProfileAction` | B+S |
 | 6.8 | C | SQL(C 컨텍스트) `update users set login_id='namja03x'` | **정책 `users_update`가 통과시키는지** 확인(앱 가드만 있고 DB 거울 없음 — Week 56 잔여) → rollback. 통과하면 K 후보 등록 | `begin; … rollback;` | S |
 | 6.9 | D | 시작일 null 만들기(SQL) → 설정 화면 | `YearMonthField` 1회 입력란 + hint `한 번만 입력할 수 있습니다` → `2019/12` 저장 → 읽기 전용. 다시 SQL로 `updateProfileAction` 경로 → `테니스 시작일은 이미 입력되어 변경할 수 없습니다.`(코드) | 입력 후 불변 | B+S |

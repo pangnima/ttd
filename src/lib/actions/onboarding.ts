@@ -12,6 +12,7 @@ import {
 } from '@/lib/profile/signup-fields'
 import { checkIdentityFields, isNicknameConflict } from '@/lib/profile/identity-fields'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
+import { WELCOME_NOTICE } from '@/lib/onboarding'
 import { AVATAR_UPLOAD_FAILED, avatarExtension, avatarFileError } from '@/lib/profile/avatar-limits'
 
 export type OnboardingActionState = { error: string } | null
@@ -119,5 +120,6 @@ export async function completeProfileAction(
 
     // 게이트가 (main) 레이아웃에 있으므로 레이아웃 캐시를 비워야 방금 채운 값이 보인다
     revalidatePath('/', 'layout')
-    redirect(next ?? personalNavHref(user.id))
+    // 가입 폼과 같은 착지 — 완료 신호가 없어 사용자가 「회원가입 안됨」으로 인지했다(U-6)
+    redirect(next ?? `${personalNavHref(user.id)}&notice=${WELCOME_NOTICE}`)
 }

@@ -17,6 +17,8 @@ import { validatePassword, WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-poli
 import { LOGIN_ID_TAKEN_MESSAGE, normalizeLoginId, validateLoginId } from '@/lib/auth/login-id'
 import { parseFindIdResult, type FindIdResult } from '@/lib/auth/find-id'
 import { PASSWORD_RESET_MAIL_ENABLED } from '@/lib/auth/password-reset-mode'
+import { personalNavHref } from '@/lib/nav-items'
+import { WELCOME_NOTICE } from '@/lib/onboarding'
 
 /**
  * 로그인 칸의 값을 signInWithPassword가 받을 이메일로 바꾼다.
@@ -209,8 +211,10 @@ export async function signupAction(
             .eq('id', data.user.id)
     }
 
+    // 착지는 로그인·소셜 완성과 같은 프로필(체크리스트가 다음 행동을 말한다) + 환영 배너 1회(F-pre-4·U-6).
+    // 옛 착지 /clubs는 동결된 더미 클럽 목록이라 신규 회원의 첫 화면이 픽스처였다.
     revalidatePath('/', 'layout')
-    redirect('/clubs')
+    redirect(data.user ? `${personalNavHref(data.user.id)}&notice=${WELCOME_NOTICE}` : '/login')
 }
 
 export async function logoutAction() {

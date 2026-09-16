@@ -28,6 +28,8 @@ import { PageContainer } from '@/components/common/page-container'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
 import { WeakPasswordNotice } from '@/components/profile/weak-password-notice'
 import { WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
+import { WelcomeNotice } from '@/components/onboarding/welcome-notice'
+import { WELCOME_NOTICE } from '@/lib/onboarding'
 import { buildOnboardingSteps, isOnboardingComplete } from '@/lib/onboarding'
 
 type Props = {
@@ -186,6 +188,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                 <ProfileScopeTabs scope={scope} personalHref={personalHref} />
                 {/* 0경기에서도 그린다(Week 57) — 헤더 빈 상태는 "왜 비었나"를, 체크리스트는 "무엇을 할지"를 말한다.
                     옛 0경기 가드는 「첫 경기」 단계를 미완료 상태로는 영영 못 보게 만들었다 */}
+                {notice === WELCOME_NOTICE && <WelcomeNotice />}
                 {notice === WEAK_PASSWORD_NOTICE && <WeakPasswordNotice />}
                 {showOnboarding && <OnboardingChecklist steps={onboardingSteps} />}
                 <SelfAnalyticsSection bundle={bundle} me={target} scope={scope} ratingHistory={ratingHistory} />

@@ -44,6 +44,12 @@ export async function updateSession(request: NextRequest) {
 
     const path = request.nextUrl.pathname
 
+    // 서버 액션(POST)은 리다이렉트하지 않는다(F-19). 세션이 남은 채 열려 있던 /login(뒤로 가기·다른 탭 로그인)에서
+    // 제출하거나 보호 화면에서 세션이 만료된 뒤 제출하면, 307을 받은 액션 응답이 HTML이 되어
+    // 「An unexpected response was received from the server」로 터진다. 이 앱이 받는 POST는 서버 액션뿐이고
+    // 액션은 저마다 getUser() null 분기를 가지므로(데이터는 RLS가 지킨다) 세션 갱신만 하고 통과시킨다.
+    if (request.method === 'POST') return supabaseResponse
+
     // 보호 라우트: 비로그인 시 /login 리다이렉트.
     // /clubs/join(초대 미리보기)은 공유 링크라 비로그인·크롤러에 공개한다(OG 미리보기).
     // /onboarding은 (main) 밖이지만 로그인한 사람만 쓰는 화면이라 같은 가드를 받는다
@@ -64,8 +70,9 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // 인증 라우트: 이미 로그인된 사용자는 next(있으면) 또는 내 전적 > 개인으로 리다이렉트
-    const isAuthRoute = path === '/login' || path === '/signup'
+    // 인증 라우트: 이미 로그인된 사용자는 next(있으면) 또는 내 전적 > 개인으로 리다이렉트.
+    // 찾기 두 화면도 로그인 이전의 화면이다(U-4) — 헤더가 없어 로그인한 사람에게는 돌아갈 길이 로고뿐이었다
+    const isAuthRoute = path === '/login' || path === '/signup' || path === '/find-id' || path === '/forgot-password'
     if (isAuthRoute && user) {
         const next = request.nextUrl.searchParams.get('next')
         const dest = isSafeNext(next) ? next : personalNavHref(user.id)

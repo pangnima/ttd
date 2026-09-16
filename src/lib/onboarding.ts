@@ -9,6 +9,12 @@
 
 export type OnboardingStepKey = 'join-match' | 'profile'
 
+/**
+ * 가입 직후 착지 쿼리 `?notice=welcome` — 프로필이 「가입이 완료됐습니다」 배너를 한 번 그린다(F-pre-4·U-6).
+ * 가입 폼(`signupAction`)과 소셜 완성 화면(`completeProfileAction`)이 같은 값으로 착지한다.
+ */
+export const WELCOME_NOTICE = 'welcome'
+
 export type OnboardingStep = {
     key: OnboardingStepKey
     title: string

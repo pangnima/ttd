@@ -82,7 +82,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
                 disabled={isPending || nicknameTaken || tennisMissing || avatarError}
                 className="w-full h-11 font-semibold mt-2"
             >
-                {isPending ? '저장 중...' : '시작하기'}
+                {isPending ? '가입 중...' : '회원가입'}
             </Button>
         </form>
     )
