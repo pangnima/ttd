@@ -11,8 +11,10 @@
 | Supabase ref | `xiwwbgltkbvxdzxxxoba` (TennisClubs, 서울) | `rjuhydxaoizgfiatyfpo` (baselineplay-prod, 서울) |
 | 누가 붙나 | 로컬 `npm run dev`(`.env.local`) · E2E · Vercel **Preview/Development** | Vercel **Production**(baselineplay.vercel.app)만 |
 | 계정 | 남자01~·관리자 등 테스트 계정 56명(비밀번호 123123, `docs/e2e/README.md`) | 실사용자만. 관리자 = 본인 구글 계정 `role='admin'` |
+| git 브랜치 | **`dev`** — 평소 작업·커밋은 전부 여기 | **`main`** — 릴리스 전용. `dev`를 merge할 때만 움직인다 |
 | MCP | `apply_migration`·`execute_sql` 쓰기 자유 | **읽기 조회 + 마이그레이션 적용만** — `execute_sql`로 데이터를 만들거나 고치지 않는다, E2E·시드 금지 |
 
+**브랜치 흐름(Week 68)**: 개발은 `dev`에서 커밋·push한다(Vercel이 프리뷰 URL로 자동 배포 — dev DB). 릴리스는 ① 그 릴리스에 든 마이그레이션을 **prod DB에 먼저** 적용(dev에서 이미 검증된 것) → ② `git checkout main && git merge dev && git push` → ③ Vercel Production 배포(prod DB) → ④ `git checkout dev`로 복귀. `main`에 직접 커밋하지 않는다 — `main`에 push = 실사용자에게 배포다. feature 브랜치·PR은 혼자 개발하는 동안 두지 않는다.
 규칙: **마이그레이션은 dev 롤백 스모크 → dev 적용 → prod 적용** 순으로 둘 다. 스키마 재현 정본은 `supabase/history/`(원격 `schema_migrations` 히스토리 사본, `scripts/db-history.ts`로 export/replay/snapshot) — 새 마이그레이션을 둘 다 적용한 뒤 `export`로 갱신하고, 정의가 갈렸는지 의심되면 두 환경 `snapshot`을 diff한다(Week 68에 그 diff가 히스토리 밖 EXECUTE 회수 4건을 잡아 0091로 편입했다). 히스토리 밖에서 `execute_sql`로만 DDL·권한을 바꾸면 prod에 재현되지 않는다. Auth 설정(Google provider·Site URL·Redirect URLs·Confirm email off·최소 비밀번호 8)은 SQL 밖이라 두 대시보드에서 각각 맞춘다. 로컬 `.env.local`은 언제나 dev — prod 값은 Vercel Production env에만 둔다.
 
 ## 기술 스택
@@ -321,4 +323,4 @@ npm run dev · npm run build · npm run lint · npx tsc --noEmit · npx vitest r
 - [ ] DB 변경 시 롤백 SQL 스모크 + `types/supabase.ts` 갱신
 - [ ] CLAUDE.md의 이력 표·백로그 갱신(배경 서사는 `docs/history/`)
 - [ ] 룸·협상·직접 기록 흐름을 건드렸으면 `docs/e2e/match-room-scenarios.md`의 해당 시나리오를 다시 돌리고 `docs/e2e/runs.md`에 한 줄
-- [ ] git commit (conventional commits)
+- [ ] git commit (conventional commits) — **`dev` 브랜치에서**. 릴리스는 prod 마이그레이션 → `main` merge·push
