@@ -31,6 +31,7 @@ import { WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
 import { WelcomeNotice } from '@/components/onboarding/welcome-notice'
 import { WELCOME_NOTICE } from '@/lib/onboarding'
 import { buildOnboardingSteps, isOnboardingComplete } from '@/lib/onboarding'
+import { isDefaultAvatar } from '@/lib/default-images'
 
 type Props = {
     params: Promise<{ userId: string }>
@@ -166,7 +167,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             userId,
             hasJoinedRoom: roomQueue.joinedRoomIds.length > 0,
             hasPersonalMatch: bundle.personalMatches.length > 0,
-            hasProfileImage: Boolean(target.profileImage),
+            hasProfileImage: Boolean(target.profileImage) && !isDefaultAvatar(target.profileImage),
+            hasContactOrRacket: Boolean(target.phone) || Boolean(target.racketBrand),
         })
         const showOnboarding = scope.kind === 'personal' && !isOnboardingComplete(onboardingSteps)
 

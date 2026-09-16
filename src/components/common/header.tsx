@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { personalNavHref } from '@/lib/nav-items'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -44,7 +45,7 @@ export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: H
             </button>
             {/* 모바일 전용 — 헤더 정중앙에 배치 (safe-area pt를 제외한 콘텐츠 영역 기준 수직 중앙) */}
             <Link
-                href="/clubs"
+                href={userId ? personalNavHref(userId) : '/'}
                 aria-label="BASELINE 홈"
                 className="md:hidden absolute left-1/2 -translate-x-1/2 top-[env(safe-area-inset-top)] bottom-0 flex items-center"
             >

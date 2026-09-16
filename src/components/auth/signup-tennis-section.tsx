@@ -26,6 +26,8 @@ type Props = {
      * (`NicknameField`의 `onTakenChange`와 같은 관용구).
      */
     onMissingChange?: (missing: boolean) => void
+    /** 완성 화면(U-2)이 이미 있는 라켓을 미리 채운다 — 가입 폼은 생략 */
+    initialRacket?: { brand: string | null; model: string | null }
 }
 
 /**
@@ -39,7 +41,7 @@ type Props = {
  * UI가 그 기본값을 그대로 되살려 두고 있었다. 층만 옮겼을 뿐 결과가 같았다.
  * `FieldToggle`이 `value: T | undefined`를 받아 미선택을 그려 주므로 공용 컴포넌트는 손대지 않는다.
  */
-export function SignupTennisSection({ onMissingChange }: Props) {
+export function SignupTennisSection({ onMissingChange, initialRacket }: Props) {
     const [gender, setGender] = useState<GenderValue | undefined>()
     const [hand, setHand] = useState<HandValue | undefined>()
     const [ntrp, setNtrp] = useState<SignupNtrp | undefined>()
@@ -70,7 +72,7 @@ export function SignupTennisSection({ onMissingChange }: Props) {
                 <p className="mt-1 text-caption text-muted-foreground">1.0 ~ 4.0 (0.5 단위) · 가입 후 변경할 수 없습니다</p>
             </div>
 
-            <RacketField />
+            <RacketField initialBrand={initialRacket?.brand} initialModel={initialRacket?.model} />
 
             {/* 왜 제출이 잠겼는지는 아는 쪽이 말한다 — 부모 둘에 문구를 복제하지 않는다 */}
             {missing && (

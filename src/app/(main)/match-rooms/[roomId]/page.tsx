@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { isViewerJoined } from '@/lib/match-rooms/headcount'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMatchRoomDetail, fetchMatchRoomSummary } from '@/lib/queries/match-rooms'
 import { fetchRoomDetailExtras } from '@/lib/queries/room-detail-extras'
@@ -64,7 +65,7 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
                     ? (
                         <RoomHostActions
                             roomId={roomId}
-                            canCloseRotation={x.isPendingRotation}
+                            canCloseRotation={x.isPendingRotation && detail.games.length > 0}
                             isListed={detail.room.isListed}
                             isSettled={detail.room.isSettled}
                             closedAt={detail.room.closedAt}
@@ -100,8 +101,9 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
             />
             {/* 호스트는 나갈 수 없다 — '매칭 리스트에서 내리기'가 호스트의 퇴장이다(0054).
                 경기에 배정된 참가자도 나갈 수 없다(0077) — 강퇴 가드(member_has_games)와 같은 집합을 본다 */}
-            {!x.isHost && detail.viewer && detail.viewer.status !== 'declined' && detail.viewer.status !== 'removed' && (
-                <RoomLeaveButton roomId={roomId} hasGames={roomGameMemberIds(detail.games).has(user.id)} />
+            {/* 초대 대기(invited)에게는 배너의 [거절]이 같은 행동이라 여기 버튼을 겹쳐 두지 않는다(U-7) */}
+            {!x.isHost && isViewerJoined(detail.viewer) && (
+                <RoomLeaveButton roomId={roomId} hasGames={roomGameMemberIds(detail.games).has(user.id)} finished={isRoomFinished(stage)} />
             )}
         </PageContainer>
     )

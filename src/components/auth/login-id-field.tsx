@@ -20,8 +20,8 @@ type Props = {
 /**
  * 로그인 아이디 입력(0085) — `NicknameField`와 같은 관용구. 타이핑이 멈추면 중복을 물어 아래에서 말한다.
  *
- * 대문자는 오류가 아니라 정규화 대상이라 입력 중에 소문자로 바꾸지 않고 판정만 정규화된 값으로 한다 —
- * 서버·트리거가 같은 정규화를 하므로 저장값은 언제나 소문자다.
+ * 대문자는 오류가 아니라 정규화 대상이다 — 서버·트리거가 소문자로 저장하므로 **입력 중에 소문자로 보여준다**(U-1).
+ * 화면은 대문자인데 저장은 소문자면 "입력한 값과 저장된 값이 다른" 칸이 된다. trim은 타이핑 중엔 하지 않는다.
  */
 export function LoginIdField({ required = true, onTakenChange }: Props) {
     const [value, setValue] = useState('')
@@ -53,7 +53,7 @@ export function LoginIdField({ required = true, onTakenChange }: Props) {
                 id="login_id" name="login_id" placeholder="영문 소문자·숫자·_ 4~20자"
                 required={required} maxLength={LOGIN_ID_MAX_LEN}
                 autoComplete="username" autoCapitalize="none" spellCheck={false}
-                value={value} onChange={(e) => setValue(e.target.value)}
+                value={value} onChange={(e) => setValue(e.target.value.toLowerCase())}
                 aria-invalid={bad}
                 className={inputCls}
             />

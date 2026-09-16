@@ -77,15 +77,20 @@ export function canCreateRoomLineup(detail: MatchRoomDetail, candidateCount: num
  * 호스트에게는 [자동 대진표]도 있다는 것을 말한다(Week 47) — 그 버튼은 호스트에게만 보이므로
  * 참가자 문구에 섞으면 "없는 버튼을 가리키는" 안내가 된다.
  */
-export function roomGamesEmptyMessage(detail: MatchRoomDetail, isHost = false): string {
+export function roomGamesEmptyMessage(detail: MatchRoomDetail, opts: { canLineup?: boolean; canAdd?: boolean } | boolean = {}): string {
+    // 옛 시그니처(불리언 = 호스트)도 받는다 — 픽스처·가이드가 그대로 돈다
+    const { canLineup = false, canAdd = false } = typeof opts === 'boolean' ? { canLineup: opts } : opts
     const s = detail.source
     if (s.kind === 'rotation' && !s.isFinalized) {
         // 0050: 방에 참가한 사람 누구나 이 화면의 '게임 입력'에서 자기 기준으로 게임을 넣는다
         const base = '게임이 아직 없습니다. 위 [게임 입력]에서 파트너·상대와 스코어를 구성하세요.'
-        return isHost ? `${base} 경기 전이라면 [자동 대진표]로 미리 짤 수도 있습니다.` : base
+        return canLineup ? `${base} 경기 전이라면 [자동 대진표]로 미리 짤 수도 있습니다.` : base
     }
     if (s.kind === 'confirmation' && s.requestStatus === 'pending') {
         return '상대 대표가 확인 요청을 수락하면 결과를 등록할 수 있습니다.'
     }
-    return '게임이 없습니다. 함께 친 참가자로 게임을 추가하세요.'
+    // 참가자에게 "내가 만들 수 있다"를 말한다(U-13) — 없으면 초대받은 사람은 호스트를 기다린다
+    return canAdd
+        ? '게임이 없습니다. [게임 추가]로 상대와 게임을 만드세요 — 참가자 누구나 만들 수 있습니다.'
+        : '게임이 없습니다. 함께 친 참가자로 게임을 추가하세요.'
 }

@@ -9,6 +9,8 @@ type Props = {
     roomId: string
     /** 이 방의 경기에 배정돼 있다 — 나갈 수 없다(0077, 강퇴 가드 member_has_games의 거울) */
     hasGames?: boolean
+    /** 종료·마감된 방(U-8) — 결과가 이미 마무리됐는데 「결과를 마무리하라」고 말하지 않는다 */
+    finished?: boolean
 }
 
 /**
@@ -18,11 +20,13 @@ type Props = {
  * 경기에 배정된 사람은 버튼 대신 이유를 본다(0077) — 버튼만 없으면 왜 없는지 모른다. 나가면 상세가 게이트에
  * 막혀 결과를 확인할 수 없고 좌석 만장일치가 영영 비기 때문에, 서버도 leave_member_has_games로 거절한다.
  */
-export function RoomLeaveButton({ roomId, hasGames = false }: Props) {
+export function RoomLeaveButton({ roomId, hasGames = false, finished = false }: Props) {
     const router = useRouter()
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
+    // 끝난 매칭의 배정자에게는 할 말이 없다 — 나갈 수도, 마무리할 것도 없다
+    if (hasGames && finished) return null
     if (hasGames) {
         return (
             <p className={`${TYPO.caption} text-right break-keep`}>

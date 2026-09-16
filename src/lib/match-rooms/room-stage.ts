@@ -22,7 +22,7 @@ export const ROOM_STAGE_LABEL: Record<RoomStage, string> = {
 }
 
 export const ROOM_STAGE_HINT: Record<RoomStage, string> = {
-    recruiting: '아직 등록된 게임이 없습니다. 참가자가 모이면 게임을 추가하세요.',
+    recruiting: '아직 등록된 게임이 없습니다. 참가자 누구나 게임 추가로 상대와 게임을 만들 수 있어요.',
     playing: '결과를 기다리는 게임이 남아 있습니다.',
     reviewing: '모든 게임의 결과가 입력됐습니다. 참가자 확인이 끝나면 매칭이 종료됩니다.',
     settled: '모든 결과가 확정됐습니다. 전적은 개인 경기 결과에서 볼 수 있습니다.',

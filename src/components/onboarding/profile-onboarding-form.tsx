@@ -22,6 +22,9 @@ type Props = {
     defaultProfileImage: string | null
     /** 자기 행을 중복으로 세지 않기 위해 */
     userId: string
+    /** 이미 있는 값은 미리 채운다(U-2) — 완성 액션이 무조건 update하므로 비워 두면 null로 덮어쓴다 */
+    defaultPhone?: string
+    defaultRacket?: { brand: string | null; model: string | null }
 }
 
 /**
@@ -34,7 +37,7 @@ type Props = {
  * 취소 버튼은 두지 않는다 — 여기는 되돌아갈 곳이 없는 한 방향 화면이다(`FormActions`가 아니라
  * 가입 폼과 같은 전폭 버튼을 쓰는 이유). 대신 다른 계정으로 들어온 사람을 위해 로그아웃을 남긴다.
  */
-export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defaultProfileImage, userId }: Props) {
+export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defaultProfileImage, userId, defaultPhone = '', defaultRacket }: Props) {
     const [state, formAction, isPending] = useActionState(completeProfileAction, null)
     const [nicknameTaken, setNicknameTaken] = useState(false)
     // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
@@ -62,11 +65,11 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
                 />
             </div>
 
-            <PhoneField />
+            <PhoneField defaultValue={defaultPhone} />
 
             <div className="h-px bg-border" />
 
-            <SignupTennisSection onMissingChange={setTennisMissing} />
+            <SignupTennisSection onMissingChange={setTennisMissing} initialRacket={defaultRacket} />
 
             {/* 가입 폼과 같은 동의 — 소셜 경로만 건너뛰고 있었다(수집하는 정보는 같다) */}
             <label className="flex items-start gap-2 text-caption text-muted-foreground">

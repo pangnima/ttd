@@ -62,7 +62,7 @@
 | # | 계정 | 조작 | 기대 | 검증 | 수단 |
 |---|---|---|---|---|---|
 | 4.1 | 신규 계정 | `/profile/<uid>?scope=personal`(0경기) | 헤더 `ProfileEmptyGuide` `아직 확정된 경기가 없어요` + [매칭 참여하기](`/match-rooms`)·[사용 가이드]; `StatsEmpty` `전적 데이터가 아직 없어요`; 개인 경기 결과 프리뷰 빈 상태 | Week 57 유도 넷 | B |
-| 4.2 | 신규 계정 | 체크리스트 `시작하기` | `2단계 중 N단계 완료` — **N이 이미 1인지**(2단계 `프로필 완성하기` done = `profileImage` → 기본 아바타로 항상 done, U-pre-1 판정). 「첫 매칭 참여하기」 링크 `/match-rooms` | `lib/onboarding.ts` | B |
+| 4.2 | 신규 계정 | 체크리스트 `시작하기` | `2단계 중 0단계 완료` — 기본 아바타는 「프로필 완성」이 아니다(Week 63 U-pre-1: 직접 올린 사진 ∨ 휴대폰·라켓 입력이 done). 「첫 매칭 참여하기」 링크 `/match-rooms` | `lib/onboarding.ts`·`isDefaultAvatar` | B |
 | 4.3 | 신규 계정 | 매칭 참가(S 방 하나 비밀번호 입장) 후 프로필 | 두 단계가 모두 done이 되어 **카드 자체가 사라진다**(`모든 준비를 마쳤어요!`·닫기 버튼은 마지막 단계를 프로필 화면 안에서 끝낼 때만 보인다) | `isOnboardingComplete` | B |
 | 4.4 | B | A의 프로필(비공개 상태) | 4카드 블러 + `승률을 공개하지 않은 유저입니다`, 편집 불가, `최근 경기`·`라이벌 · 파트너` | `PlayerStatsSection locked` | B |
 | 4.5 | A | 본인 화면에서 비공개 카드 `클릭해서 보기` | **공개로 전환**되는지(`toggleStatsHiddenAction(false)`) — 보기와 공개 전환이 한 클릭이면 U 후보 | `stats-quad-grid.tsx` | B+S |
@@ -73,7 +73,7 @@
 
 | # | 계정 | 조작 | 기대 | 검증 | 수단 |
 |---|---|---|---|---|---|
-| 5.1 | 비로그인 | `/guide` | S0.5와 같음 + 로고 클릭 → `/clubs` → `/login?next=%2Fclubs`(U-pre-4 판정) | `header.tsx:46` | B |
+| 5.1 | 비로그인 | `/guide` | S0.5와 같음 + 로고 클릭 → `/`(랜딩). 로그인 상태면 로고 → `/profile/<uid>?scope=personal`(Week 63 U-pre-4). not-found·프로필 error CTA는 `/match-rooms` | `header.tsx`·`sidebar.tsx` | B |
 | 5.2 | B | 세 목록 화면 `PageGuide` | 매칭 리스트(참가 방 있으면 접힘)·참여 중인 매칭·개인 경기 결과 각각 펼침/접힘 조건, 「전체 가이드 →」 → `/guide#<id>` 앵커 착지 | `GuideHashScroll` | B |
 | 5.3 | B | 사이드바 | `개인`·`매칭 리스트`·`참여 중인 매칭`(뱃지)·`개인 경기 결과` + 구분선 + `사용 가이드`. 방 상세 URL에서 `매칭 리스트` 활성(K-11 confirmed) | `isNavItemActive` | B |
 | 5.4 | B | 사이드바 접기(rail) | 뱃지가 점으로 | `sidebar-nav-row.tsx:43` | B |

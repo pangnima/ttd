@@ -103,6 +103,13 @@ describe('roomGamesEmptyMessage', () => {
     it('자유 기록은 게임 추가 안내', () => {
         expect(roomGamesEmptyMessage(detailWith({ kind: 'direct' }))).toContain('게임을 추가하세요')
     })
+
+    it('게임을 추가할 수 있는 참가자에게는 "내가 만들 수 있다"를 말한다(U-13)', () => {
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'direct' }), { canAdd: true })).toContain('[게임 추가]')
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'direct' }), { canAdd: false })).not.toContain('[게임 추가]')
+        // 옛 불리언 시그니처는 canLineup으로 읽힌다
+        expect(roomGamesEmptyMessage(detailWith({ kind: 'rotation', isFinalized: false }), true)).toContain('자동 대진표')
+    })
 })
 
 describe('roomGameMemberIds — 경기에 배정된 회원 (0070)', () => {

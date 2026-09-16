@@ -18,6 +18,8 @@ type Props = {
     /** 비밀번호 identity가 있을 때만 1회 설정란을 연다 — 소셜 전용 계정은 아이디가 있어도 쓸 데가 없다 */
     canSetLoginId: boolean
     userId: string
+    /** 닉네임 중복 동안 [저장하기]를 잠근다(U-3) — 온보딩 폼과 같은 관용구 */
+    onNicknameTakenChange?: (taken: boolean) => void
 }
 
 function ReadonlyLabel({ children }: { children: React.ReactNode }) {
@@ -36,7 +38,7 @@ function ReadonlyLabel({ children }: { children: React.ReactNode }) {
  * 서버(`updateProfileAction`)도 현재 값이 null일 때만 받는다. 있으면 읽기 전용으로 보인다 —
  * 폼으로 전송하지 않는다. 비밀번호 없는 소셜 계정에는 입력란도 표시도 없다(가질 이유가 없다).
  */
-export function ProfileIdentityFields({ name, nickname, loginId, canSetLoginId, userId }: Props) {
+export function ProfileIdentityFields({ name, nickname, loginId, canSetLoginId, userId, onNicknameTakenChange }: Props) {
     return (
         <>
             <div className="grid grid-cols-2 gap-3">
@@ -45,7 +47,7 @@ export function ProfileIdentityFields({ name, nickname, loginId, canSetLoginId, 
                     {/* 이름은 변경 불가 — 표시만, 폼 전송 안 함 */}
                     <div className={readonlyFieldCls}>{name}</div>
                 </div>
-                <NicknameField defaultValue={nickname} excludeUserId={userId} />
+                <NicknameField defaultValue={nickname} excludeUserId={userId} onTakenChange={onNicknameTakenChange} />
             </div>
 
             {loginId ? (

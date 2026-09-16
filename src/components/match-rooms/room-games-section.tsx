@@ -84,7 +84,7 @@ export function RoomGamesSection({
                 </div>
             </div>
             {detail.games.length === 0 ? (
-                <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail, canLineup)}</div>
+                <div className={EMPTY_BLOCK}>{roomGamesEmptyMessage(detail, { canLineup, canAdd: !!gameCtx })}</div>
             ) : (
                 <RoomGameRounds detail={detail} viewerId={viewerId} confirmations={confirmations} />
             )}

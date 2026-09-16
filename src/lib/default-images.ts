@@ -24,6 +24,11 @@ function pick<T>(arr: readonly T[]): T {
 // 기본 아바타 전체 경로 목록 (회원가입 폼에서 노출·셔플에 사용)
 export const DEFAULT_AVATAR_PATHS: string[] = AVATAR_FILES.map((file) => `/avatars/${file}`)
 
+/** 기본 아바타인가 — 체크리스트 「프로필 완성」이 "직접 올린 사진"을 가르는 기준(U-pre-1) */
+export function isDefaultAvatar(url: string | null | undefined): boolean {
+    return !!url && DEFAULT_AVATAR_PATHS.includes(url)
+}
+
 export function randomAvatarPath(): string {
     return pick(DEFAULT_AVATAR_PATHS)
 }

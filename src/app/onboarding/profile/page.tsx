@@ -27,7 +27,7 @@ export default async function ProfileOnboardingPage({ searchParams }: Props) {
 
     const { data: profile } = await supabase
         .from('users')
-        .select('name, nickname, profile_image, ntrp')
+        .select('name, nickname, profile_image, ntrp, phone, racket_brand, racket_model')
         .eq('id', user.id)
         .single()
 
@@ -58,6 +58,8 @@ export default async function ProfileOnboardingPage({ searchParams }: Props) {
                         defaultName={profile?.name ?? ''}
                         defaultNickname={profile?.nickname ?? ''}
                         defaultProfileImage={profile?.profile_image ?? null}
+                        defaultPhone={profile?.phone ?? ''}
+                        defaultRacket={{ brand: profile?.racket_brand ?? null, model: profile?.racket_model ?? null }}
                         userId={user.id}
                     />
 

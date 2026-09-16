@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findScheduleConflicts, type ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
+import { findScheduleConflicts, formatScheduleConflicts, type ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
 
 const slots: ScheduleSlot[] = [
     { playedAt: '2026-09-07', playedTime: '19:00', label: '남자08' },
@@ -29,5 +29,17 @@ describe('findScheduleConflicts', () => {
 
     it('날짜가 비어 있으면 판정하지 않는다', () => {
         expect(findScheduleConflicts(slots, '', '19:00')).toEqual([])
+    })
+})
+
+describe('formatScheduleConflicts — 같은 상대는 한 번만, 넷을 넘으면 외 N건(U-12)', () => {
+    const at = (label: string): ScheduleSlot => ({ playedAt: '2026-09-07', playedTime: '19:00', label })
+
+    it('로테이션 게임처럼 같은 이름이 반복되면 하나로 접는다', () => {
+        expect(formatScheduleConflicts([at('남자01'), at('남자01'), at('로테이션 경기')])).toBe('남자01 / 로테이션 경기')
+    })
+
+    it('구별되는 이름이 넷을 넘으면 뒤는 건수로', () => {
+        expect(formatScheduleConflicts(['a', 'b', 'c', 'd', 'e', 'f'].map(at))).toBe('a / b / c / d 외 2건')
     })
 })

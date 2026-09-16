@@ -26,6 +26,14 @@ function hourOf(time?: string): string | null {
  * 대상은 **미확정 일정**(확인 요청 허브가 담는 집합)뿐이다 — 이미 끝나 확정된 경기와의
  * 시각 일치는 중복 일정이 아니라 그날 여러 코트에서 친 기록일 수 있다.
  */
+/** 경고 문구의 목록 부분 — 같은 이름은 한 번만, 넷을 넘으면 「외 N건」(U-12: 로테이션 게임은 같은 상대가 반복된다) */
+export function formatScheduleConflicts(conflicts: ScheduleSlot[], max = 4): string {
+    const labels = [...new Set(conflicts.map((c) => c.label))]
+    const shown = labels.slice(0, max)
+    const rest = labels.length - shown.length
+    return rest > 0 ? `${shown.join(' / ')} 외 ${rest}건` : shown.join(' / ')
+}
+
 export function findScheduleConflicts(
     slots: ScheduleSlot[],
     playedAt: string,

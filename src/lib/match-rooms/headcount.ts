@@ -21,9 +21,9 @@ export function isViewerJoined(viewer?: ViewerLike): boolean {
     return !!viewer && viewer.status === 'joined'
 }
 
-/** "참가 3명" 표기 */
-export function formatHeadcount(joined: number): string {
-    return `참가 ${joined}명`
+/** "참가 3명" · 비회원이 있으면 "참가 3명 · 비회원 2명"(U-9 — 힌트의 「참가 예정 N명」과 숫자가 맞아야 한다) */
+export function formatHeadcount(joined: number, guests = 0): string {
+    return guests > 0 ? `참가 ${joined}명 · 비회원 ${guests}명` : `참가 ${joined}명`
 }
 
 /** 목록 카드 상태 칩 라벨 — 없으면 아직 입장하지 않은 방 */

@@ -35,6 +35,16 @@ describe('매칭 참여 단계의 done', () => {
     })
 })
 
+describe('프로필 단계 — 기본 아바타는 완성이 아니다(U-pre-1)', () => {
+    it('사진이 기본 아바타뿐이면 미완료, 휴대폰·라켓 중 하나라도 적으면 완료', () => {
+        const profile = (i: Partial<typeof input> & { hasContactOrRacket?: boolean }) =>
+            buildOnboardingSteps({ ...input, ...i }).find((s) => s.key === 'profile')!.done
+        expect(profile({ hasProfileImage: false })).toBe(false)
+        expect(profile({ hasProfileImage: true })).toBe(true)
+        expect(profile({ hasProfileImage: false, hasContactOrRacket: true })).toBe(true)
+    })
+})
+
 describe('완료 판정', () => {
     it('둘 다 하면 끝난다 — 셋째 단계가 없어 영영 미완료로 남지 않는다', () => {
         const steps = buildOnboardingSteps({ ...input, hasJoinedRoom: true, hasProfileImage: true })

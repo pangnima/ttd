@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-    myMatchNavItems, buildPersonalNavItem, guideNavItem, isNavItemActive,
+    myMatchNavItems, buildPersonalNavItem, guideNavItem, isNavItemActive, personalNavHref,
 } from '@/lib/nav-items'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
@@ -47,7 +47,7 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
                     collapsed ? 'justify-center px-2' : 'px-5'
                 )}
             >
-                <Link href="/clubs" className="flex items-center gap-2.5 min-w-0" aria-label="BASELINE 홈">
+                <Link href={userId ? personalNavHref(userId) : '/'} className="flex items-center gap-2.5 min-w-0" aria-label="BASELINE 홈">
                     <BrandLogo wordmark={false} size="sm" className="shrink-0" />
                     <span className={cn(labelClass, WORDMARK_CLASS, 'text-body')}>BASELINE</span>
                 </Link>

@@ -2,7 +2,7 @@
 
 import { CalendarClock } from 'lucide-react'
 import type { PersonalMatchSetScore } from '@/types'
-import { findScheduleConflicts, type ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
+import { findScheduleConflicts, formatScheduleConflicts, type ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
 import { FormSectionCard } from '@/components/common/form-section-card'
 import { PendingResultNotice } from '@/components/personal-matches/form-sections/pending-result-notice'
 import { MatchMetaSection } from '@/components/personal-matches/form-sections/match-meta-section'
@@ -52,7 +52,7 @@ export function WhenColumn({ s, recentCourtNames, existingSets, variant = 'page'
                         <CalendarClock className="w-4 h-4 text-spot shrink-0 mt-0.5" />
                         <p className="text-caption text-muted-foreground break-keep">
                             <span className="text-foreground font-medium">이 시각에 이미 등록된 경기가 있습니다</span> —{' '}
-                            {conflicts.map((c) => c.label).join(' / ')}. 같은 경기를 두 번 만들고 있는지 확인해주세요.
+                            {formatScheduleConflicts(conflicts)}. 같은 경기를 두 번 만들고 있는지 확인해주세요.
                         </p>
                     </div>
                 )}

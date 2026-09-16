@@ -34,8 +34,13 @@ export type OnboardingInput = {
      * 영영 미완료로 남는다 — Week 54에 클럽 단계를 내린 것과 같은 결함이라 탈출구로 둔다.
      */
     hasPersonalMatch: boolean
-    /** 프로필 이미지 설정 여부 (기본값 미설정 시 false) */
+    /**
+     * 직접 올린(또는 provider가 준) 사진 — **기본 아바타는 세지 않는다**(U-pre-1). 이메일 가입은 기본 아바타가
+     * 저장되므로 그것을 세면 2단계가 언제나 done이라 체크리스트가 사실상 1단계였다.
+     */
     hasProfileImage: boolean
+    /** 휴대폰·라켓 중 하나라도 적었으면 프로필을 "완성"한 것으로 친다 — 사진을 올리기 싫은 사람의 탈출구 */
+    hasContactOrRacket?: boolean
 }
 
 /** 입력 신호를 체크리스트 단계 배열로 변환 (매칭 참여가 항상 첫 단계). */
@@ -53,7 +58,7 @@ export function buildOnboardingSteps(input: OnboardingInput): OnboardingStep[] {
             title: '프로필 완성하기',
             description: '사진과 정보를 채워 매칭에서 다른 참가자가 나를 알아볼 수 있게 하세요.',
             href: '/profile/settings',
-            done: input.hasProfileImage,
+            done: input.hasProfileImage || Boolean(input.hasContactOrRacket),
         },
         /*
          * 「클럽 둘러보기」 단계는 1차 오픈에서 내렸다(Week 54) — 클럽이 동결 상태라

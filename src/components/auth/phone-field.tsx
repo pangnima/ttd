@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FORM_INPUT_BASE as inputCls, FORM_LABEL_BASE as labelCls } from '@/lib/dashboard/tokens'
 import {
     formatPhoneNumber,
@@ -12,6 +12,8 @@ import {
 
 type Props = {
     defaultValue?: string
+    /** 형식이 틀린 동안 제출을 잠글 때(U-3). `NicknameField.onTakenChange`와 같은 관용구 — 참조가 고정된 setter를 넘길 것 */
+    onInvalidChange?: (invalid: boolean) => void
 }
 
 /**
@@ -22,7 +24,7 @@ type Props = {
  * 빈 값으로 치므로, 손대지 않은 칸은 오류도 아니고 저장 시 null이 된다.
  * 형식 판정은 `lib/format/phone.ts`가 단일 출처다(DB 제약 `users_phone_check`의 거울).
  */
-export function PhoneField({ defaultValue = '' }: Props) {
+export function PhoneField({ defaultValue = '', onInvalidChange }: Props) {
     const [phone, setPhone] = useState(
         defaultValue ? formatPhoneNumber(defaultValue) : PHONE_PREFIX
     )
@@ -30,6 +32,9 @@ export function PhoneField({ defaultValue = '' }: Props) {
 
     // 타이핑 도중에는 언제나 '미완성'이라 빨간 글씨가 계속 떠 있게 된다. blur 이후에만 말한다.
     const invalid = touched && !isBlankPhone(phone) && !isValidMobilePhone(phone)
+    useEffect(() => {
+        onInvalidChange?.(invalid)
+    }, [invalid, onInvalidChange])
 
     return (
         <div>

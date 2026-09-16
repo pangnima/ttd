@@ -60,7 +60,7 @@
 | 2.5 | A | `/login?next=%2Fmatch-rooms%3Ftab%3Dpast` → 로그인 | `/match-rooms?tab=past` | hidden `next` | B |
 | 2.6 | — | `/login?error=oauth` / `?error=deleted` | 배너 `소셜 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.` / `탈퇴한 계정입니다.` | `mapAuthQueryError` | B |
 | 2.7 | A | 비밀번호 `123123`(정책 미달)으로 로그인 | 대시보드 최소 길이 8이 **켜져 있으면** `/profile/<A>?scope=personal&notice=weak_password` + 배너 `비밀번호 규칙이 강화되었습니다.` … / 꺼져 있으면 배너 없음 → **SKIP(사유: 대시보드 설정)**으로 기록하고 Week 60 잔여 유지 | `data.weakPassword` | B |
-| 2.8 | A | 「로그인 상태 유지」 체크/해제 후 로그인 | 동작 차이 없음(U-pre-2) | UI only | B |
+| 2.8 | A | 로그인 폼 | 「로그인 상태 유지」 체크박스 **없음**(Week 63 U-pre-2 — 동작이 없던 UI를 없앴다) | — | B |
 | 2.9 | A | 눈 아이콘 | 비밀번호 평문 토글, aria-label 전환 | — | B |
 
 ## A3 아이디 찾기

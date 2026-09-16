@@ -27,7 +27,7 @@ export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
         <section className="space-y-2">
             <div className="flex items-start justify-between gap-3">
                 <h2 className={TYPO.h3}>
-                    참가자 <span className="text-caption text-muted-foreground tabular-nums font-normal">{formatHeadcount(joined)}</span>
+                    참가자 <span className="text-caption text-muted-foreground tabular-nums font-normal">{formatHeadcount(joined, detail.guests.length)}</span>
                 </h2>
                 {invite && !detail.room.isSettled && (
                     <RoomInviteMembers

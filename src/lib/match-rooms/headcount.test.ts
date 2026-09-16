@@ -15,6 +15,9 @@ describe('countJoined', () => {
 describe('formatHeadcount', () => {
     it('정원 없이 참가 인원만', () => {
         expect(formatHeadcount(3)).toBe('참가 3명')
+        // 비회원이 있으면 함께 센다(U-9) — 힌트의 「참가 예정 N명」과 어긋나지 않게
+        expect(formatHeadcount(1, 4)).toBe('참가 1명 · 비회원 4명')
+        expect(formatHeadcount(3, 0)).toBe('참가 3명')
     })
 })
 

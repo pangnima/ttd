@@ -65,15 +65,6 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
                     </div>
                 </div>
 
-                {/* UI만: 세션은 Supabase 기본 정책을 따름 */}
-                <label className="flex items-center gap-2 text-body2 text-muted-foreground">
-                    <input
-                        type="checkbox" name="remember" defaultChecked
-                        className="size-4 rounded-sm border-input accent-spot-solid"
-                    />
-                    로그인 상태 유지
-                </label>
-
                 {state?.error && (
                     <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                         {state.error}
