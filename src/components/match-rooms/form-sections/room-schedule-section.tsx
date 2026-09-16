@@ -2,7 +2,7 @@
 
 import type { MatchType } from '@/types'
 import { MATCH_FORM_LABEL, MATCH_FORM_SELECT_TRIGGER, TYPO } from '@/lib/dashboard/tokens'
-import { EnumSelect } from '@/components/match/enum-select'
+import { EnumSelect } from '@/components/common/enum-select'
 import {
     COURT_COUNT_OPTIONS,
     DEFAULT_SLOT_MINUTES,

@@ -3,7 +3,7 @@
 import type { LineupPlayer } from '@/lib/match-games/lineup-core'
 import type { LineupSlot } from '@/lib/match-rooms/lineup'
 import { isMissingPlayer } from '@/lib/match-rooms/lineup-draft'
-import { EnumSelect } from '@/components/match/enum-select'
+import { EnumSelect } from '@/components/common/enum-select'
 
 type Props = {
     label: string

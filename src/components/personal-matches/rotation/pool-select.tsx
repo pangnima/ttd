@@ -1,6 +1,6 @@
 'use client'
 
-import { EnumSelect } from '@/components/match/enum-select'
+import { EnumSelect } from '@/components/common/enum-select'
 import type { PoolPlayer } from '@/lib/personal-matches/rotation'
 
 type PoolSelectProps = {

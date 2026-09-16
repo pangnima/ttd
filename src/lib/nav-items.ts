@@ -73,6 +73,6 @@ export function isNavItemActive(item: NavItem, pathname: string, userId: string 
  */
 export const guideNavItem: NavItem = { href: '/guide', label: NAV_LABEL.guide, icon: BookOpen, matchPrefix: '/guide' }
 
-// 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). Week 54에 헤더 [클럽 찾기]와
-// 프로필 빈 상태·온보딩의 클럽 유도까지 내려, 진입은 이제 **로고 링크로만** 남는다 —
-// 해동 시 clubNavItems + ClubNavTree(components/common/club-nav-tree.tsx)를 여기서 복원한다.
+// 클럽 메뉴는 Week 39에서 사이드바에서 내렸고(클럽 동결) Week 69에 클럽 UI를 통째로 삭제했다 —
+// 코드는 git 태그 `frozen-clubs-ui-2026-09-16`에 있다(CLAUDE.md 백로그 「해동 후보」).
+// 해동 시 그 태그에서 clubNavItems + ClubNavTree(components/common/club-nav-tree.tsx)를 되살린다.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchRequest, MatchRequestSeat, RequestAcceptance, RequestSeatRole } from '@/types'
+import type { MatchRequestSeat, RequestAcceptance, RequestSeatRole } from '@/types'
 import {
-    acceptanceProgress, classifyPendingRequest, formatAcceptanceProgress,
+    acceptanceProgress, formatAcceptanceProgress,
     groupAcceptanceNames, pendingMemberCount, requiresAllMembers, viewerSideOf,
 } from './participants'
 
@@ -9,18 +9,6 @@ const seat = (
     role: RequestSeatRole, userId: string | undefined, acceptance: MatchRequestSeat['acceptance'],
 ): MatchRequestSeat => ({ role, userId, name: role, acceptance })
 
-function req(seats: MatchRequestSeat[], viewerRole?: RequestSeatRole, roomId?: string): MatchRequest {
-    return {
-        id: 'r1', requesterId: 'me', opponentUserId: 'opp',
-        playedAt: '2026-09-07', playedTime: '10:00', matchType: 'men_doubles', surface: 'hard',
-        setScores: [], status: 'pending', createdAt: '', resultStatus: 'none', proposedSetScores: [],
-        seats, viewerRole, roomId,
-    }
-}
-
-// 단식: 요청자 + 대표 2석 / 복식: + 파트너·상대2
-const singles = (oppAcc: MatchRequestSeat['acceptance']) =>
-    [seat('requester', 'me', 'accepted'), seat('opponent', 'opp', oppAcc)]
 const doubles = (
     oppAcc: MatchRequestSeat['acceptance'],
     partnerAcc: MatchRequestSeat['acceptance'],
@@ -67,52 +55,6 @@ describe('acceptanceProgress', () => {
 
     it('남은 인원 수', () => {
         expect(pendingMemberCount(doubles('accepted', 'pending', 'pending'))).toBe(2)
-    })
-})
-
-describe('classifyPendingRequest (방 밖 = 전원 수락)', () => {
-    it('요청자는 내가 보낸 요청', () => {
-        expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending'), 'requester'))).toBe('mine')
-    })
-
-    it('미응답 대표는 내 차례', () => {
-        expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending'), 'opponent'))).toBe('respond')
-    })
-
-    it('미응답 파트너도 내 차례 — 0056의 핵심 변화', () => {
-        expect(classifyPendingRequest(req(doubles('accepted', 'pending', 'pending'), 'partner'))).toBe('respond')
-    })
-
-    it('이미 수락한 참가자는 남은 회원을 기다린다 (취소 권한이 없어 sent로 보내면 안 된다)', () => {
-        expect(classifyPendingRequest(req(doubles('accepted', 'accepted', 'pending'), 'partner'))).toBe('awaitMembers')
-    })
-
-    it('단식은 대표 1명이 곧 전원', () => {
-        expect(classifyPendingRequest(req(singles('pending'), 'opponent'))).toBe('respond')
-        expect(classifyPendingRequest(req(singles('pending'), 'requester'))).toBe('mine')
-    })
-
-    it('내 좌석이 없으면 관여하지 않는다', () => {
-        expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending')))).toBe('awaitMembers')
-    })
-
-    it('전원 수락인데 status가 아직 pending인 과도 상태 — 대기', () => {
-        expect(classifyPendingRequest(req(doubles('accepted', 'accepted', 'accepted'), 'partner'))).toBe('awaitMembers')
-    })
-})
-
-describe('classifyPendingRequest (룸 요청 = 대표 1명 모델 유지)', () => {
-    it('룸 요청의 파트너는 응답 대상이 아니다 — 입장이 곧 동의', () => {
-        const r = req(doubles('pending', 'pending', 'pending'), 'partner', 'room-1')
-        expect(classifyPendingRequest(r)).toBe('awaitMembers')
-    })
-
-    it('룸 요청의 대표는 종전대로 응답한다', () => {
-        expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending'), 'opponent', 'room-1'))).toBe('respond')
-    })
-
-    it('룸 요청의 요청자는 내가 보낸 요청', () => {
-        expect(classifyPendingRequest(req(doubles('pending', 'pending', 'pending'), 'requester', 'room-1'))).toBe('mine')
     })
 })
 

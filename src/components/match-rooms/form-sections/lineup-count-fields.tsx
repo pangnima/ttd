@@ -5,7 +5,7 @@ import { useMemo } from 'react'
 import { PER_PLAYER_OPTIONS } from '@/lib/match-rooms/lineup'
 import { SLOT_MINUTES_OPTIONS } from '@/lib/match-rooms/schedule'
 import { MATCH_FORM_LABEL, TYPO } from '@/lib/dashboard/tokens'
-import { EnumSelect } from '@/components/match/enum-select'
+import { EnumSelect } from '@/components/common/enum-select'
 
 type Props = {
     perPlayer: number
