@@ -27,16 +27,20 @@ export default async function ProfileSettingsPage() {
 
     return (
         <PageContainer>
+            {/* 폼 화면은 매칭 만들기와 같은 폭(max-w-2xl) — 전폭이면 입력 칸이 한 줄에 늘어져 읽기 어렵다 */}
             <PageHeader
+                className="mx-auto w-full max-w-2xl"
                 title="내 정보 수정"
                 description="닉네임, 휴대폰 번호, 주력 라켓, 프로필 사진, 통계 공개 여부를 수정합니다."
             />
-            <ProfileSettingsForm initialProfile={data} userId={user.id} canSetLoginId={canSetLoginId} />
-            {/* 비밀번호가 없는 계정에는 폼 대신 이유를 말한다 — 판정은 이미 받아 둔 user에서 나온다(쿼리 0 추가) */}
-            {hasPasswordIdentity(signals)
-                ? <PasswordChangeForm />
-                : <SocialAccountNotice providerLabel={socialProviderLabel(signals) ?? '소셜'} />}
-            <DeleteAccountButton />
+            <div className="mx-auto w-full max-w-2xl space-y-6">
+                <ProfileSettingsForm initialProfile={data} userId={user.id} canSetLoginId={canSetLoginId} />
+                {/* 비밀번호가 없는 계정에는 폼 대신 이유를 말한다 — 판정은 이미 받아 둔 user에서 나온다(쿼리 0 추가) */}
+                {hasPasswordIdentity(signals)
+                    ? <PasswordChangeForm />
+                    : <SocialAccountNotice providerLabel={socialProviderLabel(signals) ?? '소셜'} />}
+                <DeleteAccountButton />
+            </div>
         </PageContainer>
     )
 }

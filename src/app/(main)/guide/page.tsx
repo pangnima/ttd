@@ -41,7 +41,8 @@ export default function GuidePage() {
                 title="사용 가이드"
                 description="매칭을 열고, 참가하고, 결과를 확인하는 순서대로 정리했습니다"
             />
-            <div className="max-w-3xl space-y-6">
+            {/* 전폭 — 예시가 실제 목록 카드와 같은 폭으로 그려져야 그림이 화면과 같다(Week 58의 세로 적층 결정과 같은 이유) */}
+            <div className="space-y-6">
                 {GUIDE_SECTIONS.map((section) => (
                     <GuideSectionCard key={section.id} section={section} example={GUIDE_EXAMPLES[section.id]} />
                 ))}
