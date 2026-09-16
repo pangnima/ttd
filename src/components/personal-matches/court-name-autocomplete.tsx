@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from 'react'
 import { Autocomplete } from '@base-ui/react/autocomplete'
-import { ITEM_CLASS, POPUP_CLASS } from '@/components/personal-matches/player-autocomplete'
+import { ITEM_CLASS, POPUP_CLASS } from '@/components/personal-matches/autocomplete-classes'
 import { MATCH_FORM_INPUT } from '@/lib/dashboard/tokens'
 import { COURT_NAME_MAX_LENGTH } from '@/lib/personal-matches/validate-input'
 

@@ -1,7 +1,7 @@
 import type { MatchRoomDetail, MatchRoomGuest, MatchRoomMember } from '@/types'
 import { formatDominantHand, formatRacket } from '@/lib/profile/signup-fields'
 import {
-    GUEST_LABEL, HOST_LABEL, INVITED_LABEL, JOINED_LABEL, PENDING_CONFIRM_LABEL,
+    DECLINED_LABEL, GUEST_LABEL, HOST_LABEL, INVITED_LABEL, JOINED_LABEL, PENDING_CONFIRM_LABEL, REMOVED_LABEL,
 } from '@/lib/match-rooms/member-labels'
 
 /**
@@ -10,7 +10,7 @@ import {
  *
  * **지금 방에 있는 사람만 뜬다** — 스스로 나간 사람(declined)도, 호스트가 내보낸 사람(removed)도 없다.
  * 강퇴 행을 남겨 [다시 초대]를 붙이던 방식(0068)은 철회했다: 명단은 "코트에 누가 있나"를 읽는 곳이고,
- * 되돌릴 길은 [회원 초대] 검색이 대신한다(inviteExcludedUserIds가 호스트에게만 강퇴자를 후보로 남긴다).
+ * 되돌릴 길은 [회원 초대] 검색이 대신한다(inviteRowState가 호스트에게만 강퇴자를 고를 수 있는 행으로 남긴다).
  * (열람·합류 신청 상태는 0048에서 폐지 — 비밀번호 입장이 곧 참가)
  */
 export type MemberRowView = {
@@ -132,16 +132,26 @@ export function buildMemberRows(detail: MatchRoomDetail): MemberRowView[] {
     return [...members, ...roomGuests, ...guests].sort((a, b) => (ORDER[a.statusLabel] ?? 9) - (ORDER[b.statusLabel] ?? 9))
 }
 
+/** [회원 초대] 검색 결과 한 행의 자격 — 고를 수 있나, 못 고른다면 왜(라벨) */
+export type InviteRowState = { selectable: boolean; label?: string }
+
 /**
- * [회원 초대] 검색에서 뺄 회원 id — 이미 방에 있거나 부를 수 없는 사람.
+ * [회원 초대] 검색 결과 행의 상태 — 이미 방에 있거나 부를 수 없는 사람은 **감추지 않고 비활성 + 라벨**로 보인다.
+ * 찾은 사람이 목록에 없으면 "검색이 안 된다"로 읽히기 때문이다(옛 `inviteExcludedUserIds`는 감췄다 — K-2).
  *
  * 내보낸 사람(removed)과 나간 사람(declined)이 예외다. `invite_room_members`(0068 §5 · 0088)는 **호스트가
  * 부를 때만** 둘을 invited로 되돌리므로, 명단에서 사라진 그 사람을 다시 부르는 길이 호스트에게는 여기밖에 없다
  * (비노출 방은 비밀번호 입장이 없어 거절 뒤 재초대가 유일한 길이다 — F-22).
- * 참가자에게 보이면 눌러도 아무 일이 없는 헛 항목이 되므로 그때는 함께 제외한다.
+ * 참가자에게는 눌러도 아무 일이 없으므로 그때는 비활성이다 — 라벨은 그대로 두어 왜 못 부르는지 말한다.
  */
-export function inviteExcludedUserIds(members: MatchRoomMember[], canReinvite: boolean): string[] {
-    return members
-        .filter((m) => !((m.status === 'removed' || m.status === 'declined') && canReinvite))
-        .map((m) => m.userId)
+export function inviteRowState(userId: string, members: MatchRoomMember[], canReinvite: boolean): InviteRowState {
+    const m = members.find((x) => x.userId === userId)
+    if (!m) return { selectable: true }
+    if (m.role === 'host') return { selectable: false, label: HOST_LABEL }
+    switch (m.status) {
+        case 'joined': return { selectable: false, label: JOINED_LABEL }
+        case 'invited': return { selectable: false, label: INVITED_LABEL }
+        case 'removed': return { selectable: canReinvite, label: REMOVED_LABEL }
+        case 'declined': return { selectable: canReinvite, label: DECLINED_LABEL }
+    }
 }

@@ -39,7 +39,7 @@
 | 1.1 | A | `/match-rooms/new` | 경기 방식 `단식` 기본, 경기 시간 `2시간`, 코트 면 수 `1면`, 요약 줄 `시각을 고르면 종료 시각이 계산됩니다` | `use-match-room-form-state` 기본값 | B |
 | 1.2 | A | 비밀번호에 `abc` 입력 | 실시간 문구 `비밀번호는 4~20자로 입력해주세요.`, [매칭 만들기] 비활성 | `validateRoomPassword` | B |
 | 1.3 | A | 비밀번호 `a b c d` | `비밀번호에는 공백을 넣을 수 없습니다.` | 동상 | B |
-| 1.4 | A | 날짜 오늘, 시각 `10시`(셀렉트 라벨은 `10시` — base-ui Select, 키보드로 고른다), 표면 아무거나, 코트명 `E2E-S1`, 비밀번호 `1234`, 상대 초대에서 `남자02` 선택, 메모 `S1` | 요약 줄 `10:00~12:00 (2시간) · 코트 1면 · 참가 예정 2명이면 1인당 N경기 권장`, 초대 칩 `남자02` | `recommendGames`(단식 2명·30분·2h·1면) | B |
+| 1.4 | A | 날짜 오늘, 시각 `10시`(셀렉트 라벨은 `10시` — base-ui Select, 키보드로 고른다), 표면 아무거나, 코트명 `E2E-S1`, 비밀번호 `1234`, 상대 초대에서 `남자02` 입력 → [검색](또는 Enter — 폼이 제출되지 않는다) → 결과 행 클릭 → 칩 `남자02`, 메모 `S1` | 요약 줄 `10:00~12:00 (2시간) · 코트 1면 · 참가 예정 2명이면 1인당 N경기 권장`, 초대 칩 `남자02` | `recommendGames`(단식 2명·30분·2h·1면) | B |
 | 1.5 | A | [매칭 만들기] | `/match-rooms/<id>`로 이동. 헤더 eyebrow `단식 · 하드`(방식 라벨 — 출처 어휘 아님, F-1), 제목에 `E2E-S1 · 단식`, 단계 칩 `모집 중`, 명단에 `남자01 호스트`·`남자02 초대 대기`, 게임 섹션 빈 상태 `게임이 없습니다. 함께 친 참가자로 게임을 추가하세요.` | SQL: `match_rooms.court_name='E2E-S1'`, `match_room_members` host/joined + player/invited, `match_room_secrets` 1행 | B+S |
 | 1.6 | A | 헤더 액션 | [비밀번호 변경]·[매칭 리스트에서 내리기] 있음, [게임 입력 종료] **없음**(단식) | `canCloseRotation=false` | B |
 | 1.7 | A | 게임 섹션 헤더 | [게임 추가] 있음(direct는 항상), [자동 대진표] 있음(회원 1명이라도 후보 >0) | `canViewerAddRoomGame`·`canCreateRoomLineup(…,2,1)` | B |
@@ -48,6 +48,7 @@
 | 1.10 | B | `/me/match-rooms` | 최상단 `나를 초대한 매칭` 카드 `나를 참가자로 입력한 경기 · 9월 15일 10:00~12:00 · E2E-S1 · 단식`(상세·목록과 같은 구간 표기, F-3), 하단 `수락하면 매칭 참가자로 등록됩니다. 매칭 안 게임은 상대 확인을 거쳐 양쪽 기록에 남습니다.`(F-2), [참가 수락]/[거절] | `roomQueue.invites` | B |
 | 1.11 | B | 상세 URL 직접 접근 | 상세가 보인다(초대자는 게이트 없음) + `RoomInviteBanner` `이 경기에 초대되었습니다. 참가하시겠어요?` [참가 수락]/[거절]. 턴 배너·[게임 추가]·[회원 초대]·하단 [매칭 나가기] **없음**(Week 63 U-7 — 배너의 [거절]이 같은 행동) | invited는 RPC 통과, `isMember=false` | B |
 | 1.12 | B | [참가 수락] | 배너 사라짐, 명단 `남자02 참가`, [게임 추가]·[회원 초대]·[비회원 등록] 등장, 하단 [매칭 나가기] 등장. 단계 칩 여전히 `모집 중`(게임 0) | `respond_room_invite` → joined; SQL `status='joined'` | B+S |
+| 1.12a | A | [회원 초대] → `남자0` + Enter → 결과에서 `남자03`·`남자04` 행 클릭 → [2명 초대하기] | 팝업 닫힘, 명단에 `남자03 초대 대기`·`남자04 초대 대기` 두 행. 재검색하면 둘은 비활성 + 칩 `초대 대기`, `남자02`는 `참가`(Week 64 다중 초대) | `inviteRoomMembersAction(roomId, ids)` | B |
 | 1.13 | B | 뱃지 | 0 | — | B |
 | 1.14 | A | [게임 추가] → 상대 자동완성에 `남자02` 선택 → [게임 저장] | 게임 행 1개: 팀 줄 `나` / `남자02`, 배지 `결과 미입력`, 액션 [결과 입력]. 단계 칩 `진행 중`, 배너 `경기 결과를 입력해주세요` | `create_room_game` → `match_requests.status='accepted'`, `personal_matches` 관점 2행(`source_type='confirmation'`), `match_result_negotiations.result_status='none'` | B+S |
 | 1.15 | B | 상세 | 같은 게임 행이 `나` / `남자01`로 보임(당사자 전원 '나', Week 46), [결과 입력] 있음 | `buildRoomGameTeams` | B |
@@ -171,8 +172,8 @@
 | 6.3 | C | 상세 URL | `RoomRemovedNotice` `호스트가 이 매칭에서 회원님을 내보냈습니다.`, 비밀번호 입력창 **없음** | `viewer.status='removed'` → RPC `not_member` | B |
 | 6.4 | C | `/me/match-rooms` | 이 방 카드 없음, 뱃지 0 | 정산 축 목록에서 removed 제외 | B |
 | 6.5 | C | `/match-rooms` 목록의 카드 | 칩 `내보내짐` | `viewerStatusLabel` | B |
-| 6.6 | B | [회원 초대] 검색 `남자03` | **후보에 없음**(참가자가 열면 removed 제외) | `inviteExcludedUserIds(members, false)` | B |
-| 6.7 | A | [회원 초대] 검색 `남자03` → 선택 | 즉시 초대(저장 버튼 없음), 명단 `남자03 초대 대기` | `invite_room_members` → `removed→invited` | B+S |
+| 6.6 | B | [회원 초대] 검색 `남자03` → [검색] | **행은 뜨되 비활성 + 칩 `내보내짐`**(참가자가 열면 재초대 불가 — 감추지 않고 이유를 보인다, Week 64·K-2) | `inviteRowState(id, members, false)` | B |
+| 6.7 | A | [회원 초대] 검색 `남자03` → [검색] → 행 클릭(체크·칩 `내보내짐` 함께) → [1명 초대하기] | 팝업 닫힘, 명단 `남자03 초대 대기`(Week 64 — 호스트에게는 활성 행) | `invite_room_members` → `removed→invited` | B+S |
 | 6.8 | C | 뱃지 1 → [참가 수락] | 복귀 `참가` | — | B |
 | 6.9 | A | `남자02` 행 | [내보내기] **없음**(게임 배정) | `roomGameMemberIds` | B |
 | 6.10 | A | `남자01`(본인) 행 | [내보내기] 없음 | `row.userId!==viewerId` | B |
@@ -230,7 +231,7 @@
 | 10.2 | A | 정산된 방에 SQL `create_room_lineup` | `room_already_closed` | 버튼 없음 ↔ 가드 | S |
 | 10.3 | A | 정산된 방에 SQL `add_room_guest` | `room_already_closed` | — | S |
 | 10.4 | A | [게임 추가]에서 상대에 본인 | 자기 자신 선택 불가(후보 제외) / SQL `create_room_game(self)` → `cannot_request_self` | — | B+S |
-| 10.5 | A | 이미 참가한 B를 [회원 초대] | 후보에 없음 / SQL 호출 시 joined 유지(강등 없음) | `invite_room_members` on conflict | B+S |
+| 10.5 | A | 이미 참가한 B를 [회원 초대] | 비활성 행 + 칩 `참가` / SQL 호출 시 joined 유지(강등 없음) | `invite_room_members` on conflict | B+S |
 | 10.6 | A | 방 밖 회원(D)을 [게임 추가] 상대로 SQL 호출 | `opponent_not_in_room` | — | S |
 | 10.7 | A | 결과 있는 라인업 게임 id를 넣어 SQL `replace_room_lineup` | `lineup_locked` | S3.17 거울 | S |
 | 10.8 | A | 게스트끼리 게임으로 SQL `create_room_lineup` | `invalid_games` | 0076 | S |
@@ -271,7 +272,7 @@
 | 13.7 | C | SQL `enter_match_room(room, '1234')` | `room_not_listed`(뒷문 없음) | 0082 가드 | S |
 | 13.8 | A | SQL `update_match_room_password(room, 'abcd')` | `room_not_listed`(upsert 뒷문 차단) → `match_room_secrets` 여전히 0행 | 0082 | S |
 | 13.9 | A | [게임 추가] 상대 `남자02` → 결과 입력 → B 확인 | S1과 같은 협상 흐름이 비노출 방에서도 동작, 정산 `종료` | `is_settled` | B+S |
-| 13.10 | B → A → B | (변형) 새 비노출 방 `E2E-S13B`에서 초대 [거절] → 호스트 [회원 초대] 검색 `남자02` → 선택 → B 「나를 초대한 매칭」 → [수락] | 거절 뒤 명단에서 사라짐(declined) → 호스트 검색에 **후보로 뜬다**(참가자 검색에는 없음) → 명단 `초대 대기` → B 수락 후 `참가 2명`. SQL: `invite_room_members`가 호스트 호출에서만 declined→invited(0088, F-22) | `respond_room_invite(false)`, `inviteExcludedUserIds(members, canReinvite)` | B+S |
+| 13.10 | B → A → B | (변형) 새 비노출 방 `E2E-S13B`에서 초대 [거절] → 호스트 [회원 초대] 검색 `남자02` → [검색] → 행 클릭 → [1명 초대하기] → B 「나를 초대한 매칭」 → [수락] | 거절 뒤 명단에서 사라짐(declined) → 호스트 검색에 **활성 행 + 칩 `나감`**(참가자 검색에는 비활성 `나감`) → 명단 `초대 대기` → B 수락 후 `참가 2명`. SQL: `invite_room_members`가 호스트 호출에서만 declined→invited(0088, F-22) | `respond_room_invite(false)`, `inviteRowState(id, members, canReinvite)` | B+S |
 | 13.11 | A | 복식 변형: 직접 기록 복식(로테이션) 풀에 회원 `남자02` + 비회원 `E2E게스트1`·`E2E게스트2` → [매칭 만들고 초대] | 비노출 로테이션 방, `rotation_sessions` seed 유지(players 빈 풀), 게스트 2명은 `match_room_guests`에 즉시 등록, B 초대 대기 | `add_room_guest` 경로, `?notice=direct_room` | B+S |
 | 13.12 | A | 13.11을 한 번 더 하되 저장 전에 SQL로 같은 이름 게스트를 그 방에… (방이 아직 없어 불가) → 대신 회원 초대 대상에 탈퇴자를 넣을 수 없으므로 **부분 실패는 코드 확인** — `direct-record-room.ts`의 `?notice=invite_failed` 분기와 배너 문구 `매칭은 만들어졌지만 초대에 실패했습니다.` | 부분 실패 경로 | 코드 |
 | 13.13 | — | 정리 SQL | `court_name like 'E2E-%'`가 비노출 방도 잡아 0건 | README | S |
@@ -312,8 +313,8 @@
 | 15.5 | D | 비참가 회원의 상세 | 게이트(비밀번호). SQL `create_room_game`·`leave_match_room` → `not_room_member` | — | B+S |
 | 15.6 | A | **정산됐지만 안 닫힌 방**의 호스트 자유 기록(S3 방식으로 게스트 상대 게임 1개를 확정): `/me/personal-matches` 카드 [수정] → 상대명 변경 저장 / [삭제] | 저장·삭제가 **된다** → 방이 미정산(`진행 중`)으로 되돌아가거나 마지막 행이면 방이 지워진다(cleanup 트리거). K-9 잔여 — 의도인지 판정해 F-pre-9 상태 결정 | `personal_matches_update/delete` 정책은 닫힌 방만 뺀다(0083) | B+S |
 | 15.7 | A | 마감 방의 그 카드 | [수정]·[삭제] 없음 + 배지 `마감`; `/edit` URL → 방으로 리다이렉트 | 12.7·12.8 회귀 | B |
-| 15.8 | A | 매칭 만들기에서 회원 검색 1자 / 21명 선택 시도 | 1자 → 후보 없음(2자부터). 20명에서 입력창 사라지고 `한 번에 20명까지 초대할 수 있습니다. 나머지는 룸에서 추가로 부를 수 있습니다.`(회원이 20명 안 되면 SKIP + 사유) | `MIN_QUERY_LENGTH`, `MATCH_ROOM_INVITE_MAX` | B |
-| 15.9 | A | 룸 안 [회원 초대] 검색에서 본인·게스트·이미 참가자 | 후보에 없음 | `inviteExcludedUserIds` | B |
+| 15.8 | A | 매칭 만들기에서 회원 검색 1자 + Enter / 21명 선택 시도 | 1자로 조회된다(Week 64 — Enter는 폼을 제출하지 않는다, 결과 21건 이상이면 `20명까지만 보입니다…` 안내). 20명에서 입력창은 남고 고르지 않은 행만 비활성, `한 번에 20명까지 초대할 수 있습니다. 나머지는 룸에서 추가로 부를 수 있습니다.`(회원이 20명 안 되면 SKIP + 사유) | `MIN_USER_SEARCH_LENGTH`·`USER_SEARCH_LIMIT`, `MATCH_ROOM_INVITE_MAX` | B |
+| 15.9 | A | 룸 안 [회원 초대] 검색에서 본인·게스트·이미 참가자·초대 대기 | 본인·게스트는 결과에 없음(쿼리가 뺀다), 참가자·초대 대기·호스트는 **비활성 행 + 칩**(`참가`·`초대 대기`·`호스트`) | `queryUsers`, `inviteRowState` | B |
 | 15.10 | 비로그인 | `/match-rooms/new`·`/me/match-rooms`·상세 URL | 전부 `/login?next=`(next 인코딩 보존) | middleware | B |
 
 

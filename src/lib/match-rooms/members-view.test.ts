@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail } from '@/types'
-import { buildMemberRows, inviteExcludedUserIds, memberMetaLine, type MemberRowView } from './members-view'
+import { buildMemberRows, inviteRowState, memberMetaLine, type MemberRowView } from './members-view'
 
 const base: MatchRoomDetail = {
     room: { id: 'r', hostUserId: 'h', sourceKind: 'rotation', playedAt: '2026-09-10', matchType: 'men_doubles', courtCount: 1, isSettled: false, isListed: true, createdAt: '' },
@@ -62,24 +62,33 @@ describe('buildMemberRows — 지금 방에 있는 사람만', () => {
     })
 })
 
-describe('inviteExcludedUserIds — [회원 초대] 후보에서 뺄 회원', () => {
+describe('inviteRowState — [회원 초대] 검색 결과 행의 자격', () => {
     const members = [
         { userId: 'h', name: '개설자', nickname: '', deleted: false, role: 'host' as const, status: 'joined' as const },
+        { userId: 'j', name: '참가자', nickname: '', deleted: false, role: 'player' as const, status: 'joined' as const },
         { userId: 'i', name: '초대자', nickname: '', deleted: false, role: 'player' as const, status: 'invited' as const },
         { userId: 'd', name: '나간이', nickname: '', deleted: false, role: 'player' as const, status: 'declined' as const },
         { userId: 'k', name: '강퇴자', nickname: '', deleted: false, role: 'player' as const, status: 'removed' as const },
     ]
 
-    it('호스트에게는 강퇴자와 나간 사람이 후보로 남는다 — 그 사람을 다시 부를 유일한 경로(0088)', () => {
-        expect(inviteExcludedUserIds(members, true)).toEqual(['h', 'i'])
+    it('방에 없는 회원은 고를 수 있고 라벨이 없다', () => {
+        expect(inviteRowState('x', members, true)).toEqual({ selectable: true })
     })
 
-    it('참가자에게는 강퇴자도 빠진다 — 눌러도 아무 일이 없는 헛 항목이기 때문', () => {
-        expect(inviteExcludedUserIds(members, false)).toEqual(['h', 'i', 'd', 'k'])
+    it('호스트·참가·초대 대기는 누구에게나 비활성이고 명단과 같은 라벨을 단다', () => {
+        expect(inviteRowState('h', members, true)).toEqual({ selectable: false, label: '호스트' })
+        expect(inviteRowState('j', members, true)).toEqual({ selectable: false, label: '참가' })
+        expect(inviteRowState('i', members, true)).toEqual({ selectable: false, label: '초대 대기' })
     })
 
-    it('나간 사람(declined)은 참가자에게는 여전히 빠진다 — RPC가 호스트에게만 되돌린다', () => {
-        expect(inviteExcludedUserIds(members, false)).toContain('d')
+    it('호스트에게는 강퇴자와 나간 사람이 고를 수 있는 행이다 — 그 사람을 다시 부를 유일한 경로(0088)', () => {
+        expect(inviteRowState('k', members, true)).toEqual({ selectable: true, label: '내보내짐' })
+        expect(inviteRowState('d', members, true)).toEqual({ selectable: true, label: '나감' })
+    })
+
+    it('참가자에게는 둘 다 비활성이되 감추지 않는다 — 왜 못 부르는지 라벨이 말한다(K-2)', () => {
+        expect(inviteRowState('k', members, false)).toEqual({ selectable: false, label: '내보내짐' })
+        expect(inviteRowState('d', members, false)).toEqual({ selectable: false, label: '나감' })
     })
 })
 

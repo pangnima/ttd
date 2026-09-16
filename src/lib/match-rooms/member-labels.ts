@@ -31,6 +31,13 @@ export const INVITED_LABEL = '초대 대기'
  */
 export const REMOVED_LABEL = '내보내짐'
 
+/**
+ * 스스로 나갔거나 초대를 거절한 상태(`status='declined'`). 명단에는 행이 없고 [회원 초대] 검색 결과에서만
+ * 보인다 — 호스트에게는 다시 부를 수 있는 사람이고 참가자에게는 부를 수 없는 사람이라, 왜 못 고르는지를
+ * 라벨이 말해야 한다. 액션 [매칭 나가기]와 어간을 맞췄다.
+ */
+export const DECLINED_LABEL = '나감'
+
 /** 수락 전 대표 확인자 — 아직 멤버가 아니라 요청의 상대다 */
 export const PENDING_CONFIRM_LABEL = '확인 대기'
 

@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { fetchOpponentCandidates } from '@/lib/queries/users'
 import { fetchRecentCourtNames } from '@/lib/queries/personal-matches'
 import { MatchRoomForm } from '@/components/match-rooms/match-room-form'
 import { PageContainer } from '@/components/common/page-container'
@@ -17,10 +16,7 @@ export default async function NewMatchRoomPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const [opponentCandidates, recentCourtNames] = await Promise.all([
-        fetchOpponentCandidates(user.id),
-        fetchRecentCourtNames(user.id),
-    ])
+    const recentCourtNames = await fetchRecentCourtNames(user.id)
 
     return (
         <PageContainer>
@@ -31,7 +27,6 @@ export default async function NewMatchRoomPage() {
             />
             <MatchRoomForm
                 selfUserId={user.id}
-                opponentCandidates={opponentCandidates}
                 recentCourtNames={recentCourtNames}
             />
         </PageContainer>

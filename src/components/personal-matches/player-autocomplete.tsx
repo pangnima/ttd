@@ -5,26 +5,30 @@ import { Autocomplete } from '@base-ui/react/autocomplete'
 import type { PlayerSuggestion, PlayerSuggestionGroup } from '@/lib/personal-matches/player-suggestions'
 import { PlayerSuggestionItem } from '@/components/personal-matches/player-suggestion-item'
 import { MATCH_FORM_INPUT } from '@/lib/dashboard/tokens'
+import { ITEM_CLASS, NOTE_CLASS, POPUP_CLASS } from '@/components/personal-matches/autocomplete-classes'
 
 type Props = {
     value: string                       // 입력 텍스트 (= 선수 이름)
     groups: PlayerSuggestionGroup[]
     placeholder?: string
+    // 서버 검색이 답을 기다리는 중 — Empty 대신 「검색 중…」을 보인다(대기 중에 「없습니다」라 단정하지 않는다)
+    loading?: boolean
+    // 후보가 없을 때의 문구 — 기본은 게스트 이름 입력 안내(선수 입력용)
+    emptyText?: string
     onInputChange: (name: string) => void   // 타이핑 — 회원 연결 해제 + 이름 갱신
     onPick: (item: PlayerSuggestion) => void
 }
 
-export const POPUP_CLASS =
-    'relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0'
-export const ITEM_CLASS =
-    'relative flex w-full cursor-default items-center gap-1.5 rounded-md px-2 py-1.5 text-body2 outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground'
+const DEFAULT_EMPTY_TEXT = '일치하는 후보가 없습니다. 입력한 이름 그대로 저장됩니다.'
 
 /**
  * 자유 텍스트 + 후보 제안 입력 (base-ui Autocomplete).
  * Combobox와 달리 항목을 고르지 않고 닫아도 입력값이 유지되어 게스트 이름 직접 입력과 공존한다.
  * mode="none": 필터는 buildPlayerSuggestionGroups가 이미 수행했으므로 목록을 그대로 렌더한다.
  */
-export function PlayerAutocomplete({ value, groups, placeholder, onInputChange, onPick }: Props) {
+export function PlayerAutocomplete({
+    value, groups, placeholder, loading = false, emptyText = DEFAULT_EMPTY_TEXT, onInputChange, onPick,
+}: Props) {
     // 키보드로 하이라이트된 항목 — Enter 시 선택 (하이라이트가 없으면 폼 제출만 막는다)
     const highlighted = useRef<PlayerSuggestion | undefined>(undefined)
 
@@ -57,9 +61,12 @@ export function PlayerAutocomplete({ value, groups, placeholder, onInputChange, 
             <Autocomplete.Portal>
                 <Autocomplete.Positioner className="isolate z-50" sideOffset={4}>
                     <Autocomplete.Popup className={POPUP_CLASS}>
-                        <Autocomplete.Empty className="px-3 py-2 text-caption text-muted-foreground break-keep">
-                            일치하는 후보가 없습니다. 입력한 이름 그대로 저장됩니다.
-                        </Autocomplete.Empty>
+                        {/* Empty는 items가 비면 무조건 뜨므로 대기 중에는 Status로 바꿔 단다 */}
+                        {loading ? (
+                            <Autocomplete.Status className={NOTE_CLASS}>검색 중…</Autocomplete.Status>
+                        ) : (
+                            <Autocomplete.Empty className={NOTE_CLASS}>{emptyText}</Autocomplete.Empty>
+                        )}
                         <Autocomplete.List className="outline-none">
                             {(group: PlayerSuggestionGroup) => (
                                 <Autocomplete.Group key={group.value} items={group.items} className="pb-1 last:pb-0">

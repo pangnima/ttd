@@ -1,11 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileLink } from '@/components/common/profile-link'
-import { PILL_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { NTRP_BADGE, memberStatusChipClass } from '@/lib/dashboard/member-badges'
 import type { MemberRowView } from '@/lib/match-rooms/members-view'
 import { canKickRoomMember, canRemoveRoomGuest } from '@/lib/match-rooms/kick'
-import {
-    HOST_LABEL, INVITED_LABEL, JOINED_LABEL, PENDING_CONFIRM_LABEL,
-} from '@/lib/match-rooms/member-labels'
 import { MemberMetaLine } from '@/components/match-rooms/member-meta-line'
 import { RoomMemberHostActions } from '@/components/match-rooms/room-member-host-actions'
 import { RoomGuestRemoveButton } from '@/components/match-rooms/room-guest-remove-button'
@@ -22,19 +19,10 @@ type Props = {
     host?: { viewerId: string }
 }
 
-// 키가 곧 라벨 문자열이다 — member-labels의 상수를 계산 키로 써서 라벨과 색이 갈릴 자리를 없앤다
-const STATUS_CLASS: Record<string, string> = {
-    [HOST_LABEL]: 'border-primary/40 text-primary',
-    [JOINED_LABEL]: 'border-win/40 text-win',
-    [INVITED_LABEL]: 'border-spot/50 text-spot',
-    [PENDING_CONFIRM_LABEL]: 'border-spot/50 text-spot',
-}
-
-// NTRP는 이름 옆에 붙는다 — 실력이 곧 그 사람을 고르는 기준이라 이름과 한 덩어리로 읽혀야 한다.
-// shrink-0이라 어떤 폭에서도 잘리지 않고, 잘리는 것은 언제나 이름 뒤의 메타(닉네임·라켓)다.
-const NTRP_BADGE = `${PILL_BASE} ${TYPO.micro} shrink-0 border-border text-foreground tabular-nums`
-
-/** 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·NTRP·상태 칩 / 2줄: 닉네임·주력손·라켓 */
+/**
+ * 명단 1행 — 1줄: 아바타·이름(회원이면 프로필 링크)·NTRP·상태 칩 / 2줄: 닉네임·주력손·라켓.
+ * 상태 칩·NTRP 배지의 색은 lib/dashboard/member-badges가 정본이다([회원 초대] 검색 결과 행과 공유).
+ */
 export function RoomMemberRow({ row, roomId, isSettled, viewerId, hasGames = false, host }: Props) {
     const name = (
         <span className="text-body2 font-medium text-foreground truncate">
@@ -63,7 +51,7 @@ export function RoomMemberRow({ row, roomId, isSettled, viewerId, hasGames = fal
                 </div>
                 <MemberMetaLine row={row} />
             </div>
-            <span className={`${PILL_BASE} shrink-0 ${STATUS_CLASS[row.statusLabel] ?? 'border-border text-muted-foreground'}`}>
+            <span className={memberStatusChipClass(row.statusLabel)}>
                 {row.statusLabel}
             </span>
             {canKick && row.userId && (

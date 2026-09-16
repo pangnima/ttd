@@ -1,6 +1,5 @@
 import type { MatchRoomDetail } from '@/types'
-import type { OpponentCandidate } from '@/lib/queries/users'
-import { buildMemberRows, inviteExcludedUserIds } from '@/lib/match-rooms/members-view'
+import { buildMemberRows } from '@/lib/match-rooms/members-view'
 import { roomGameMemberIds } from '@/lib/match-rooms/game-status'
 import { countJoined, formatHeadcount } from '@/lib/match-rooms/headcount'
 import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
@@ -13,7 +12,7 @@ type Props = {
     /** 호스트 전용 액션(내보내기·다시 초대)을 행에 붙일지 — 호스트에게만 참이다 */
     host?: { viewerId: string }
     /** 초대 자격(호스트·참가자)이 있을 때만 넘어온다 — 없으면 명단만 그린다 */
-    invite?: { selfUserId: string; candidates: OpponentCandidate[] }
+    invite?: { selfUserId: string }
 }
 
 /** 참가자 명단 — 회원 멤버(호스트·참가·초대 대기) + 출처 기록의 비회원. 정원 없이 참가 인원만 표시(0048) */
@@ -33,8 +32,8 @@ export function RoomMembersSection({ detail, viewerId, invite, host }: Props) {
                     <RoomInviteMembers
                         roomId={detail.room.id}
                         selfUserId={invite.selfUserId}
-                        candidates={invite.candidates}
-                        excludedUserIds={inviteExcludedUserIds(detail.members, !!host)}
+                        members={detail.members}
+                        canReinvite={!!host}
                     />
                 )}
             </div>

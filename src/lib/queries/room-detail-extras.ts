@@ -48,8 +48,6 @@ export async function fetchRoomDetailExtras(detail: MatchRoomDetail, viewerId: s
 
     // 게임 추가 폼과 로테이션 빌더가 같은 참가자 명단·자동완성 후보를 쓰므로 한 번만 조회한다
     const needsPicker = canAdd || (isMember && isPendingRotation)
-    // 회원 후보는 참가자 초대(0065)에도 쓰이므로 게임 입력 자격과 별개로 멤버 전원에게 필요하다
-    const needsCandidates = needsPicker || isMember
     const requestIds = detail.games.map((g) => g.sourceRequestId).filter((id): id is string => !!id)
 
     const [
@@ -60,7 +58,8 @@ export async function fetchRoomDetailExtras(detail: MatchRoomDetail, viewerId: s
         // 대진 생성·수정은 호스트 전용이라 호스트에게만 조회한다
         isHost ? fetchRoomLineupCandidates(roomId, detail.guests) : [],
         isHost ? fetchEditableLineupGames(roomId) : [],
-        needsCandidates ? fetchOpponentCandidates(viewerId) : [],
+        // 클럽 회원 후보는 게임 폼 자동완성에만 쓴다 — [회원 초대]는 전체 회원 검색이라 이 목록이 필요 없다
+        needsPicker ? fetchOpponentCandidates(viewerId) : [],
         needsPicker ? fetchPastOpponents(viewerId) : [],
         // 협상 행이 오는 게임 = 내가 결과를 입력·확인할 수 있는 게임 (RLS가 당사자만 통과시킨다)
         fetchRoomGameConfirmations(requestIds, viewerId),

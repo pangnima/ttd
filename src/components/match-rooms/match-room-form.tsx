@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { CourtSurface } from '@/types'
-import type { OpponentCandidate } from '@/lib/queries/users'
 import { createMatchRoomAction } from '@/lib/actions/match-rooms'
 import { FormActions } from '@/components/common/form-actions'
 import { FormSectionCard } from '@/components/common/form-section-card'
@@ -17,7 +16,6 @@ import { useMatchRoomFormState } from '@/components/match-rooms/use-match-room-f
 
 type Props = {
     selfUserId: string
-    opponentCandidates: OpponentCandidate[]
     recentCourtNames: string[]
 }
 
@@ -25,7 +23,7 @@ type Props = {
  * 「매칭 만들기」 — 경기 전에 방을 연다. 스코어도 라인업도 받지 않는다:
  * 참가자는 초대 수락·비밀번호 입장으로 채워지고, 대진과 결과는 매칭 룸 안에서 끝난다.
  */
-export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames }: Props) {
+export function MatchRoomForm({ selfUserId, recentCourtNames }: Props) {
     const s = useMatchRoomFormState()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -80,7 +78,6 @@ export function MatchRoomForm({ selfUserId, opponentCandidates, recentCourtNames
                 <RoomPasswordSection password={s.password} onPasswordChange={s.setPassword} />
                 <RoomInviteeSection
                     selfUserId={selfUserId}
-                    candidates={opponentCandidates}
                     invitees={s.invitees}
                     onAdd={s.addInvitee}
                     onRemove={s.removeInvitee}

@@ -5,21 +5,15 @@ import type { OpponentCandidate } from '@/lib/queries/users'
 import type { PastOpponent } from '@/lib/queries/personal-matches'
 import { buildPlayerSuggestionGroups, type PlayerSuggestion } from '@/lib/personal-matches/player-suggestions'
 import { MATCH_FORM_LABEL } from '@/lib/dashboard/tokens'
+import { HAND_OPTIONS, type HandValue } from '@/lib/profile/signup-fields'
 import { FieldToggle } from '@/components/common/field-toggle'
 import { PlayerAutocomplete } from '@/components/personal-matches/player-autocomplete'
 import { useUserSearch } from '@/components/personal-matches/use-user-search'
 
-type Hand = 'right' | 'left' | ''
-
-const HAND_OPTIONS: { value: 'right' | 'left'; label: string }[] = [
-    { value: 'right', label: '오른손' },
-    { value: 'left', label: '왼손' },
-]
-
 export type PlayerPickerValue = {
     userId?: string
     name: string
-    hand: Hand
+    hand: HandValue | ''
 }
 
 type Props = {
@@ -29,13 +23,13 @@ type Props = {
     // 매칭 리스트 방 참가자 — 최상단 '방 참가자' 그룹 (방 게임 구성·모집형 채우기에서만 전달)
     roomParticipants?: OpponentCandidate[]
     value: PlayerPickerValue
-    // picked: 후보를 골랐을 때 그 항목 (NTRP 프리필용). 타이핑이면 undefined
-    onChange: (value: PlayerPickerValue, picked?: PlayerSuggestion) => void
+    onChange: (value: PlayerPickerValue, picked?: PlayerSuggestion) => void  // picked: 고른 후보(NTRP 프리필용), 타이핑이면 undefined
     placeholder?: string
     showHand?: boolean
     // 플랫폼 전체 회원 검색 — 로그인 유저 id를 주면 이 필드 안에서 디바운스 검색해 "전체 회원" 그룹을 붙인다.
     // 필드마다 독립된 검색 상태를 가지므로 복식 3필드·로테이션 풀 행이 서로 간섭하지 않는다.
     searchSelfUserId?: string
+    emptyText?: string  // 후보 없음 문구 — 맥락이 다르면 바꿔 단다
 }
 
 /**
@@ -45,7 +39,7 @@ type Props = {
  * 손잡이는 항상 노출 — 게스트는 필수, 회원은 프로필 값이 자동 채워지며 수정 가능.
  */
 export function PlayerPicker({
-    label, candidates, pastOpponents = [], roomParticipants, value, onChange, placeholder, showHand = true, searchSelfUserId,
+    label, candidates, pastOpponents = [], roomParticipants, value, onChange, placeholder, showHand = true, searchSelfUserId, emptyText,
 }: Props) {
     const search = useUserSearch(searchSelfUserId)
     const searchResults = searchSelfUserId ? search.results : undefined
@@ -84,6 +78,8 @@ export function PlayerPicker({
                 value={value.name}
                 groups={groups}
                 placeholder={placeholder ?? '이름 또는 닉네임'}
+                loading={!!searchSelfUserId && search.loading}
+                emptyText={emptyText}
                 onInputChange={handleInputChange}
                 onPick={handlePick}
             />
@@ -93,7 +89,7 @@ export function PlayerPicker({
                     <FieldToggle
                         label="손잡이"
                         required={!value.userId}
-                        options={HAND_OPTIONS}
+                        options={[...HAND_OPTIONS]}
                         value={value.hand || undefined}
                         onChange={(hand) => onChange({ ...value, hand })}
                     />

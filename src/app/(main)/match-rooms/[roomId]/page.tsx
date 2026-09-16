@@ -82,7 +82,7 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
             <RoomMembersSection
                 detail={detail}
                 viewerId={user.id}
-                invite={x.isMember ? { selfUserId: user.id, candidates: x.opponentCandidates } : undefined}
+                invite={x.isMember ? { selfUserId: user.id } : undefined}
                 host={x.isHost ? { viewerId: user.id } : undefined}
             />
             <RoomGamesSection

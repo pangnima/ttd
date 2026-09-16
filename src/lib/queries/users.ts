@@ -60,6 +60,7 @@ export type OpponentCandidate = {
     id: string
     name: string
     nickname?: string      // 전체 회원 검색 결과에서만 채움 (닉네임 매칭 표시·필터용)
+    profileImage?: string  // 전체 회원 검색 결과에서만 채움 (결과 행 아바타)
     ntrp?: number          // 정적 자가선언 NTRP (fallback)
     personalNtrp?: number  // 동적 개인 NTRP(개인경기 기반 캐시). 있으면 프리필 우선
     statsHidden?: boolean  // 통계 비공개 — 개인 NTRP를 감추고 자가선언 값만 쓴다 (derivePublicNtrp)
