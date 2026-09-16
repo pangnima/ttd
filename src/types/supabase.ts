@@ -1545,6 +1545,14 @@ export type Database = {
         Args: { p_accept: boolean; p_session_id: string }
         Returns: undefined
       }
+      room_game_tallies: {
+        Args: { p_room_ids: string[] }
+        Returns: {
+          room_id: string
+          settled: number
+          total: number
+        }[]
+      }
       room_member_has_games: {
         Args: { p_room_id: string; p_user_id: string }
         Returns: boolean

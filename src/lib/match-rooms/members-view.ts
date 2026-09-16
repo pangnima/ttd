@@ -135,13 +135,13 @@ export function buildMemberRows(detail: MatchRoomDetail): MemberRowView[] {
 /**
  * [회원 초대] 검색에서 뺄 회원 id — 이미 방에 있거나 부를 수 없는 사람.
  *
- * 강퇴자(removed)만 예외다. `invite_room_members`(0068 §5)는 **호스트가 부를 때만** 강퇴를 풀어 주므로,
- * 명단에서 사라진 그 사람을 다시 부르는 길이 호스트에게는 여기밖에 없다.
+ * 내보낸 사람(removed)과 나간 사람(declined)이 예외다. `invite_room_members`(0068 §5 · 0088)는 **호스트가
+ * 부를 때만** 둘을 invited로 되돌리므로, 명단에서 사라진 그 사람을 다시 부르는 길이 호스트에게는 여기밖에 없다
+ * (비노출 방은 비밀번호 입장이 없어 거절 뒤 재초대가 유일한 길이다 — F-22).
  * 참가자에게 보이면 눌러도 아무 일이 없는 헛 항목이 되므로 그때는 함께 제외한다.
- * 나간 사람(declined)은 어느 쪽도 되살릴 수 없다 — RPC가 `on conflict do nothing`이라 언제나 제외한다.
  */
 export function inviteExcludedUserIds(members: MatchRoomMember[], canReinvite: boolean): string[] {
     return members
-        .filter((m) => !(m.status === 'removed' && canReinvite))
+        .filter((m) => !((m.status === 'removed' || m.status === 'declined') && canReinvite))
         .map((m) => m.userId)
 }

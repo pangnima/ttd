@@ -119,7 +119,7 @@
 | 4.10 | D | 상세 | 미확인이면 [결과 확인] 있음, `is_settled=false` | — | B+S |
 | 4.11 | D | [결과 확인] | 게임 1 확정, 게임 2 남아 단계 `진행 중` | `settle_match_result` true | B+S |
 | 4.12 | A | 명단 `남자02` 행 | [내보내기] **없음**(배정된 게임 있음). SQL로 `kick_room_member(B)` → `member_has_games` | `canKickRoomMember hasGames` ↔ RPC 가드 | B+S |
-| 4.13 | A | 게임 2 제안 → B·C·D 확인(SQL 보조) | 게임은 전부 확정되지만 **방은 아직 미정산**(미확정 로테이션 세션이 남아 있다) — 단계 `진행 중`. **호스트에게만** 배너 `모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다` · 카드 필 `게임 입력 종료` · 뱃지 1, 풀 회원은 필 없음 · 뱃지 0(0077, F-11) | `is_settled` = 대표 게임 확정 ∧ 미확정 세션 없음 | S |
+| 4.13 | A | 게임 2 제안 → B·C·D 확인(SQL 보조) | 게임은 전부 확정되지만 **방은 아직 미정산**(미확정 로테이션 세션이 남아 있다) — 단계 `진행 중`. **호스트에게만** 배너 `모든 결과가 확정됐습니다 — 게임 입력을 종료하면 매칭이 마무리됩니다` · 카드 필 `게임 입력 종료` · 뱃지 1, 풀 회원은 필 없음 · 뱃지 0(0077, F-11). **호스트가 어느 게임의 requester도 아닌 대진**(team1[0]이 B)으로도 같아야 한다 — 총계는 `room_game_tallies`(0088, F-21)가 방 전체를 준다 | `is_settled` = 대표 게임 확정 ∧ 미확정 세션 없음 | S |
 | 4.14 | — | 각자 `/me/personal-matches` | 게임 2개 승·패 관점 맞음 | — | B(표본 2명) |
 | 4.15 | A | [게임 입력 종료](confirm 수락) | 세션 삭제 → 정산 `종료`, 호스트 뱃지도 0(`closeRotation` 차례가 사라진다) | `close_rotation_room` → `recompute_match_room_settled` | B+S |
 
@@ -271,7 +271,7 @@
 | 13.7 | C | SQL `enter_match_room(room, '1234')` | `room_not_listed`(뒷문 없음) | 0082 가드 | S |
 | 13.8 | A | SQL `update_match_room_password(room, 'abcd')` | `room_not_listed`(upsert 뒷문 차단) → `match_room_secrets` 여전히 0행 | 0082 | S |
 | 13.9 | A | [게임 추가] 상대 `남자02` → 결과 입력 → B 확인 | S1과 같은 협상 흐름이 비노출 방에서도 동작, 정산 `종료` | `is_settled` | B+S |
-| 13.10 | B | (변형) 새 비노출 방 `E2E-S13B`에서 초대 [거절] | 명단에서 사라짐(declined). `/match-rooms`에도 없고 비밀번호도 없어 재진입 경로가 **호스트 재초대뿐** — `inviteExcludedUserIds`가 declined를 항상 제외하면 호스트 [회원 초대]에서도 후보에 없어 **영구 차단**이다. 판정해 findings에 | `respond_room_invite(false)`, `members-view.ts:143` | B+S |
+| 13.10 | B → A → B | (변형) 새 비노출 방 `E2E-S13B`에서 초대 [거절] → 호스트 [회원 초대] 검색 `남자02` → 선택 → B 「나를 초대한 매칭」 → [수락] | 거절 뒤 명단에서 사라짐(declined) → 호스트 검색에 **후보로 뜬다**(참가자 검색에는 없음) → 명단 `초대 대기` → B 수락 후 `참가 2명`. SQL: `invite_room_members`가 호스트 호출에서만 declined→invited(0088, F-22) | `respond_room_invite(false)`, `inviteExcludedUserIds(members, canReinvite)` | B+S |
 | 13.11 | A | 복식 변형: 직접 기록 복식(로테이션) 풀에 회원 `남자02` + 비회원 `E2E게스트1`·`E2E게스트2` → [매칭 만들고 초대] | 비노출 로테이션 방, `rotation_sessions` seed 유지(players 빈 풀), 게스트 2명은 `match_room_guests`에 즉시 등록, B 초대 대기 | `add_room_guest` 경로, `?notice=direct_room` | B+S |
 | 13.12 | A | 13.11을 한 번 더 하되 저장 전에 SQL로 같은 이름 게스트를 그 방에… (방이 아직 없어 불가) → 대신 회원 초대 대상에 탈퇴자를 넣을 수 없으므로 **부분 실패는 코드 확인** — `direct-record-room.ts`의 `?notice=invite_failed` 분기와 배너 문구 `매칭은 만들어졌지만 초대에 실패했습니다.` | 부분 실패 경로 | 코드 |
 | 13.13 | — | 정리 SQL | `court_name like 'E2E-%'`가 비노출 방도 잡아 0건 | README | S |

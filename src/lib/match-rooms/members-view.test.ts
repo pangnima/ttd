@@ -70,16 +70,16 @@ describe('inviteExcludedUserIds — [회원 초대] 후보에서 뺄 회원', ()
         { userId: 'k', name: '강퇴자', nickname: '', deleted: false, role: 'player' as const, status: 'removed' as const },
     ]
 
-    it('호스트에게는 강퇴자가 후보로 남는다 — 그 사람을 다시 부를 유일한 경로', () => {
-        expect(inviteExcludedUserIds(members, true)).toEqual(['h', 'i', 'd'])
+    it('호스트에게는 강퇴자와 나간 사람이 후보로 남는다 — 그 사람을 다시 부를 유일한 경로(0088)', () => {
+        expect(inviteExcludedUserIds(members, true)).toEqual(['h', 'i'])
     })
 
     it('참가자에게는 강퇴자도 빠진다 — 눌러도 아무 일이 없는 헛 항목이기 때문', () => {
         expect(inviteExcludedUserIds(members, false)).toEqual(['h', 'i', 'd', 'k'])
     })
 
-    it('나간 사람(declined)은 누구에게도 되살아나지 않는다 — RPC가 on conflict do nothing이다', () => {
-        expect(inviteExcludedUserIds(members, true)).toContain('d')
+    it('나간 사람(declined)은 참가자에게는 여전히 빠진다 — RPC가 호스트에게만 되돌린다', () => {
+        expect(inviteExcludedUserIds(members, false)).toContain('d')
     })
 })
 

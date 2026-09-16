@@ -51,20 +51,19 @@ export const fetchRoomQueue = cache(async (userId: string): Promise<RoomQueue> =
     return { turns, invites: queue.roomInvites, joinedRoomIds: queue.joinedRoomIds }
 })
 
-/** 방별 대표 게임의 총수·확정 수 — 호스트 종료 차례의 재료. 관점 행은 세지 않는다 */
+/**
+ * 방별 대표 게임의 총수·확정 수 — 호스트 종료 차례의 재료. 관점 행은 세지 않는다.
+ *
+ * `personal_matches`를 직접 세면 안 된다(F-21) — SELECT 정책이 본인 행뿐이라 호스트가 requester가 아닌
+ * 게임(자동 대진표는 team1[0]이 소유한다)은 호스트 눈에 없고, 총계가 실제보다 작아 「게임 입력 종료」 차례가
+ * 목록·뱃지에서 빠졌다. `room_game_tallies`(0088, definer)가 참가 중인 방의 숫자만 돌려준다.
+ */
 async function fetchRoomGameTallies(roomIds: string[]): Promise<Record<string, { total: number; settled: number }>> {
     const supabase = await createClient()
-    const { data } = await supabase
-        .from('personal_matches')
-        .select('room_id, has_result')
-        .in('room_id', roomIds)
-        .eq('is_perspective', false)
+    const { data } = await supabase.rpc('room_game_tallies', { p_room_ids: roomIds })
     const tallies: Record<string, { total: number; settled: number }> = {}
     for (const row of data ?? []) {
-        if (!row.room_id) continue
-        const t = (tallies[row.room_id] ??= { total: 0, settled: 0 })
-        t.total += 1
-        if (row.has_result) t.settled += 1
+        tallies[row.room_id] = { total: row.total, settled: row.settled }
     }
     return tallies
 }

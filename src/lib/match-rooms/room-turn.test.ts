@@ -214,6 +214,15 @@ describe('closeRotationRooms — 목록에서 호스트 종료 차례 (0077)', (
         expect(closeRotationRooms(sessions, ME, tallies)).toEqual(['r-mine-done'])
     })
 
+    it('총계는 방 전체의 대표 게임이다 — 호스트가 어느 게임의 requester도 아니어도(F-21)', () => {
+        // 0088 이전에는 앱이 personal_matches를 직접 세어 호스트 소유 행만 잡혔다(2게임 중 0 → 차례 없음).
+        // room_game_tallies(definer)가 주는 방 전체 숫자를 넣으면 차례가 선다 — 이 계약을 고정한다.
+        const rlsOnly = { 'r-mine-done': { total: 0, settled: 0 } }
+        const whole = { 'r-mine-done': { total: 2, settled: 2 } }
+        expect(closeRotationRooms(sessions, ME, rlsOnly)).toEqual([])
+        expect(closeRotationRooms(sessions, ME, whole)).toEqual(['r-mine-done'])
+    })
+
     it('rollUpRoomTurns를 거치면 그 방의 차례가 된다', () => {
         const turns = rollUpRoomTurns([{ roomId: 'r-mine-done', turn: 'closeRotation' }])
         expect(turns.get('r-mine-done')).toEqual({ turn: 'closeRotation', count: 1 })
