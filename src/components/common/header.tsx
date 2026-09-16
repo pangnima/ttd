@@ -96,7 +96,7 @@ export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: H
                         </form>
                     </div>
                 ) : (
-                    <Link href="/login" className={cn(buttonVariants({ size: 'sm' }))}>
+                    <Link href="/login" className={cn(buttonVariants({ variant: 'accent', size: 'sm' }))}>
                         로그인
                     </Link>
                 )}

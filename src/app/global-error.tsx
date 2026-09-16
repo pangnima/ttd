@@ -1,5 +1,8 @@
 'use client'
 
+import { cn } from '@/lib/utils'
+import { CTA_LINK } from '@/lib/dashboard/tokens'
+
 type Props = {
     error: Error & { digest?: string }
     reset: () => void
@@ -14,7 +17,7 @@ export default function GlobalError({ reset }: Props) {
                 <p className="text-muted-foreground text-body2">잠시 후 다시 시도해 주세요.</p>
                 <button
                     onClick={reset}
-                    className="mt-2 rounded-md bg-primary px-4 py-2 text-body2 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className={cn(CTA_LINK, 'mt-2')}
                 >
                     다시 시도
                 </button>

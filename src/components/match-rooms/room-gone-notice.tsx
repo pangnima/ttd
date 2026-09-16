@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { PageContainer } from '@/components/common/page-container'
 import { PageHeader } from '@/components/common/page-header'
-import { CARD_BASE, TYPO } from '@/lib/dashboard/tokens'
+import { CARD_BASE, TYPO, CTA_LINK } from '@/lib/dashboard/tokens'
 
 /**
  * 존재하지 않거나 호스트가 매칭 리스트에서 내린 방의 URL로 왔을 때(E2E F-14).
@@ -19,7 +19,7 @@ export function RoomGoneNotice() {
                 </p>
                 <Link
                     href="/match-rooms"
-                    className="inline-block rounded-md bg-primary px-4 py-2 text-body2 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className={CTA_LINK}
                 >
                     매칭 리스트로 돌아가기
                 </Link>

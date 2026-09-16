@@ -59,7 +59,7 @@ export function ResetPasswordForm() {
                 </p>
             )}
 
-            <Button type="submit" disabled={isPending} className="w-full h-11 font-semibold">
+            <Button variant="accent" type="submit" disabled={isPending} className="w-full h-11 font-semibold">
                 {isPending ? '변경 중...' : '비밀번호 변경'}
             </Button>
         </form>

@@ -621,7 +621,7 @@ export function MatchGameCreateForm({ clubId, members: initialMembers, initialDa
             )}
 
             <div className="flex gap-2">
-                <Button type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">
+                <Button variant="accent" type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">
                     {isPending ? '저장 중...' : initialData ? '수정 저장' : '저장하기'}
                 </Button>
                 <Link

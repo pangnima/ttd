@@ -21,7 +21,7 @@ export function PasswordResetContactNotice() {
             {ADMIN_CONTACT_EMAIL && (
                 <a
                     href={`mailto:${ADMIN_CONTACT_EMAIL}?subject=${encodeURIComponent('[BASELINE] 비밀번호 초기화 요청')}`}
-                    className={cn(buttonVariants({ size: 'lg' }), 'w-full h-11 font-semibold')}
+                    className={cn(buttonVariants({ variant: 'accent', size: 'lg' }), 'w-full h-11 font-semibold')}
                 >
                     {ADMIN_CONTACT_EMAIL}로 문의하기
                 </a>

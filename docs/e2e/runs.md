@@ -208,3 +208,13 @@
 | 로그인 상태 `/` | PASS | Chrome(구글 계정) → `/profile/83f158b3…?scope=personal` 리다이렉트 유지 |
 | 콘솔 | PASS | 오류·경고 0 |
 | 빌드 | PASS | `/` ○ Static(getUser 제거) · tsc · lint(기존 경고 2) · vitest 1029 |
+
+## 2026-09-16 · Week 66 채움 버튼 색 통일 확인
+
+채움(solid) 버튼·CTA를 전부 옐로우(`spot-solid`)로 — Button `variant="accent"` 26곳 + 인라인 `bg-primary` CTA 10곳을 `CTA_LINK`로, [클럽 만들기]·[대진표 만들기]는 `HEADER_ACTION_LINK`(테두리 칩)로. 룸·협상·직접 기록 로직은 건드리지 않아 시나리오 재실행 없음(색·클래스만).
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 정적 검사 | PASS | tsc · lint(기존 경고 2) · vitest 1029 · build |
+| 잔여 grep | PASS | `bg-primary text-primary-foreground` → `member-result-row`(선택 체크)·미사용 `chip.tsx`뿐. `<Button` 단일/다중 줄 전부 variant 명시, `buttonVariants()` 무variant 0 |
+| 브라우저(Playwright MCP, 남자01) | PASS | 비로그인 `/login`·`/signup`·`/find-id`·`/forgot-password`·`/`·`/guide`·404, 로그인 후 프로필(빈 상태 CTA 3)·`/profile/settings`([저장하기]·[비밀번호 변경])·`/me/match-rooms`·`/match-rooms`·`/me/personal-matches`·`/match-rooms/new`·룸 게이트 [입장] — 채움 버튼 computed bg 전부 `rgb(255,209,102)`, `bg-primary` 채움 0. 두 목록 헤더의 [+ 매칭 만들기]·[+ 직접 기록]은 테두리 칩 유지. 라이트 토글(`dark` 클래스 제거)에서도 같은 옐로우 |

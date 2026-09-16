@@ -36,7 +36,7 @@ export function ForgotPasswordForm() {
                 </p>
             )}
 
-            <Button type="submit" disabled={isPending} className="w-full h-11 font-semibold">
+            <Button variant="accent" type="submit" disabled={isPending} className="w-full h-11 font-semibold">
                 {isPending ? '전송 중...' : '재설정 링크 보내기'}
             </Button>
         </form>

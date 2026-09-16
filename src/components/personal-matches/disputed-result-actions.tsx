@@ -37,7 +37,7 @@ export function DisputedResultActions({
                 <span className={badgeClassName} title={badge.title}>{badge.label}</span>
                 <Button
                     size="sm"
-                    variant={isReentryTurn(c) ? 'default' : 'outline'}
+                    variant={isReentryTurn(c) ? 'accent' : 'outline'}
                     className="h-7 text-caption"
                     onClick={d.openDialog}
                 >

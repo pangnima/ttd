@@ -38,6 +38,7 @@ export function ClubDetailActions({ clubId, membershipStatus }: Props) {
 
     return (
         <Button
+            variant="accent"
             size="sm"
             className="h-8 gap-1.5"
             onClick={() => startTransition(async () => { await applyToClubAction(clubId) })}

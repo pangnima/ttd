@@ -87,6 +87,7 @@ export function PasswordChangeForm() {
             )}
 
             <Button
+                variant="accent"
                 type="submit"
                 disabled={isPending}
                 className="w-full rounded-full font-semibold h-11"

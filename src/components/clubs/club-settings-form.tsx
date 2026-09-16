@@ -149,7 +149,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                                     type="button"
                                     onClick={() => setIsPublic(true)}
                                     className={cn(
-                                        buttonVariants({ variant: isPublic ? 'default' : 'outline', size: 'sm' }),
+                                        buttonVariants({ variant: isPublic ? 'accent' : 'outline', size: 'sm' }),
                                         'flex-1'
                                     )}
                                 >
@@ -159,7 +159,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                                     type="button"
                                     onClick={() => setIsPublic(false)}
                                     className={cn(
-                                        buttonVariants({ variant: !isPublic ? 'default' : 'outline', size: 'sm' }),
+                                        buttonVariants({ variant: !isPublic ? 'accent' : 'outline', size: 'sm' }),
                                         'flex-1'
                                     )}
                                 >
@@ -172,7 +172,7 @@ export function ClubSettingsForm({ club }: ClubSettingsFormProps) {
                             <p className="text-body2 text-destructive">{state.error}</p>
                         )}
 
-                        <Button type="submit" className="w-full" disabled={isSaving}>
+                        <Button variant="accent" type="submit" className="w-full" disabled={isSaving}>
                             {isSaving ? '저장 중...' : '저장하기'}
                         </Button>
                     </CardContent>

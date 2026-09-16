@@ -49,7 +49,7 @@ export function RoomPasswordGate({ roomId }: Props) {
                 />
             </div>
             {error && <p className="text-caption text-destructive">{error}</p>}
-            <Button type="submit" disabled={isPending || !password}>{isPending ? '확인 중…' : '입장'}</Button>
+            <Button variant="accent" type="submit" disabled={isPending || !password}>{isPending ? '확인 중…' : '입장'}</Button>
         </form>
     )
 }

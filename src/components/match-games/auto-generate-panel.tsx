@@ -64,6 +64,7 @@ export function AutoGeneratePanel({ courts, attendees, baseStart, slotMinutes, o
                 />
             </div>
             <Button
+                variant="accent"
                 type="button"
                 size="sm"
                 className="h-8 text-caption gap-1"

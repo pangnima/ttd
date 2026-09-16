@@ -22,7 +22,7 @@
 | 브랜드 비비드 채움 | `--X-solid` | **글자를 얹지 않는** 넓은 바·링·아이콘·로고 |
 | 채움 위 텍스트 | `--X-foreground` | `bg-win text-win-foreground` |
 
-글자를 얹는 채움은 **`--X`** 를 쓴다(`bg-win text-win-foreground`). 비비드 `--X-solid`는 흰 배경 위 대비가 2:1 안팎이라 그 위에 읽을 수 있는 글자를 올릴 수 없기 때문이다 — 승패 바(`personal-match-card`), 승률 링(`win-rate-ring`), 라이벌 스택바처럼 **텍스트가 없는 넓은 면**에만 쓴다. 예외는 옐로우로, `--spot-solid`는 명도가 높아 짙은 글자를 얹을 수 있다(Chip solid / Badge `lime` / Button `accent`).
+글자를 얹는 채움은 **`--X`** 를 쓴다(`bg-win text-win-foreground`). 비비드 `--X-solid`는 흰 배경 위 대비가 2:1 안팎이라 그 위에 읽을 수 있는 글자를 올릴 수 없기 때문이다 — 승패 바(`personal-match-card`), 승률 링(`win-rate-ring`), 라이벌 스택바처럼 **텍스트가 없는 넓은 면**에만 쓴다. 예외는 옐로우로, `--spot-solid`는 명도가 높아 짙은 글자를 얹을 수 있다(Chip solid / Badge `lime` / Button `accent` / `CTA_LINK`). **채움 버튼은 전부 이 옐로우다**(Week 66 — §5).
 
 다크 모드는 배경이 어두워 비비드 원본이 그대로 AA를 넘기므로 `--X`와 `--X-solid` 값이 같은 경우가 많다.
 
@@ -47,12 +47,12 @@
 
 | 토큰 | 라이트 | 다크 | 용도 |
 |---|---|---|---|
-| `--primary` / `-foreground` | `#0e7695` / `#ffffff` | `#06d6a0` / `#0b1319` | 메인 액션·링크·포커스 |
+| `--primary` / `-foreground` | `#0e7695` / `#ffffff` | `#06d6a0` / `#0b1319` | 텍스트 링크·포커스·활성 표시(채움 버튼은 아니다 — §5) |
 | `--info` / `-foreground` | `#0e7a9c` / `#ffffff` | `#2cb1db` / `#0b1319` | 보조 정보·해시태그 |
 | `--win` / `-solid` / `-foreground` | `#07805f` / `#06d6a0` / `#ffffff` | `#06d6a0` / `#06d6a0` / `#0b1319` | 승·성공·완료·활성 |
 | `--loss` / `-solid` / `-foreground` | `#b85335` / `#ff7f50` / `#ffffff` | `#ff9470` / `#ff7f50` / `#0b1319` | 패·부정 |
 | `--destructive` / `-foreground` | `var(--loss)` / `#ffffff` | `var(--loss)` / `var(--loss-foreground)` | 삭제·에러·취소 |
-| `--spot` / `-solid` / `-foreground` | `#8a6a0f` / `#ffd166` / `#1d2d35` | `#ffd166` / `#ffd166` / `#0b1319` | 대기·주의·별점·강조 |
+| `--spot` / `-solid` / `-foreground` | `#8a6a0f` / `#ffd166` / `#1d2d35` | `#ffd166` / `#ffd166` / `#0b1319` | 대기·주의·별점·강조 + **채움 버튼·CTA**(`-solid`, Week 66) |
 | `--accent-lime` / `-foreground` | `var(--spot-solid)` / `var(--spot-foreground)` | 〃 | **하위호환 별칭** — §6 |
 
 ### 카테고리 데이터 팔레트
@@ -78,7 +78,7 @@
 
 **모드에 따라 primary의 색상(hue)이 바뀐다.** 라이트는 블루, 다크는 민트다(다크 배경에서 민트의 시인성이 블루보다 높다). 그 결과:
 
-- **다크에서 `--primary`와 `--win`이 같은 민트다.** 구분은 색이 아니라 **형태**가 담당한다 — 액션은 solid 버튼(`bg-primary`), 상태는 틴트 칩(`bg-win/15 text-win`). 승리 배지에 solid를 쓰더라도 클릭 대상이 아니므로 혼동되지 않는다.
+- **다크에서 `--primary`와 `--win`이 같은 민트다.** Week 66부터 채움 버튼은 `spot-solid`(옐로우)라 버튼과 승 배지가 색으로 갈린다. 남은 겹침은 `text-primary` 링크와 `text-win` 상태 텍스트인데, 링크는 밑줄·위치로, 상태는 틴트 칩(`bg-win/15 text-win`)으로 **형태**가 구분한다. (Week 66 이전에는 액션이 `bg-primary` solid 버튼이라 형태만이 구분이었다.)
 - **라이트에서 `--primary`와 `--info`가 같은 블루 계열이다.** 사양 팔레트에 블루가 하나뿐이라 그렇다. 한 톤 차이를 두었고, 카테고리 의미는 전부 `--cat-*`로 분리해 블루의 과부하를 줄였다.
 
 **`--destructive`가 `--loss`와 같은 코랄이다.** 새 팔레트의 붉은 계열은 코랄 하나이며, 코랄 `#ff7f50`은 실제 클레이코트 색이라 "패 = 클레이"라는 기존 설계와도 맞는다. warm 대역은 **코랄(부정·위험·패배)** 과 **옐로우(주의·대기·강조)** 둘로만 정리했다. 패배 배지가 에러처럼 읽히면 `--loss`만 별도 값으로 되돌리면 된다(토큰이 분리돼 있다).
@@ -87,10 +87,11 @@
 
 값이 아니라 **용도**로 고른다.
 
-1. 클릭 가능한 주요 액션·링크·포커스 → `primary`
+1. **채움 버튼·CTA**(저장·제출·로그인·참가 수락·[다시 시도]…) → `spot-solid`(Button `accent` / `CTA_LINK`). 채움 색의 출처가 둘(`accent` = 옐로우, `bg-primary` = 다크 민트·라이트 블루)이라 화면마다 갈리던 것을 Week 66에 하나로 모았다. `--primary`를 옐로우로 바꾸지 않은 이유는 `colors.test.ts`가 primary의 **텍스트** 대비(card·background 위 ≥4.5)를 가드하고, 링크·포커스 링까지 번지기 때문이다. 파괴적 확인만 예외(`destructive`)
+1-b. 텍스트 링크·포커스 링·활성 탭·선택 표시 → `primary`
 2. 경기 결과(승/패) → `win` / `loss`, 무·미확정 → `muted`
 3. 삭제·탈퇴·에러 문구·이의 제기 → `destructive`
-4. 대기·미완료·주의·별점·관리자 같은 "눈길을 끄는 꼬리표" → `spot`
+4. 대기·미완료·주의·별점·관리자 같은 "눈길을 끄는 꼬리표" → `spot`(테두리·틴트). 채움 버튼과 같은 hue이지만 **형태**로 갈린다 — 필은 테두리/틴트, 버튼은 채움
 5. 보조 정보·부가 데이터 → `info`
 6. 결과가 아닌 **분류 태그** → `cat-1~8` (승패 색을 빌려 쓰지 않는다)
 7. 그 외 전부 → `foreground` / `muted-foreground` / `border` / `secondary`

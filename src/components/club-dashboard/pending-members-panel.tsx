@@ -44,6 +44,7 @@ export function PendingMembersPanel({ clubId, pendingMembers }: PendingMembersPa
                         </div>
                         <div className="flex gap-1.5 shrink-0">
                             <Button
+                                variant="accent"
                                 size="sm"
                                 className="h-7 text-caption"
                                 onClick={() => handleApprove(m.userId)}

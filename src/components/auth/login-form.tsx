@@ -71,7 +71,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
                     </p>
                 )}
 
-                <Button type="submit" disabled={isPending} className="w-full h-11 font-semibold">
+                <Button variant="accent" type="submit" disabled={isPending} className="w-full h-11 font-semibold">
                     {isPending ? '로그인 중...' : '로그인'}
                 </Button>
             </form>

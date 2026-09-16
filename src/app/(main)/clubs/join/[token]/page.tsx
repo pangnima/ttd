@@ -76,7 +76,7 @@ export default async function ClubJoinPage({ params }: JoinPageProps) {
                 ) : (
                     <Link
                         href={`/login?next=/clubs/join/${token}`}
-                        className={cn(buttonVariants(), 'w-full gap-1.5')}
+                        className={cn(buttonVariants({ variant: 'accent' }), 'w-full gap-1.5')}
                     >
                         <UserPlus className="w-4 h-4" />
                         로그인하고 가입하기

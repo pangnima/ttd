@@ -54,7 +54,7 @@ export function NegotiationTurnActions({
                 )}
                 <Button
                     size="sm"
-                    variant={reviewMode ? 'default' : 'outline'}
+                    variant={reviewMode ? 'accent' : 'outline'}
                     className="h-7 text-caption"
                     onClick={d.openDialog}
                 >

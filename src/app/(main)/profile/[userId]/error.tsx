@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { CTA_LINK } from '@/lib/dashboard/tokens'
 
 type Props = {
     error: Error & { digest?: string }
@@ -16,7 +17,7 @@ export function ProfileError({ error, reset }: Props) {
             <div className="flex gap-3 mt-2">
                 <button
                     onClick={reset}
-                    className="rounded-md bg-primary px-4 py-2 text-body2 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className={CTA_LINK}
                 >
                     다시 시도
                 </button>

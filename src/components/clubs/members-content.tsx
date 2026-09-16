@@ -168,6 +168,7 @@ export function MembersContent({
                                     {canManagePending && (
                                         <div className="flex gap-1.5 shrink-0">
                                             <Button
+                                                variant="accent"
                                                 size="sm"
                                                 className="h-7 text-caption"
                                                 onClick={() => handleApprove(m.userId)}

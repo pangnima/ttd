@@ -35,6 +35,7 @@ export function MatchConfirmFooter({
         return (
             <div className="flex justify-end">
                 <Button
+                    variant="accent"
                     size="sm"
                     onClick={onConfirm}
                     disabled={isPending}

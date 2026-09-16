@@ -30,7 +30,7 @@ export function InviteJoinButton({ token }: Props) {
 
     return (
         <div className="space-y-2">
-            <Button className="w-full gap-1.5" onClick={onClick} disabled={isPending}>
+            <Button variant="accent" className="w-full gap-1.5" onClick={onClick} disabled={isPending}>
                 <UserPlus className="w-4 h-4" />
                 {isPending ? '가입 중…' : '가입하기'}
             </Button>

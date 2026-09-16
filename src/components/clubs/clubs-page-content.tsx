@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { ClubListRow } from '@/components/clubs/club-list-row'
-import { EMPTY_BLOCK, TYPO } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, TYPO, HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { Plus, Search, RefreshCw } from 'lucide-react'
@@ -104,7 +104,7 @@ export function ClubsPageContent({ allClubs, membershipMap, memberCounts }: Club
                             <div className="flex items-center gap-2">
                                 <Link
                                     href="/clubs/new"
-                                    className="inline-flex items-center gap-1.5 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    className={HEADER_ACTION_LINK}
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     클럽 만들기

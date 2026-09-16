@@ -42,7 +42,7 @@ export function RoomInviteCard({ invite }: Props) {
                     </p>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
-                    <Button size="sm" className="h-7 text-caption" disabled={isPending} onClick={() => respond(true)}>참가 수락</Button>
+                    <Button variant="accent" size="sm" className="h-7 text-caption" disabled={isPending} onClick={() => respond(true)}>참가 수락</Button>
                     <Button size="sm" variant="outline" className="h-7 text-caption" disabled={isPending} onClick={() => respond(false)}>거절</Button>
                 </div>
             </div>

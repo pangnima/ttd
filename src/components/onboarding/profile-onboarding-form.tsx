@@ -85,6 +85,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
             )}
 
             <Button
+                variant="accent"
                 type="submit"
                 disabled={isPending || nicknameTaken || tennisMissing || avatarError}
                 className="w-full h-11 font-semibold mt-2"

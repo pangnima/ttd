@@ -92,7 +92,7 @@ export function ProfileSettingsForm({ initialProfile, userId, canSetLoginId }: P
                 </p>
             )}
 
-            <Button type="submit" disabled={isPending || avatarError || nicknameTaken || phoneInvalid} className="w-full rounded-full font-semibold h-11">
+            <Button variant="accent" type="submit" disabled={isPending || avatarError || nicknameTaken || phoneInvalid} className="w-full rounded-full font-semibold h-11">
                 {isPending ? '저장 중...' : '저장하기'}
             </Button>
         </form>

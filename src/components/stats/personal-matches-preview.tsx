@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import type { PersonalMatch } from '@/types'
-import { TYPO, EMPTY_BLOCK } from '@/lib/dashboard/tokens'
+import { TYPO, EMPTY_BLOCK, CTA_LINK } from '@/lib/dashboard/tokens'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
 import { hasResult } from '@/lib/personal-matches/winner'
 import { PersonalMatchMonthBrowser } from '@/components/personal-matches/personal-match-month-browser'
@@ -23,7 +24,7 @@ export function PersonalMatchesPreview({ personalMatches, readOnly = false }: Pr
                 {!readOnly && (
                     <Link
                         href="/me/personal-matches/new"
-                        className="inline-flex items-center gap-1 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                        className={cn(CTA_LINK, 'gap-1 px-3 py-1.5 shrink-0')}
                     >
                         + 직접 기록
                     </Link>

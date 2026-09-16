@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { CalendarDays } from 'lucide-react'
 import type { MatchType } from '@/types'
 import { getMatchTypeStyle, MATCH_TYPE_LABELS } from '@/lib/dashboard/match-type-style'
-import { CARD_BASE, PILL_BASE } from '@/lib/dashboard/tokens'
+import { CARD_BASE, PILL_BASE, CTA_LINK } from '@/lib/dashboard/tokens'
 
 type Props = {
     matchType: MatchType
@@ -28,7 +29,7 @@ export function StatsQuadCardEmpty({ matchType, recordHref }: Props) {
                 {recordHref && (
                     <Link
                         href={recordHref}
-                        className="inline-flex items-center gap-1 text-caption font-medium rounded-md px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                        className={cn(CTA_LINK, 'gap-1 text-caption px-2.5 py-1')}
                     >
                         <CalendarDays className="w-3 h-3" />
                         매칭 참여

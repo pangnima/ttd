@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { CalendarDays, Users } from 'lucide-react'
-import { EMPTY_BLOCK, PILL_BASE } from '@/lib/dashboard/tokens'
+import { EMPTY_BLOCK, PILL_BASE, CTA_LINK } from '@/lib/dashboard/tokens'
 
 type Props = {
     recordHref?: string
@@ -41,7 +42,7 @@ export function StatsEmpty({ recordHref, browseHref, recordLabel, browseLabel }:
                     {recordHref && (
                         <Link
                             href={recordHref}
-                            className="inline-flex items-center gap-1.5 text-body2 font-medium rounded-md px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            className={cn(CTA_LINK, 'px-3 py-1.5')}
                         >
                             <CalendarDays className="w-3.5 h-3.5" />
                             {recordLabel ?? '매칭 참여하기'}

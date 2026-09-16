@@ -74,6 +74,7 @@ export function SignupForm() {
             )}
 
             <Button
+                variant="accent"
                 type="submit"
                 disabled={isPending || pwMismatch || pwWeak || emailTaken || loginIdTaken || nicknameTaken || tennisMissing || avatarError}
                 className="w-full h-11 font-semibold mt-2"

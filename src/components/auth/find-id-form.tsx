@@ -46,7 +46,7 @@ export function FindIdForm() {
                 </p>
             )}
 
-            <Button type="submit" disabled={isPending} className="w-full h-11 font-semibold">
+            <Button variant="accent" type="submit" disabled={isPending} className="w-full h-11 font-semibold">
                 {isPending ? '확인 중...' : '아이디 찾기'}
             </Button>
         </form>

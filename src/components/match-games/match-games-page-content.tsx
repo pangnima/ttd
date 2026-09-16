@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { cn } from '@/lib/utils'
+import { HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MatchGameTable } from '@/components/match-games/match-game-table'
@@ -90,7 +92,7 @@ export function MatchGamesPageContent({
                 actions={
                     <Link
                         href={`/clubs/${clubId}/match-games/new`}
-                        className="flex items-center gap-1.5 text-body2 font-medium bg-primary text-primary-foreground rounded-full px-4 py-2 hover:bg-primary/90 transition-colors shrink-0"
+                        className={cn(HEADER_ACTION_LINK, 'shrink-0')}
                     >
                         <Plus className="w-4 h-4" />
                         대진표 만들기

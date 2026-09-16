@@ -37,7 +37,8 @@ export const TYPO = {
 
 // 칩 radius 4px(rounded-sm)
 export const PILL_BASE = 'inline-flex items-center text-caption px-2 py-0.5 rounded-sm border'
-// '승인 필요' 같은 주의 필 — 대기·주의는 spot(docs/color-system.md §4). 클릭 가능한 것에는 쓰지 않는다
+// '승인 필요' 같은 주의 필 — 대기·주의는 spot(docs/color-system.md §4). 테두리형 필이라 클릭 대상에는 쓰지 않는다
+// (채움 CTA는 Button `accent` / CTA_LINK — 같은 옐로우지만 형태(테두리 vs 채움)로 갈린다)
 export const ATTENTION_PILL = `${PILL_BASE} border-spot/50 text-spot`
 // 빈 상태도 데이터 카드(CARD_BASE)와 동일한 채워진 surface로 표시 — 라이트 모드 시인성.
 // break-keep: 한글이 글자 단위가 아닌 어절(띄어쓰기) 단위로 줄바꿈되도록.
@@ -78,7 +79,7 @@ export const MATCH_FORM_SELECT_TRIGGER =
     'w-full h-12 data-[size=default]:h-12 rounded-lg px-3 text-body bg-background dark:bg-input/30 border-input focus:border-ring'
 
 /**
- * 폼·팝업 하단 액션 줄 — 저장(라임) 왼쪽 / 취소 오른쪽, 우측 정렬.
+ * 폼·팝업 하단 액션 줄 — 저장(옐로우, Button `accent`) 왼쪽 / 취소 오른쪽, 우측 정렬.
  * 직접 기록 폼의 치수가 정본이고 모든 저장형 팝업과 매칭 만들기가 이것을 그대로 쓴다.
  * 좁은 화면에서는 저장이 폭을 채우고(flex-1), lg부터 고정 폭으로 우측에 붙는다.
  */
@@ -93,10 +94,19 @@ export const FORM_CANCEL = 'h-11 lg:min-w-24'
  *
  * ⚠ Button의 outline variant를 쓰지 않는 이유 — button.tsx base가 `text-sm`이라
  * 페이지에서 buttonVariants를 가져다 쓰면 시맨틱 타이포 규칙을 우회하게 된다.
- * 남은 통일 대상: 클럽 만들기(rounded-full + Plus 아이콘)·대진표 만들기(primary 필).
+ * 네 목록 화면(매칭 리스트·참여 중인 매칭·개인 경기 결과·클럽·대진표)이 전부 이것을 쓴다(Week 66).
  */
 export const HEADER_ACTION_LINK =
     'inline-flex items-center gap-1 text-body2 border border-border rounded-sm px-3 py-2 hover:border-input transition-colors whitespace-nowrap'
+
+/**
+ * 에러·404·빈 상태·안내 카드의 채움 CTA 링크/버튼 — **채움 버튼은 전부 옐로우(spot-solid)** 다(Week 66).
+ * 채움 색의 출처가 둘(Button `accent` = 옐로우 / `bg-primary` = 다크 민트·라이트 블루)이라 화면마다 갈리던 것을
+ * 한 출처로 모았다. Button `accent`와 같은 색이고, Button을 쓰지 않는 이유는 HEADER_ACTION_LINK와 같다(`text-sm` 우회).
+ * 치수만 다르게 쓸 자리는 `cn(CTA_LINK, 'px-3 py-1.5')`처럼 덮는다.
+ */
+export const CTA_LINK =
+    'inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-body2 font-medium bg-spot-solid text-spot-foreground hover:bg-spot-solid/90 transition-colors'
 
 /** AI 코칭 카드 섹션 제목 색상 (강점/개선/팁/에러) */
 export const AI_COACHING_STYLE = {
