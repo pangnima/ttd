@@ -218,3 +218,19 @@
 | 정적 검사 | PASS | tsc · lint(기존 경고 2) · vitest 1029 · build |
 | 잔여 grep | PASS | `bg-primary text-primary-foreground` → `member-result-row`(선택 체크)·미사용 `chip.tsx`뿐. `<Button` 단일/다중 줄 전부 variant 명시, `buttonVariants()` 무variant 0 |
 | 브라우저(Playwright MCP, 남자01) | PASS | 비로그인 `/login`·`/signup`·`/find-id`·`/forgot-password`·`/`·`/guide`·404, 로그인 후 프로필(빈 상태 CTA 3)·`/profile/settings`([저장하기]·[비밀번호 변경])·`/me/match-rooms`·`/match-rooms`·`/me/personal-matches`·`/match-rooms/new`·룸 게이트 [입장] — 채움 버튼 computed bg 전부 `rgb(255,209,102)`, `bg-primary` 채움 0. 두 목록 헤더의 [+ 매칭 만들기]·[+ 직접 기록]은 테두리 칩 유지. 라이트 토글(`dark` 클래스 제거)에서도 같은 옐로우 |
+
+## 2026-09-16 · Week 67 사이드 메뉴 IA·명칭 재정비 확인
+
+계정 A(남자01, 세션 유지). Chrome 확장은 주입 타임아웃(기록된 증상)이라 Playwright MCP로.
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 정적 검사 | PASS | tsc · lint(기존 경고 2) · vitest 1031(신규 `nav-items.test.ts` 2 + `sections.test` RETIRED_WORDS) · build |
+| 잔여 grep | PASS | `rg '개인 경기 결과' src` → `nav-items.ts` 이력 주석 1건뿐(가드는 주석을 벗기고 본다). `label: '개인'`은 `profile-scope-tabs.tsx`(통계 범위 탭)만 |
+| 모바일 시트(390px) | PASS | 최상단 옐로우 [+ 매칭 만들기] → 개인 통계·매칭 리스트·참여 중인 매칭·내 경기 결과 | 사용 가이드. CTA 클릭 → `/match-rooms/new` 착지 + 시트 닫힘(`role=dialog` 0) |
+| 데스크톱 펼침(1400px) | PASS | 사이드바 최상단 full-width 옐로우 CTA, 5항목 순서·활성(`/me/personal-matches`에서 「내 경기 결과」). `/me/personal-matches` [+ 직접 기록]이 헤더 actions에서 PageGuide 아래 우측 행으로 |
+| rail(접힘) | PASS | CTA가 w-10 h-10 옐로우 정사각 + 아이콘만, `aria-label="매칭 만들기"`, 텍스트 없음 |
+| 프로필 본인 | PASS | `MemberProfileHeader` 위 eyebrow 「개인 통계」. scope 탭 '개인/클럽/통합'은 그대로 |
+| `/guide` | PASS | h2 「매칭 리스트」·「참여 중인 매칭」·「내 경기 결과」 + 「… 열기」 CTA, FLOW 4단계 "내 경기 결과와 개인 통계에 반영", 스테퍼 4칸 「전적으로 내 경기 결과」, 다섯 단계 종료 힌트 "전적은 내 경기 결과에서" — 전부 `NAV_LABEL` 보간 |
+| 비로그인 `/guide` | PASS | 사이드바에 CTA 없음, 「사용 가이드」 한 줄 + 헤더 [로그인] |
+| 미실행 | — | 타인 프로필(eyebrow 없음 — 코드 분기 `isSelf`만 확인), 정산 방 안내의 「내 경기 결과」 링크(정산 방 픽스처 없음 — 문자열 보간은 가이드 STAGES로 대신 확인) |

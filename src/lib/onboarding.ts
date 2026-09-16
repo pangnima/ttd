@@ -1,3 +1,5 @@
+import { NAV_LABEL } from '@/lib/nav-items'
+
 /**
  * 신규 사용자 온보딩 체크리스트 — 단계 정의와 완료 판정(순수 함수).
  *
@@ -49,7 +51,7 @@ export function buildOnboardingSteps(input: OnboardingInput): OnboardingStep[] {
         {
             key: 'join-match',
             title: '첫 매칭 참여하기',
-            description: '매칭 리스트에서 비밀번호로 들어가거나 직접 매칭을 만들어 보세요. 결과가 확정되면 전적이 쌓입니다.',
+            description: `${NAV_LABEL.matchRooms}에서 비밀번호로 들어가거나 직접 매칭을 만들어 보세요. 결과가 확정되면 전적이 쌓입니다.`,
             href: '/match-rooms',
             done: input.hasJoinedRoom || input.hasPersonalMatch,
         },

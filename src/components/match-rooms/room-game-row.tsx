@@ -19,7 +19,7 @@ type Props = {
     slotLabel?: string
 }
 
-// 개인 경기 카드와 같은 배지 형태 — 룸과 개인 경기 결과가 같은 경기를 다르게 보이면 안 된다
+// 개인 경기 카드와 같은 배지 형태 — 룸과 내 경기 결과가 같은 경기를 다르게 보이면 안 된다
 const BADGE_BASE = 'px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 whitespace-nowrap tabular-nums'
 // 대기·주의 = spot (docs/color-system.md §4). 모집 중은 아직 손댈 수 없으니 미확정과 같은 형태로 둔다
 const STATUS_BADGE: Record<'attention' | 'pending', string> = {

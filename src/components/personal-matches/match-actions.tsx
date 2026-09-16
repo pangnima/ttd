@@ -60,7 +60,7 @@ export function MutualLockedBadge() {
 
 /**
  * 자유 기록의 [결과 입력] — 상대 확인 없이 즉시 확정한다(복식은 세트별 애드/듀스 포함).
- * 개인 경기 결과 목록과 확인 요청 허브가 공용한다.
+ * 내 경기 결과 목록과 확인 요청 허브가 공용한다.
  */
 export function FreeResultEntryButton({ match }: Props) {
     const d = useResultDialog()

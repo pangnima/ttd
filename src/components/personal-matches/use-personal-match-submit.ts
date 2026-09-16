@@ -108,7 +108,7 @@ export function usePersonalMatchSubmit(s: PersonalMatchFormState, initialId?: st
                 ? `/match-rooms/${s.roomId}`
                 : initialId && s.initialHasResult
                     ? '/me/personal-matches'
-                    // 폼은 세트를 받지 않으므로 신규는 언제나 결과 미입력 — 개인 경기 결과의 「결과 입력 대기」에 뜬다(Week 38).
+                    // 폼은 세트를 받지 않으므로 신규는 언제나 결과 미입력 — 내 경기 결과의 「결과 입력 대기」에 뜬다(Week 38).
                     : '/me/personal-matches',
         )
     }

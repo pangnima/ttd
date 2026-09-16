@@ -11,9 +11,10 @@ import {
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { BrandLogo } from '@/components/common/brand-logo'
 import { MobileNavRow } from '@/components/common/mobile-nav-row'
+import { NavCreateLink } from '@/components/common/nav-create-link'
 
 type MobileNavProps = {
-    /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인' href) */
+    /** 로그인 사용자 id — (main)/layout → Header 경유 (개인 섹션 노출·'개인 통계' href) */
     userId?: string | null
     /** 「참여 중인 매칭」의 '내 차례' 건수 — 서버 fetchRoomQueue 1곳(roomBadgeTotal)에서 계산해 props로 전달 */
     myTurnCount?: number
@@ -24,7 +25,7 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
     const pathname = usePathname()
     const close = () => setOpen(false)
 
-    // 개인 섹션: '개인'(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 개인 경기 결과(끝난 것)
+    // 개인 섹션: 개인 통계(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 내 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
 
     return (
@@ -52,6 +53,7 @@ export function MobileNav({ userId = null, myTurnCount = 0 }: MobileNavProps) {
                 {/* 메인 네비게이션 */}
                 <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
                     {/* 개인 섹션 (로그인 시) */}
+                    {userId && <div className="mb-2"><NavCreateLink onNavigate={close} /></div>}
                     {myNavItems.length > 0 && (
                         <div className="space-y-1">
                             {myNavItems.map((item) => (

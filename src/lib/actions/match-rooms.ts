@@ -412,7 +412,7 @@ export async function closeRotationRoomAction(roomId: string): Promise<ActionRes
 /**
  * 방 닫기(0083) — 정산된 방을 호스트가 마감한다. 결과 정정·게임 추가·초대·대진 편집·기록 수정이 전부 잠기고,
  * 정산을 되돌리는 어떤 경로도 recompute_match_room_settled에서 room_closed로 막힌다.
- * 확정된 전적은 이미 개인 경기 결과에 있다 — 닫기는 노출을 바꾸지 않고 잠금만 얹는다.
+ * 확정된 전적은 이미 내 경기 결과에 있다 — 닫기는 노출을 바꾸지 않고 잠금만 얹는다.
  */
 export async function closeMatchRoomAction(roomId: string): Promise<ActionResult> {
     const { supabase, user } = await requireUser()

@@ -14,8 +14,9 @@ import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { PageGuide } from '@/components/guide/page-guide'
+import { NAV_LABEL } from '@/lib/nav-items'
 
-export const metadata = { title: '매칭 리스트' }
+export const metadata = { title: NAV_LABEL.matchRooms }
 
 type Props = { searchParams: Promise<{ tab?: string; cursor?: string }> }
 
@@ -58,7 +59,7 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
     return (
         <PageContainer>
             <PageHeader
-                title="매칭 리스트"
+                title={NAV_LABEL.matchRooms}
                 description="리스트에 노출된 경기입니다. 비밀번호를 입력하면 참가자·결과를 볼 수 있습니다"
             />
 
@@ -70,7 +71,7 @@ export default async function MatchRoomsPage({ searchParams }: Props) {
                 <RoomCreateLink />
                 {/* 배지는 head count라 페이지 크기와 무관하게 정확하다. 종료 탭은 무한히 자라 숫자를 붙이지 않는다 */}
                 <LinkTabs
-                    ariaLabel="매칭 리스트 탭"
+                    ariaLabel={`${NAV_LABEL.matchRooms} 탭`}
                     activeKey={activeTab}
                     items={ROOM_LIST_TABS.map((t) => ({
                         ...t,

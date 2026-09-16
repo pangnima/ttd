@@ -3,6 +3,7 @@ import { GUEST_LABEL, HOST_LABEL, INVITED_LABEL, JOINED_LABEL } from '@/lib/matc
 import { ROOM_STAGE_HINT, ROOM_STAGE_LABEL, type RoomStage } from '@/lib/match-rooms/room-stage'
 import { ROOM_TURN_PILL } from '@/lib/match-rooms/room-turn'
 import { MATCH_ROOMS_PATH, MY_ROOM_TABS, MY_ROOMS_PATH, ROOM_LIST_TABS } from '@/lib/match-rooms/tabs'
+import { NAV_LABEL } from '@/lib/nav-items'
 
 /**
  * 사용 가이드 문구 — **단일 출처**(Week 57).
@@ -52,16 +53,16 @@ const FLOW: GuideSection = {
     title: '매칭은 이렇게 흘러갑니다',
     summary: '매칭을 열거나 들어가고, 매칭 안에서 게임을 만들고, 결과를 서로 확인하면 전적이 됩니다.',
     steps: [
-        `함께 칠 사람을 모읍니다. ${em('매칭 만들기')}로 매칭을 열어 ${HOST_LABEL}가 되거나, 매칭 리스트에서 비밀번호로 들어가 참가자가 됩니다. 초대를 받았다면 ${em('참가 수락')}만 누르면 됩니다.`,
+        `함께 칠 사람을 모읍니다. ${em('매칭 만들기')}로 매칭을 열어 ${HOST_LABEL}가 되거나, ${NAV_LABEL.matchRooms}에서 비밀번호로 들어가 참가자가 됩니다. 초대를 받았다면 ${em('참가 수락')}만 누르면 됩니다.`,
         `매칭 안에서 그날 친 게임을 올립니다. ${em('게임 추가')}로 하나씩 올리거나, ${HOST_LABEL}가 ${em('자동 대진표')}로 한 번에 짤 수 있습니다.`,
         `게임마다 한 사람이 결과를 입력하면 나머지 참가자가 확인합니다. 회원 참가자 전원이 확인해야 확정되고, 틀렸다면 ${em('이의 제기')}로 다시 입력을 요청할 수 있습니다.`,
-        '모든 게임이 확정되면 매칭이 종료되고, 그 경기들은 개인 경기 결과와 내 통계에 반영됩니다.',
+        `모든 게임이 확정되면 매칭이 종료되고, 그 경기들은 ${NAV_LABEL.myRecords}와 ${NAV_LABEL.myStats}에 반영됩니다.`,
     ],
 }
 
 const MATCH_ROOMS: GuideSection = {
     id: 'match-rooms',
-    title: '매칭 리스트',
+    title: NAV_LABEL.matchRooms,
     summary: '리스트에 노출된 모든 매칭입니다. 들어갈 매칭을 고르거나 직접 여는 곳이에요.',
     steps: [
         `${em(LIST_OPEN.label)} 탭에서 일시·코트·${HOST_LABEL}를 보고 매칭을 고릅니다. ${em(LIST_PAST.label)} 탭은 지난 매칭입니다.`,
@@ -70,12 +71,12 @@ const MATCH_ROOMS: GuideSection = {
         `카드에 ${TURN_PILLS} 같은 표시가 붙어 있으면 그 매칭에서 내가 할 일이 있다는 뜻입니다.`,
     ],
     href: MATCH_ROOMS_PATH,
-    cta: '매칭 리스트 열기',
+    cta: `${NAV_LABEL.matchRooms} 열기`,
 }
 
 const MY_MATCH_ROOMS: GuideSection = {
     id: 'my-match-rooms',
-    title: '참여 중인 매칭',
+    title: NAV_LABEL.myRooms,
     summary: '내가 참가한 매칭과 나를 초대한 매칭입니다. 메뉴의 숫자는 여기서 내가 답해야 할 카드 수예요.',
     steps: [
         `맨 위 ${em('나를 초대한 매칭')}에서 ${em('참가 수락')}을 누르면 비밀번호 없이 참가자가 됩니다.`,
@@ -84,12 +85,12 @@ const MY_MATCH_ROOMS: GuideSection = {
         '결과 입력·확인·이의는 모두 매칭 안에서 합니다. 이 화면은 어느 매칭이 내 차례인지만 보여줍니다.',
     ],
     href: MY_ROOMS_PATH,
-    cta: '참여 중인 매칭 열기',
+    cta: `${NAV_LABEL.myRooms} 열기`,
 }
 
 const PERSONAL_MATCHES: GuideSection = {
     id: 'personal-matches',
-    title: '개인 경기 결과',
+    title: NAV_LABEL.myRecords,
     summary: '확정된 전적이 모이는 곳입니다. 매칭에서 결과가 확정되면 자동으로 여기에 쌓입니다.',
     steps: [
         `매칭 안에서 확정된 경기가 ${OUTCOMES}로 정리되어 목록에 오르고 승률·레이팅에 반영됩니다.`,
@@ -98,7 +99,7 @@ const PERSONAL_MATCHES: GuideSection = {
         `잘못 확정한 결과는 카드의 ${em('결과 정정')}으로 되돌릴 수 있습니다. ${HOST_LABEL}가 마감한 매칭의 경기는 잠깁니다.`,
     ],
     href: PERSONAL_MATCHES_PATH,
-    cta: '개인 경기 결과 열기',
+    cta: `${NAV_LABEL.myRecords} 열기`,
 }
 
 /** 단계 문구는 룸 배너의 것을 그대로 쓴다(`ROOM_STAGE_HINT`) — 여기서 다시 적으면 둘이 갈린다 */

@@ -14,8 +14,9 @@ import { RoomListPager } from '@/components/match-rooms/room-list-pager'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { PageGuide } from '@/components/guide/page-guide'
+import { NAV_LABEL } from '@/lib/nav-items'
 
-export const metadata = { title: '참여 중인 매칭' }
+export const metadata = { title: NAV_LABEL.myRooms }
 
 type Props = { searchParams: Promise<{ tab?: string; cursor?: string }> }
 
@@ -54,7 +55,7 @@ export default async function MyMatchRoomsPage({ searchParams }: Props) {
     return (
         <PageContainer>
             <PageHeader
-                title="참여 중인 매칭"
+                title={NAV_LABEL.myRooms}
                 description="내가 참가한 매칭입니다. 결과 입력·확인은 각 매칭 안에서 합니다"
             />
 
@@ -65,7 +66,7 @@ export default async function MyMatchRoomsPage({ searchParams }: Props) {
             <div className="space-y-3">
                 <RoomCreateLink />
                 <LinkTabs
-                    ariaLabel="참여 중인 매칭 탭"
+                    ariaLabel={`${NAV_LABEL.myRooms} 탭`}
                     activeKey={activeTab}
                     items={MY_ROOM_TABS.map((t) => ({
                         ...t,

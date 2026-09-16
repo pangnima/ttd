@@ -7,7 +7,7 @@ import { classifyPendingMatch } from './queue'
  * "어떤 상태 조합이 존재하는가"라는 지식을 픽스처 삭제 전에 테스트로 옮겨 둔다.
  */
 
-// 모든 케이스는 미확정(setScores 빈 배열)이 전제다 — 확정 행은 개인 경기 결과 화면 소관
+// 모든 케이스는 미확정(setScores 빈 배열)이 전제다 — 확정 행은 내 경기 결과 화면 소관
 function base(over: Partial<PersonalMatch> = {}): PersonalMatch {
     return {
         id: 'm1',

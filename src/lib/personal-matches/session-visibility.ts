@@ -2,7 +2,7 @@ import type { RotationSession } from '@/types'
 import type { EnteredRotationGame } from '@/lib/personal-matches/rotation-entered'
 
 /**
- * 입력 가능한 로테이션 일정 카드를 개인 경기 결과 목록에서 **언제 숨기는가** (Week 38, 순수).
+ * 입력 가능한 로테이션 일정 카드를 내 경기 결과 목록에서 **언제 숨기는가** (Week 38, 순수).
  *
  * 좌석 있는 세션은 finalize 후에도 남는다(0057 — 참가자가 게임을 더 넣을 수 있게). 그러나 게임이
  * 전부 확정되고 경기 날짜까지 지났으면 더 넣을 게임이 없는 것이 보통이라, 그때부터 카드를 숨긴다.

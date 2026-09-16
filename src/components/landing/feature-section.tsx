@@ -1,6 +1,7 @@
 import { CheckCheck, Shuffle, TrendingUp } from 'lucide-react'
 
 import { TYPO } from '@/lib/dashboard/tokens'
+import { NAV_LABEL } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
 
 /** 실제로 있는 기능 셋 — 어휘는 사용 가이드(sections.ts)와 같다. 클럽 운영은 동결(Week 54)이라 없다 */
@@ -19,7 +20,7 @@ const FEATURES = [
     {
         icon: TrendingUp,
         title: '개인 통계 · NTRP',
-        description: '확정된 경기가 개인 경기 결과에 쌓이고, 승률·레이팅·티어로 정리됩니다.',
+        description: `확정된 경기가 ${NAV_LABEL.myRecords}에 쌓이고, 승률·레이팅·티어로 정리됩니다.`,
     },
 ] as const
 

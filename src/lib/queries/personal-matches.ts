@@ -46,7 +46,7 @@ export async function fetchPublicPersonalMatchesByUser(userId: string): Promise<
  * disputed_by(0061)는 이의 탭의 섹션 분할·배지 이름용 — 빠뜨리면 이의자 미상 폴백 문구로만 떨어진다.
  * dispute_count(0062)는 이의를 거친 협상을 확정까지 이의 탭에 붙잡아 두는 술어 — 빠뜨리면 재제안된 건이
  * 종전처럼 내 차례 탭으로 새어 이의자가 자기 분쟁을 추적할 수 없게 된다.
- * 개인 경기 결과 화면(확정)·확인 요청 허브(미확정)·매칭 룸 상세가 공용한다.
+ * 내 경기 결과 화면(확정)·확인 요청 허브(미확정)·매칭 룸 상세가 공용한다.
  */
 export async function attachConfirmations(matches: PersonalMatch[], userId: string): Promise<PersonalMatch[]> {
     const requestIds = [...new Set(matches.map((m) => m.sourceRequestId).filter((id): id is string => !!id))]
@@ -86,7 +86,7 @@ export async function attachConfirmations(matches: PersonalMatch[], userId: stri
 }
 
 /**
- * 결과가 확정된 개인 경기만 — '개인 경기 결과' 화면 본문.
+ * 결과가 확정된 개인 경기만 — '내 경기 결과' 화면 본문.
  * has_result(0051 생성 컬럼)가 hasResult(winner.ts)와 같은 규칙이라 확정/미확정 집합이 DB에서 갈린다.
  * confirmation을 붙이는 이유: 확정 카드의 [결과 정정](0055) 자격이 canReopenResult(confirmation)이고,
  * 그 판정은 '요청 당사자인가'를 알아야 한다 — 복식 파트너·상대2에게는 버튼이 뜨면 안 된다.

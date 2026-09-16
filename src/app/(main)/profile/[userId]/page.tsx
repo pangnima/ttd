@@ -12,7 +12,7 @@ import {
     type RatingHistoryPoint,
 } from '@/lib/queries/ratings'
 import { ProfileScopeTabs } from '@/components/profile/profile-scope-tabs'
-import { personalNavHref } from '@/lib/nav-items'
+import { NAV_LABEL, personalNavHref } from '@/lib/nav-items'
 import type { RatingSummary } from '@/components/profile/rating-summary-row'
 import { isProvisional } from '@/lib/rating/display'
 import { replayPersonalRatings } from '@/lib/rating/personal-rating'
@@ -25,6 +25,7 @@ import { PersonalAnalyticsSection } from '@/components/profile/personal-analytic
 import { StatsQuadGrid } from '@/components/stats/stats-quad-grid'
 import { EMPTY_PLAYER_STATS } from '@/lib/stats'
 import { PageContainer } from '@/components/common/page-container'
+import { TYPO } from '@/lib/dashboard/tokens'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
 import { WeakPasswordNotice } from '@/components/profile/weak-password-notice'
 import { WEAK_PASSWORD_NOTICE } from '@/lib/auth/password-policy'
@@ -98,7 +99,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         // 가입 클럽 목록 로드 (scope 탭 + 클럽 ID 검증에 사용)
         const myClubs = await fetchMyClubs(userId)
 
-        // scope 결정: total(명시) | <clubId>(가입 클럽 중 일치) | personal(기본 — '개인' 메뉴·로그인 진입점과 동일)
+        // scope 결정: total(명시) | <clubId>(가입 클럽 중 일치) | personal(기본 — '개인 통계' 메뉴·로그인 진입점과 동일)
         const matchedClub = myClubs.find((c) => c.id === scopeParam)
         const scope: AnalyticsScope = scopeParam === 'total'
             ? { kind: 'total' }
@@ -174,18 +175,23 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
 
         return (
             <PageContainer>
-                <MemberProfileHeader
-                    user={target}
-                    clubName={scope.kind === 'club' ? scope.clubName : club?.name}
-                    clubRating={clubRating}
-                    provisional={provisional}
-                    clubRank={clubRank}
-                    stats={headerStats}
-                    summary={summary}
-                    recentForm={form}
-                    personalRating={scope.kind === 'personal' ? personalRating : undefined}
-                    ratingSummary={ratingSummary}
-                />
+                {/* 본인 프로필의 h1은 이름이라 메뉴 라벨과 제목이 이어지지 않았다(Week 54 잔여) —
+                    PageHeader의 eyebrow 자리에 메뉴 라벨을 둔다. 타인 프로필은 그 메뉴로 오지 않으므로 없다 */}
+                <div className="space-y-2">
+                    <p className={TYPO.eyebrow}>{NAV_LABEL.myStats}</p>
+                    <MemberProfileHeader
+                        user={target}
+                        clubName={scope.kind === 'club' ? scope.clubName : club?.name}
+                        clubRating={clubRating}
+                        provisional={provisional}
+                        clubRank={clubRank}
+                        stats={headerStats}
+                        summary={summary}
+                        recentForm={form}
+                        personalRating={scope.kind === 'personal' ? personalRating : undefined}
+                        ratingSummary={ratingSummary}
+                    />
+                </div>
                 {/* 통계 범위 탭 스캐폴드 — 개인만 동작, 클럽/통합은 준비 중 */}
                 <ProfileScopeTabs scope={scope} personalHref={personalHref} />
                 {/* 0경기에서도 그린다(Week 57) — 헤더 빈 상태는 "왜 비었나"를, 체크리스트는 "무엇을 할지"를 말한다.

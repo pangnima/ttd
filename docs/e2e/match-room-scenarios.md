@@ -29,7 +29,7 @@
 | 0.2 | A | `/match-rooms`로 이동(비로그인) | `/login?next=%2Fmatch-rooms`로 리다이렉트 | `lib/supabase/middleware.ts` 보호 경로 | B |
 | 0.3 | A | 로그인 | `/match-rooms`로 복귀. 사이드바 「참여 중인 매칭」 뱃지 없음 | `roomBadgeTotal` = 0 | B |
 | 0.4 | A | `/me/match-rooms` | `참여 중인 매칭이 없습니다.` 또는 기존 방 없음, 「나를 초대한 매칭」 섹션 없음 | — | B |
-| 0.5 | — | 비로그인 `/guide` | 리다이렉트 없이 열리고 헤더([로그인])·사이드바(「사용 가이드」 한 줄, 활성) 유지. 6섹션(흐름·매칭 리스트·참여 중인 매칭·개인 경기 결과·다섯 단계·용어) 각각 글 아래 「예시」 그림(더미 카드·배지). 흐름 섹션의 스테퍼 4칸을 누르면 해당 섹션으로 이동. 예시 안 카드·[참가 수락]·[결과 확인]은 클릭·탭 포커스가 되지 않고 다이얼로그가 열리지 않는다. 환영 팝업 없음 | Week 57·58 — 보호 라우트 아님, `GuideExample`의 inert | B |
+| 0.5 | — | 비로그인 `/guide` | 리다이렉트 없이 열리고 헤더([로그인])·사이드바(「사용 가이드」 한 줄, 활성) 유지. 6섹션(흐름·매칭 리스트·참여 중인 매칭·내 경기 결과·다섯 단계·용어) 각각 글 아래 「예시」 그림(더미 카드·배지). 흐름 섹션의 스테퍼 4칸을 누르면 해당 섹션으로 이동. 예시 안 카드·[참가 수락]·[결과 확인]은 클릭·탭 포커스가 되지 않고 다이얼로그가 열리지 않는다. 환영 팝업 없음 | Week 57·58 — 보호 라우트 아님, `GuideExample`의 inert | B |
 | 0.6 | A | `/match-rooms` 상단 「이 화면 사용법」 | 참가 중인 매칭이 없으면 **펼침**, 있으면 접힘. 「전체 가이드 →」가 `/guide#match-rooms`로 착지해 그 섹션이 상단에 온다 | `PageGuide open` = `joinedRoomIds.length === 0` | B |
 
 ## S1 단식 기본 흐름 (A 호스트 · B 참가자)
@@ -252,7 +252,7 @@
 | 12.4 | A | [매칭 닫기](confirm) | 칩 `마감`(채운 muted), 안내 `매칭이 마감되었습니다. … [다시 열기]로 잠금을 풉니다.`, 같은 자리에 [다시 열기], 게임 행의 [결과 정정] 사라짐 | `closedAt` | B |
 | 12.5 | B | 같은 방 | 안내 `… 호스트에게 다시 열기를 요청하세요.`, [결과 정정] 없음 / SQL `reopen_match_result` → `room_closed` | `canReopenResult(c, { roomClosed })` | B+S |
 | 12.6 | B | 참여 중인 매칭 · 매칭 리스트 | 카드 필 `마감`(`결과 확정` 대신), 뱃지 변화 없음(닫기는 차례를 만들지 않는다) | — | B |
-| 12.7 | B | 개인 경기 결과의 그 방 게임 카드 | 배지 `마감`(`상호 확인` 대신), [결과 정정]·[수정]·[삭제] 없음. 호스트 자유 기록 카드도 같음 | `roomClosedAt` | B |
+| 12.7 | B | 내 경기 결과의 그 방 게임 카드 | 배지 `마감`(`상호 확인` 대신), [결과 정정]·[수정]·[삭제] 없음. 호스트 자유 기록 카드도 같음 | `roomClosedAt` | B |
 | 12.8 | A | 호스트 소유 자유 기록의 `/me/personal-matches/[id]/edit` URL 직접 진입 | 방 상세로 리다이렉트 / SQL 소유자 DELETE → 정책 0행, security definer 경로는 `room_closed` | `isRoomClosed` · 0083b 트리거 | B+S |
 | 12.9 | A | SQL `kick_room_member`·`enter_match_room`·`invite_room_members`·`replace_room_lineup(p_game_ids=[])` | `room_closed` · `room_closed` · `room_already_closed` · `room_already_closed` | 노출 ↔ 가드 | S |
 | 12.10 | C | 초대만 걸린 채 닫힌 방의 초대 카드에서 [참가 수락] | 수락된다(닫혀도 초대 응답은 막지 않는다 — 뱃지가 영영 남는 것을 막기 위해) | `respond_room_invite` | B |

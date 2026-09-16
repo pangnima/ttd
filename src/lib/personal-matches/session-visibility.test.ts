@@ -8,7 +8,7 @@ const game = (over: Partial<EnteredRotationGame> = {}): EnteredRotationGame => (
 })
 const TODAY = '2026-09-09'
 
-describe('isDormantSession — 게임 전부 확정 + 경기일 경과면 개인 경기 결과에서 숨긴다', () => {
+describe('isDormantSession — 게임 전부 확정 + 경기일 경과면 내 경기 결과에서 숨긴다', () => {
     it('게임이 있고, 내 미확정 행이 없고, 날짜가 지났으면 숨긴다', () => {
         expect(isDormantSession({ playedAt: '2026-09-08' }, [game()], false, TODAY)).toBe(true)
     })

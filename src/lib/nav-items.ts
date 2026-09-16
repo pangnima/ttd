@@ -1,42 +1,57 @@
 import { BarChart3, BookOpen, CalendarDays, ClipboardList, ListChecks } from 'lucide-react'
 
+/**
+ * 사이드 메뉴 라벨 — **단일 출처**(Week 67). 페이지 제목·metadata·가이드·빈 상태·안내문이 이 값을
+ * 보간한다(`member-labels.ts` 관용구) — 같은 화면을 메뉴와 제목이 다른 이름으로 부르면 안 된다.
+ * '개인'→'개인 통계': 옛 라벨은 프로필 scope 탭(개인/클럽/통합)의 하위 탭 이름을 그대로 메뉴명으로
+ * 쓴 것이라 무엇을 보는 화면인지 말하지 않았다. '개인 경기 결과'→'내 경기 결과': '개인'이 그 메뉴와
+ * 부딪히고 '비공개'로 읽혔다. '매칭 리스트'는 "리스트에 올린다·내린다"처럼 개념어라 유지.
+ */
+export const NAV_LABEL = {
+    myStats: '개인 통계',
+    matchRooms: '매칭 리스트',
+    myRooms: '참여 중인 매칭',
+    myRecords: '내 경기 결과',
+    guide: '사용 가이드',
+} as const
+
 export type NavItem = {
     href: string
     label: string
     icon: React.ElementType
-    /** 하위 경로까지 활성으로 볼 접두사. 없으면 '개인' 메뉴의 정확 일치 규칙을 따른다 */
+    /** 하위 경로까지 활성으로 볼 접두사. 없으면 '개인 통계' 메뉴의 정확 일치 규칙을 따른다 */
     matchPrefix?: string
     /** 작업 큐 뱃지를 다는 메뉴 — href 하드코딩 대신 데이터로 (Sidebar·MobileNav 공유) */
     badge?: boolean
 }
 
-/** '개인' 통계 허브 href. 개인/클럽/통합 하위 구분은 메뉴가 아니라 페이지 내부 탭(ProfileScopeTabs)이 담당한다. */
+/** '개인 통계' 허브 href. 개인/클럽/통합 하위 구분은 메뉴가 아니라 페이지 내부 탭(ProfileScopeTabs)이 담당한다. */
 export function personalNavHref(userId: string): string {
     return `/profile/${userId}?scope=personal`
 }
 
-/** '개인' 단일 메뉴 — 사용자별 href가 필요해 정적 배열 대신 빌더로 제공 (Sidebar/MobileNav 공유). */
+/** '개인 통계' 단일 메뉴 — 사용자별 href가 필요해 정적 배열 대신 빌더로 제공 (Sidebar/MobileNav 공유). */
 export function buildPersonalNavItem(userId: string): NavItem {
-    return { href: personalNavHref(userId), label: '개인', icon: BarChart3 }
+    return { href: personalNavHref(userId), label: NAV_LABEL.myStats, icon: BarChart3 }
 }
 
-/** '개인' 메뉴 활성 판정 — 본인 프로필 경로만(scope 무관). /profile/settings·타인 프로필은 제외. */
+/** '개인 통계' 메뉴 활성 판정 — 본인 프로필 경로만(scope 무관). /profile/settings·타인 프로필은 제외. */
 export function isPersonalNavActive(pathname: string, userId: string): boolean {
     return pathname === `/profile/${userId}`
 }
 
 /**
- * 개인 경기 메뉴 ('개인' 메뉴와 같은 섹션, 로그인 시 노출).
+ * 개인 경기 메뉴 ('개인 통계' 메뉴와 같은 섹션, 로그인 시 노출).
  *
- * 하나의 경기가 놓이는 자리는 둘뿐이다(Week 39) — **진행 중인 매칭은 매칭 룸**, **끝난 것은 개인 경기 결과**.
+ * 하나의 경기가 놓이는 자리는 둘뿐이다(Week 39) — **진행 중인 매칭은 매칭 룸**, **끝난 것은 내 경기 결과**.
  * Week 45에 그 앞단을 둘로 갈랐다: 고르러 오는 **매칭 리스트**(전체 방)와 내 작업 공간인
  * **참여 중인 매칭**(내 방 + 초대). 뱃지는 후자에 붙는다 — 뱃지가 세는 것이 그 화면에 그려지기 때문이다.
  * 순서는 찾기 → 참여 → 결과.
  */
 export const myMatchNavItems: NavItem[] = [
-    { href: '/match-rooms', label: '매칭 리스트', icon: CalendarDays, matchPrefix: '/match-rooms' },
-    { href: '/me/match-rooms', label: '참여 중인 매칭', icon: ListChecks, matchPrefix: '/me/match-rooms', badge: true },
-    { href: '/me/personal-matches', label: '개인 경기 결과', icon: ClipboardList, matchPrefix: '/me/personal-matches' },
+    { href: '/match-rooms', label: NAV_LABEL.matchRooms, icon: CalendarDays, matchPrefix: '/match-rooms' },
+    { href: '/me/match-rooms', label: NAV_LABEL.myRooms, icon: ListChecks, matchPrefix: '/me/match-rooms', badge: true },
+    { href: '/me/personal-matches', label: NAV_LABEL.myRecords, icon: ClipboardList, matchPrefix: '/me/personal-matches' },
 ]
 
 /**
@@ -56,7 +71,7 @@ export function isNavItemActive(item: NavItem, pathname: string, userId: string 
  * 없으면 비어 사이드바가 텅 비고, 가이드는 비로그인에게도 열려야 한다(미들웨어 보호 목록에 없다).
  * Week 39가 `topNavItems`(사용 가이드)를 사이드 메뉴 축소로 지웠는데, 안내 요구가 생겨 단일 항목으로 되살렸다.
  */
-export const guideNavItem: NavItem = { href: '/guide', label: '사용 가이드', icon: BookOpen, matchPrefix: '/guide' }
+export const guideNavItem: NavItem = { href: '/guide', label: NAV_LABEL.guide, icon: BookOpen, matchPrefix: '/guide' }
 
 // 클럽 메뉴는 Week 39에서 사이드바에서 내렸다(클럽 동결). Week 54에 헤더 [클럽 찾기]와
 // 프로필 빈 상태·온보딩의 클럽 유도까지 내려, 진입은 이제 **로고 링크로만** 남는다 —

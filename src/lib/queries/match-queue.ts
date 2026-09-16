@@ -11,13 +11,13 @@ import type { ScheduleSlot } from '@/lib/personal-matches/schedule-conflict'
 import type { MatchRoomInvite, PersonalMatch, RotationSession } from '@/types'
 
 /**
- * 미확정 경기의 **단일 데이터 소스** — 매칭 리스트 작업 큐(room-queue.ts) · 개인 경기 결과 · 사이드바 뱃지.
+ * 미확정 경기의 **단일 데이터 소스** — 매칭 리스트 작업 큐(room-queue.ts) · 내 경기 결과 · 사이드바 뱃지.
  *
  * 미확정 상태는 두 축으로 나뉜다:
  *  - A축: 아직 personal_matches 행이 없는 단계 — 방 초대 · 미입력 로테이션 세션
  *  - B축: 경기가 된 뒤 결과가 비어 있는 행(has_result=false) — classifyPendingMatch가 버킷으로 나눈다
  *
- * 확정 경기는 여기 절대 들어오지 않는다(개인 경기 결과 화면 소관) — 분할 술어는 has_result 하나다.
+ * 확정 경기는 여기 절대 들어오지 않는다(내 경기 결과 화면 소관) — 분할 술어는 has_result 하나다.
  *
  * ⚠ 방 밖 확인 요청(match_requests) 축은 Week 39에 빠졌다. 회원이 끼는 경기가 전부 매칭 룸을 거치면서
  * 방 밖 pending 요청이 더는 생기지 않고, 그 승인 화면(허브)도 함께 사라졌다 —

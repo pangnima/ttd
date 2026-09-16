@@ -7,8 +7,8 @@ import { ROOM_STAGE_LABEL } from '@/lib/match-rooms/room-stage'
 /** 동결·철거된 경로 — 가이드가 여기로 보내면 「눌러도 갈 곳이 없는 링크」가 된다 */
 const RETIRED_PATHS = ['/clubs', '/me/match-requests', '/me/analytics', '/me/personal-matches/new']
 
-/** 폐기된 노출 어휘(Week 54) — 코드 식별자에는 남아 있어 grep으로는 못 잡는다 */
-const RETIRED_WORDS = ['방장', '클럽', '강퇴', '초대됨']
+/** 폐기된 노출 어휘(Week 54·67) — 코드 식별자에는 남아 있어 grep으로는 못 잡는다. '개인 경기 결과'는 옛 메뉴명(→ 내 경기 결과) */
+const RETIRED_WORDS = ['방장', '클럽', '강퇴', '초대됨', '개인 경기 결과']
 
 const allText = (s: (typeof GUIDE_SECTIONS)[number]) => [s.title, s.summary, ...s.steps].join('\n')
 

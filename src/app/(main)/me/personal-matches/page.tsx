@@ -10,8 +10,9 @@ import { EMPTY_BLOCK, HEADER_ACTION_LINK } from '@/lib/dashboard/tokens'
 import { PageHeader } from '@/components/common/page-header'
 import { PageContainer } from '@/components/common/page-container'
 import { PageGuide } from '@/components/guide/page-guide'
+import { NAV_LABEL } from '@/lib/nav-items'
 
-export const metadata = { title: '개인 경기 결과' }
+export const metadata = { title: NAV_LABEL.myRecords }
 
 /**
  * 내 전적 — 확정된 경기 전부와, 방 밖 직접 기록 중 아직 스코어가 없는 것들(Week 39).
@@ -33,16 +34,18 @@ export default async function PersonalMatchesPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="개인 경기 결과"
+                title={NAV_LABEL.myRecords}
                 description="확정된 전적을 봅니다. 비회원과 친 경기는 여기서 직접 기록할 수 있습니다"
-                actions={
-                    <Link href="/me/personal-matches/new" className={HEADER_ACTION_LINK}>
-                        + 직접 기록
-                    </Link>
-                }
             />
 
             <PageGuide id="personal-matches" open={matches.length === 0} />
+
+            {/* 헤더 actions가 아니라 목록 위 별도 행 — 두 매칭 목록 화면의 [+ 매칭 만들기](RoomCreateLink)와 같은 자리(Week 54 규칙) */}
+            <div className="flex justify-end">
+                <Link href="/me/personal-matches/new" className={HEADER_ACTION_LINK}>
+                    + 직접 기록
+                </Link>
+            </div>
 
             <PendingResultsSection queue={queue} viewerId={user.id} builder={builder} />
 

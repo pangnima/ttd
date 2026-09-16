@@ -10,10 +10,11 @@ import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { BrandLogo, WORDMARK_CLASS } from '@/components/common/brand-logo'
 import { useSidebar } from '@/components/common/sidebar-context'
 import { SidebarNavRow } from '@/components/common/sidebar-nav-row'
+import { NavCreateLink } from '@/components/common/nav-create-link'
 
 type SidebarProps = {
     currentPath?: string
-    /** 로그인 사용자 id ('개인' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
+    /** 로그인 사용자 id ('개인 통계' 메뉴 href 생성용, 아이콘은 클라이언트에서 직접 렌더링) */
     userId?: string | null
     /** 「참여 중인 매칭」에 그려지는 강조 카드 수 — 방 초대 + 내 차례가 있는 방 (그 메뉴의 뱃지) */
     myTurnCount?: number
@@ -24,7 +25,7 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
     const { collapsed } = useSidebar()
     const activePath = currentPath ?? pathname
 
-    // 개인 섹션: '개인'(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 개인 경기 결과(끝난 것)
+    // 개인 섹션: 개인 통계(본인 프로필) + 매칭 리스트(전체) + 참여 중인 매칭(내 방) + 내 경기 결과(끝난 것)
     const myNavItems = userId ? [buildPersonalNavItem(userId), ...myMatchNavItems] : []
 
     // 라벨은 rail에서 max-width/opacity로 페이드(width:auto는 트랜지션 불가하므로 max-width 사용)
@@ -55,7 +56,8 @@ export function Sidebar({ currentPath, userId, myTurnCount = 0 }: SidebarProps) 
 
             {/* 메인 네비게이션 — rail에서는 플라이아웃이 사이드바 밖으로 나가야 하므로 overflow를 자르지 않는다 */}
             <nav className={cn('flex-1 min-h-0 p-3 space-y-0.5', collapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden')}>
-                {/* 개인 섹션: '개인' 통계 허브(개인/클럽/통합 구분은 페이지 탭) + 매칭 리스트 + 개인 경기 결과 (로그인 시) */}
+                {/* [+ 매칭 만들기] CTA(내비 위의 버튼) → 개인 섹션: 개인 통계(개인/클럽/통합 구분은 페이지 탭) + 매칭 리스트 + 참여 중인 매칭 + 내 경기 결과 (로그인 시) */}
+                {userId && <div className="mb-2"><NavCreateLink collapsed={collapsed} /></div>}
                 {myNavItems.length > 0 && (
                     <div className="space-y-0.5">
                         {myNavItems.map((item) => (

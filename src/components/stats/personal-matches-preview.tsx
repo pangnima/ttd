@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { PersonalMatch } from '@/types'
 import { TYPO, EMPTY_BLOCK, CTA_LINK } from '@/lib/dashboard/tokens'
+import { NAV_LABEL } from '@/lib/nav-items'
 import { groupByMonth } from '@/lib/personal-matches/grouping'
 import { hasResult } from '@/lib/personal-matches/winner'
 import { PersonalMatchMonthBrowser } from '@/components/personal-matches/personal-match-month-browser'
@@ -20,7 +21,7 @@ export function PersonalMatchesPreview({ personalMatches, readOnly = false }: Pr
     return (
         <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-                <h2 className={TYPO.h4}>개인 경기 결과</h2>
+                <h2 className={TYPO.h4}>{NAV_LABEL.myRecords}</h2>
                 {!readOnly && (
                     <Link
                         href="/me/personal-matches/new"

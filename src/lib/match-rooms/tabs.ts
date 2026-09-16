@@ -1,3 +1,5 @@
+import { NAV_LABEL } from '@/lib/nav-items'
+
 /**
  * 방 목록의 탭 — **시간 축 하나뿐**이다(진행 중 / 종료된).
  *
@@ -42,7 +44,7 @@ export const ROOM_LIST_TABS: RoomTabMeta[] = [
         label: '진행 중인 경기',
         href: roomTabHref(MATCH_ROOMS_PATH, 'open'),
         emptyTitle: '진행 중인 경기가 없습니다.',
-        emptyHint: '경기를 등록하고 매칭 리스트에 노출해보세요',
+        emptyHint: `경기를 등록하고 ${NAV_LABEL.matchRooms}에 노출해보세요`,
         emptyHref: '/match-rooms/new',
     },
     {
@@ -64,8 +66,8 @@ export const MY_ROOM_TABS: RoomTabMeta[] = [
         key: 'open',
         label: '진행 중',
         href: roomTabHref(MY_ROOMS_PATH, 'open'),
-        emptyTitle: '참여 중인 매칭이 없습니다.',
-        emptyHint: '매칭 리스트에서 경기에 입장해보세요',
+        emptyTitle: `${NAV_LABEL.myRooms}이 없습니다.`,
+        emptyHint: `${NAV_LABEL.matchRooms}에서 경기에 입장해보세요`,
         emptyHref: MATCH_ROOMS_PATH,
     },
     {

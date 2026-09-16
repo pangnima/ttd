@@ -61,7 +61,7 @@
 
 | # | 계정 | 조작 | 기대 | 검증 | 수단 |
 |---|---|---|---|---|---|
-| 4.1 | 신규 계정 | `/profile/<uid>?scope=personal`(0경기) | 헤더 `ProfileEmptyGuide` `아직 확정된 경기가 없어요` + [매칭 참여하기](`/match-rooms`)·[사용 가이드]; `StatsEmpty` `전적 데이터가 아직 없어요`; 개인 경기 결과 프리뷰 빈 상태 | Week 57 유도 넷 | B |
+| 4.1 | 신규 계정 | `/profile/<uid>?scope=personal`(0경기) | 헤더 `ProfileEmptyGuide` `아직 확정된 경기가 없어요` + [매칭 참여하기](`/match-rooms`)·[사용 가이드]; `StatsEmpty` `전적 데이터가 아직 없어요`; 내 경기 결과 프리뷰 빈 상태 | Week 57 유도 넷 | B |
 | 4.2 | 신규 계정 | 체크리스트 `시작하기` | `2단계 중 0단계 완료` — 기본 아바타는 「프로필 완성」이 아니다(Week 63 U-pre-1: 직접 올린 사진 ∨ 휴대폰·라켓 입력이 done). 「첫 매칭 참여하기」 링크 `/match-rooms` | `lib/onboarding.ts`·`isDefaultAvatar` | B |
 | 4.3 | 신규 계정 | 매칭 참가(S 방 하나 비밀번호 입장) 후 프로필 | 두 단계가 모두 done이 되어 **카드 자체가 사라진다**(`모든 준비를 마쳤어요!`·닫기 버튼은 마지막 단계를 프로필 화면 안에서 끝낼 때만 보인다) | `isOnboardingComplete` | B |
 | 4.4 | B | A의 프로필(비공개 상태) | 4카드 블러 + `승률을 공개하지 않은 유저입니다`, 편집 불가, `최근 경기`·`라이벌 · 파트너` | `PlayerStatsSection locked` | B |
@@ -74,8 +74,8 @@
 | # | 계정 | 조작 | 기대 | 검증 | 수단 |
 |---|---|---|---|---|---|
 | 5.1 | 비로그인 | `/guide` | S0.5와 같음 + 로고 클릭 → `/`(랜딩). 로그인 상태면 로고 → `/profile/<uid>?scope=personal`(Week 63 U-pre-4). not-found·프로필 error CTA는 `/match-rooms` | `header.tsx`·`sidebar.tsx` | B |
-| 5.2 | B | 세 목록 화면 `PageGuide` | 매칭 리스트(참가 방 있으면 접힘)·참여 중인 매칭·개인 경기 결과 각각 펼침/접힘 조건, 「전체 가이드 →」 → `/guide#<id>` 앵커 착지 | `GuideHashScroll` | B |
-| 5.3 | B | 사이드바 | `개인`·`매칭 리스트`·`참여 중인 매칭`(뱃지)·`개인 경기 결과` + 구분선 + `사용 가이드`. 방 상세 URL에서 `매칭 리스트` 활성(K-11 confirmed) | `isNavItemActive` | B |
+| 5.2 | B | 세 목록 화면 `PageGuide` | 매칭 리스트(참가 방 있으면 접힘)·참여 중인 매칭·내 경기 결과 각각 펼침/접힘 조건, 「전체 가이드 →」 → `/guide#<id>` 앵커 착지 | `GuideHashScroll` | B |
+| 5.3 | B | 사이드바 | 최상단 옐로우 [+ 매칭 만들기](rail이면 + 아이콘, 비로그인 없음 — Week 67) → `개인 통계`·`매칭 리스트`·`참여 중인 매칭`(뱃지)·`내 경기 결과` + 구분선 + `사용 가이드`. 모바일 시트도 같은 순서. 본인 프로필 상단 eyebrow `개인 통계`. 방 상세 URL에서 `매칭 리스트` 활성(K-11 confirmed) | `isNavItemActive`·`NavCreateLink` | B |
 | 5.4 | B | 사이드바 접기(rail) | 뱃지가 점으로 | `sidebar-nav-row.tsx:43` | B |
 | 5.5 | B | 뱃지 항등식 최종 | 현재 큐 상태에서 뱃지 수 = `/me/match-rooms` 강조 카드(초대 + 내 차례 필) 수. SQL로 `fetchMatchQueue` 대상 행 수와 대조 | `roomBadgeTotal` | B+S |
 | 5.6 | B | 390px 모바일 시트 | 같은 항목·뱃지, 로고 링크 없음, 테마 토글 | `MobileNav` | B |

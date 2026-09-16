@@ -1,4 +1,5 @@
 import type { MatchRoomGame, MatchRoomMeta, MatchRoomSource } from '@/types'
+import { NAV_LABEL } from '@/lib/nav-items'
 
 /**
  * 매칭 룸의 진행 단계 (순수 — Week 39 → Week 53).
@@ -25,7 +26,7 @@ export const ROOM_STAGE_HINT: Record<RoomStage, string> = {
     recruiting: '아직 등록된 게임이 없습니다. 참가자 누구나 게임 추가로 상대와 게임을 만들 수 있어요.',
     playing: '결과를 기다리는 게임이 남아 있습니다.',
     reviewing: '모든 게임의 결과가 입력됐습니다. 참가자 확인이 끝나면 매칭이 종료됩니다.',
-    settled: '모든 결과가 확정됐습니다. 전적은 개인 경기 결과에서 볼 수 있습니다.',
+    settled: `모든 결과가 확정됐습니다. 전적은 ${NAV_LABEL.myRecords}에서 볼 수 있습니다.`,
     closed: '호스트가 매칭을 마감했습니다. 결과 정정을 포함한 모든 수정이 잠겼습니다.',
 }
 

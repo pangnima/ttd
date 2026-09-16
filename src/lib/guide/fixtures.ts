@@ -125,7 +125,7 @@ export const GUIDE_MEMBERS_DETAIL: MatchRoomDetail = {
     guests: [{ id: '00000000-0000-4000-8000-0000000000d1', name: '강민준', ntrp: 3.0, createdBy: OPPONENT_ID }],
 }
 
-// ── 개인 경기 결과: 확정 게임이 전적으로 올라온 카드 (1세트라 「승」 배지 — 2세트부터는 'N게임 · …') ──
+// ── 내 경기 결과: 확정 게임이 전적으로 올라온 카드 (1세트라 「승」 배지 — 2세트부터는 'N게임 · …') ──
 export const GUIDE_PERSONAL_MATCH: PersonalMatch = {
     id: GUIDE_GAMES[2].id, userId: GUIDE_VIEWER_ID, opponentName: '박지훈', opponentUserId: OPPONENT_ID,
     playedAt: PLAYED_AT, playedTime: PLAYED_TIME, matchType: 'singles', surface: 'hard', courtName: COURT,
