@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { DeletedBadge } from '@/components/common/deleted-badge'
 import type { PersonalMatch } from '@/types'
 import { PENDING_BADGE, resolveResultBadge } from '@/lib/personal-matches/result-badge'
 import { formatOpponents } from '@/lib/personal-matches/labels'
@@ -40,10 +41,13 @@ export function PersonalMatchCard({ match: m, actions, hideMeta = false, gameLab
                         {isDoubles && (
                             <p className="text-body2 font-medium text-foreground truncate">
                                 나{m.partnerName && <> · <span className="text-primary">{m.partnerName}</span></>}
+                                {m.partnerDeleted && <DeletedBadge className="ml-1" />}
                             </p>
                         )}
                         <p className="text-body2 font-medium text-foreground truncate">
                             <span className="text-muted-foreground">vs </span>{opponentLabel}
+                            {/* 탈퇴한 상대 — 이름은 스냅샷 그대로 두고 배지만(F-25) */}
+                            {(m.opponentDeleted || m.opponent2Deleted) && <DeletedBadge className="ml-1" />}
                         </p>
                     </div>
                     <span className={`px-2 py-1 rounded-[4px] text-caption font-bold shrink-0 whitespace-nowrap tabular-nums ${result.badgeClass}`}>

@@ -23,6 +23,16 @@ export function roomGameStatusBadge(game: MatchRoomGame): RoomGameStatus | null 
     return lineupReady ? { label: '결과 미입력', tone: 'attention' } : { label: '모집 중', tone: 'pending' }
 }
 
+/**
+ * 행의 상태 배지를 액션 쪽 배지가 대신하는가(F-20) — disputed 상태에서 당사자에게는 `DisputedResultActions`가
+ * 「내가 이의 제기」·「OOO님 이의」처럼 **누가** 이의했는지까지 말하므로, 같은 뜻의 「이의 제기」 상태 배지를
+ * 겹쳐 두지 않는다(F-4가 proposed에서 한 것과 같은 「행마다 배지 하나」 규칙, 이번엔 더 구체적인 쪽을 남긴다).
+ * 제3자에게는 액션이 없으므로 상태 배지가 그대로 남는다.
+ */
+export function statusBadgeReplacedByActions(game: MatchRoomGame, viewerId: string, hasConfirmation: boolean): boolean {
+    return game.sourceType === 'confirmation' && game.resultStatus === 'disputed' && hasConfirmation && isRoomGameParty(game, viewerId)
+}
+
 /** 작성자만 수정 폼으로 갈 수 있다 — 상호 확인 게임은 잠겨 있어 아무도 못 간다(결과는 제안·확인으로) */
 export function canEditRoomGame(game: MatchRoomGame, viewerId: string): boolean {
     return game.sourceType === 'direct' && game.ownerUserId === viewerId

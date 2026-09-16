@@ -196,6 +196,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )
     }
 
+    // 탈퇴한 회원의 URL — 익명화된 행이라 통계도 메타도 없다(F-pre-8). 헤더만 배지와 함께 그린다
+    if (target.deletedAt) {
+        return (
+            <PageContainer>
+                <MemberProfileHeader user={target} />
+                <p className="text-body2 text-muted-foreground">탈퇴한 회원입니다.</p>
+            </PageContainer>
+        )
+    }
+
     // 타인 프로필: 공개 요약 통계
     const privacy = target.statsHidden ? 'locked' : 'public'
     const showStats = !target.statsHidden

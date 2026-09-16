@@ -149,7 +149,7 @@
 | 9.5 | — | 옛 아이디 `e2esignup1`+비번 / 옛 이메일 `e2e1@e2e.test`+비번 | `아이디 또는 비밀번호가 올바르지 않습니다.`(login_id null → resolve 실패) / **`탈퇴한 계정입니다.`**(auth 이메일 잔존 → signIn 성공 → deleted_at 검사 → signOut) | `auth.ts:54-65` | B |
 | 9.6 | — | `/find-id` `테스트가입자`+`e2e1@e2e.test` | `일치하는 회원이 없습니다`(탈퇴 제외) | `find_login_id` `deleted_at is null` | B |
 | 9.7 | — | e2e2 가입에 **e2e1의 옛 닉네임·아이디** 재사용 | 실시간 `사용 가능`, 가입 성공(부분 유니크 인덱스가 탈퇴 행을 뺀다) | 0079·0085 | B+S |
-| 9.8 | A | 탈퇴자가 있던 방 명단·게임 행·개인 카드 / 탈퇴자 프로필 URL `/profile/<e2e1 uid>` | 명단 `탈퇴한 회원` + `탈퇴` 배지 / 게임 행 이름 / 프로필: 헤더 `탈퇴한 회원`, 성별·주력손 줄이 ` · `로 비는지(**F-pre-8 판정**), 통계 비공개 블러 | `member-profile-header.tsx:102` | B |
+| 9.8 | A | 탈퇴자가 있던 방 명단·게임 행·개인 카드 / 탈퇴자 프로필 URL `/profile/<e2e1 uid>` | 명단 `탈퇴한 회원(탈퇴)` / 게임 행·개인 카드는 **스냅샷 이름 그대로 + `탈퇴` 배지**(F-25 규칙, 0089) / 프로필: 헤더 `탈퇴한 회원` + `탈퇴` 배지, 성별·주력손·NTRP 줄 **없음**, 본문 `탈퇴한 회원입니다.`(F-pre-8). SQL: `personal_ntrp null`(`ntrp`는 게이트 술어라 남긴다) | `member-profile-header.tsx`·`deleted-badge.tsx` | B+S |
 | 9.9 | e2e2 | e2e2도 탈퇴 | **두 번째 탈퇴 성공**(닉네임 `탈퇴한 회원` 리터럴 충돌 없음 — 부분 인덱스) | 0079 결정의 실증 | B+S |
 | 9.10 | G | (사용자 확인 후) 구글 계정 탈퇴 → 구글 재로그인 | `/login?error=deleted` `탈퇴한 계정입니다.` → 복구는 두 행 삭제 + 재가입(A8.5) | `/auth/callback` 탈퇴 차단 | M+S |
 | 9.11 | — | 회원 정리 SQL | `auth_rows=0`, `public_rows=0` | README | S |

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchRoomDetail, MatchRoomGame, MatchRoomSource } from '@/types'
-import { canCreateRoomLineup, canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage, roomGameMemberIds } from './game-status'
+import { canCreateRoomLineup, canEditRoomGame, isRoomGameParty, roomGameStatusBadge, roomGamesEmptyMessage, roomGameMemberIds, statusBadgeReplacedByActions } from './game-status'
 
 const base: MatchRoomGame = {
     id: 'g1',
@@ -47,6 +47,21 @@ describe('canEditRoomGame · isRoomGameParty', () => {
         expect(isRoomGameParty(base, 'u1')).toBe(true)
         expect(isRoomGameParty(base, 'u2')).toBe(true)
         expect(isRoomGameParty(base, 'u3')).toBe(false)
+    })
+})
+
+describe('statusBadgeReplacedByActions — 이의 상태의 당사자 행은 배지 하나(F-20)', () => {
+    const disputed: MatchRoomGame = { ...base, sourceType: 'confirmation', resultStatus: 'disputed' }
+
+    it('당사자 + 협상이 있으면 상태 배지를 액션 배지에 양보한다', () => {
+        expect(statusBadgeReplacedByActions(disputed, 'u1', true)).toBe(true)
+        expect(statusBadgeReplacedByActions(disputed, 'u2', true)).toBe(true)
+    })
+
+    it('제3자·협상 없음·다른 상태에서는 상태 배지가 남는다', () => {
+        expect(statusBadgeReplacedByActions(disputed, 'u3', true)).toBe(false)
+        expect(statusBadgeReplacedByActions(disputed, 'u1', false)).toBe(false)
+        expect(statusBadgeReplacedByActions({ ...disputed, resultStatus: 'proposed' }, 'u1', true)).toBe(false)
     })
 })
 

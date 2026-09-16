@@ -79,6 +79,20 @@ export function buildRoomGameTeams(game: MatchRoomGame, viewerId: string): RoomG
     return joinTeams(['나', labels.partnerName], [labels.opponentName, labels.opponent2Name])
 }
 
+/**
+ * 탈퇴한 참가자의 스냅샷 이름들(F-25) — 팀 줄이 이름을 그대로 잇기 때문에 줄 문자열에서 되찾을 수 있다.
+ * 소유자는 users 현재값이라 이미 `탈퇴한 회원`이고 명단이 배지를 단다.
+ */
+export function deletedParticipantNames(game: MatchRoomGame): string[] {
+    return game.participants.filter((p) => p.deleted).map((p) => p.name)
+}
+
+/** 팀 줄(`이름 · 이름`)에 탈퇴자가 있는가 — 배지를 그 줄 끝에 붙일지 정한다 */
+export function teamLineHasDeleted(line: string, deletedNames: string[]): boolean {
+    if (deletedNames.length === 0) return false
+    return line.split(' · ').some((name) => deletedNames.includes(name))
+}
+
 /** 한 줄로 뭉친 팀 라인 — 팀을 두 줄로 가르지 않는 자리(요약 문구 등)에서 쓴다 */
 export function buildRoomGameLine(game: MatchRoomGame, viewerId: string): string {
     const { mine, theirs } = buildRoomGameTeams(game, viewerId)

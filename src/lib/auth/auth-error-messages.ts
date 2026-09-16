@@ -21,6 +21,9 @@ const ERROR_RULES: ReadonlyArray<{ match: string; message: string }> = [
     { match: 'email rate limit exceeded', message: '잠시 후 다시 시도해 주세요.' },
     { match: 'for security purposes', message: '잠시 후 다시 시도해 주세요.' },
     { match: 'over_email_send_rate_limit', message: '잠시 후 다시 시도해 주세요.' },
+    // 비밀번호 변경에서 새 비밀번호가 현재와 같을 때 — 실제 문장은 'New password should be different from the old password.'(F-16).
+    // 옛 키('same as the old password')는 버전 차이에 대비해 남긴다.
+    { match: 'different from the old password', message: '기존 비밀번호와 다른 비밀번호를 입력해 주세요.' },
     { match: 'same as the old password', message: '기존 비밀번호와 다른 비밀번호를 입력해 주세요.' },
     // handle_new_user 트리거가 CHECK·유니크에 걸려 가입이 롤백된 경우(0079·0085). 서버 액션이 signUp 전에
     // 같은 검사를 하므로 동시 제출의 경합에서만 여기까지 온다.

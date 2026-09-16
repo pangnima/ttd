@@ -16,6 +16,7 @@ export type User = {
     createdAt: string
     isGuest: boolean   // true면 게스트 선수 (public.users에 존재하지만 Auth 계정 없음)
     statsHidden: boolean  // true면 승률·승무패를 타인에게 비공개
+    deletedAt?: string | null  // 탈퇴 시각(soft delete). 있으면 화면은 이름·메타·NTRP 대신 '탈퇴한 회원'과 배지만
 }
 
 export type Club = {
@@ -134,15 +135,18 @@ export type PersonalMatch = {
     userId: string
     opponentName: string
     opponentUserId?: string  // 클럽 회원과 연결된 경우 users.id, 외부 상대는 undefined
+    opponentDeleted?: boolean  // 회원 상대가 탈퇴했다(F-25) — 이름은 스냅샷 그대로, 카드는 배지만 붙인다
     opponentDominantHand?: 'right' | 'left'  // 외부 상대 직접 입력 시 손잡이 (회원/미입력은 undefined)
     // ── 복식 전용: 내 파트너 (단식이면 모두 undefined) ──
     partnerUserId?: string
     partnerName?: string
+    partnerDeleted?: boolean
     partnerDominantHand?: 'right' | 'left'
     partnerNtrp?: number    // 복식 파트너 추정 NTRP(선택) — 개인 레이팅 '내 팀' 블렌드에 반영
     // ── 복식 전용: 상대팀 2번째 선수 (단식이면 모두 undefined) ──
     opponent2UserId?: string
     opponent2Name?: string
+    opponent2Deleted?: boolean
     opponent2DominantHand?: 'right' | 'left'
     opponent2Ntrp?: number  // 복식 상대2 추정 NTRP — 개인 레이팅 상대팀 평균에 반영
     // 애드/듀스 코트는 세트마다 바뀔 수 있어 setScores 각 세트의 myAd/oppAd로 보관한다.
@@ -342,7 +346,8 @@ export type MatchRoomMember = {
     racketModel?: string
 }
 
-export type MatchRoomParticipantRef = { role: string; name: string; userId?: string }
+/** 게임 참가자 스냅샷 — 이름은 저장 당시 값, `deleted`는 상세 RPC(0089)가 users에서 얹는다(F-25: 원래 이름 + 탈퇴 배지) */
+export type MatchRoomParticipantRef = { role: string; name: string; userId?: string; deleted?: boolean }
 
 /**
  * 방의 대표 게임 한 벌 (0049) — 작성자가 호스트가 아니어도 방 전원에게 보인다.

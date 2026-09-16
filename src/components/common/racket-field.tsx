@@ -29,6 +29,9 @@ type RacketFieldProps = {
 export function RacketField({ initialBrand, initialModel }: RacketFieldProps) {
     const initial = splitRacketBrand(initialBrand)
     const [choice, setChoice] = useState<RacketBrandChoice | undefined>(initial.choice)
+    // 텍스트 둘도 state로 — React 19 form action이 서버 거절 뒤 폼을 리셋해 uncontrolled 값이 날아간다(F-17, NameField 관용구)
+    const [otherText, setOtherText] = useState(initial.otherText ?? '')
+    const [model, setModel] = useState(initialModel ?? '')
 
     return (
         <div>
@@ -46,7 +49,8 @@ export function RacketField({ initialBrand, initialModel }: RacketFieldProps) {
                     {choice === 'other' && (
                         <input
                             name="racket_other"
-                            defaultValue={initial.otherText}
+                            value={otherText}
+                            onChange={(e) => setOtherText(e.target.value)}
                             placeholder="브랜드명 입력 (예: 프린스)"
                             maxLength={RACKET_BRAND_MAX_LEN}
                             required
@@ -56,7 +60,8 @@ export function RacketField({ initialBrand, initialModel }: RacketFieldProps) {
                     )}
                     <input
                         name="racket_model"
-                        defaultValue={initialModel ?? ''}
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
                         placeholder="라켓명 (선택, 예: 프로스태프 97)"
                         maxLength={RACKET_MODEL_MAX_LEN}
                         aria-label="라켓명"

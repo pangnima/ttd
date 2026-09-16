@@ -30,6 +30,7 @@ export function mapUserRow(row: UserRow): User {
         createdAt: row.created_at,
         isGuest: row.is_guest ?? false,
         statsHidden: row.stats_hidden ?? false,
+        deletedAt: row.deleted_at ?? null,
     }
 }
 

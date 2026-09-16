@@ -2,7 +2,10 @@ import type { Database } from '@/types/supabase'
 import type { CourtSurface, MatchType, PersonalMatch, PersonalMatchSetScore } from '@/types'
 
 type PersonalMatchRow = Database['public']['Tables']['personal_matches']['Row']
-type PersonalMatchParticipantRow = Database['public']['Tables']['personal_match_participants']['Row']
+type PersonalMatchParticipantRow = Database['public']['Tables']['personal_match_participants']['Row'] & {
+    /** `user:users(deleted_at)` 임베드 — 조회가 붙이면 탈퇴 배지의 재료(F-25), 안 붙이면 undefined */
+    user?: { deleted_at: string | null } | null
+}
 
 /**
  * personal_matches DB row → PersonalMatch 도메인 매핑 (순수 함수, server-only 아님).
@@ -21,13 +24,16 @@ export function mapPersonalMatchRow(row: PersonalMatchRow, participants: Persona
         userId: row.user_id,
         opponentName: opponent?.name ?? '',
         opponentUserId: opponent?.user_id ?? undefined,
+        opponentDeleted: !!opponent?.user?.deleted_at,
         opponentDominantHand: (opponent?.dominant_hand as 'right' | 'left' | null) ?? undefined,
         partnerUserId: partner?.user_id ?? undefined,
         partnerName: partner?.name ?? undefined,
+        partnerDeleted: !!partner?.user?.deleted_at,
         partnerDominantHand: (partner?.dominant_hand as 'right' | 'left' | null) ?? undefined,
         partnerNtrp: partner?.ntrp_snapshot != null ? Number(partner.ntrp_snapshot) : undefined,
         opponent2UserId: opponent2?.user_id ?? undefined,
         opponent2Name: opponent2?.name ?? undefined,
+        opponent2Deleted: !!opponent2?.user?.deleted_at,
         opponent2DominantHand: (opponent2?.dominant_hand as 'right' | 'left' | null) ?? undefined,
         opponent2Ntrp: opponent2?.ntrp_snapshot != null ? Number(opponent2.ntrp_snapshot) : undefined,
         playedAt: row.played_at,

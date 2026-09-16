@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
 import { NameField } from '@/components/auth/name-field'
 import { NicknameField } from '@/components/auth/nickname-field'
+import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 import { PhoneField } from '@/components/auth/phone-field'
 import { SignupTennisSection } from '@/components/auth/signup-tennis-section'
 import { completeProfileAction } from '@/lib/actions/onboarding'
@@ -39,6 +40,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
     // 초기값 true — effect가 돌기 전 한 프레임이라도 열려 있으면 안 된다
     const [tennisMissing, setTennisMissing] = useState(true)
     const [avatarError, setAvatarError] = useState(false)
+    const [agreed, setAgreed] = useState(false)
 
     return (
         <form action={formAction} className="space-y-5">
@@ -56,6 +58,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
                     defaultValue={defaultNickname}
                     excludeUserId={userId}
                     onTakenChange={setNicknameTaken}
+                    serverError={state?.error === NICKNAME_TAKEN_MESSAGE ? state.error : null}
                 />
             </div>
 
@@ -67,11 +70,12 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
 
             {/* 가입 폼과 같은 동의 — 소셜 경로만 건너뛰고 있었다(수집하는 정보는 같다) */}
             <label className="flex items-start gap-2 text-caption text-muted-foreground">
-                <input type="checkbox" name="agree_privacy" value="true" required className="mt-0.5" />
+                <input type="checkbox" name="agree_privacy" value="true" required className="mt-0.5" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
                 <span>개인정보 수집·이용에 동의합니다. 이름·닉네임·휴대폰 번호를 클럽 운영과 경기 기록에 사용합니다. *</span>
             </label>
 
-            {state?.error && (
+            {/* 닉네임 충돌은 필드가 자기 자리에서 말한다(F-18) — 여기 공통 줄까지 그리면 「사용 가능」과 「이미 사용 중」이 동시에 보인다 */}
+            {state?.error && state.error !== NICKNAME_TAKEN_MESSAGE && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>

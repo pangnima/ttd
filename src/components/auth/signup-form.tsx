@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
 import { NameField } from '@/components/auth/name-field'
 import { NicknameField } from '@/components/auth/nickname-field'
+import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
 import { PhoneField } from '@/components/auth/phone-field'
 import { SignupAccountSection } from '@/components/auth/signup-account-section'
 import { SignupTennisSection } from '@/components/auth/signup-tennis-section'
@@ -26,6 +27,8 @@ export function SignupForm() {
     const [tennisMissing, setTennisMissing] = useState(true)
     // 사진이 한계를 넘어 거절된 동안(F-15) — 필드가 input을 비우고 사유를 말한다
     const [avatarError, setAvatarError] = useState(false)
+    // 동의 체크도 state로 — 서버 거절 뒤 폼 리셋에 날아가지 않게(F-17)
+    const [agreed, setAgreed] = useState(false)
 
     return (
         <form action={formAction} className="space-y-5">
@@ -47,7 +50,7 @@ export function SignupForm() {
             {/* ── 프로필 ── */}
             <div className="grid grid-cols-2 gap-3 items-start">
                 <NameField />
-                <NicknameField onTakenChange={setNicknameTaken} />
+                <NicknameField onTakenChange={setNicknameTaken} serverError={state?.error === NICKNAME_TAKEN_MESSAGE ? state.error : null} />
             </div>
 
             <PhoneField />
@@ -59,11 +62,12 @@ export function SignupForm() {
 
             {/* 휴대폰 번호를 받으므로 수집·이용 동의가 필요하다. required로 두어 브라우저가 제출을 막는다. */}
             <label className="flex items-start gap-2 text-caption text-muted-foreground">
-                <input type="checkbox" name="agree_privacy" value="true" required className="mt-0.5" />
+                <input type="checkbox" name="agree_privacy" value="true" required className="mt-0.5" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
                 <span>개인정보 수집·이용에 동의합니다. 이름·닉네임·휴대폰 번호를 클럽 운영과 경기 기록에 사용합니다. *</span>
             </label>
 
-            {state?.error && (
+            {/* 닉네임 충돌은 필드가 자기 자리에서 말한다(F-18) — 여기 공통 줄까지 그리면 「사용 가능」과 「이미 사용 중」이 동시에 보인다 */}
+            {state?.error && state.error !== NICKNAME_TAKEN_MESSAGE && (
                 <p className="text-body2 text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                     {state.error}
                 </p>

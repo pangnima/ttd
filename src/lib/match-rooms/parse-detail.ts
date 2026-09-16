@@ -22,7 +22,7 @@ function toParticipant(v: unknown): MatchRoomParticipantRef | null {
     const role = str(v.role)
     const name = str(v.name)
     if (!role || !name) return null
-    return { role, name, userId: str(v.userId) }
+    return { role, name, userId: str(v.userId), deleted: v.deleted === true }
 }
 
 function toSetScore(v: unknown): PersonalMatchSetScore | null {

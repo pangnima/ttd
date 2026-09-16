@@ -262,6 +262,9 @@ export async function deleteAccountAction(): Promise<{ error: string } | null> {
             tennis_start_date: null,
             racket_brand: null,
             racket_model: null,
+            // 개인 레이팅도 익명화(F-pre-8). `ntrp`는 남긴다 — `ntrp is null`이 온보딩 게이트의 권위 술어라(0084)
+            // 비우면 다른 탭에 남은 세션이 완성 화면으로 밀려 익명화된 행을 되살릴 수 있다. 화면은 deletedAt으로 감춘다
+            personal_ntrp: null,
             stats_hidden: true,
             deleted_at: new Date().toISOString(),
         })

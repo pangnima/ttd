@@ -7,6 +7,7 @@ import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/reval
 import { listRecordAsRoom } from '@/lib/match-rooms/create-room'
 import { sourceKindOf, validateCreateMatchRoomInput, type CreateMatchRoomInput } from '@/lib/match-rooms/create-match'
 import { translateError } from '@/lib/match-rooms/error-map'
+import { ROOM_ERROR_MESSAGES } from '@/lib/match-rooms/error-messages'
 
 /**
  * 매칭 리스트(매칭 룸) 쓰기 — 매칭 만들기·입장·초대 응답·호스트 관리·방 게임 등록.
@@ -17,47 +18,6 @@ import { translateError } from '@/lib/match-rooms/error-map'
 // stale = 내가 팝업을 열어 둔 사이 방이 움직였다 — 팝업은 그대로 두고 화면만 새로 읽는다(0060 관용구)
 type ActionResult = { error: string | null; stale?: boolean }
 
-/** RPC가 raise하는 식별자 → 사용자 안내 문구. 순서 무관 — translateError가 포함된 키 중 가장 긴 것을 고른다(F-pre-2) */
-const ROOM_ERROR_MESSAGES: Array<[string, string]> = [
-    ['not_authenticated', '로그인이 필요합니다.'],
-    ['room_not_found', '존재하지 않거나 리스트에서 내려간 경기입니다.'],
-    // 0082 — 비노출 방은 비밀번호 입장도, 비밀번호 만들기도 없다(초대로만 들어온다)
-    ['room_not_listed', '초대받은 사람만 들어올 수 있는 매칭입니다. 비밀번호 입장은 지원하지 않습니다.'],
-    ['wrong_password', '비밀번호가 일치하지 않습니다.'],
-    ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
-    ['invite_not_found', '처리할 초대가 없습니다.'],
-    ['target_not_room_member', '이미 매칭에 없는 참가자입니다.'],
-    ['cannot_kick_host', '호스트는 내보낼 수 없습니다.'],
-    // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품는다(긴 키 우선이라 순서는 무관)
-    ['leave_member_has_games', '이미 배정된 경기가 있어 나갈 수 없습니다. 결과를 마무리하거나 호스트에게 대진 수정을 요청해주세요.'],
-    ['member_has_games', '이미 배정된 경기가 있어 내보낼 수 없습니다.'],
-    ['room_member_removed', '호스트가 내보낸 경기입니다. 다시 초대를 받아야 입장할 수 있습니다.'],
-    ['not_host', '호스트만 할 수 있습니다.'],
-    ['not_room_host', '호스트만 할 수 있습니다.'],
-    ['invalid_guest_name', '이름을 1~40자로 입력해주세요.'],
-    ['duplicate_guest_name', '이미 같은 이름의 참가자가 있습니다. 구별되는 이름으로 입력해주세요.'],
-    ['guest_not_found', '이미 명단에서 빠진 참가자입니다.'],
-    ['room_already_closed', '이미 게임 입력이 종료된 경기입니다.'],
-    // 0083 — 호스트가 닫은 방. 기존 room_already_closed(정산됨)와 뜻이 다르다
-    ['room_closed', '호스트가 마감한 매칭입니다. 고치려면 호스트가 다시 열어야 합니다.'],
-    ['room_not_settled', '모든 게임의 결과가 확정된 뒤에 마감할 수 있습니다.'],
-    ['room_not_closed', '마감되지 않은 매칭입니다.'],
-    ['not_room_member', '매칭에 참가한 뒤 게임을 등록할 수 있습니다.'],
-    ['host_cannot_leave', '호스트는 나갈 수 없습니다. 매칭 리스트에서 내리기를 사용해주세요.'],
-    ['room_not_ready', '아직 게임을 추가할 수 없는 경기입니다.'],
-    ['cannot_request_self', '자기 자신과의 게임은 등록할 수 없습니다.'],
-    ['invalid_opponent', '게임 상대를 다시 선택해주세요.'],
-    ['opponent_not_in_room', '상대는 이 매칭에 참가한 회원이어야 합니다.'],
-    ['participant_not_in_room', '참가자는 이 매칭에 참가한 회원이어야 합니다.'],
-    ['doubles_players_required', '복식은 파트너와 상대팀 2번째 선수를 모두 입력해주세요.'],
-    ['duplicate_players', '같은 회원을 두 번 지정할 수 없습니다.'],
-    ['invalid_partner', '파트너를 다시 선택해주세요.'],
-    ['invalid_opponent2', '상대팀 2번째 선수를 다시 선택해주세요.'],
-    ['replace_not_allowed', '이미 결과가 있거나 내 기록이 아니어서 대체할 수 없습니다.'],
-    ['invalid_participant', '참가자 정보를 다시 확인해주세요.'],
-    ['invalid_games', '대진 구성이 올바르지 않습니다. 게임마다 회원이 한 명은 있어야 합니다.'],
-    ['lineup_locked', '그 사이 결과가 입력된 경기가 있어 대진을 바꿀 수 없습니다. 새로고침 후 다시 시도해주세요.'],
-]
 
 function translate(message: string, fallback: string): string {
     return translateError(message, ROOM_ERROR_MESSAGES, fallback)

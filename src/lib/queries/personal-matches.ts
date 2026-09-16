@@ -11,7 +11,8 @@ export async function fetchPersonalMatchesByUser(userId: string): Promise<Person
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('personal_matches')
-        .select('*, participants:personal_match_participants(*)')
+        // users 임베드는 탈퇴 배지용(F-25) — 스냅샷 이름은 그대로 쓴다
+        .select('*, participants:personal_match_participants(*, user:users(deleted_at))')
         .eq('user_id', userId)
         .order('played_at', { ascending: false })
         .order('played_time', { ascending: false, nullsFirst: false })
@@ -111,7 +112,7 @@ async function fetchPersonalMatchesByHasResult(userId: string, hasResult: boolea
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('personal_matches')
-        .select('*, participants:personal_match_participants(*)')
+        .select('*, participants:personal_match_participants(*, user:users(deleted_at))')
         .eq('user_id', userId)
         .eq('has_result', hasResult)
         .order('played_at', { ascending: false })

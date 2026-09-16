@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { GuestBadge } from '@/components/common/guest-badge'
+import { DeletedBadge } from '@/components/common/deleted-badge'
 import { TierIcon } from '@/components/common/tier-icon'
 import { ProfileTierProgress } from '@/components/profile/profile-tier-progress'
 import { ProfileStatRow } from '@/components/profile/profile-stat-row'
@@ -97,17 +98,21 @@ export function MemberProfileHeader({ user, clubName, clubRating, provisional, c
                                     <h1 className="text-h1 font-bold">{user.name}</h1>
                                     <span className="text-body2 text-muted-foreground">({user.nickname})</span>
                                     {user.isGuest && <GuestBadge />}
+                                    {user.deletedAt && <DeletedBadge />}
                                 </div>
-                                <p className="text-body2 text-muted-foreground">
-                                    {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
-                                    {clubRank !== undefined && (
-                                        <span className="ml-1.5 font-medium text-foreground">· 클럽 {clubRank}위</span>
-                                    )}
-                                </p>
+                                {/* 탈퇴자는 성별·주력손이 익명화되어 null이다 — 기본값('남 · 오른손')을 거짓으로 그리지 않는다(F-pre-8) */}
+                                {!user.deletedAt && (
+                                    <p className="text-body2 text-muted-foreground">
+                                        {genderLabel[user.gender]} · {handLabel[user.dominantHand]}
+                                        {clubRank !== undefined && (
+                                            <span className="ml-1.5 font-medium text-foreground">· 클럽 {clubRank}위</span>
+                                        )}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         {/* 통합 scope는 우측 요약 행(RatingSummaryRow)이 NTRP를 포함하므로 단일 배지 생략 */}
-                        {!ratingSummary && (user.isGuest ? (
+                        {!ratingSummary && !user.deletedAt && (user.isGuest ? (
                             <Badge variant="outline" className="text-caption text-muted-foreground shrink-0">NTRP -</Badge>
                         ) : (
                             <Badge variant="outline" className="text-caption font-mono shrink-0">

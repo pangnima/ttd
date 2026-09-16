@@ -66,9 +66,9 @@
 | 2.1 | A | S1 방에서 [게임 추가] 시도 | **정산된 방이라 버튼 없음**. 새 방 `E2E-S2`를 S1과 같이 만들고 B 초대·수락 | `is_settled` | B |
 | 2.2 | A | [게임 추가] B 상대 → A [결과 입력] `6:4` → [확인 요청] | A 배지 `참가자 확인 대기`, 버튼 [제안 수정] | `proposedByMe` | B |
 | 2.3 | A | [제안 수정] → `6:2` → 저장 | 스코어 갱신, 여전히 proposed. B의 확인 초기화(제안자만 남음) | `confirmed_by=[A]` | B+S |
-| 2.4 | B | [결과 확인] 다이얼로그 → [이의 제기] → 사유 `점수 오기` → 제출 | B 배지 `내가 이의 제기`, 버튼 [다시 입력](outline), 사유 줄 `내 이의 사유: 점수 오기` | `dispute_match_result` → `disputed`, `disputed_by=[B]`, `dispute_count=1` | B+S |
+| 2.4 | B | [결과 확인] 다이얼로그 → [이의 제기] → 사유 `점수 오기` → 제출 | B 배지 `내가 이의 제기` **하나**(상태 배지 `이의 제기`는 당사자 행에서 액션 배지에 양보 — F-20), 버튼 [다시 입력](outline), 사유 줄 `내 이의 사유: 점수 오기` | `dispute_match_result` → `disputed`, `disputed_by=[B]`, `dispute_count=1` | B+S |
 | 2.5 | B | 사유 201자 입력 | textarea `maxLength=200`이 **조용히 잘라** 200자로 저장된다(문구는 뜨지 않는다 — 앱 선검증 `dispute_reason_too_long`은 붙여넣기 우회 시에만). SQL `length(dispute_reason)=200` | maxLength + 앱 선검증 | B+S |
-| 2.6 | A | 상세 | 배지 `남자02님 이의`, 버튼 [다시 입력](강조), 배너 `결과를 다시 입력해주세요`, 사유 줄 `남자02님 이의 사유: 점수 오기` | `isReentryTurn` true(제안자) | B |
+| 2.6 | A | 상세 | 배지 `남자02님 이의` 하나, 버튼 [다시 입력](강조), 배너 `결과를 다시 입력해주세요`, 사유 줄 `남자02님 이의 사유: 점수 오기` | `isReentryTurn` true(제안자) | B |
 | 2.7 | A | `/me/match-rooms` | 필 `다시 입력`, 뱃지 1 | `reenterResult` | B |
 | 2.8 | A | [다시 입력] → `6:4` → [확인 요청] | 배지 `남자02님 이의 후 재입력`, 진행 배지 | 재제안 → `proposed`, `dispute_count` 유지 1 | B+S |
 | 2.9 | B | 상세 | 배너 `다시 입력된 결과를 확인해주세요`, 필 `결과 확인` | `reentryReview` | B |

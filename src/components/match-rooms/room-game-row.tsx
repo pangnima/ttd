@@ -2,8 +2,9 @@ import type { MatchRoomDetail, MatchRoomGame, PersonalMatchConfirmation } from '
 import { PENDING_BADGE, resolveResultBadge } from '@/lib/personal-matches/result-badge'
 import { MATCH_TYPE_LABELS, getMatchTypeBadgeClass } from '@/lib/dashboard/match-type-style'
 import { PILL_BASE } from '@/lib/dashboard/tokens'
-import { roomGameStatusBadge } from '@/lib/match-rooms/game-status'
-import { buildRoomGameSets, buildRoomGameTeams } from '@/lib/match-rooms/game-labels'
+import { roomGameStatusBadge, statusBadgeReplacedByActions } from '@/lib/match-rooms/game-status'
+import { buildRoomGameSets, buildRoomGameTeams, deletedParticipantNames, teamLineHasDeleted } from '@/lib/match-rooms/game-labels'
+import { DeletedBadge } from '@/components/common/deleted-badge'
 import { GameScoreChips } from '@/components/personal-matches/set-score-chips'
 import { RoomGameActions } from '@/components/match-rooms/room-game-actions'
 
@@ -40,12 +41,16 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation, slotL
     const teams = buildRoomGameTeams(game, viewerId)
     // 라인과 같은 관점의 스코어 — 상대팀 회원에게는 승패가 뒤집힌 대표 행 값이 내려온다
     const sets = buildRoomGameSets(game, viewerId)
+    const deletedNames = deletedParticipantNames(game)
     const status = roomGameStatusBadge(game)
     const result = resolveResultBadge(sets)
     const gameLabel = detail.source.kind === 'rotation' ? `게임 ${game.groupSeq ?? index + 1}` : undefined
-    const badge = status
-        ? { label: status.label, className: STATUS_BADGE[status.tone] }
-        : { label: result.label, className: result.badgeClass }
+    // 이의 상태의 당사자 행은 액션 쪽 배지(누가 이의했는지)가 대신한다 — 행마다 배지 하나(F-20)
+    const badge = statusBadgeReplacedByActions(game, viewerId, !!confirmation)
+        ? null
+        : status
+            ? { label: status.label, className: STATUS_BADGE[status.tone] }
+            : { label: result.label, className: result.badgeClass }
 
     return (
         <div className="flex items-stretch gap-3 px-3 py-3">
@@ -62,15 +67,19 @@ export function RoomGameRow({ game, index, detail, viewerId, confirmation, slotL
                         {gameLabel && <span className="text-caption text-muted-foreground shrink-0">{gameLabel}</span>}
                 {slotLabel && <span className="text-caption text-muted-foreground shrink-0">{slotLabel}</span>}
                     </div>
-                    <span className={`${BADGE_BASE} ${badge.className}`}>{badge.label}</span>
+                    {badge && <span className={`${BADGE_BASE} ${badge.className}`}>{badge.label}</span>}
                 </div>
 
                 {/* 팀마다 한 줄 — 당사자에게는 '나', 제3자에게는 작성자 실명. 단식이라도 내 팀 줄을 접지 않는다:
                     한 방에 남의 게임이 섞여 있어 첫 줄이 비면 "누구 게임인지" 한 번 더 읽어야 한다 */}
                 <div className="mt-1.5 min-w-0">
-                    <p className="text-body2 font-medium text-foreground truncate">{teams.mine}</p>
+                    <p className="text-body2 font-medium text-foreground truncate">
+                        {teams.mine}
+                        {teamLineHasDeleted(teams.mine, deletedNames) && <DeletedBadge className="ml-1" />}
+                    </p>
                     <p className="text-body2 font-medium text-foreground truncate">
                         <span className="text-muted-foreground">vs </span>{teams.theirs}
+                        {teamLineHasDeleted(teams.theirs, deletedNames) && <DeletedBadge className="ml-1" />}
                     </p>
                 </div>
 

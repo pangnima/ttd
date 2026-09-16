@@ -9,6 +9,7 @@ import { revalidateRoomList, revalidateRoomPaths } from '@/lib/match-rooms/reval
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 import { findKnownError } from '@/lib/match-rooms/error-map'
+import { RESULT_ERROR_MESSAGES, STALE_KEYS } from '@/lib/match-rooms/error-messages'
 
 /**
  * 상호 확인 경기(match_requests 수락 → personal_matches 2행)의 사후 결과(세트) 등록 플로우.
@@ -25,35 +26,6 @@ import { findKnownError } from '@/lib/match-rooms/error-map'
  */
 type ActionResult = { error: string | null; stale?: boolean }
 
-/**
- * RPC가 raise하는 식별자 → 사용자 안내 문구 (acceptMatchRequestAction과 동일 패턴).
- * 한 키가 다른 키의 접두(`result_already_confirmed` ⊂ `…_by_seat`)여도 findKnownError가 가장 긴 키를 고르므로
- * 순서는 무관하다(F-pre-2 — 종전의 길이순 정렬을 공용 함수로 옮겼다).
- */
-const RESULT_ERROR_MESSAGES: Array<[string, string]> = [
-    ['request_not_found', '존재하지 않는 경기입니다.'],
-    ['request_not_accepted', '수락된 상호 확인 경기에만 결과를 등록할 수 있습니다.'],
-    ['not_request_party', '이 경기에 참가한 회원만 결과를 등록할 수 있습니다.'],
-    ['negotiation_not_found', '결과 협상 정보를 찾을 수 없습니다. 화면을 새로고침해주세요.'],
-    ['result_already_confirmed', '이미 확정된 결과입니다.'],
-    ['result_already_proposed', '다른 참가자가 먼저 결과를 제안했습니다. 제안된 결과를 확인해주세요.'],
-    ['result_not_proposed', '확인할 결과 제안이 없습니다. 다른 참가자가 이의를 제기했거나 다시 입력했을 수 있습니다.'],
-    ['cannot_confirm_own_proposal', '본인이 제안한 결과는 이미 확인한 것으로 칩니다. 남은 참가자의 확인을 기다려주세요.'],
-    ['result_already_confirmed_by_seat', '이미 확인한 결과입니다. 남은 참가자의 확인을 기다려주세요.'],
-    ['cannot_dispute_own_proposal', '본인이 제안한 결과에는 이의를 제기할 수 없습니다. 제안을 수정해주세요.'],
-    ['counterpart_deleted', '상대팀 회원이 모두 탈퇴하여 결과를 확정할 수 없습니다.'],
-    ['invalid_set_scores', '게임 스코어를 올바르게 입력해주세요.'],
-    ['dispute_reason_too_long', '이의 사유는 200자 이내로 입력해주세요.'],
-    ['personal_matches_missing', '경기 기록을 찾을 수 없어 확정하지 못했습니다.'],
-    ['perspective_row_missing', '참가자 기록 일부가 없어 확정하지 못했습니다.'],
-    ['result_not_confirmed', '아직 확정되지 않은 결과입니다.'],
-]
-
-/** 내 화면이 낡아서 거부된 코드들 — 동시 입력의 다른 한쪽이 먼저 도착했을 때 */
-const STALE_KEYS = new Set([
-    'result_already_proposed', 'result_not_proposed', 'result_already_confirmed',
-    'result_already_confirmed_by_seat', 'negotiation_not_found',
-])
 
 function mapRpcError(message: string, fallback: string): ActionResult {
     const known = findKnownError(message, RESULT_ERROR_MESSAGES)
