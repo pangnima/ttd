@@ -143,7 +143,7 @@ docs/                            설계 문서 · history/(주차별 서사 원�
 2. **keepalive 크론 확인(대시보드)** — 코드는 Week 70(`/api/keepalive` + `vercel.json` crons 매일 03:00 KST). Vercel Production 환경변수 `CRON_SECRET`(무작위 문자열)을 넣고 배포 후 Vercel › Cron Jobs에서 실행 로그 `{"ok":true}` 확인. 없어도 돌지만 열린 엔드포인트가 된다.
 3. **비밀번호 복구 경로** — 지금은 운영자 수동(`docs/history` Week 60·61). 도메인 구매 → Resend SMTP → `PASSWORD_RESET_MAIL_ENABLED = true` 한 줄.
 4. **알림 부재** — 초대·결과 확인·이의에 알림이 없어 무응답이 방을 막는다(이의 왕복 상한도 없음). 최소한 이메일 또는 인앱 뱃지 확장.
-5. **보안 잔여** — anon RPC 시도 제한 없음(`is_email_taken`·`resolve_login_email`은 의도적 열거) · leaked password protection(대시보드 Authentication › Providers › Email) · advisor 잔여는 0092로 닫혔다(남은 경고는 전부 의도: 의도적 anon 6종·`match_room_secrets` 정책 0·다중 permissive·새 인덱스 미사용).
+5. **보안 잔여** — anon RPC 시도 제한 없음(`is_email_taken`·`resolve_login_email`은 의도적 열거) · leaked password protection은 **Pro 플랜 전용**(무료 대시보드가 거절, 2026-09-17 확인) — 앱 규칙 8자+영문+숫자+특수 + 대시보드 최소 8이 이미 흔한 유출 비밀번호를 거르므로 보류. 원하면 HIBP range API(무료·키 불필요, SHA-1 앞 5자 k-anonymity)를 `validatePassword` 서버 쪽에 붙이면 같은 효과 · advisor 잔여는 0092로 닫혔다(남은 경고는 전부 의도: 의도적 anon 6종·`match_room_secrets` 정책 0·다중 permissive·새 인덱스 미사용).
 
 ### 백로그 (주제별)
 - **오픈 전 필수**: 위 1~3 · 카카오 로그인 실측(버튼 미노출, `PROVIDERS` 한 줄) · 이메일 확인(Confirm email) 켜기는 SMTP 이후(켤 때 가입 성공 화면·`mapAuthError` 함께) · 배포 도메인 바꾸면 Site URL·Redirect URLs·`DEFAULT_SITE_URL`·Google 리디렉션 URI 함께.
