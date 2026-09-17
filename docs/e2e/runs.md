@@ -34,6 +34,8 @@
 | match-room | S12 매칭 닫기·다시 열기 | 2026-09-15 Week 62 | Phase 2 | 첫 브라우저 실행 |
 | match-room | S13 비노출 방 | 2026-09-16 Week 64 | S13.10 | |
 | match-room | S14 협상 전이 전수 | 2026-09-15 Week 62 | Phase 2 | |
+| match-room | S16 알림 | 2026-09-17 Week 71 | Week 71 블록 | 16.1·16.2·16.14 브라우저, 나머지는 롤백 스모크(SQL) |
+| match-room | S17 초대 만료·예약 알림·자동 확정 | 2026-09-17 Week 71 | Week 71 블록 | 17.4·17.5 브라우저, 17.1~17.3·17.6~17.9·17.11·17.12 롤백 스모크, 17.13 PASS(첫 틱 02:00:00 UTC succeeded 70ms) |
 | match-room | S15 권한 매트릭스 | 2026-09-16 Week 64 | S15.8·15.9 | 15.8 21명 선택은 미실행 |
 | record | R1 직접 기록 | 2026-09-16 Week 63 | ⑤ R1.2 | |
 | record | R2 목록 그룹 | 2026-09-15 Week 62 | Phase 3 | |
@@ -302,3 +304,18 @@
 | S4-c TextField·UserAvatar | PASS | `/signup` 필드 5종(라벨·도움말·비밀번호 규칙 체크리스트), 헤더·프로필 아바타(이니셜·userId 색) |
 | S4-d MatchRow·TriggerDialog | PASS | `/guide` 카드 3연작·매칭 카드(MatchRow), 룸 [회원 초대] 팝업(제목·검색·닫기 영문 없음). A를 dev SQL로 방 908e5f3c에 잠시 넣었다 뺌 |
 | 미실행 | — | LineupRow(자동 대진표 카드)·TriggerDialog [게임 추가]·[비회원 등록]·h2h 카드 실데이터·390px — 구조 치환이라 tsc로 갈음. 다음 S3·S4·S11·R3 재실행 때 확인 |
+
+## 2026-09-17 · Week 71 알림 · 초대 만료 · 자동 확정 확인
+
+계정 A(남자01)·B(남자02)·C(남자03) + D(dev의 다른 회원). 브라우저는 Playwright 폴백 스크립트(README 도구 규약), 나머지는 dev `execute_sql` 롤백 스모크(마이그레이션 본문 + 시나리오를 한 트랜잭션에 넣고 마지막 `raise exception`으로 되돌림).
+
+| 항목 | 결과 | 관찰 |
+|---|---|---|
+| 0094 사건 13종(S16.1~16.13 SQL) | PASS | room_invited→C+B+B · invite_accepted→A×2 · invite_declined→A · room_entered→A×2 · member_left→A · member_removed→C · result_proposed→B×3 · result_disputed→A · result_confirmed→A · result_reopen_requested→A · result_auto_confirmed→A+B(sys) · room_closed→B · room_deleted→B. 삭제 뒤 room_id null·payload 유지, anon select 거부, B [모두 읽음] 8건 |
+| S16.1·16.2·16.14 브라우저 | PASS | B 종 `알림 1건` → 드롭다운(제목·1분 전·본문·방 한 줄) → 클릭 → `/match-rooms/<id>`·종 `알림`(0) → `/me/notifications` h1 「알림」·[모두 읽음] 비활성. 390px 드롭다운 폭 352px |
+| S17.1~17.3·17.6~17.9·17.11·17.12 SQL | PASS | J1 1 → J2 2(dedupe) · J3 만료→A(inviteeName 남자02) · J4 D-1 1 · J5 미입력 A·B · J6 리마인드→B(13h, 상태 proposed 유지) · J7 25h: confirmed·스코어행 2·정산 t·자동확정 알림 2(sys), 두 번 호출 불변 · J8 재입력→A · 열흘 전 방 0건 · cron.job 2행(두 번 적용해도 2) |
+| S17.4·17.5 브라우저 | PASS | B의 지난 초대(9/16 방)가 「나를 초대한 매칭」에서 사라지고 뱃지 1(남은 초대만), 상세는 「종료된 매칭이라 초대를 수락할 수 없습니다」·수락 버튼 없음 |
+| 스모크가 고친 것 | — | 첫 시나리오에서 `close_match_room`이 `room_not_settled` — `create_room_game`에 `p_replace_match_id`(시드 치환)를 안 넘겨 시드 direct 행이 남아 있었다(앱은 늘 넘긴다). J7이 처음엔 안 돌았다 — 어제 끝난 방은 종료+24h가 오늘 같은 시각이라 규칙대로였고, 시나리오를 이틀 전 방으로 바꿨다 |
+| 정적 검사 | PASS | tsc · lint 0 · build · vitest 1034(신규 13: labels 8·schedule 4·error-messages 1) |
+| S17.13 크론 | PASS | dev `cron.job_run_details` 첫 틱 2026-09-17 02:00:00 UTC succeeded(70ms) |
+| 미확인 | — | S16.3~16.13 브라우저 재실행(SQL로 갈음). 로테이션 방 대진표 알림(16.12)은 SQL·브라우저 모두 미실행 |

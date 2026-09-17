@@ -318,6 +318,49 @@
 | 15.10 | 비로그인 | `/match-rooms/new`·`/me/match-rooms`·상세 URL | 전부 `/login?next=`(next 인코딩 보존) | middleware | B |
 
 
+## S16 알림 (A 호스트 · B 참가자 · C 초대 대기) — 0094, Week 71
+
+> 방 `E2E-S16`(단식, 내일 10:00, 120분). 헤더 종 = "일어난 일", 사이드바 뱃지 = "내가 할 일". 문구는 `lib/notifications/labels.ts`가 정본이라 여기서는 **누가 받는가**와 **어디로 가는가**만 본다.
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 16.1 | A | 매칭 만들기에서 B·C 초대 | B·C 종 `1`(「매칭 초대」, 방 한 줄 `9월 N일 10:00~12:00 · E2E-S16 · 단식`), A 종 0(행위자 제외) | T1 INSERT invited | B·C |
+| 16.2 | B | 종 → 항목 클릭 | 룸으로 이동 + 종 0(낙관적) + 새로고침해도 0 | `mark_notifications_read` | B |
+| 16.3 | B | 룸 배너 [참가 수락] | A 종 「참가 수락」(B) | T1 invited→joined | A |
+| 16.4 | C | [거절] | A 종 「초대 거절」(C) | T1 invited→declined | A |
+| 16.5 | D | 비밀번호 입장 | A 종 「새 참가자」(D) | T1 INSERT joined | A |
+| 16.6 | D | [매칭 나가기] | A 종 「참가자 나감」(D) | T1 joined→declined | A |
+| 16.7 | A | [게임 추가] A vs B → [결과 입력] | B 종 「결과 입력됨 … 24시간 동안 이의가 없으면 자동 확정」, A 종 없음 | T2 →proposed | B |
+| 16.8 | B | [이의 제기](사유) | A 종 「이의 제기 … 사유: …」 | T2 proposed→disputed | A |
+| 16.9 | A | [다시 입력] → B [결과 확인] | B 종 「결과 다시 입력됨」 · A 종 「결과 확정」(B) | T2 재제안 revised · proposed→confirmed(uid) | A·B |
+| 16.10 | B | [결과 정정](사유) → A 재입력 → B 확인 | A 종 「결과 정정 요청」 → B 종 「결과 다시 입력됨」 → A 「결과 확정」 | T2 confirmed→disputed | A·B |
+| 16.11 | A | [매칭 닫기] | B 종 「매칭 마감」, A 없음 | T3 closed_at | B |
+| 16.12 | A | 다른 방에서 [자동 대진표] 저장 / [대진 편집] 저장 | 참가자 종 「대진표 나옴 (N게임)」 **1건**(게임 수와 무관) / 「대진표 변경」 1건 | RPC 말미 방출 | 참가자 |
+| 16.13 | A | [매칭 리스트에서 내리기] | 참가자·초대 대기 종 「매칭 취소」, 항목 클릭 → `/me/match-rooms`(폴백 — room_id null), 방 한 줄은 그대로 보인다(payload 스냅샷) | T3 BEFORE DELETE | B |
+| 16.14 | B | [전체 보기] → `/me/notifications` → [모두 읽음] | 최근 50건, 안 읽은 점 사라짐, 버튼 비활성 | `fetchNotificationList` | B |
+| 16.15 | 비로그인 | 헤더 | 종 없음 | `inbox=null` | — |
+| 16.16 | S | anon으로 `select * from notifications` / `rpc mark_notifications_read` | 둘 다 거부(permission denied) | RLS·revoke | S |
+
+## S17 초대 만료 · 예약 알림 · 자동 확정 (A 호스트 · B 참가자 · C 초대 대기) — 0094~0095, Week 71
+
+> 시각은 dev `execute_sql`로 조작한다(`played_at`·`played_time`·`proposed_at`·`disputed_at`) — 크론을 기다리지 않고 `select public.run_notification_jobs()`를 직접 부른다. **prod에서는 하지 않는다.** 방 `E2E-S17`.
+
+| # | 계정 | 조작 | 기대 | 검증 | 수단 |
+|---|---|---|---|---|---|
+| 17.1 | S | 방을 오늘, `played_time` = 지금+1h로 → jobs | C 종 「초대에 응답해 주세요 … 2시간 뒤 시작」 1건, 두 번 돌려도 1건 | J1 dedupe | S+C |
+| 17.2 | S | `played_time` = 지금−30m → jobs | C 종 「… 지금 시작합니다」 추가(합 2) | J2 | S+C |
+| 17.3 | S | 방을 어제로 → jobs | A 종 「초대 만료 — C님이 응답하지 않았습니다」, 참가자 전원(A·B) 종 「내일 매칭」(D-1이 어제 20:00이라 창 안) | J3·J4 | S+A |
+| 17.4 | C | 「나를 초대한 매칭」·사이드바 뱃지 | 이 방의 초대 카드 **없음**, 뱃지에서 빠짐 | `isInviteExpired` | C |
+| 17.5 | C | 상세 URL 직접 | 배너 대신 「종료된 매칭이라 초대를 수락할 수 없습니다」 | `RoomInviteExpiredNotice` | C |
+| 17.6 | S | C로 `respond_room_invite(room, true)` / `(room, false)` | `invite_expired` / 통과(거절은 허용) → A 종 「초대 거절」 | 0094 가드 | S |
+| 17.7 | S | 게임 A vs B 결과 없음, 방 어제 → jobs | A·B 종 「결과를 입력해 주세요」 | J5 종료+3h | S |
+| 17.8 | S | A가 결과 입력, 방 **이틀 전**, `proposed_at` = 지금−13h → jobs | B 종 「곧 자동 확정됩니다」, 상태 여전히 proposed | J6 | S+B |
+| 17.9 | S | `proposed_at` = 지금−25h → jobs ×2 | 상태 confirmed, 관점 행 스코어 채움, 방 정산, A·B 종 「결과 자동 확정 … [결과 정정]」(actor null), 두 번째 호출은 아무것도 안 함 | J7 | S+A |
+| 17.10 | B | 룸에서 [결과 정정] | 가능(자동 확정의 되돌리기) → A 종 「결과 정정 요청」 | `canReopenResult` | B |
+| 17.11 | S | 다른 게임: B 이의, `disputed_at` = 지금−25h → jobs | A 종 「결과를 다시 입력해 주세요」 | J8 | S+A |
+| 17.12 | S | 방을 열흘 전으로 → jobs | 예약 알림 **0건**(2일 유효창) | 창 규칙 | S |
+| 17.13 | S | `select * from cron.job` / `cron.job_run_details` | `notification_jobs`(*/10)·`notification_cleanup`(10 18) active, 최근 실행 succeeded | pg_cron | S |
+
 ## 회귀 고정 행 (이력에서 E2E가 잡았던 것)
 
 | 근거 | 시나리오 행 |
@@ -332,3 +375,5 @@
 | Week 47 · 초기값 = 권장 | 3.8 |
 | Week 48 · 0076 회원 1명 대진 | 3.8·3.14 |
 | 0072 · 로테이션 방 자동 대진표 | 4.4·5.7 |
+| Week 71 · 0094 초대 만료 = 종료 시각(시드 치환 없인 방이 정산되지 않는다) | 17.4~17.6 |
+| Week 71 · 0095 자동 확정 deadline은 방 종료 기준(어제 끝난 방은 오늘 같은 시각까지 대기) | 17.8·17.9 |

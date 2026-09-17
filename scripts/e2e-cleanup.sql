@@ -28,6 +28,8 @@ delete from match_room_guests  where room_id in (select id from e2e_rooms);
 delete from match_room_members where room_id in (select id from e2e_rooms);
 delete from match_room_secrets where room_id in (select id from e2e_rooms);
 delete from match_rooms where id in (select id from e2e_rooms);
+-- 0094: 알림은 방 삭제로 room_id만 null이 되고 남는다(payload 스냅샷) — 태그 코트명으로 잡는다. 방 삭제 자체가 room_deleted를 만드므로 그 뒤에
+delete from notifications where room_id in (select id from e2e_rooms) or payload->>'courtName' like 'E2E-%';
 
 -- 신규 가입·탈퇴 테스트 계정(@e2e.test) — README 「신규 가입·탈퇴 전용 계정」
 create temp table e2e_users on commit drop as
@@ -35,6 +37,7 @@ create temp table e2e_users on commit drop as
 delete from match_room_members where user_id in (select id from e2e_users);
 delete from personal_matches   where user_id in (select id from e2e_users);
 delete from rotation_sessions  where user_id in (select id from e2e_users);
+delete from notifications      where user_id in (select id from e2e_users);
 delete from public.users       where id in (select id from e2e_users);
 delete from auth.users         where id in (select id from e2e_users);
 
@@ -42,7 +45,8 @@ select
   (select count(*) from match_rooms where court_name like 'E2E-%') as rooms,
   (select count(*) from personal_matches where court_name like 'E2E-%' or notes like 'E2E-%') as matches,
   (select count(*) from match_requests where court_name like 'E2E-%') as requests,
-  (select count(*) from auth.users where email like '%@e2e.test') as e2e_users;
+  (select count(*) from auth.users where email like '%@e2e.test') as e2e_users,
+  (select count(*) from notifications where payload->>'courtName' like 'E2E-%') as notifications;
 
 commit;
 
