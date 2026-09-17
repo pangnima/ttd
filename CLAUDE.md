@@ -32,17 +32,18 @@ src/
 │   ├── auth/confirm/            재설정 메일 토큰(verifyOtp) — callback과 계약이 달라 따로
 │   ├── auth/callback/           소셜 로그인 착지(exchangeCodeForSession, 탈퇴 차단, 미완성 프로필 분기)
 │   ├── onboarding/profile/      소셜 가입자 프로필 완성 — (main) 밖(게이트가 그 레이아웃에 있어 안에 두면 루프)
+│   ├── api/keepalive/           Vercel Cron 착지(vercel.json crons, 매일 1회) — prod DB 읽기 한 번으로 무료 플랜 7일 무활동 정지 방지
 │   ├── (main)/                  로그인 후 셸(헤더·사이드바) + error.tsx 백스톱. 프로필 완성 게이트가 여기(쿼리 1회 공유)
 │   │   ├── match-rooms/         매칭 리스트(전체 방 2탭) · new(매칭 만들기) · [roomId](매칭 룸 상세 = 단일 작업 공간)
 │   │   ├── me/                  match-rooms(참여 중인 매칭 = 작업 큐, 뱃지 착지) · personal-matches(내 경기 결과 + 직접 기록) · 옛 경로 리다이렉트
 │   │   ├── profile/             [userId](개인 통계 허브 — 본인/타인) · settings
-│   │   └── guide/               사용 가이드(비로그인도 열림)
+│   │   └── guide/ terms/ privacy/  사용 가이드·이용약관·개인정보처리방침 — 보호 라우트가 아니라 비로그인도 열린다(문구는 lib/guide·lib/legal)
 │   ├── page.tsx                 랜딩(정적, dark 스코프) · opengraph-image · tiers(개발용)
 ├── components/
 │   ├── ui/                      shadcn 생성물 — 직접 수정 금지
 │   ├── common/                  셸(Header·Sidebar·MobileNav·NavCreateLink)·PageHeader·FormActions·LinkTabs·필드·배지·member-search/
 │   ├── guide/                   PageGuide(인라인 설명)·가이드 페이지 섹션·examples/(실제 카드를 더미 데이터로)
-│   ├── auth/ onboarding/ landing/ theme/
+│   ├── auth/ onboarding/ landing/ theme/ legal/  auth/consent-checkbox = 가입·완성 폼 공용 동의(약관·방침 링크) · legal/ = 약관 페이지 골격
 │   ├── profile/ stats/          프로필 헤더·scope 탭·통계 카드 한 벌(head-to-head/ = 1:1 맞대결 표시 분리)
 │   ├── personal-matches/        개인 경기 폼·카드·협상 액션·결과 다이얼로그·rotation/(빌더)·form-sections/
 │   └── match-rooms/             룸 카드·상세(헤더·명단·게임·대진표·초대·호스트 액션)·form-sections/·lineup-edit/
@@ -53,6 +54,7 @@ src/
 │   ├── match-rooms/ personal-matches/ match-requests/ match-games/ analytics/ rating/
 │   │                            순수 규칙(vitest) — 분류·자격·검증·대진·집계. 앱 술어는 DB RPC 가드의 거울
 │   ├── guide/                   sections.ts = 안내 문구 단일 출처(라벨은 보간) + fixtures(예시 데이터) + 테스트 가드
+│   ├── legal/                   terms.ts·privacy.ts = 약관·개인정보처리방침 본문 데이터(**실제 수집 항목만** — users 컬럼·탈퇴 익명화 규칙과 같아야 한다) · LEGAL_EFFECTIVE_DATE
 │   ├── dashboard/               tokens.ts(TYPO·CARD·PILL·CTA 토큰)·member-badges·colors.test(컬러 회귀 가드)
 │   ├── auth/ profile/ format/ image/ og/  인증·프로필 규칙(비밀번호·아이디·닉네임·검색)·포맷·이미지 축소·OG
 │   └── nav-items.ts(메뉴 라벨 NAV_LABEL 단일 출처) · site-url.ts · onboarding.ts · stats.ts · utils.ts
@@ -78,6 +80,8 @@ docs/                            설계 문서 · history/(주차별 서사 원�
 /me/match-requests                  → /me/match-rooms 리다이렉트 (Week 39 허브 철거)
 /me/personal-matches/new?room=      → /match-rooms/[roomId] 리다이렉트
 /guide                              사용 가이드 (Week 57 — **(main) 안이지만 보호 라우트가 아니라 비로그인도 열린다**. 흐름 → 화면 셋 → 다섯 단계 → 용어, 섹션 id가 앵커. 진입점은 사이드바·모바일 내비의 「사용 가이드」 + 세 목록 화면 인라인 설명의 「전체 가이드 →」 + 랜딩 푸터)
+/terms · /privacy                   이용약관·개인정보처리방침 (Week 70 — /guide처럼 (main) 안, 비로그인 열림. 가입·완성 폼 동의 문구와 랜딩 푸터가 링크. 구글 OAuth 동의 화면 게시의 필수 링크)
+/api/keepalive                      Vercel Cron 전용(GET, `CRON_SECRET` 대조) — prod 일시정지 방지
 /tiers
 ```
 
@@ -132,13 +136,14 @@ docs/                            설계 문서 · history/(주차별 서사 원�
 | 67 | — | 사이드 메뉴 IA — [+ 매칭 만들기] CTA, 「개인 통계」·「내 경기 결과」, NAV_LABEL 단일 출처 |
 | 68 | 0091 | **환경 분리** — dev/prod Supabase 두 프로젝트, supabase/history 재생 정본, 드리프트 0091, dev/main 브랜치 |
 | 69 | — | **총정리** — README·env 주석·CLAUDE.md 압축, dead code·클럽 UI·AI 코칭 삭제(태그), 공통 컴포넌트 11, E2E 문서 재편 |
+| 70 | 0092 | **오픈 준비** — 이용약관·개인정보처리방침 페이지 + 동의 문구 링크(ConsentCheckbox), keepalive 크론(prod 일시정지 방지), advisor 잔여(search_path 10·anon+PUBLIC 회수 11·FK 인덱스 11·RLS initplan 57) |
 
 ## 다음 할 일 (추천 순 — 1차 오픈 기준)
-1. **구글 OAuth 동의 화면 게시** — 새 Google Cloud 프로젝트라 테스트 상태(테스트 사용자만 로그인). 개인정보처리방침·이용약관 페이지가 선행 조건(약관 본문·링크 없음).
-2. **prod 무료 플랜 일시정지 방지** — 7일 무활동 시 정지. 오픈 전까지 주 1회 접속하거나 Pro.
+1. **구글 OAuth 동의 화면 게시(대시보드)** — 코드 선행 조건은 Week 70에 끝났다(`/terms`·`/privacy`). Google Cloud Console › OAuth 동의 화면에 앱 홈 `https://baselineplay.vercel.app`, 개인정보처리방침 `…/privacy`, 서비스 약관 `…/terms` 링크를 넣고 「앱 게시」(비민감 scope라 심사 없음). 게시 전에는 테스트 사용자 100명 제한·「확인되지 않은 앱」 경고.
+2. **keepalive 크론 확인(대시보드)** — 코드는 Week 70(`/api/keepalive` + `vercel.json` crons 매일 03:00 KST). Vercel Production 환경변수 `CRON_SECRET`(무작위 문자열)을 넣고 배포 후 Vercel › Cron Jobs에서 실행 로그 `{"ok":true}` 확인. 없어도 돌지만 열린 엔드포인트가 된다.
 3. **비밀번호 복구 경로** — 지금은 운영자 수동(`docs/history` Week 60·61). 도메인 구매 → Resend SMTP → `PASSWORD_RESET_MAIL_ENABLED = true` 한 줄.
 4. **알림 부재** — 초대·결과 확인·이의에 알림이 없어 무응답이 방을 막는다(이의 왕복 상한도 없음). 최소한 이메일 또는 인앱 뱃지 확장.
-5. **보안 잔여** — anon RPC 시도 제한 없음(`is_email_taken`·`resolve_login_email`은 의도적 열거), `search_path` 미설정 10종, RLS `auth.uid()` 재평가 56건, 미인덱스 FK 11건.
+5. **보안 잔여** — anon RPC 시도 제한 없음(`is_email_taken`·`resolve_login_email`은 의도적 열거) · leaked password protection(대시보드 Authentication › Providers › Email) · advisor 잔여는 0092로 닫혔다(남은 경고는 전부 의도: 의도적 anon 6종·`match_room_secrets` 정책 0·다중 permissive·새 인덱스 미사용).
 
 ### 백로그 (주제별)
 - **오픈 전 필수**: 위 1~3 · 카카오 로그인 실측(버튼 미노출, `PROVIDERS` 한 줄) · 이메일 확인(Confirm email) 켜기는 SMTP 이후(켤 때 가입 성공 화면·`mapAuthError` 함께) · 배포 도메인 바꾸면 Site URL·Redirect URLs·`DEFAULT_SITE_URL`·Google 리디렉션 URI 함께.
@@ -224,7 +229,7 @@ Client Component (read)  → lib/supabase/client.ts — RLS로 보호된 read-on
 ### Supabase
 - 읽기: Server Component에서 `lib/supabase/server.ts`. 쓰기: `lib/actions/*` Server Action으로만. Client Component는 `lib/supabase/client.ts` read-only
 - 권한 판단은 `club_members.role = 'owner'` 기준(`clubs.owner_id` 직접 비교 금지). 환경변수는 `.env.local`만
-- 마이그레이션은 `supabase/migrations/00NN_slug.sql`이 정본(dev 롤백 스모크 → dev 적용 → **prod 적용** → `db-history.ts export`). 새 RPC는 anon EXECUTE 회수(**마이그레이션 안에서** — execute_sql로만 하면 prod에 안 간다), pgcrypto는 `set search_path = public, extensions`. RLS/RPC 검증은 `execute_sql`에 `begin; … rollback;` 롤백 스모크(사용자 컨텍스트는 `set_config('request.jwt.claims', …)`)
+- 마이그레이션은 `supabase/migrations/00NN_slug.sql`이 정본(dev 롤백 스모크 → dev 적용 → **prod 적용** → `db-history.ts export`). 새 RPC는 anon EXECUTE 회수(**마이그레이션 안에서** — execute_sql로만 하면 prod에 안 간다), pgcrypto는 `set search_path = public, extensions`(0092부터 **모든 함수**에 — 비어 있으면 advisor가 잡는다). 정책식의 `auth.uid()`는 `(select auth.uid())`로 감싼다(0092 — 행마다 재평가 방지, 감싸지 않으면 advisor `auth_rls_initplan`). RLS/RPC 검증은 `execute_sql`에 `begin; … rollback;` 롤백 스모크(사용자 컨텍스트는 `set_config('request.jwt.claims', …)`)
 
 ## 타입 정의 요약 (src/types/index.ts)
 ```ts
