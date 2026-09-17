@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { AvatarUploadField } from '@/components/auth/avatar-upload-field'
+import { ConsentCheckbox } from '@/components/auth/consent-checkbox'
 import { NameField } from '@/components/auth/name-field'
 import { NicknameField } from '@/components/auth/nickname-field'
 import { NICKNAME_TAKEN_MESSAGE } from '@/lib/profile/nickname'
@@ -72,10 +73,7 @@ export function ProfileOnboardingForm({ next, defaultName, defaultNickname, defa
             <SignupTennisSection onMissingChange={setTennisMissing} initialRacket={defaultRacket} />
 
             {/* 가입 폼과 같은 동의 — 소셜 경로만 건너뛰고 있었다(수집하는 정보는 같다) */}
-            <label className="flex items-start gap-2 text-caption text-muted-foreground">
-                <input type="checkbox" name="agree_privacy" value="true" required className="mt-0.5" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-                <span>개인정보 수집·이용에 동의합니다. 이름·닉네임·휴대폰 번호를 클럽 운영과 경기 기록에 사용합니다. *</span>
-            </label>
+            <ConsentCheckbox checked={agreed} onChange={setAgreed} />
 
             {/* 닉네임 충돌은 필드가 자기 자리에서 말한다(F-18) — 여기 공통 줄까지 그리면 「사용 가능」과 「이미 사용 중」이 동시에 보인다 */}
             {state?.error && state.error !== NICKNAME_TAKEN_MESSAGE && (
