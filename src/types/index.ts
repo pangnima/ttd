@@ -474,3 +474,52 @@ export type MatchRequest = {
     rotationSessionId?: string     // 로테이션 파생 요청의 세션 키 — 세션 단위 일괄 수락·목록 묶음
     groupSeq?: number
 }
+
+// ── 알림 (0094, Week 71) ──────────────────────────────────────────────────────
+// DB `notifications.type` CHECK와 1:1. 문구·링크는 lib/notifications/labels.ts가 단일 출처.
+export const NOTIFICATION_TYPES = [
+    // 사건 — 트리거·RPC가 즉시 방출
+    'room_invited', 'invite_accepted', 'invite_declined', 'room_entered',
+    'member_removed', 'member_left',
+    'result_proposed', 'result_confirmed', 'result_auto_confirmed', 'result_disputed', 'result_reopen_requested',
+    'room_closed', 'lineup_saved', 'lineup_changed', 'room_deleted', 'invite_expired',
+    // 예약 — 0095 run_notification_jobs(pg_cron)가 시각에 맞춰 방출
+    'invite_reminder', 'room_tomorrow', 'result_missing', 'auto_confirm_reminder', 'reentry_reminder',
+] as const
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
+
+/**
+ * 알림 payload — DB `room_snapshot` + `actorName` + 타입별 키. 전부 **스냅샷**이라 방·사람이 지워져도 문구가 선다.
+ * 키 이름은 `RoomTitleInput`과 맞춰 두어 `buildRoomTitle(payload)`가 변환 없이 읽는다.
+ */
+export type NotificationPayload = {
+    playedAt?: string
+    playedTime?: string
+    durationMinutes?: number
+    matchType?: MatchType
+    courtName?: string
+    hostName?: string
+    actorName?: string
+    /** invite_expired — 응답하지 않은 사람 */
+    inviteeName?: string
+    /** result_proposed — 제안자 본인의 수정(재제안) */
+    revised?: boolean
+    /** invite_reminder — 1 = 시작 2시간 전, 2 = 시작 시각 */
+    stage?: 1 | 2
+    /** auto_confirm_reminder — 자동 확정 예정 시각(ISO) */
+    deadlineAt?: string
+    disputeReason?: string
+    /** lineup_saved / lineup_changed */
+    gameCount?: number
+}
+
+export type Notification = {
+    id: string
+    type: NotificationType
+    roomId: string | null
+    requestId: string | null
+    actorUserId: string | null
+    payload: NotificationPayload
+    createdAt: string
+    readAt: string | null
+}

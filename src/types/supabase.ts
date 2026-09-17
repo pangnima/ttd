@@ -658,6 +658,7 @@ export type Database = {
           confirmed_by: string[]
           dispute_count: number
           dispute_reason: string | null
+          disputed_at: string | null
           disputed_by: string | null
           proposed_at: string | null
           proposed_by: string | null
@@ -670,6 +671,7 @@ export type Database = {
           confirmed_by?: string[]
           dispute_count?: number
           dispute_reason?: string | null
+          disputed_at?: string | null
           disputed_by?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
@@ -682,6 +684,7 @@ export type Database = {
           confirmed_by?: string[]
           dispute_count?: number
           dispute_reason?: string | null
+          disputed_at?: string | null
           disputed_by?: string | null
           proposed_at?: string | null
           proposed_by?: string | null
@@ -892,6 +895,74 @@ export type Database = {
           {
             foreignKeyName: "match_rooms_host_user_id_fkey"
             columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          payload: Json
+          read_at: string | null
+          request_id: string | null
+          room_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          request_id?: string | null
+          room_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          request_id?: string | null
+          room_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "match_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -1486,6 +1557,7 @@ export type Database = {
         Returns: undefined
       }
       leave_match_room: { Args: { p_room_id: string }; Returns: undefined }
+      mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
       mark_request_opponent_response: {
         Args: { p_accept: boolean; p_request_id: string }
         Returns: boolean
@@ -1513,6 +1585,18 @@ export type Database = {
       normalize_to_requester_perspective: {
         Args: { p_seat: string; p_sets: Json }
         Returns: Json
+      }
+      notify_users: {
+        Args: {
+          p_actor: string
+          p_dedupe_key?: string
+          p_payload?: Json
+          p_request_id: string
+          p_room_id: string
+          p_type: string
+          p_user_ids: string[]
+        }
+        Returns: number
       }
       propose_match_result: {
         Args: { p_request_id: string; p_set_scores: Json }
@@ -1570,6 +1654,10 @@ export type Database = {
         Args: { p_accept: boolean; p_session_id: string }
         Returns: undefined
       }
+      room_end_at: {
+        Args: { r: Database["public"]["Tables"]["match_rooms"]["Row"] }
+        Returns: string
+      }
       room_game_tallies: {
         Args: { p_room_ids: string[] }
         Returns: {
@@ -1578,9 +1666,19 @@ export type Database = {
           total: number
         }[]
       }
+      room_joined_user_ids: { Args: { p_room_id: string }; Returns: string[] }
       room_member_has_games: {
         Args: { p_room_id: string; p_user_id: string }
         Returns: boolean
+      }
+      room_reachable_user_ids: {
+        Args: { p_room_id: string }
+        Returns: string[]
+      }
+      room_snapshot: { Args: { p_room_id: string }; Returns: Json }
+      room_start_at: {
+        Args: { r: Database["public"]["Tables"]["match_rooms"]["Row"] }
+        Returns: string
       }
       rotation_seats_accepted: {
         Args: { p_session_id: string; p_uids: string[] }
