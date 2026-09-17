@@ -10,6 +10,8 @@ import { MobileNav } from '@/components/common/mobile-nav'
 import { BrandLogo } from '@/components/common/brand-logo'
 import { useSidebar } from '@/components/common/sidebar-context'
 import { logoutAction } from '@/lib/actions/auth'
+import { NotificationBell } from '@/components/notifications/notification-bell'
+import type { NotificationInbox } from '@/lib/queries/notifications'
 import { Shield, LogOut, PanelLeft } from 'lucide-react'
 
 type UserDisplay = {
@@ -26,9 +28,11 @@ type HeaderProps = {
     userId?: string | null
     /** 매칭 리스트 뱃지 건수 — 서버에서 계산해 모바일 nav로 전달 */
     myTurnCount?: number
+    /** 알림 받은 편지함(Week 71) — 로그인 시에만. 종 = "일어난 일", 사이드바 뱃지 = "내가 할 일" */
+    inbox?: NotificationInbox | null
 }
 
-export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: HeaderProps) {
+export function Header({ userDisplay = null, userId = null, myTurnCount = 0, inbox = null }: HeaderProps) {
     const { collapsed, toggle } = useSidebar()
 
     return (
@@ -60,6 +64,7 @@ export function Header({ userDisplay = null, userId = null, myTurnCount = 0 }: H
                   */}
                 {userDisplay ? (
                     <div className="flex items-center gap-2">
+                        {inbox && <NotificationBell inbox={inbox} />}
                         <Link href="/profile/settings" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <UserAvatar size="sm" name={userDisplay.name} nickname={userDisplay.nickname} image={userDisplay.profileImage} userId={userId} />
                             <span className="text-body2 font-medium">{userDisplay.name}</span>
