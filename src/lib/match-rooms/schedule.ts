@@ -50,6 +50,42 @@ export function formatRoomWhen(playedTime?: string | null, durationMinutes?: num
     return `${start}~${addMinutes(start, durationMinutes)}`
 }
 
+/** 방의 시간 좌표 — 종료 시각을 알기 위한 최소 입력. `MatchRoomInvite`·`MatchRoomDetail.room`이 그대로 맞는다 */
+export type RoomTimeInput = {
+    playedAt: string
+    playedTime?: string | null
+    durationMinutes?: number | null
+}
+
+/** `YYYY-MM-DD` + `HH:MM`(KST)을 Date로 — 방의 시각은 전부 KST 로컬 값이다 */
+function kstDate(playedAt: string, hhmm: string): Date {
+    return new Date(`${playedAt}T${hhmm}:00+09:00`)
+}
+
+/** 시작 시각. 시각을 모르면 그날 00:00 KST — DB `room_start_at`(0094)의 거울 */
+export function roomStartAt({ playedAt, playedTime }: RoomTimeInput): Date {
+    return kstDate(playedAt, playedTime?.slice(0, 5) ?? '00:00')
+}
+
+/**
+ * 종료 시각 — DB `room_end_at`(0094)의 거울. **규칙이 두 곳에 같아야 한다**(초대 만료 가드가 DB에, 목록 필터가 앱에 있다):
+ * 시각을 모르는 방(레거시)은 다음날 00:00 KST(그날 전체), 소요 시간을 모르면 `DEFAULT_DURATION_MINUTES`.
+ */
+export function roomEndAt(input: RoomTimeInput): Date {
+    if (!input.playedTime) {
+        const next = kstDate(input.playedAt, '00:00')
+        next.setUTCDate(next.getUTCDate() + 1)
+        return next
+    }
+    const start = roomStartAt(input)
+    return new Date(start.getTime() + (input.durationMinutes ?? DEFAULT_DURATION_MINUTES) * 60_000)
+}
+
+/** 초대가 만료됐나 — 매칭 종료 시각을 지나면 수락할 수 없다(DB `invite_expired` 가드의 거울, Week 71) */
+export function isInviteExpired(input: RoomTimeInput, now: Date = new Date()): boolean {
+    return roomEndAt(input).getTime() <= now.getTime()
+}
+
 export type RecommendInput = {
     durationMinutes?: number | null
     slotMinutes: number

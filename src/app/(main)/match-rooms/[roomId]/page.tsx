@@ -14,6 +14,8 @@ import { RoomInviteFailedNotice } from '@/components/match-rooms/room-invite-fai
 import { RoomDirectCreatedNotice } from '@/components/match-rooms/room-direct-created-notice'
 import { RoomDetailHeader } from '@/components/match-rooms/room-detail-header'
 import { RoomInviteBanner } from '@/components/match-rooms/room-invite-banner'
+import { RoomInviteExpiredNotice } from '@/components/match-rooms/room-invite-expired-notice'
+import { isInviteExpired } from '@/lib/match-rooms/schedule'
 import { RoomTurnBanner } from '@/components/match-rooms/room-turn-banner'
 import { RoomSettledNotice } from '@/components/match-rooms/room-settled-notice'
 import { RoomMembersSection } from '@/components/match-rooms/room-members-section'
@@ -75,7 +77,9 @@ export default async function MatchRoomPage({ params, searchParams }: Props) {
             />
             {notice === 'invite_failed' && <RoomInviteFailedNotice />}
             {notice === 'direct_room' && <RoomDirectCreatedNotice />}
-            {detail.viewer?.status === 'invited' && <RoomInviteBanner roomId={roomId} />}
+            {detail.viewer?.status === 'invited' && (isInviteExpired(detail.room)
+                ? <RoomInviteExpiredNotice />
+                : <RoomInviteBanner roomId={roomId} />)}
             {x.isMember && (isRoomFinished(stage)
                 ? <RoomSettledNotice closed={stage === 'closed'} isHost={x.isHost} />
                 : <RoomTurnBanner turn={turn} stage={stage} />)}

@@ -1,6 +1,13 @@
 import type { MatchResultStatus, PersonalMatchConfirmation, PersonalMatchSetScore } from '@/types'
 import { invertSetScores, swapPartnerPerspective } from '@/lib/personal-matches/perspective'
 
+/*
+ * 확정에 이르는 손은 셋이다 — ① 좌석 전원의 [결과 확인](confirm_match_result) ② 이의·정정 뒤 재입력 → 재확인
+ * ③ **자동 확정**(0095 run_notification_jobs — max(입력 시각, 매칭 종료) + 24h 동안 이의가 없으면 시스템이 좌석 전원
+ * 확인으로 간주해 settle). ③은 DB만 움직이고 여기 술어는 건드리지 않는다: 확정 뒤 행이 has_result가 되어 큐에서
+ * 빠지고, `canReopenResult`가 그대로 참이라 [결과 정정]이 자동 확정의 되돌리기 경로다(알림 문구가 그 길을 말한다).
+ */
+
 /** match_requests에서 결과 확인 상태를 만들 때 필요한 최소 컬럼 (queries/personal-matches가 select) */
 export type ConfirmationSourceRow = {
     id: string

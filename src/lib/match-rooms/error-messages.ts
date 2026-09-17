@@ -15,6 +15,7 @@ export const ROOM_ERROR_MESSAGES: ReadonlyArray<ErrorMapEntry> = [
     ['wrong_password', '비밀번호가 일치하지 않습니다.'],
     ['invalid_password', '비밀번호는 4~20자, 공백 없이 입력해주세요.'],
     ['invite_not_found', '처리할 초대가 없습니다.'],
+    ['invite_expired', '매칭이 종료되어 초대를 수락할 수 없습니다.'],
     ['target_not_room_member', '이미 매칭에 없는 참가자입니다.'],
     ['cannot_kick_host', '호스트는 내보낼 수 없습니다.'],
     // 0077 — leave의 키가 kick의 키(member_has_games)를 부분 문자열로 품는다(긴 키 우선이라 순서는 무관)

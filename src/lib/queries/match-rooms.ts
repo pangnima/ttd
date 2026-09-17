@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { parseRoomDetail } from '@/lib/match-rooms/parse-detail'
 import { countJoined } from '@/lib/match-rooms/headcount'
+import { isInviteExpired } from '@/lib/match-rooms/schedule'
 import { encodeRoomCursor, roomKeysetFilter, type RoomCursor } from '@/lib/match-rooms/room-cursor'
 import { toDominantHand, type OpponentCandidate } from '@/lib/queries/users'
 import { buildConfirmation } from '@/lib/personal-matches/confirmation'
@@ -433,22 +434,11 @@ function mapInviteRow(row: InviteRow): MatchRoomInvite | null {
     }
 }
 
-/** 내가 받은 방 초대 (status='invited', 최신순) — 확인 요청 허브 '매칭 리스트 초대' 섹션 */
-export async function fetchPendingRoomInvites(userId: string): Promise<MatchRoomInvite[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('match_room_members')
-        .select(`room_id, source_role, room:match_rooms!inner(played_at, played_time, duration_minutes, match_type, court_name, host:users!match_rooms_host_user_id_fkey(name, nickname))`)
-        .eq('user_id', userId)
-        .eq('status', 'invited')
-        .order('created_at', { ascending: false })
-    if (error || !data) return []
-    return data.map(mapInviteRow).filter((i): i is MatchRoomInvite => !!i)
-}
-
 /**
  * 확인 요청 허브·작업 큐용 내 방 멤버십 1회 조회 — 초대 대기(invited)와 참가 중(joined)을 함께 가져온다.
  * 초대 카드(A축)와 방 로테이션 세션 조회(B축)가 같은 행 집합을 두 번 읽던 것을 한 쿼리로 합친다.
+ * **종료된 매칭의 초대는 뺀다**(Week 71) — DB는 status를 바꾸지 않고 시간으로 해석한다(`respond_room_invite`의
+ * `invite_expired`와 같은 규칙 `isInviteExpired`). 뱃지(`roomBadgeTotal`)가 이 배열 길이를 세므로 함께 빠진다.
  */
 export async function fetchMyRoomMemberships(
     userId: string,
@@ -467,7 +457,7 @@ export async function fetchMyRoomMemberships(
         invites: rows
             .filter((row) => row.status === 'invited')
             .map(mapInviteRow)
-            .filter((i): i is MatchRoomInvite => !!i),
+            .filter((i): i is MatchRoomInvite => !!i && !isInviteExpired(i)),
         joinedRoomIds: [...new Set(rows.filter((row) => row.status === 'joined').map((row) => row.room_id))],
     }
 }

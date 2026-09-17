@@ -4,8 +4,32 @@ import {
     estimateMinutes,
     formatDurationLabel,
     formatRoomWhen,
+    isInviteExpired,
     recommendGames,
+    roomEndAt,
+    roomStartAt,
 } from '@/lib/match-rooms/schedule'
+
+// DB room_start_at/room_end_at(0094)와 같은 규칙이어야 한다 — 초대 만료 가드(DB)와 목록 필터(앱)가 갈리면 안 된다
+describe('roomStartAt / roomEndAt / isInviteExpired', () => {
+    it('시작 = KST 시각, 종료 = 시작 + 소요 시간', () => {
+        expect(roomStartAt({ playedAt: '2026-09-20', playedTime: '10:00' }).toISOString()).toBe('2026-09-20T01:00:00.000Z')
+        expect(roomEndAt({ playedAt: '2026-09-20', playedTime: '10:00', durationMinutes: 90 }).toISOString()).toBe('2026-09-20T02:30:00.000Z')
+    })
+    it('소요 시간을 모르면 120분, 시각을 모르면 그날 전체(다음날 00:00 KST)', () => {
+        expect(roomEndAt({ playedAt: '2026-09-20', playedTime: '22:00' }).toISOString()).toBe('2026-09-20T15:00:00.000Z')
+        expect(roomEndAt({ playedAt: '2026-09-20' }).toISOString()).toBe('2026-09-20T15:00:00.000Z')
+        expect(roomEndAt({ playedAt: '2026-09-20', playedTime: null, durationMinutes: 60 }).toISOString()).toBe('2026-09-20T15:00:00.000Z')
+    })
+    it('DB가 HH:MM:SS로 준 시각도 받는다', () => {
+        expect(roomStartAt({ playedAt: '2026-09-20', playedTime: '10:30:00' }).toISOString()).toBe('2026-09-20T01:30:00.000Z')
+    })
+    it('만료 경계는 종료 시각 포함(<=) — DB 가드와 같다', () => {
+        const room = { playedAt: '2026-09-20', playedTime: '10:00', durationMinutes: 120 }
+        expect(isInviteExpired(room, new Date('2026-09-20T02:59:59Z'))).toBe(false)
+        expect(isInviteExpired(room, new Date('2026-09-20T03:00:00Z'))).toBe(true)
+    })
+})
 
 describe('formatDurationLabel', () => {
     it('시간과 분을 사람 말로 적는다', () => {

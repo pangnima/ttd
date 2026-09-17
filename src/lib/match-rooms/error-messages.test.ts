@@ -7,7 +7,7 @@ describe('ROOM_ERROR_MESSAGES', () => {
     it.each([
         'not_member', 'invalid_duration', 'invalid_court_count', 'invalid_slot_minutes',
         'room_closed', 'room_not_settled', 'room_not_closed', 'room_already_closed', 'room_not_listed',
-        'leave_member_has_games', 'member_has_games', 'lineup_locked', 'invalid_games',
+        'leave_member_has_games', 'member_has_games', 'lineup_locked', 'invalid_games', 'invite_expired',
     ])('%s 키가 있다', (key) => {
         expect(ROOM_ERROR_MESSAGES.some(([k]) => k === key)).toBe(true)
     })
