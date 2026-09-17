@@ -1124,6 +1124,27 @@ export type Database = {
           },
         ]
       }
+      rpc_rate_limits: {
+        Row: {
+          bucket: string
+          hits: number
+          subject: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          subject: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          subject?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -1571,6 +1592,11 @@ export type Database = {
       }
       swap_opponent_perspective: { Args: { p_sets: Json }; Returns: Json }
       swap_partner_perspective: { Args: { p_sets: Json }; Returns: Json }
+      throttle_hit: {
+        Args: { p_bucket: string; p_limit: number; p_window: string }
+        Returns: undefined
+      }
+      throttle_subject: { Args: never; Returns: string }
       update_match_game: {
         Args: {
           p_courts: Json

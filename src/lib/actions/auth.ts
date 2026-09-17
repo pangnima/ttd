@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { randomAvatarPath } from '@/lib/default-images'
-import { DELETED_ACCOUNT_MESSAGE, INVALID_CREDENTIALS_MESSAGE, mapAuthError, OAUTH_ERROR_PARAM } from '@/lib/auth/auth-error-messages'
+import { DELETED_ACCOUNT_MESSAGE, INVALID_CREDENTIALS_MESSAGE, isRateLimited, mapAuthError, OAUTH_ERROR_PARAM, RATE_LIMITED_MESSAGE } from '@/lib/auth/auth-error-messages'
 import { isSafeNext } from '@/lib/supabase/middleware'
 import { parseYearMonth, toStartDateString } from '@/lib/format/year-month'
 import { isGenderValue, isHandValue, isSignupNtrp, resolveRacketBrand, normalizeRacketModel } from '@/lib/profile/signup-fields'
@@ -33,9 +33,14 @@ async function resolveLoginEmail(
     if (looksLikeEmail(raw)) return normalizeEmail(raw)
     const loginId = normalizeLoginId(raw)
     if (validateLoginId(loginId)) return null
-    const { data } = await supabase.rpc('resolve_login_email', { p_login_id: loginId })
+    const { data, error } = await supabase.rpc('resolve_login_email', { p_login_id: loginId })
+    // 시도 제한(0093)은 "없는 아이디"와 다른 답이다 — null로 뭉개면 사용자가 비밀번호를 의심한다
+    if (isRateLimited(error)) throw new RateLimitedError()
     return data ?? null
 }
+
+/** 0093 시도 제한 신호 — resolveLoginEmail의 두 호출부가 같은 문구로 잡는다 */
+class RateLimitedError extends Error {}
 
 export async function loginAction(
     _prevState: { error: string } | null,
@@ -45,7 +50,13 @@ export async function loginAction(
 
     // 「아이디 또는 이메일」 한 칸(0085). 아이디에는 @가 들어갈 수 없으므로 looksLikeEmail로 갈린다.
     // 아이디가 없어도 비밀번호 오류와 **같은 문구**를 준다 — 존재 여부를 화면에서 구분하지 않는다.
-    const email = await resolveLoginEmail(supabase, formData.get('identifier') as string | null)
+    let email: string | null
+    try {
+        email = await resolveLoginEmail(supabase, formData.get('identifier') as string | null)
+    } catch (e) {
+        if (e instanceof RateLimitedError) return { error: RATE_LIMITED_MESSAGE }
+        throw e
+    }
     if (!email) return { error: INVALID_CREDENTIALS_MESSAGE }
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -145,9 +156,10 @@ export async function signupAction(
 
     // 닉네임 유일성의 권위는 users_nickname_unique_idx(0079)지만, 인덱스에서 걸리면 트리거 롤백이라
     // 메시지가 불투명하다. 그래서 여기서 한 번 더 묻는다 — 화면 검사와 같은 RPC(0080)를 본다.
-    const { data: nicknameTaken } = await supabase.rpc('is_nickname_taken', {
+    const { data: nicknameTaken, error: nicknameError } = await supabase.rpc('is_nickname_taken', {
         p_nickname: identity.values.nickname,
     })
+    if (isRateLimited(nicknameError)) return { error: RATE_LIMITED_MESSAGE }
     if (nicknameTaken) return { error: NICKNAME_TAKEN_MESSAGE }
 
     // 아이디(0085) — 같은 3중 구조(화면 debounce / 여기 / 부분 유니크 인덱스). 트리거 안에서 CHECK·유니크에
@@ -155,15 +167,17 @@ export async function signupAction(
     const loginId = normalizeLoginId(formData.get('login_id') as string | null)
     const loginIdError = validateLoginId(loginId)
     if (loginIdError) return { error: loginIdError }
-    const { data: loginIdTaken } = await supabase.rpc('is_login_id_taken', { p_login_id: loginId })
+    const { data: loginIdTaken, error: loginIdRpcError } = await supabase.rpc('is_login_id_taken', { p_login_id: loginId })
+    if (isRateLimited(loginIdRpcError)) return { error: RATE_LIMITED_MESSAGE }
     if (loginIdTaken) return { error: LOGIN_ID_TAKEN_MESSAGE }
 
     // 이메일도 같은 방식으로 먼저 본다(0081). 지금은 signUp이 'User already registered'를 주지만,
     // **이메일 확인을 켜는 순간 Supabase가 열거 방지로 성공을 가장해** 그 메시지가 사라진다.
     // 화면 검사와 같은 RPC를 여기서도 보면 그 전환에 흔들리지 않는다.
-    const { data: emailTaken } = await supabase.rpc('is_email_taken', {
+    const { data: emailTaken, error: emailRpcError } = await supabase.rpc('is_email_taken', {
         p_email: normalizeEmail(email),
     })
+    if (isRateLimited(emailRpcError)) return { error: RATE_LIMITED_MESSAGE }
     if (emailTaken) return { error: EMAIL_TAKEN_MESSAGE }
 
     // options.data는 Supabase Auth metadata로 전달되며,
@@ -294,6 +308,7 @@ export async function findLoginIdAction(
 
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('find_login_id', { p_name: name, p_email: email })
+    if (isRateLimited(error)) return { error: RATE_LIMITED_MESSAGE }
     if (error) return { error: mapAuthError(null) }
     return { result: parseFindIdResult(data) }
 }
@@ -312,7 +327,13 @@ export async function requestPasswordResetAction(
     if (!identifier) return { error: '아이디를 입력해 주세요.' }
 
     const supabase = await createClient()
-    const email = await resolveLoginEmail(supabase, identifier)
+    let email: string | null
+    try {
+        email = await resolveLoginEmail(supabase, identifier)
+    } catch (e) {
+        if (e instanceof RateLimitedError) return { error: RATE_LIMITED_MESSAGE }
+        throw e
+    }
     // 아이디가 없거나 형식이 틀려도 같은 화면 — "없는 아이디"를 말하면 열거가 된다
     if (!email) return { success: true }
 

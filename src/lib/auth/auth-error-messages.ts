@@ -32,6 +32,14 @@ const ERROR_RULES: ReadonlyArray<{ match: string; message: string }> = [
 
 const FALLBACK_MESSAGE = '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
 
+/** anon RPC 시도 제한(0093)에 걸렸을 때 — DB가 `rate_limited`를 raise하고 PostgREST가 그 문자열을 message로 돌려준다 */
+export const RATE_LIMITED_MESSAGE = '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+
+/** PostgREST 에러가 0093의 raise인지 — 서버 액션이 "없는 아이디"와 구분해 말하기 위해 */
+export function isRateLimited(error: { message?: string } | null | undefined): boolean {
+    return Boolean(error?.message?.includes('rate_limited'))
+}
+
 /** Supabase 영문 에러 메시지를 한글로 변환한다. 미매칭 시 일반 폴백 메시지 반환. */
 export function mapAuthError(message: string | null | undefined): string {
     if (!message) return FALLBACK_MESSAGE
